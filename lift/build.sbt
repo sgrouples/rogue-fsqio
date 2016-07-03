@@ -1,2 +1,2 @@
 name := "rogue-lift"
-libraryDependencies := RogueDependencies.rogueLiftDeps
+libraryDependencies := RogueDependencies.rogueLiftDeps ++ RogueDependencies.testDeps

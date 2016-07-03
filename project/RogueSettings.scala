@@ -35,6 +35,7 @@ object RogueSettings {
 
 object RogueDependencies {
   val liftVersion = "2.6.2-MongoAsync"
+  val specsVer = "3.8.4"
   val liftDeps = Seq(
     "net.liftweb"              %% "lift-mongodb"    % liftVersion  % "compile" intransitive(),
     "net.liftweb"              %% "lift-common"     % liftVersion  % "compile",
@@ -57,22 +58,16 @@ object RogueDependencies {
     "org.mongodb"              % "mongodb-driver"      % "3.2.2"     % "compile",
     "org.mongodb"              % "mongodb-driver-async"% "3.2.2"     % "compile"
   )
-  
-  
-/*	libraryDependencies <++= (scalaVersion) { scalaVersion =>
-	  val specsVersion = "2.4.2"
-	  Seq(
-	    "com.foursquare"           %% "rogue-field"     % "2.4.0"      % "compile",
-	    "junit"                    % "junit"               % "4.5"        % "test",
-	    "com.novocode"             % "junit-interface"     % "0.6"        % "test",
-	    "ch.qos.logback"           % "logback-classic"     % "1.0.9"     % "provided",
-	    "org.specs2"              %% "specs2"              % specsVersion % "test",
-	    "org.scala-lang"           % "scala-compiler"      % scalaVersion % "test"
-	  )
-	}
 
-	Seq(RogueBuild.defaultSettings: _*)
-	*/
+  val testDeps = Seq(
+    "junit"                    % "junit"               % "4.5"        % "test",
+    "org.specs2"              %% "specs2-core"              % specsVer % "test",
+    "org.specs2"              %% "specs2-matcher"              % specsVer % "test",
+    "org.specs2"              %% "specs2-junit"              % specsVer % "test",
+    "com.novocode" % "junit-interface" % "0.11" % "test",
+    "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
+  )
+
   val coreDeps = mongoDeps ++ joda ++ liftDeps
   
   val rogueLiftDeps = mongoDeps ++ joda ++ liftDeps ++ liftRecordDeps

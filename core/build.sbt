@@ -1,2 +1,2 @@
 name := "rogue-core"
-libraryDependencies ++= RogueDependencies.coreDeps
+libraryDependencies ++= RogueDependencies.coreDeps ++ RogueDependencies.testDeps
