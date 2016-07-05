@@ -2,32 +2,17 @@
 
 package io.fsq.rogue.test
 
-import com.mongodb.{BasicDBObjectBuilder, DB, DBCollection, DBObject, MongoClient, ServerAddress, WriteConcern}
-import io.fsq.field.OptionalField
-import io.fsq.rogue.{DBCollectionFactory, InitialState, MongoJavaDriverAdapter, Query, QueryExecutor, QueryOptimizer, Rogue, RogueReadSerializer, RogueWriteSerializer}
+import com.mongodb._
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoSelect}
+import io.fsq.rogue._
 import io.fsq.rogue.index.UntypedMongoIndex
+import io.fsq.rogue.test.TrivialORM.{Meta, Record}
 import org.bson.Document
 import org.junit.{Before, Test}
 import org.specs2.matcher.JUnitMustMatchers
 
-/** A trivial ORM layer that implements the interfaces rogue needs. The goal is
-  * to make sure that rogue-core works without the assistance of rogue-lift.
-  * Ideally this would be even smaller; as it is, I needed to copy-paste some
-  * code from the Lift implementations. */
-object TrivialORM {
-  trait Record {
-    type Self >: this.type <: Record
-    def meta: Meta[Self]
-  }
 
-  trait Meta[R] {
-    def collectionName: String
-    def fromDBObject(dbo: DBObject): R
-    def toDBObject(record: R): DBObject
-    def fromDocument(doc: Document):R
-    def toDocument(record:R):Document
-  }
+object TrivialSyncORM extends {
 
   lazy val mongo = {
     val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
@@ -64,15 +49,17 @@ object TrivialORM {
     }
   }
 
+
+
   class MyQueryExecutor extends QueryExecutor[Meta[_], Record] {
     override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongo.getDB("test")))
     override val optimizer = new QueryOptimizer
     override val defaultWriteConcern: WriteConcern = WriteConcern.SAFE
 
     protected def readSerializer[M <: Meta[_], R](
-      meta: M,
-      select: Option[MongoSelect[M, R]]
-    ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
+                                                   meta: M,
+                                                   select: Option[MongoSelect[M, R]]
+                                                 ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
         case Some(MongoSelect(Nil, transformer)) =>
           // A MongoSelect clause exists, but has empty fields. Return null.
@@ -102,13 +89,11 @@ object TrivialORM {
       }
     }
     override protected def writeSerializer(record: Record): RogueWriteSerializer[Record] = new RogueWriteSerializer[Record] {
-      override def toDBObject(record: Record): DBObject = {
-        val meta = record.meta
-        record.meta.toDBObject(record)
+      override def toDBObject(record: Record): DBObject = { ???
+        ///record.meta.toDBObject(record)
       }
-      override def toDocument(r:Record): Document = {
-        val meta = record.meta
-        record.meta.toDocument(r)
+      override def toDocument(r:Record): Document = { ???
+        //record.meta.toDocument(r)
       }
     }
   }
@@ -119,35 +104,15 @@ object TrivialORM {
         meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
     }
   }
+
 }
 
-case class SimpleRecord(a: Int, b: String) extends TrivialORM.Record {
-  override type Self = SimpleRecord
-  override def meta: SimpleRecord.type = SimpleRecord
-}
-
-object SimpleRecord extends TrivialORM.Meta[SimpleRecord] {
-  val a = new OptionalField[Int, SimpleRecord.type] { override val owner = SimpleRecord; override val name = "a" }
-  val b = new OptionalField[String, SimpleRecord.type] { override val owner = SimpleRecord; override val name = "b" }
-
-  override val collectionName = "simple_records"
-  override def fromDBObject(dbo: DBObject): SimpleRecord = {
-    new SimpleRecord(dbo.get(a.name).asInstanceOf[Int], dbo.get(b.name).asInstanceOf[String])
-  }
-  override def toDBObject(record: SimpleRecord): DBObject = {
-    (BasicDBObjectBuilder
-      .start
-      .add(a.name, record.a)
-      .add(b.name, record.b)
-      .get)
-  }
-}
 
 // TODO: Everything in the rogue-lift tests should move here, except for the lift-specific extensions.
 class TrivialORMQueryTest extends JUnitMustMatchers {
-  val executor = new TrivialORM.MyQueryExecutor
+  val executor = new TrivialSyncORM.MyQueryExecutor
 
-  import TrivialORM.Implicits._
+  import TrivialSyncORM.Implicits._
 
   @Before
   def cleanUpMongo = {
@@ -156,8 +121,8 @@ class TrivialORMQueryTest extends JUnitMustMatchers {
 
   @Test
   def canBuildQuery: Unit = {
-    (SimpleRecord: Query[SimpleRecord.type, SimpleRecord, InitialState]) .toString() must_== """db.simple_records.find({ })"""
-    SimpleRecord.where(_.a eqs 1)                                        .toString() must_== """db.simple_records.find({ "a" : 1})"""
+    (SimpleRecord: Query[SimpleRecord.type, SimpleRecord, InitialState]).toString() must_== """db.simple_records.find({ })"""
+    SimpleRecord.where(_.a eqs 1).toString() must_== """db.simple_records.find({ "a" : 1})"""
   }
 
   @Test

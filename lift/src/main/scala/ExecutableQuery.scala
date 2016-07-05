@@ -4,14 +4,16 @@ package io.fsq.rogue.lift
 
 import com.mongodb.WriteConcern
 import io.fsq.field.Field
-import io.fsq.rogue.{AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, QueryExecutor, RequireShardKey, Required,
-    ShardingOk, Unlimited, Unselected, Unskipped}
+import io.fsq.rogue._
 import io.fsq.rogue.MongoHelpers.MongoSelect
-import io.fsq.rogue.Rogue._
+
+import scala.concurrent.Future
+import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, RB, R, State](
     query: Query[M, R, State],
-    db: QueryExecutor[MB, RB]
+    db: QueryExecutor[MB, RB],
+    dba: AsyncQueryExecutor[MB, RB]
 )(implicit ev: ShardingOk[M, State]) {
 
   /**
@@ -34,6 +36,15 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
    */
   def distinct[V](field: M => Field[V, _]): Seq[V] =
     db.distinct(query)(field.asInstanceOf[M => Field[V, M]])
+
+  /**
+    * Returns a list of distinct values returned by a query. The query must not have
+    * limit or skip clauses.
+    */
+  def distinctAsync[V](field: M => Field[V, _])(implicit ct: ClassTag[V]): Future[Seq[V]] = {
+    dba.distinct(query, ct)(field.asInstanceOf[M => Field[V, M]])
+  }
+
 
   /**
    * Checks if there are any records that match this query.
@@ -91,7 +102,7 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
   def paginate(countPerPage: Int)
               (implicit ev1: Required[State, Unlimited with Unskipped],
                ev2: ShardingOk[M, State]): PaginatedQuery[MB, M, RB, R, Unlimited with Unskipped] = {
-    new PaginatedQuery(ev1(query), db, countPerPage)
+    new PaginatedQuery(ev1(query), db, dba, countPerPage)
   }
 
   /**
@@ -131,10 +142,40 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
 
   def iterateBatch[S](batchSize: Int, state: S)(handler: (S, Iter.Event[Seq[R]]) => Iter.Command[S]): S =
     db.iterateBatch(query, batchSize, state)(handler)
+
+  // async ops
+  def countAsync(): Future[Long] = dba.count(query)
+
+  def foreachAsync(f :R => Unit): Future[Unit] = dba.foreach(query)(f)
+
+  def fetchAsync(): Future[Seq[R]] = dba.fetch(query)
+
+  def fetchAsync[S2](limit: Int)(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2]): Future[Seq[R]] = dba.fetch(query.limit(limit))
+
+  def getAsync[S2]()(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2]): Future[Option[R]] = dba.fetchOne(query)
+
+  def paginateAsync(countPerPage: Int)
+              (implicit ev1: Required[State, Unlimited with Unskipped],
+               ev2: ShardingOk[M, State]) = {
+    new PaginatedQuery(ev1(query), db, dba, countPerPage)
+  }
+
+  def existsAsync(implicit ev: State <:< Unlimited with Unskipped): Future[Boolean] = {
+    val q = query.copy(select = Some(MongoSelect[M, Null](Nil, _ => null)))
+    dba.exists(q.limit(1))
+  }
+
+  def bulkDeleteAsync_!!!()(implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Future[Unit] = dba.bulkDelete_!!(query)
+
+  def bulkDeleteAsync_!!(concern: WriteConcern) (implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Future[Unit] = dba.bulkDelete_!!(query, concern)
+
+  def findAndDeleteOneAsync()(implicit ev: RequireShardKey[M, State]): Future[Option[R]] = dba.findAndDeleteOne(query)
+
 }
 
 case class ExecutableModifyQuery[MB, M <: MB, RB, State](query: ModifyQuery[M, State],
-                                                         db: QueryExecutor[MB, RB]) {
+                                                         db: QueryExecutor[MB, RB],
+                                                         dba: AsyncQueryExecutor[MB, RB]) {
   def updateMulti(): Unit =
     db.updateMulti(query)
 
@@ -152,30 +193,60 @@ case class ExecutableModifyQuery[MB, M <: MB, RB, State](query: ModifyQuery[M, S
 
   def upsertOne(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State]): Unit =
     db.upsertOne(query, writeConcern)
+
+  //async ops
+  def updateMultiAsync(): Future[Unit] =
+    dba.updateMulti(query)
+
+  def updateOneAsync()(implicit ev: RequireShardKey[M, State]): Future[Unit] =
+    dba.updateOne(query)
+
+  def upsertOneAsync()(implicit ev: RequireShardKey[M, State]): Future[Unit] =
+    dba.upsertOne(query)
+
+  def updateMultiAsync(writeConcern: WriteConcern): Future[Unit] =
+    dba.updateMulti(query, writeConcern)
+
+  def updateOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State]): Future[Unit] =
+    dba.updateOne(query, writeConcern)
+
+  def upsertOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State]): Future[Unit] =
+    dba.upsertOne(query, writeConcern)
+
 }
 
 case class ExecutableFindAndModifyQuery[MB, M <: MB, RB, R](
     query: FindAndModifyQuery[M, R],
-    db: QueryExecutor[MB, RB]
+    db: QueryExecutor[MB, RB],
+    dba: AsyncQueryExecutor[MB, RB]
 ) {
   def updateOne(returnNew: Boolean = false): Option[R] =
     db.findAndUpdateOne(query, returnNew)
 
   def upsertOne(returnNew: Boolean = false): Option[R] =
     db.findAndUpsertOne(query, returnNew)
+
+
+  def updateOneAsync(returnNew: Boolean = false): Future[Option[R]] =
+    dba.findAndUpdateOne(query, returnNew)
+
+  def upsertOneAsync(returnNew: Boolean = false): Future[Option[R]] =
+    dba.findAndUpsertOne(query, returnNew)
+
 }
 
 class PaginatedQuery[MB, M <: MB, RB, R, +State <: Unlimited with Unskipped](
     q: Query[M, R, State],
     db: QueryExecutor[MB, RB],
+    dba: AsyncQueryExecutor[MB, RB],
     val countPerPage: Int,
     val pageNum: Int = 1
 )(implicit ev: ShardingOk[M, State]) {
-  def copy() = new PaginatedQuery(q, db, countPerPage, pageNum)
+  def copy() = new PaginatedQuery(q, db, dba, countPerPage, pageNum)
 
-  def setPage(p: Int) = if (p == pageNum) this else new PaginatedQuery(q, db, countPerPage, p)
+  def setPage(p: Int) = if (p == pageNum) this else new PaginatedQuery(q, db, dba, countPerPage, p)
 
-  def setCountPerPage(c: Int) = if (c == countPerPage) this else new PaginatedQuery(q, db, c, pageNum)
+  def setCountPerPage(c: Int) = if (c == countPerPage) this else new PaginatedQuery(q, db, dba, c, pageNum)
 
   lazy val countAll: Long = db.count(q)
 
@@ -184,4 +255,8 @@ class PaginatedQuery[MB, M <: MB, RB, R, +State <: Unlimited with Unskipped](
   }
 
   def numPages = math.ceil(countAll.toDouble / countPerPage.toDouble).toInt max 1
+
+  def fetchAsync(): Future[Seq[R]] = {
+    dba.fetch(q.skip(countPerPage * (pageNum - 1)).limit(countPerPage))
+  }
 }

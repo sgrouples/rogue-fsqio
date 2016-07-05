@@ -371,22 +371,6 @@ trait QueryExecutor[MB, RB] extends Rogue {
   }
 }
 
-
-/*
-def adapter: MongoJavaDriverAdapter[MB, RB]
-  def optimizer: QueryOptimizer
-
-  def defaultWriteConcern: WriteConcern
-
-  protected def readSerializer[M <: MB, R](
-      meta: M,
-      select: Option[MongoSelect[M, R]]
-  ): RogueReadSerializer[R]
-
-  protected def writeSerializer(record: RB): RogueWriteSerializer[RB]
-
- */
-
 trait AsyncQueryExecutor[MB, RB] extends Rogue {
   def adapter: MongoAsyncJavaDriverAdapter[MB, RB]
   def optimizer: QueryOptimizer
@@ -480,43 +464,6 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  /*
-  private def drainBuffer[A, B](
-                                 from: ListBuffer[A],
-                                 to: ListBuffer[B],
-                                 f: List[A] => List[B],
-                                 size: Int
-                               ): Unit = {
-    // ListBuffer#length is O(1) vs ListBuffer#size is O(N) (true in 2.9.x, fixed in 2.10.x)
-    if (from.length >= size) {
-      to ++= f(from.toList)
-      from.clear
-    }
-  }
-
-
-  def fetchBatch[M <: MB, R, T, State](query: Query[M, R, State],
-                                       batchSize: Int,
-                                       readPreference: Option[ReadPreference] = None)
-                                      (f: List[R] => List[T])
-                                      (implicit ev: ShardingOk[M, State]): List[T] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Nil
-    } else {
-      val s = serializer[M, R](query.meta, query.select)
-      val rv = new ListBuffer[T]
-      val buf = new ListBuffer[R]
-
-      adapter.query(query, Some(batchSize), readPreference) { dbo =>
-        buf += s.fromDBObject(dbo)
-        drainBuffer(buf, rv, f, batchSize)
-      }
-      drainBuffer(buf, rv, f, 1)
-
-      rv.toList
-    }
-  }
-  */
 
   def bulkDelete_!![M <: MB, State](query: Query[M, _, State],
                                     writeConcern: WriteConcern = defaultWriteConcern)
@@ -605,35 +552,5 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
       adapter.findAndModify(mod, returnNew=false, upsert=false, remove=true)(s.fromDocument _)
     }
   }
-  /*
-    def explain[M <: MB](query: Query[M, _, _]): Future[String] = {
-      adapter.explain(query)
-    }
-  */
-  /* def iterate[S, M <: MB, R, State](query: Query[M, R, State],
-                                     state: S,
-                                     readPreference: Option[ReadPreference] = None)
-                                    (handler: (S, Iter.Event[R]) => Iter.Command[S])
-                                    (implicit ev: ShardingOk[M, State]): S = {
-     if (optimizer.isEmptyQuery(query)) {
-       handler(state, Iter.EOF).state
-     } else {
-       val s = serializer[M, R](query.meta, query.select)
-       adapter.iterate(query, state, s.fromDBObject _, readPreference)(handler)
-     }
-   }
 
-   def iterateBatch[S, M <: MB, R, State](query: Query[M, R, State],
-                                          batchSize: Int,
-                                          state: S,
-                                          readPreference: Option[ReadPreference] = None)
-                                         (handler: (S, Iter.Event[List[R]]) => Iter.Command[S])
-                                         (implicit ev: ShardingOk[M, State]): S = {
-     if (optimizer.isEmptyQuery(query)) {
-       handler(state, Iter.EOF).state
-     } else {
-       val s = serializer[M, R](query.meta, query.select)
-       adapter.iterateBatch(query, batchSize, state, s.fromDBObject _, readPreference)(handler)
-     }
-   }*/
 }

@@ -3,15 +3,16 @@
 package io.fsq.rogue.lift
 
 import com.mongodb.{DBCollection, DBObject}
-import io.fsq.rogue.{DBCollectionFactory, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer,
-    RogueReadSerializer, RogueWriteSerializer}
+import io.fsq.rogue.{DBCollectionFactory, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer, RogueReadSerializer, RogueWriteSerializer}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import net.liftweb.common.Box
 import net.liftweb.mongodb.MongoDB
 import net.liftweb.mongodb.record.{BsonRecord, MongoMetaRecord, MongoRecord}
 import net.liftweb.mongodb.record.field.BsonRecordField
+import org.bson.Document
 import org.bson.types.BasicBSONList
+import java.util
 
 object LiftDBCollectionFactory extends DBCollectionFactory[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def getDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): DBCollection = {
@@ -90,6 +91,28 @@ class LiftQueryExecutor(
         case None =>
           meta.fromDBObject(dbo).asInstanceOf[R]
       }
+
+      override def fromDocument(dbo: Document): R = select match {
+        case Some(MongoSelect(Nil, transformer)) =>
+          // A MongoSelect clause exists, but has empty fields. Return null.
+          // This is used for .exists(), where we just want to check the number
+          // of returned results is > 0.
+          transformer(null)
+        case Some(MongoSelect(fields, transformer)) =>
+          val inst = meta.createRecord.asInstanceOf[MongoRecord[_]]
+
+          LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, "_id")
+
+          val values =
+            fields.map(fld => {
+              val valueOpt = LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, fld.field.name)
+              fld.valueOrDefault(valueOpt)
+            })
+
+          transformer(values)
+        case None =>
+          meta.fromDocument(dbo).asInstanceOf[R]
+      }
     }
   }
 
@@ -97,6 +120,10 @@ class LiftQueryExecutor(
     new RogueWriteSerializer[MongoRecord[_]] {
       override def toDBObject(record: MongoRecord[_]): DBObject = {
         record.asDBObject
+      }
+
+      override def toDocument(record: MongoRecord[_]): Document = {
+        record.asDocument
       }
     }
   }
@@ -123,6 +150,23 @@ object LiftQueryExecutorHelpers {
     }
   }
 
+  def setInstanceFieldFromDocList(instance: BsonRecord[_], dbo: Document, fieldNames: List[String]): Option[_] = {
+    fieldNames match {
+      case last :: Nil =>
+        val fld: Box[LField[_, _]] = instance.fieldByName(last)
+        fld.flatMap(setLastFieldFromDoc(_, dbo, last))
+      case name :: rest =>
+        val fld: Box[LField[_, _]] = instance.fieldByName(name)
+        dbo.get(name) match {
+          case obj: Document => fld.flatMap(setFieldFromDoc(_, obj, rest))
+            //ArrayList
+          case list: util.ArrayList[_] => fallbackValueFromDoc(dbo, fieldNames)
+          case null => None
+        }
+      case Nil => throw new UnsupportedOperationException("was called with empty list, shouldn't possibly happen")
+    }
+  }
+
   def setFieldFromDbo(field: LField[_, _], dbo: DBObject, fieldNames: List[String]): Option[_] = {
     if (field.isInstanceOf[BsonRecordField[_, _]]) {
       val brf = field.asInstanceOf[BsonRecordField[_, _]]
@@ -131,6 +175,20 @@ object LiftQueryExecutorHelpers {
     } else {
       fallbackValueFromDbObject(dbo, fieldNames)
     }
+  }
+
+  def setFieldFromDoc(field: LField[_, _], dbo: Document, fieldNames: List[String]): Option[_] = {
+    if (field.isInstanceOf[BsonRecordField[_, _]]) {
+      val brf = field.asInstanceOf[BsonRecordField[_, _]]
+      val inner = brf.value.asInstanceOf[BsonRecord[_]]
+      setInstanceFieldFromDocList(inner, dbo, fieldNames)
+    } else {
+      fallbackValueFromDoc(dbo, fieldNames)
+    }
+  }
+
+  def setLastFieldFromDoc(field: LField[_, _], dbo: Document, fieldName: String): Option[_] = {
+    field.setFromAny(dbo.get(fieldName)).toOption
   }
 
   def setLastFieldFromDbo(field: LField[_, _], dbo: DBObject, fieldName: String): Option[_] = {
@@ -148,6 +206,18 @@ object LiftQueryExecutorHelpers {
     }
   }
 
+  def setInstanceFieldFromDoc(instance: MongoRecord[_], dbo: Document, fieldName: String): Option[_] = {
+    fieldName.contains(".") match {
+      case true =>
+        val names = fieldName.split("\\.").toList.filter(_ != "$")
+        setInstanceFieldFromDocList(instance, dbo, names)
+      case false =>
+        val fld: Box[LField[_, _]] = instance.fieldByName(fieldName)
+        fld.flatMap (setLastFieldFromDoc(_, dbo, fieldName))
+    }
+  }
+
+
   def fallbackValueFromDbObject(dbo: DBObject, fieldNames: List[String]): Option[_] = {
     import scala.collection.JavaConverters._
     Box.!!(fieldNames.foldLeft(dbo: Object)((obj: Object, fieldName: String) => {
@@ -155,6 +225,19 @@ object LiftQueryExecutorHelpers {
         case dbl: BasicBSONList =>
           dbl.asScala.map(_.asInstanceOf[DBObject]).map(_.get(fieldName)).toList
         case dbo: DBObject =>
+          dbo.get(fieldName)
+        case null => null
+      }
+    })).toOption
+  }
+
+  def fallbackValueFromDoc(dbo: Document, fieldNames: List[String]): Option[_] = {
+    import scala.collection.JavaConversions._
+    Box.!!(fieldNames.foldLeft(dbo: Object)((obj: Object, fieldName: String) => {
+      obj match {
+        case dbl: util.ArrayList[_] =>
+          dbl.map(_.asInstanceOf[Document]).map(_.get(fieldName)).toList
+        case dbo: Document =>
           dbo.get(fieldName)
         case null => null
       }

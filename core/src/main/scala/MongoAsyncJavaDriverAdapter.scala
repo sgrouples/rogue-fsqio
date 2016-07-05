@@ -2,24 +2,19 @@ package io.fsq.rogue
 
 
 import java.util
-import java.util.Collections
 
-import io.fsq.rogue.index.UntypedMongoIndex
-import io.fsq.rogue.MongoHelpers.MongoBuilder._
-import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query, RogueSerializer}
-import io.fsq.rogue.QueryHelpers._
-import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import com.mongodb._
 import com.mongodb.async.SingleResultCallback
-import com.mongodb.async.client.{DistinctIterable, MongoCollection}
+import com.mongodb.async.client.MongoCollection
 import com.mongodb.client.model._
+import com.mongodb.client.result.{DeleteResult, UpdateResult}
+import io.fsq.rogue.MongoHelpers.MongoBuilder._
+import io.fsq.rogue.QueryHelpers._
+import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.Document
-import org.bson.codecs.LongCodec
-import org.bson.codecs.configuration.{CodecRegistries, CodecRegistry}
 import org.bson.conversions.Bson
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.{Future, Promise}
 import scala.reflect.ClassTag
 
@@ -28,26 +23,29 @@ trait AsyncDBCollectionFactory[MB, RB] {
   def getDBCollection[M <: MB](query: Query[M, _, _]): MongoCollection[Document]
 
   def getPrimaryDBCollection[M <: MB](query: Query[M, _, _]): MongoCollection[Document]
+
   def getPrimaryDBCollection(record: RB): MongoCollection[Document]
 
   def getInstanceName[M <: MB](query: Query[M, _, _]): String
+
   def getInstanceName(record: RB): String
 
   // A set of of indexes, which are ordered lists of field names
-  def getIndexes[M <: MB](query: Query[M, _, _]): Option[List[UntypedMongoIndex]]
+  def getIndexes[M <: MB](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]]
 
 }
 
 trait HasFuture[T] {
-  def future:Future[T]
+  def future: Future[T]
 }
 
-class UnitCallback[T] extends SingleResultCallback[T] with HasFuture[Unit]{
+class UnitCallback[T] extends SingleResultCallback[T] with HasFuture[Unit] {
   private[this] val promise = Promise[Unit]
+
   override def onResult(result: T, t: Throwable): Unit = {
-      if(t == null) promise.success(())
-      else promise.failure(t)
-    }
+    if (t == null) promise.success(())
+    else promise.failure(t)
+  }
 
   def future = promise.future
 }
@@ -55,94 +53,109 @@ class UnitCallback[T] extends SingleResultCallback[T] with HasFuture[Unit]{
 //specialized for Long to avoid conversion quirks
 class PromiseLongCallbackBridge extends SingleResultCallback[java.lang.Long] {
   private[this] val promise = Promise[Long]()
+
   override def onResult(result: java.lang.Long, t: Throwable): Unit = {
     if (t == null) promise.success(result)
     else promise.failure(t)
   }
+
   def future = promise.future
 }
 
 class PromiseLongBooleanCallbackBridge extends SingleResultCallback[java.lang.Long] {
   val promise = Promise[Boolean]()
+
   override def onResult(result: java.lang.Long, t: Throwable): Unit = {
     if (t == null) promise.success(result.longValue() > 0)
     else promise.failure(t)
   }
+
   def future = promise.future
 }
 
 class PromiseArrayListAdapter[R] extends SingleResultCallback[java.util.Collection[R]] {
   val coll = new util.ArrayList[R]()
   private[this] val p = Promise[Seq[R]]
+
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
     if (t == null) p.success(coll)
     else p.failure(t)
   }
+
   def future = p.future
 }
 
 
-class PromiseSingleResultAdapter[R] extends SingleResultCallback[java.util.Collection[R]]{
+class PromiseSingleResultAdapter[R] extends SingleResultCallback[java.util.Collection[R]] {
   val coll = new util.ArrayList[R](1)
   private[this] val p = Promise[Option[R]]
+
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
     if (t == null) p.success(coll.headOption)
     else p.failure(t)
   }
+
   def future = p.future
 }
 
 class UpdateResultCallback extends SingleResultCallback[UpdateResult] with HasFuture[Unit] {
   private[this] val p = Promise[Unit]
+
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
     if (t == null) p.success(())
     else p.failure(t)
   }
+
   def future = p.future
 }
 
-class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] => Unit) extends SingleResultCallback[UpdateResult] with HasFuture[Unit]{
+class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] => Unit) extends SingleResultCallback[UpdateResult] with HasFuture[Unit] {
   private[this] val p = Promise[Unit]
   @volatile private[this] var retried = false
+
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
     if (t == null) p.success(())
-    else if(t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
+    else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
       retried = true
       retry(this)
     } else p.failure(t)
   }
+
   def future = p.future
 }
 
-class SingleDocumentOptCallback[R](f: Document =>R) extends SingleResultCallback[Document] with HasFuture[Option[R]] {
+class SingleDocumentOptCallback[R](f: Document => R) extends SingleResultCallback[Document] with HasFuture[Option[R]] {
   private[this] val p = Promise[Option[R]]
+
   override def onResult(result: Document, t: Throwable): Unit = {
-    if(t == null) {
-      if(result !=null) p.success(Option(f(result)))
+    if (t == null) {
+      if (result != null) p.success(Option(f(result)))
       else p.success(None)
     } else p.failure(t)
   }
+
   def future = p.future
 }
 
 //upsert only
-class SingleDocumentOptCallbackWithRetry[R](f: Document =>R)(retry: SingleDocumentOptCallbackWithRetry[R] => Unit) extends SingleResultCallback[Document] with HasFuture[Option[R]] {
-  private [this] var retried = false
+class SingleDocumentOptCallbackWithRetry[R](f: Document => R)(retry: SingleDocumentOptCallbackWithRetry[R] => Unit) extends SingleResultCallback[Document] with HasFuture[Option[R]] {
+  private[this] var retried = false
   val p = Promise[Option[R]]
+
   override def onResult(result: Document, t: Throwable): Unit = {
-    if(t == null) {
-      if(result !=null) p.success(Option(f(result)))
+    if (t == null) {
+      if (result != null) p.success(Option(f(result)))
       else p.success(None)
-    } else if(t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
+    } else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
       retried = true
       retry(this)
     } else p.failure(t)
   }
+
   def future = p.future
 }
-
 
 
 class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollectionFactory[MB, RB]) {
@@ -156,7 +169,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     //we don't care for skip, limit in count - maybe we deviate from original, but it makes no sense anyways
     val coll = dbCollectionFactory.getDBCollection(query)
     val callback = new PromiseLongCallbackBridge()
-    if(queryClause.lim.isDefined || queryClause.sk.isDefined) {
+    if (queryClause.lim.isDefined || queryClause.sk.isDefined) {
       val options = new CountOptions()
       queryClause.lim.map(options.limit(_))
       queryClause.sk.map(options.skip(_))
@@ -174,7 +187,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     //we don't care for skip, limit in count - maybe we deviate from original, but it makes no sense anyways
     val coll = dbCollectionFactory.getDBCollection(query)
     val callback = new PromiseLongBooleanCallbackBridge()
-    if(queryClause.lim.isDefined || queryClause.sk.isDefined) {
+    if (queryClause.lim.isDefined || queryClause.sk.isDefined) {
       val options = new CountOptions()
       queryClause.lim.map(options.limit(_))
       queryClause.sk.map(options.skip(_))
@@ -232,8 +245,8 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     val ord = queryClause.order.map(buildOrder)
 
     //check if serializer will work - quite possible that no, and separate mapper from Document -> R will be needed
-    val adaptedSerializer = new com.mongodb.Function[Document,R]{
-      override def apply(d: Document):R = serializer.fromDocument(d)
+    val adaptedSerializer = new com.mongodb.Function[Document, R] {
+      override def apply(d: Document): R = serializer.fromDocument(d)
     }
     val pa = new PromiseArrayListAdapter[R]()
     //sort, hints
@@ -253,8 +266,8 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     val sel = queryClause.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
     val ord = queryClause.order.map(buildOrder)
     //check if serializer will work - quite possible that no, and separate mapper from Document -> R will be needed
-    val adaptedSerializer = new com.mongodb.Function[Document,R]{
-      override def apply(d: Document):R = serializer.fromDocument(d)
+    val adaptedSerializer = new com.mongodb.Function[Document, R] {
+      override def apply(d: Document): R = serializer.fromDocument(d)
     }
     val oneP = new PromiseSingleResultAdapter[R]()
     val cursor = coll.find(cnd).projection(sel)
@@ -272,7 +285,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     val cnd = buildCondition(queryClause.condition)
     val coll = dbCollectionFactory.getDBCollection(query)
     val callback = new UnitCallback[Void]
-    coll.find(cnd).forEach(new Block[Document]{
+    coll.find(cnd).forEach(new Block[Document] {
       override def apply(t: Document): Unit = f(t)
     }, callback)
     callback.future
@@ -300,12 +313,12 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
       val m = buildModify(modClause.mod)
       val coll = dbCollectionFactory.getPrimaryDBCollection(modClause.query)
       val updateOptions = new UpdateOptions().upsert(upsert)
-      val updater: (SingleResultCallback[UpdateResult]) => Unit = if(multi) {
-        coll.updateMany(q,m, updateOptions , _)
+      val updater: (SingleResultCallback[UpdateResult]) => Unit = if (multi) {
+        coll.updateMany(q, m, updateOptions, _)
       } else {
-        coll.updateOne(q,m, updateOptions, _)
+        coll.updateOne(q, m, updateOptions, _)
       }
-      val callback = if(upsert) new UpdateResultCallbackWithRetry(updater)
+      val callback = if (upsert) new UpdateResultCallbackWithRetry(updater)
       else new UpdateResultCallback
       updater(callback)
       callback.future
@@ -327,8 +340,8 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
       val ord = query.order.map(buildOrder)
       val m = buildModify(modClause.mod)
       val coll = dbCollectionFactory.getPrimaryDBCollection(query)
-      val retDoc = if(returnNew) ReturnDocument.AFTER else ReturnDocument.BEFORE
-      val updater: (SingleResultCallback[Document]) => Unit = if(remove) {
+      val retDoc = if (returnNew) ReturnDocument.AFTER else ReturnDocument.BEFORE
+      val updater: (SingleResultCallback[Document]) => Unit = if (remove) {
         val opts = new FindOneAndDeleteOptions()
         ord.map(dbo => opts.sort(dbo))
         coll.findOneAndDelete(cnd, opts, _)
@@ -337,7 +350,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
         ord.map(dbo => opts.sort(dbo))
         coll.findOneAndUpdate(cnd, m, opts, _)
       }
-      val callback = if(upsert) new SingleDocumentOptCallbackWithRetry[R](f)(updater)
+      val callback = if (upsert) new SingleDocumentOptCallbackWithRetry[R](f)(updater)
       else new SingleDocumentOptCallback[R](f)
       updater(callback)
       callback.future

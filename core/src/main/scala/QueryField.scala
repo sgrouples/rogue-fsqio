@@ -488,19 +488,6 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Fie
   def setTo(vs: Traversable[V]) =
     new ModifyClause(ModOps.Set,
                      field.name -> QueryHelpers.list(valuesToDB(vs)))
-
-  def setTo(vsOpt: Option[Traversable[V]]) = {
-    vsOpt match {
-      case Some(vs) => {
-        new ModifyClause(ModOps.Set,
-                         field.name -> QueryHelpers.list(valuesToDB(vs)))
-      }
-      case None => {
-        new SafeModifyField(field).unset
-      }
-    }
-  }
-
   def push(v: V) =
     new ModifyClause(ModOps.Push,
                      field.name -> valueToDB(v))
@@ -562,9 +549,9 @@ class ListModifyField[V: BSONType, M](field: Field[List[V], M])
 }
 
 //?manifets ?
-class CaseClassListModifyField[V, M](field: Field[List[V], M])
+class CaseClassListModifyField[V, M](field: Field[List[V], M], asDBObject: V => DBObject)
     extends AbstractListModifyField[V, DBObject, M, List](field) {
-  override def valueToDB(v: V) = ???
+  override def valueToDB(v: V) = asDBObject(v)
     //QueryHelpers.asDBObject(v)
 }
 

@@ -9,7 +9,7 @@ object RogueSettings {
 	
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "2.5.1-MongoAsync-11",
-    organization := "com.foursquare",
+    organization := "io.fsq.rogue",
     scalaVersion := "2.11.8",
     publishMavenStyle := true,
     publishArtifact in Test := false,
@@ -34,7 +34,7 @@ object RogueSettings {
 }
 
 object RogueDependencies {
-  val liftVersion = "2.6.2-MongoAsync"
+  val liftVersion = "2.6.2-MongoAsync-8"
   val specsVer = "3.8.4"
   val liftDeps = Seq(
     "net.liftweb"              %% "lift-mongodb"    % liftVersion  % "compile" intransitive(),
@@ -51,8 +51,8 @@ object RogueDependencies {
   
   
   val joda = Seq(
-    "joda-time"                % "joda-time"           % "2.9.1"        % "provided",
-    "org.joda"                 % "joda-convert"        % "1.8.1"        % "provided"
+    "joda-time"                % "joda-time"           % "2.9.4"        % "compile",
+    "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
   val mongoDeps = Seq(
     "org.mongodb"              % "mongodb-driver"      % "3.2.2"     % "compile",
@@ -68,7 +68,7 @@ object RogueDependencies {
     "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
   )
 
-  val coreDeps = mongoDeps ++ joda ++ liftDeps
+  val coreDeps = mongoDeps ++ joda
   
   val rogueLiftDeps = mongoDeps ++ joda ++ liftDeps ++ liftRecordDeps
 	
