@@ -188,6 +188,13 @@ class ModifyPushEachSliceClause(fieldName: String, slice: Int, values: Traversab
   }
 }
 
+class ModifyPushEachSlicePositionClause(fieldName: String, slice: Int, position: Int, values: Traversable[_])
+  extends ModifyClause(ModOps.Push) {
+  override def extend(q: BasicDBObjectBuilder): Unit = {
+    q.push(fieldName).add("$each", QueryHelpers.list(values)).add("$slice", slice).add("$position", position).pop
+  }
+}
+
 class ModifyBitClause(fieldName: String, value: Int, op: BitOps.Value) extends ModifyClause(ModOps.Bit) {
   override def extend(q: BasicDBObjectBuilder): Unit = {
     q.push(fieldName).add(op.toString, value).pop

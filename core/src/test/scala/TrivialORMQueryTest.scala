@@ -4,10 +4,10 @@ package io.fsq.rogue.test
 
 import com.mongodb.{BasicDBObjectBuilder, DB, DBCollection, DBObject, MongoClient, ServerAddress, WriteConcern}
 import io.fsq.field.OptionalField
-import io.fsq.rogue.{DBCollectionFactory, InitialState, MongoJavaDriverAdapter, Query, QueryExecutor, QueryOptimizer,
-    Rogue, RogueReadSerializer, RogueWriteSerializer}
+import io.fsq.rogue.{DBCollectionFactory, InitialState, MongoJavaDriverAdapter, Query, QueryExecutor, QueryOptimizer, Rogue, RogueReadSerializer, RogueWriteSerializer}
 import io.fsq.rogue.MongoHelpers.{AndCondition, MongoSelect}
 import io.fsq.rogue.index.UntypedMongoIndex
+import org.bson.Document
 import org.junit.{Before, Test}
 import org.specs2.matcher.JUnitMustMatchers
 
@@ -25,6 +25,8 @@ object TrivialORM {
     def collectionName: String
     def fromDBObject(dbo: DBObject): R
     def toDBObject(record: R): DBObject
+    def fromDocument(doc: Document):R
+    def toDocument(record:R):Document
   }
 
   lazy val mongo = {
@@ -84,11 +86,29 @@ object TrivialORM {
         case None =>
           meta.fromDBObject(dbo).asInstanceOf[R]
       }
+
+      override def fromDocument(doc: Document): R = select match {
+        case Some(MongoSelect(Nil, transformer)) =>
+          // A MongoSelect clause exists, but has empty fields. Return null.
+          // This is used for .exists(), where we just want to check the number
+          // of returned results is > 0.
+          transformer(null)
+
+        case Some(MongoSelect(fields, transformer)) =>
+          transformer(fields.map(f => f.valueOrDefault(Option(doc.get(f.field.name)))))
+
+        case None =>
+          meta.fromDocument(doc).asInstanceOf[R]
+      }
     }
     override protected def writeSerializer(record: Record): RogueWriteSerializer[Record] = new RogueWriteSerializer[Record] {
       override def toDBObject(record: Record): DBObject = {
         val meta = record.meta
         record.meta.toDBObject(record)
+      }
+      override def toDocument(r:Record): Document = {
+        val meta = record.meta
+        record.meta.toDocument(r)
       }
     }
   }

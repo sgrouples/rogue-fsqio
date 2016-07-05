@@ -268,6 +268,12 @@ class StringQueryField[F <: String, M](override val field: Field[F, M])
   override def valueToDB(v: F): F = v
 }
 
+class CaseClassQueryField[V, M](val field: Field[V, M]) {
+  def unsafeField[F](name: String): SelectableDummyField[F, M] = {
+    new SelectableDummyField[F, M](field.name + "." + name, field.owner)
+  }
+}
+
 class BsonRecordQueryField[M, B](field: Field[B, M], asDBObject: B => DBObject, defaultValue: B)
     extends AbstractQueryField[B, B, DBObject, M](field) {
   override def valueToDB(b: B) = asDBObject(b)
@@ -349,6 +355,30 @@ class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObjec
       clauseFuncs.map(cf => cf(rec))
     )
   }
+}
+
+class CaseClassListQueryField[M, B](field: Field[List[B], M],  asDBObject: B => DBObject)
+  extends AbstractListQueryField[B, B, DBObject, M, List](field) {
+  override def valueToDB(b: B) = asDBObject(b)
+
+  /*def subfield[V, V1](f: B => Field[V, B])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], M] = {
+    new SelectableDummyField[List[V1], M](field.name + "." + f(rec).name, field.owner)
+  }
+
+  def subselect[V, V1](f: B => Field[V, B])(implicit ev: Rogue.Flattened[V, V1]): SelectField[Option[List[V1]], M] = {
+    Rogue.roptionalFieldToSelectField(subfield(f))
+  }
+
+  def unsafeField[V](name: String): DummyField[V, M] = {
+    new DummyField[V, M](field.name + "." + name, field.owner)
+  }
+
+  def elemMatch[V](clauseFuncs: (B => QueryClause[_])*) = {
+    new ElemMatchWithPredicateClause(
+      field.name,
+      clauseFuncs.map(cf => cf(rec))
+    )
+  }*/
 }
 
 class MapQueryField[V, M](val field: Field[Map[String, V], M]) {
@@ -459,6 +489,18 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Fie
     new ModifyClause(ModOps.Set,
                      field.name -> QueryHelpers.list(valuesToDB(vs)))
 
+  def setTo(vsOpt: Option[Traversable[V]]) = {
+    vsOpt match {
+      case Some(vs) => {
+        new ModifyClause(ModOps.Set,
+                         field.name -> QueryHelpers.list(valuesToDB(vs)))
+      }
+      case None => {
+        new SafeModifyField(field).unset
+      }
+    }
+  }
+
   def push(v: V) =
     new ModifyClause(ModOps.Push,
                      field.name -> valueToDB(v))
@@ -468,6 +510,10 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Fie
 
   def push(vs: Traversable[V], slice: Int) =
     new ModifyPushEachSliceClause(field.name, slice, valuesToDB(vs))
+
+  def push(vs: Traversable[V], slice: Int, position: Int) =
+    new ModifyPushEachSlicePositionClause(field.name, slice, position, valuesToDB(vs))
+
 
   def pushAll(vs: Traversable[V]) =
     new ModifyClause(ModOps.PushAll,
@@ -513,6 +559,13 @@ class SeqModifyField[V: BSONType, M](field: Field[Seq[V], M])
 class ListModifyField[V: BSONType, M](field: Field[List[V], M])
     extends AbstractListModifyField[V, AnyRef, M, List](field) {
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
+}
+
+//?manifets ?
+class CaseClassListModifyField[V, M](field: Field[List[V], M])
+    extends AbstractListModifyField[V, DBObject, M, List](field) {
+  override def valueToDB(v: V) = ???
+    //QueryHelpers.asDBObject(v)
 }
 
 class EnumerationListModifyField[V <: Enumeration#Value, M](field: Field[List[V], M])

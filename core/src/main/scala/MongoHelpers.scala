@@ -2,7 +2,7 @@
 
 package io.fsq.rogue
 
-import com.mongodb.{BasicDBObjectBuilder, DBObject}
+import com.mongodb.{BasicDBObjectBuilder, DBObject, BasicDBObject}
 import java.util.regex.Pattern
 import scala.collection.immutable.ListMap
 
@@ -20,13 +20,13 @@ object MongoHelpers extends Rogue {
   sealed case class MongoSelect[M, R](fields: List[SelectField[_, M]], transformer: List[Any] => R)
 
   object MongoBuilder {
-    def buildCondition(cond: AndCondition, signature: Boolean = false): DBObject = {
+    def buildCondition(cond: AndCondition, signature: Boolean = false): BasicDBObject = {
       buildCondition(cond, BasicDBObjectBuilder.start, signature)
     }
 
     def buildCondition(cond: AndCondition,
                        builder: BasicDBObjectBuilder,
-                       signature: Boolean): DBObject = {
+                       signature: Boolean): BasicDBObject = {
       val (rawClauses, safeClauses) = cond.clauses.partition(_.isInstanceOf[RawQueryClause])
 
       // Normal clauses
@@ -64,26 +64,26 @@ object MongoHelpers extends Rogue {
             .filterNot(_.keySet.isEmpty)
         builder.add("$or", QueryHelpers.list(subclauses))
       })
-      builder.get
+      builder.get.asInstanceOf[BasicDBObject]
     }
 
-    def buildOrder(o: MongoOrder): DBObject = {
+    def buildOrder(o: MongoOrder): BasicDBObject = {
       val builder = BasicDBObjectBuilder.start
       o.terms.reverse.foreach { case (field, ascending) => builder.add(field, if (ascending) 1 else -1) }
-      builder.get
+      builder.get.asInstanceOf[BasicDBObject]
     }
 
-    def buildModify(m: MongoModify): DBObject = {
+    def buildModify(m: MongoModify): BasicDBObject = {
       val builder = BasicDBObjectBuilder.start
       m.clauses.groupBy(_.operator).foreach{ case (op, cs) => {
         builder.push(op.toString)
         cs.foreach(_.extend(builder))
         builder.pop
       }}
-      builder.get
+      builder.get().asInstanceOf[BasicDBObject]
     }
 
-    def buildSelect[M, R](select: MongoSelect[M, R]): DBObject = {
+    def buildSelect[M, R](select: MongoSelect[M, R]): BasicDBObject = {
       val builder = BasicDBObjectBuilder.start
       // If select.fields is empty, then a MongoSelect clause exists, but has an empty
       // list of fields. In this case (used for .exists()), we select just the
@@ -99,7 +99,7 @@ object MongoHelpers extends Rogue {
           }
         })
       }
-      builder.get
+      builder.get.asInstanceOf[BasicDBObject]
     }
 
     def buildHint(h: ListMap[String, Any]): DBObject = {
