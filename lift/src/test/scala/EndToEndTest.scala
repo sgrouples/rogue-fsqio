@@ -3,11 +3,12 @@
 package io.fsq.rogue.lift.test
 
 import com.mongodb.ReadPreference
-import io.fsq.rogue.{Iter, LatLong}
+import io.fsq.rogue._
 import io.fsq.rogue.Iter._
 import io.fsq.rogue.lift.LiftRogue._
 import java.util.Calendar
 import java.util.regex.Pattern
+
 import org.bson.types.ObjectId
 import org.junit.{After, Before, Ignore, Test}
 import org.specs2.matcher.JUnitMustMatchers
@@ -145,6 +146,7 @@ class EndToEndTest extends JUnitMustMatchers {
     val t = baseTestTip().save(true)
 
     // select subfields
+    val x = Tip.counts at "foo"
     Tip.where(_._id eqs t.id).select(_.counts at "foo").fetch() must_== List(Some(1L))
 
     Venue.where(_._id eqs v.id).select(_.geolatlng.unsafeField[Double]("lat")).fetch() must_== List(Some(40.73))

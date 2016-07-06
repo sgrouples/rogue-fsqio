@@ -8,8 +8,8 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 	
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "2.5.1-MongoAsync-11",
-    organization := "io.fsq.rogue",
+    version := "2.5.1-MongoAsync-11-SNAPSHOT",
+    organization := "io.fsq",
     scalaVersion := "2.11.8",
     publishMavenStyle := true,
     publishArtifact in Test := false,
@@ -29,7 +29,8 @@ object RogueSettings {
             case _ => Seq()
         }
     },
-    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials")
+    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials"),
+    testOptions in Test ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=>MongoEmbedded.stop))
 	)
 }
 

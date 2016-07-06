@@ -30,6 +30,9 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
   def countDistinct[V](field: M => Field[V, _]): Long =
     db.countDistinct(query)(field.asInstanceOf[M => Field[V, M]])
 
+  def countDistinctAsync[V](field: M => Field[V, _])(implicit ct: ClassTag[V]): Future[Long] =
+    dba.countDistinct(query, ct)(field.asInstanceOf[M => Field[V, M]])
+
   /**
    * Returns a list of distinct values returned by a query. The query must not have
    * limit or skip clauses.

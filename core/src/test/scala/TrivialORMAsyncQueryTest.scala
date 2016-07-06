@@ -16,12 +16,17 @@ import scala.concurrent.duration._
 
 object TrivialAsyncORMTests {
 
-  val mongoAsync: async.client.MongoClient = {
+  def connectToMongo = {
     val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
       val arr = str.split(':')
       (arr(0), arr(1).toInt)
-    }).getOrElse(("localhost", 27017))
+    }).getOrElse(("localhost", 51101))
     MongoClients.create(s"mongodb://${host}:${port}")
+
+  }
+
+  lazy val mongoAsync: async.client.MongoClient = {
+    connectToMongo
   }
 
   def disconnectFromMongo = {
@@ -55,7 +60,7 @@ object TrivialAsyncORMTests {
   }
 
   class MyQueryExecutor extends AsyncQueryExecutor[Meta[_], Record] {
-    override val adapter = new MongoAsyncJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongoAsync.getDatabase("test")))
+    override val adapter = new MongoAsyncJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongoAsync.getDatabase("testAsync")))
     override val optimizer = new QueryOptimizer
     override val defaultWriteConcern: WriteConcern = WriteConcern.ACKNOWLEDGED
 
@@ -135,35 +140,35 @@ class TrivialAsyncORMQueryTest extends JUnitMustMatchers {
 
   @Before
   def cleanUpMongo = {
-    Await.ready(executor.bulkDelete_!!(SimpleARecord), oneS)
+    Await.ready(executor.bulkDelete_!!(SimpleRecord), oneS)
     ()
   }
 
   @Test
   def canBuildQuery: Unit = {
-    (SimpleARecord: Query[SimpleARecord.type, SimpleARecord, InitialState]).toString() must_== """db.simplea_records.find({ })"""
-    SimpleARecord.where(_.a eqs 1).toString() must_== """db.simplea_records.find({ "a" : 1})"""
+    (SimpleRecord: Query[SimpleRecord.type, SimpleRecord, InitialState]).toString() must_== """db.simple_records.find({ })"""
+    SimpleRecord.where(_.a eqs 1).toString() must_== """db.simple_records.find({ "a" : 1})"""
   }
 
   @Test
   def canExecuteQuery: Unit = {
-    Await.result(executor.fetch(SimpleARecord.where(_.a eqs 1)), oneS) must_== Nil
-    Await.result(executor.count(SimpleARecord), oneS) must_== 0
-    Await.result(executor.exists(SimpleARecord), oneS) must_== false
+    Await.result(executor.fetch(SimpleRecord.where(_.a eqs 1)), oneS) must_== Nil
+    Await.result(executor.count(SimpleRecord), oneS) must_== 0
+    Await.result(executor.exists(SimpleRecord), oneS) must_== false
   }
 
   @Test
   def canUpsertAndGetResults: Unit = {
-    Await.result(executor.count(SimpleARecord), oneS) must_== 0
+    Await.result(executor.count(SimpleRecord), oneS) must_== 0
 
     val x = for {
-      _ <- executor.upsertOne(SimpleARecord.modify(_.a setTo 1).and(_.b setTo "foo"))
-      cnt <- executor.count(SimpleARecord)
-      results <- executor.fetch(SimpleARecord.where(_.a eqs 1))
-      e1 <- executor.exists(SimpleARecord.where(_.a eqs 1).select(_.a))
-      r1 <- executor.fetch(SimpleARecord.where(_.a eqs 1).select(_.a))
-      r2 <- executor.fetch(SimpleARecord.where(_.a eqs 1).select(_.b))
-      r3 <- executor.fetch(SimpleARecord.where(_.a eqs 1).select(_.a, _.b))
+      _ <- executor.upsertOne(SimpleRecord.modify(_.a setTo 1).and(_.b setTo "foo"))
+      cnt <- executor.count(SimpleRecord)
+      results <- executor.fetch(SimpleRecord.where(_.a eqs 1))
+      e1 <- executor.exists(SimpleRecord.where(_.a eqs 1).select(_.a))
+      r1 <- executor.fetch(SimpleRecord.where(_.a eqs 1).select(_.a))
+      r2 <- executor.fetch(SimpleRecord.where(_.a eqs 1).select(_.b))
+      r3 <- executor.fetch(SimpleRecord.where(_.a eqs 1).select(_.a, _.b))
     } yield {
       e1 must_== true
       cnt must_== 1

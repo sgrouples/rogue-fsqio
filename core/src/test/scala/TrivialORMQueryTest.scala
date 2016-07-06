@@ -14,12 +14,16 @@ import org.specs2.matcher.JUnitMustMatchers
 
 object TrivialSyncORM extends {
 
-  lazy val mongo = {
+  def connectToMongo = {
     val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
       val arr = str.split(':')
       (arr(0), arr(1).toInt)
-    }).getOrElse(("localhost", 27017))
+    }).getOrElse(("localhost", 51101))
     new MongoClient(new ServerAddress(host, port))
+  }
+
+  lazy val mongo = {
+    connectToMongo
   }
 
   type MB = Meta[_]
@@ -52,7 +56,7 @@ object TrivialSyncORM extends {
 
 
   class MyQueryExecutor extends QueryExecutor[Meta[_], Record] {
-    override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongo.getDB("test")))
+    override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongo.getDB("testSync")))
     override val optimizer = new QueryOptimizer
     override val defaultWriteConcern: WriteConcern = WriteConcern.SAFE
 
