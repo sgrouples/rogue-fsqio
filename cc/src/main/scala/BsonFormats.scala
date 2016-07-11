@@ -1,17 +1,21 @@
 package me.sgrouples.rogue
 
+import java.time.{Instant, LocalDateTime, ZoneOffset}
+
 import shapeless._
 import labelled.{FieldType, field}
 import org.bson._
 import org.bson.types.ObjectId
 
 import scala.annotation.implicitNotFound
+import scala.collection.mutable.ArrayBuffer
 import scala.language.implicitConversions
 import scala.language.higherKinds
+import scala.reflect.ClassTag
 
 @implicitNotFound("implicit BsonFormat not found for ${T}")
 trait BsonFormat[T] {
- // def read(b: BsonValue): T
+ def read(b: BsonValue): T
   def write(t:T): BsonValue
 }
 
@@ -20,35 +24,117 @@ trait BsonFormat[T] {
   */
 trait BaseBsonFormats{
 
-  private[rogue] type JF[T] = BsonFormat[T] // simple alias for reduced verbosity
-
   implicit object IntBsonFormat extends BsonFormat[Int] {
-    //override def read(b: BsonValue): Int = b.asNumber().intValue()
+    override def read(b: BsonValue): Int = b.asNumber().intValue()
     override def write(t: Int): BsonValue = new BsonInt32(t)
   }
 
   implicit object LongBsonFormat extends BsonFormat[Long] {
-    //override def read(b: BsonValue): Long = b.asNumber().longValue()
+    override def read(b: BsonValue): Long = b.asNumber().longValue()
     override def write(t: Long): BsonValue = new BsonInt64(t)
   }
 
   implicit object StringBsonFormat extends BsonFormat[String] {
-    //override def read(b: BsonValue): String = b.asString().getValue()
+    override def read(b: BsonValue): String = b.asString().getValue()
     override def write(t: String): BsonValue = new BsonString(t)
   }
 
   implicit object ObjectIdBsonFormat extends BsonFormat[ObjectId] {
-    //override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
+    override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
     override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
+  }
+
+  implicit object LocalDateTimeBsonFormat extends BsonFormat[LocalDateTime] {
+    override def read(b: BsonValue): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
+    override def write(t: LocalDateTime): BsonValue = new BsonDateTime(t.toInstant(ZoneOffset.UTC).toEpochMilli)
   }
 
 }
 
-object BsonFormats extends BaseBsonFormats with BsonFormats
+trait BsonCollectionFormats {
+  import scala.collection.JavaConversions._
+
+  private[rogue] type BF[T] = BsonFormat[T]
+
+  implicit def listFormat[T :BsonFormat] = new BsonFormat[List[T]] {
+    implicit val f = implicitly[BsonFormat[T]]
+    def write(list: List[T]) = {
+      new BsonArray(list.map(f.write(_)))
+    }
+    def read(value: BsonValue): List[T] = {
+      value.asArray().map(f.read(_)).toList
+    }
+  }
+
+  implicit def arrayFormat[T :BsonFormat : ClassTag] = new BsonFormat[Array[T]] {
+    implicit val f = implicitly[BsonFormat[T]]
+    def write(array: Array[T]) = {
+      val buff = new ArrayBuffer[BsonValue](array.length)
+      array.foreach( e => buff += f.write(e) )
+      new BsonArray(buff)
+    }
+    def read(value: BsonValue) = {
+      value.asArray().map(f.read(_)).toArray
+    }
+  }
+
+  implicit def optionFormat[T :BF]: BF[Option[T]] = new OptionFormat[T]
+
+  class OptionFormat[T : BsonFormat] extends BF[Option[T]] {
+    implicit val f = implicitly[BsonFormat[T]]
+    def write(option: Option[T]) = {
+      option match {
+        case Some(x) => f.write(x)
+        case None => BsonNull.VALUE
+      }
+    }
+    def read(value: BsonValue) = if(value.isNull) None
+    else Option(f.read(value))
+  }
+
+  implicit def mapFormat[K :BsonFormat, V :BsonFormat] = new BsonFormat[Map[K, V]] {
+    implicit val fk = implicitly[BsonFormat[K]]
+    implicit val fv = implicitly[BsonFormat[V]]
+    def write(m: Map[K, V]) = {
+      val doc = new BsonDocument()
+      m.foreach{ case (k, v) =>
+        val kv = fk.write(k)
+        val vv = fv.write(v)
+        if(kv.isString && !vv.isNull) doc.append(kv.asString().getValue, vv)
+      }
+      doc
+    }
+    def read(value: BsonValue) = {
+      value.asDocument().map{ case(ks,v) =>
+        (fk.read(new BsonString(ks)), fv.read(v))
+      }(collection.breakOut)
+    }
+  }
+
+  //TODO - other collections - see SprayJson viaSeq
+  /*
+
+  import collection.{immutable => imm}
+  def viaSeq[I <: Iterable[T], T :BsonFormat](f: imm.Seq[T] => I): BsonFormat[I] = new BsonFormat[I] {
+    def write(iterable: I) = new BsonArray(iterable.map(_.toJson).toVector)
+    def read(value: BsonValue) = if(value.isArray) {
+      value.asArray().getValues
+    } else {
+
+      case JsArray(elements) => f(elements.map(_.convertTo[T]))
+      case x => deserializationError("Expected Collection as JsArray, but got " + x)
+    }
+  }*/
+}
+
+trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats
+
+
+object BsonFormats extends StandardBsonFormats with BsonFormats
 
 
 trait BsonFormats extends LowPrioBsonFormats {
-  this: BaseBsonFormats =>
+  this: StandardBsonFormats =>
 }
 /*
 trait FamilyFormats extends LowPriorityFamilyFormats {
@@ -66,10 +152,12 @@ trait LowPrioBsonFormats {
 
   abstract class WrappedBsonFromat[Wrapped, SubRepr](implicit tpe :Typeable[Wrapped]) {
     def write(v: SubRepr): BsonValue
+    def read(b: BsonValue): SubRepr
   }
 
   implicit def hHilBsonFormat[Wrapped](implicit tpe: Typeable[Wrapped]): WrappedBsonFromat[Wrapped, HNil] = new WrappedBsonFromat[Wrapped, HNil]{
     override def write(t: HNil): BsonValue = BsonNull.VALUE
+    override def read(b: BsonValue) = HNil
   }
 
 
@@ -81,7 +169,7 @@ trait LowPrioBsonFormats {
                                                                                remFormat: WrappedBsonFromat[Wrapped, Remaining]
                                                                              ): WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] =
    new WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] {
-     println(s"Creating format ${t.describe}")
+     private[this] val fieldName  = key.value.name
      override def write(ft: FieldType[Key, Value] :: Remaining): BsonValue = {
        val rest = remFormat.write(ft.tail)
        val serializedVal = headSer.value.write(ft.head)
@@ -96,9 +184,25 @@ trait LowPrioBsonFormats {
          rest
        }
      }
+
+     override def read(b: BsonValue): FieldType[Key, Value] :: Remaining = {
+       val f = headSer.value
+       val resolved: Value = {
+         val v = b.asDocument().get(fieldName)
+         if(v == null && v.isNull) {
+           f.read(BsonNull.VALUE)
+         } else {
+           f.read(v)
+         }
+       }
+       val remaining = remFormat.read(b)
+       field[Key](resolved) :: remaining
+
+     }
    }
 
-  implicit def cNilFormat[Wrapped](
+ /* For future support of coproducts
+ implicit def cNilFormat[Wrapped](
                                     implicit
                                     t: Typeable[Wrapped]
                                   ): WrappedBsonFromat[Wrapped, CNil] = new WrappedBsonFromat[Wrapped, CNil] {
@@ -129,23 +233,20 @@ trait LowPrioBsonFormats {
           jft.write(r)
       }
     }
-
+  */
 
 
   implicit def bsonEncoder[T, Repr](implicit gen: LabelledGeneric.Aux[T, Repr],
                            sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
                            tpe: Typeable[T]
                           ) : BsonFormat[T] = new BsonFormat[T] {
-    println(s"Creating ${tpe.describe}")
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
-    /*override def read(b: BsonValue): T = {
-      throw new RuntimeException("Not implemented reading yet")
-    }*/
+    override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
   }
 
 }
 
-object BsonEncoder {
+object BsonFormat {
   def apply[T](implicit f: Lazy[BsonFormat[T]]): BsonFormat[T] = f.value
 
 }
