@@ -48,7 +48,7 @@ object RogueDependencies {
   "net.liftweb"              %% "lift-record"         % liftVersion  % "compile" intransitive(),
   "net.liftweb"              %% "lift-mongodb-record" % liftVersion  % "compile" intransitive(),
   "net.liftweb"              %% "lift-webkit"         % liftVersion  % "compile" intransitive()
-)
+  )
   
   
   val joda = Seq(
@@ -69,8 +69,12 @@ object RogueDependencies {
     "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
   )
 
+  val shapeless = "com.chuusai" %% "shapeless" % "2.3.1"
+
   val coreDeps = mongoDeps ++ joda
   
   val rogueLiftDeps = mongoDeps ++ joda ++ liftDeps ++ liftRecordDeps
+
+  val ccDeps = mongoDeps ++ Seq(shapeless) ++ testDeps
 	
 }
