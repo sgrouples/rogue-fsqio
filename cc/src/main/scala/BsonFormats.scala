@@ -1,6 +1,9 @@
 package me.sgrouples.rogue
 
+import java.nio.{ByteBuffer, ByteOrder}
 import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.util
+import java.util.UUID
 
 import shapeless._
 import labelled.{FieldType, field}
@@ -24,6 +27,11 @@ trait BsonFormat[T] {
   */
 trait BaseBsonFormats{
 
+  implicit object BooleanBsonFormat extends BsonFormat[Boolean] {
+    override def read(b: BsonValue): Boolean = b.asBoolean().getValue()
+    override def write(t: Boolean): BsonValue = new BsonBoolean(t)
+  }
+
   implicit object IntBsonFormat extends BsonFormat[Int] {
     override def read(b: BsonValue): Int = b.asNumber().intValue()
     override def write(t: Int): BsonValue = new BsonInt32(t)
@@ -43,6 +51,48 @@ trait BaseBsonFormats{
     override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
     override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
   }
+
+  implicit object DoubleBsonFormat extends BsonFormat[Double] {
+    override def read(b: BsonValue): Double = b.asDouble().doubleValue()
+    override def write(t: Double): BsonValue = new BsonDouble(t)
+  }
+
+  /**
+    * care must be taken - because of different UUID formats.
+    * by default codec can read any type, but for write - decision must be made
+    * either format 3 - JAVA_LEGACY or format 4 - UUID_STANDARD
+    * recommendation is to use UUID_STANDARD, but java driver uses JAVA_LEGACY by default
+    * @see [https://jira.mongodb.org/browse/JAVA-403] for explanation
+    * @see [[org.bson.codecs.UuidCodec]]
+    * this implementation does not support C_SHARP_LEGACY codec at all
+    */
+  implicit object UUIDBsonFormat extends BsonFormat[UUID] {
+    override def read(bv: BsonValue): UUID = {
+      val b = bv.asBinary()
+      val bytes = b.getData()
+      val bb = ByteBuffer.wrap(b.getData)
+      b.getType match {
+        case BsonBinarySubType.UUID_LEGACY.getValue =>
+          bb.order(ByteOrder.LITTLE_ENDIAN)
+        case _ =>
+          bb.order(ByteOrder.BIG_ENDIAN)
+      }
+      new UUID(bb.getLong(0), bb.getLong(8))
+    }
+
+    override def write(t: UUID): BsonValue = {
+      val bytes = ByteBuffer.allocate(16)
+      //for UUID_STANDARD it should be:
+      //bytes.order(ByteOrder.BIG_ENDIAN)
+      //
+      bytes.order(ByteOrder.LITTLE_ENDIAN)
+      bytes.putLong(0, t.getMostSignificantBits)
+      bytes.putLong(8, t.getLeastSignificantBits)
+
+      new BsonBinary(BsonBinarySubType.UUID_LEGACY, bytes.array())
+    }
+  }
+
 
   implicit object LocalDateTimeBsonFormat extends BsonFormat[LocalDateTime] {
     override def read(b: BsonValue): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
@@ -125,6 +175,7 @@ trait BsonCollectionFormats {
       case x => deserializationError("Expected Collection as JsArray, but got " + x)
     }
   }*/
+
 }
 
 trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats
