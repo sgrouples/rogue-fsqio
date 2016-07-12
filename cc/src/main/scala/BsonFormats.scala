@@ -18,7 +18,7 @@ import scala.reflect.ClassTag
 
 @implicitNotFound("implicit BsonFormat not found for ${T}")
 trait BsonFormat[T] {
- def read(b: BsonValue): T
+  def read(b: BsonValue): T
   def write(t:T): BsonValue
 }
 
@@ -71,12 +71,10 @@ trait BaseBsonFormats{
       val b = bv.asBinary()
       val bytes = b.getData()
       val bb = ByteBuffer.wrap(b.getData)
-      b.getType match {
-        case BsonBinarySubType.UUID_LEGACY.getValue =>
+      if(b.getType == BsonBinarySubType.UUID_LEGACY.getValue)
           bb.order(ByteOrder.LITTLE_ENDIAN)
-        case _ =>
+      else
           bb.order(ByteOrder.BIG_ENDIAN)
-      }
       new UUID(bb.getLong(0), bb.getLong(8))
     }
 
