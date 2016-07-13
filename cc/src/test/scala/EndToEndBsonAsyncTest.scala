@@ -3,11 +3,13 @@ import java.time.LocalDateTime
 import java.util.regex.Pattern
 
 import com.mongodb.ReadPreference
+import com.mongodb.async.client.MongoClients
 import io.fsq.rogue._
+import io.fsq.rogue.test.TrivialAsyncORMTests
 import org.bson.types.ObjectId
 import org.junit.{After, Before, Ignore, Test}
 import org.specs2.matcher.JUnitMustMatchers
-
+import CcRogue._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Awaitable}
 
@@ -43,11 +45,19 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     Tip(new ObjectId(), legid = 234L, counts = Map("foo" -> 1L, "bar" -> 2L))
   }
 
-  val VenueR = ???
+  object VenueR extends RCcMeta[Venue] {
 
-  @Before
+  }
+
+  object VenueClaimR extends RCcMeta[VenueClaim] {
+
+  }
+
+
+    @Before
   def setupMongoConnection: Unit = {
-//    RogueTestMongo.connectToMongoAsync
+    val m = TrivialAsyncORMTests.mongoAsync
+    CcMongo.defineDb("default", m, "rogue-test-async")
   }
 
   @After
@@ -59,52 +69,53 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     blk(VenueClaim.bulkDeleteAsync_!!!())
     blk(VenueClaim.countAsync()) must_== 0
 
-    blk(Like.allShards.bulkDeleteAsync_!!!())
+    //blk(Like.allShards.bulkDeleteAsync_!!!())
 
-    RogueTestMongo.disconnectFromMongoAsync
+    TrivialAsyncORMTests.disconnectFromMongo
   }
 
   @Test
   def eqsTests: Unit = {
     val v = baseTestVenue()
-    blk(v.insertAsync())
-    val vc = baseTestVenueClaim(v.id)
-    blk(vc.insertAsync())
+    blk(VenueR.insertOneAsync(v))
+    val vc = baseTestVenueClaim(v._id)
+    blk(VenueClaimR.insertOneAsync(vc))
 
     // eqs
-    blk(metaRecordToQueryBuilder(Venue).where(_._id eqs v.id).fetchAsync()).map(_.id) must_== Seq(v.id)
-    blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v.id)
-    blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v.id)
-    blk(VenueR.where(_.venuename eqs v.venuename).fetchAsync()).map(_.id) must_== List(v.id)
-    blk(VenueR.where(_.closed eqs false).fetchAsync()).map(_.id) must_== List(v.id)
+    blk(ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync()).map(_.id) must_== Seq(v._id)
+    blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
+    blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
+    blk(VenueR.where(_.venuename eqs v.venuename).fetchAsync()).map(_.id) must_== List(v._id)
+    blk(VenueR.where(_.closed eqs false).fetchAsync()).map(_.id) must_== List(v._id)
 
     blk(VenueR.where(_.mayor eqs 432432).fetchAsync()).map(_.id) must_== Nil
     blk(VenueR.where(_.closed eqs true).fetchAsync()).map(_.id) must_== Nil
 
     blk(VenueClaim.where(_.status eqs ClaimStatus.approved).fetchAsync()).map(_.id) must_== List(vc.id)
-    blk(VenueClaim.where(_.venueid eqs v.id).fetchAsync()).map(_.id) must_== List(vc.id)
+    blk(VenueClaim.where(_.venueid eqs v._id).fetchAsync()).map(_.id) must_== List(vc.id)
     blk(VenueClaim.where(_.venueid eqs v).fetchAsync()).map(_.id) must_== List(vc.id)
   }
 
+  /*
   @Test
   def testInequalityQueries: Unit = {
     val v = baseTestVenue()
     blk(v.insertAsync())
-    val vc = baseTestVenueClaim(v.id)
+    val vc = baseTestVenueClaim(v._id)
     blk(vc.insertAsync())
 
     // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
     // VenueClaim has status approved.
-    blk(VenueR.where(_.mayor_count neqs 5).fetchAsync()).map(_.id) must_== List(v.id)
-    blk(VenueR.where(_.mayor_count < 5).fetchAsync()).map(_.id) must_== List(v.id)
-    blk(VenueR.where(_.mayor_count lt 5).fetchAsync()).map(_.id) must_== List(v.id)
-    blk(VenueR.where(_.mayor_count <= 5).fetchAsync()).map(_.id) must_== List(v.id)
-    blk(VenueR.where(_.mayor_count lte 5).fetchAsync()).map(_.id) must_== List(v.id)
+    blk(VenueR.where(_.mayor_count neqs 5).fetchAsync()).map(_.id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count < 5).fetchAsync()).map(_.id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count lt 5).fetchAsync()).map(_.id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count <= 5).fetchAsync()).map(_.id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count lte 5).fetchAsync()).map(_.id) must_== List(v._id)
     blk(VenueR.where(_.mayor_count > 5).fetchAsync()).map(_.id) must_== Nil
     blk(VenueR.where(_.mayor_count gt 5).fetchAsync()).map(_.id) must_== Nil
     blk(VenueR.where(_.mayor_count >= 5).fetchAsync()).map(_.id) must_== Nil
     blk(VenueR.where(_.mayor_count gte 5).fetchAsync()).map(_.id) must_== Nil
-    blk(VenueR.where(_.mayor_count between(3, 5)).fetchAsync()).map(_.id) must_== List(v.id)
+    blk(VenueR.where(_.mayor_count between(3, 5)).fetchAsync()).map(_.id) must_== List(v._id)
     blk(VenueClaim.where(_.status neqs ClaimStatus.approved).fetchAsync()).map(_.id) must_== Nil
     blk(VenueClaim.where(_.status neqs ClaimStatus.pending).fetchAsync()).map(_.id) must_== List(vc.id)
   }
@@ -114,7 +125,7 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     val v = baseTestVenue()
     blk(v.insertAsync())
 
-    val base = VenueR.where(_._id eqs v.id)
+    val base = VenueR.where(_._id eqs v._id)
     blk(base.select(_.legacyid).fetchAsync()) must_== List(v.legacyid.value)
     blk(base.select(_.legacyid, _.userid).fetchAsync()) must_== List((v.legacyid.value, v.userid.value))
     blk(base.select(_.legacyid, _.userid, _.mayor).fetchAsync()) must_== List((v.legacyid.value, v.userid.value, v.mayor.value))
@@ -127,7 +138,7 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
   def selectEnum: Unit = {
     val v = baseTestVenue()
     blk(v.insertAsync())
-    blk(VenueR.where(_._id eqs v.id).select(_.status).fetchAsync()) must_== List(VenueStatus.open)
+    blk(VenueR.where(_._id eqs v._id).select(_.status).fetchAsync()) must_== List(VenueStatus.open)
   }
 
   @Test
@@ -135,7 +146,7 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     val v = baseTestVenue()
     blk(v.insertAsync())
 
-    val base = VenueR.where(_._id eqs v.id)
+    val base = VenueR.where(_._id eqs v._id)
     blk(base.selectCase(_.legacyid, V1).fetchAsync()) must_== List(V1(v.legacyid.value))
     blk(base.selectCase(_.legacyid, _.userid, V2).fetchAsync()) must_== List(V2(v.legacyid.value, v.userid.value))
     blk(base.selectCase(_.legacyid, _.userid, _.mayor, V3).fetchAsync()) must_== List(V3(v.legacyid.value, v.userid.value, v.mayor.value))
@@ -153,9 +164,9 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
 
     // select subfields
     blk(Tip.where(_._id eqs t.id).select(_.counts at "foo").fetchAsync()) must_== Seq(Some(1L))
-    blk(VenueR.where(_._id eqs v.id).select(_.geolatlng.unsafeField[Double]("lat")).fetchAsync()) must_== List(Some(40.73))
+    blk(VenueR.where(_._id eqs v._id).select(_.geolatlng.unsafeField[Double]("lat")).fetchAsync()) must_== List(Some(40.73))
 
-    val subuserids: Seq[Option[List[Long]]] = blk(VenueR.where(_._id eqs v.id).select(_.claims.subselect(_.userid)).fetchAsync())
+    val subuserids: Seq[Option[List[Long]]] = blk(VenueR.where(_._id eqs v._id).select(_.claims.subselect(_.userid)).fetchAsync())
     subuserids must_== List(Some(List(1234, 5678)))
 
     val q = VenueR.where(_.claims.subfield(_.userid) eqs 1234).select(_.claims.$$)
@@ -168,9 +179,9 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     // selecting a claims.userid when there is no top-level claims list should
     // have one element in the List for the one Venue, but an Empty for that
     // Venue since there's no list of claims there.
-    blk(VenueR.where(_._id eqs v.id).modify(_.claims unset).and(_.lastClaim unset).updateOneAsync())
-    blk(VenueR.where(_._id eqs v.id).select(_.lastClaim.subselect(_.userid)).fetchAsync()) must_== List(None)
-    blk(VenueR.where(_._id eqs v.id).select(_.claims.subselect(_.userid)).fetchAsync()) must_== List(None)
+    blk(VenueR.where(_._id eqs v._id).modify(_.claims unset).and(_.lastClaim unset).updateOneAsync())
+    blk(VenueR.where(_._id eqs v._id).select(_.lastClaim.subselect(_.userid)).fetchAsync()) must_== List(None)
+    blk(VenueR.where(_._id eqs v._id).select(_.claims.subselect(_.userid)).fetchAsync()) must_== List(None)
   }
 
   @Ignore("These tests are broken because DummyField doesn't know how to convert a String to an Enum")
@@ -183,14 +194,14 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     // know how to convert the String to an Enum.
 
     val statuses: Seq[Option[VenueClaimBson.status.MyType]] =
-      blk(VenueR.where(_._id eqs v.id).select(_.lastClaim.subselect(_.status)).fetchAsync())
+      blk(VenueR.where(_._id eqs v._id).select(_.lastClaim.subselect(_.status)).fetchAsync())
     // This assertion works.
     statuses must_== List(Some("Approved"))
     // This assertion is what we want, and it fails.
     // statuses must_== List(Some(ClaimStatus.approved))
 
     val subuseridsAndStatuses: Seq[(Option[List[Long]], Option[List[VenueClaimBson.status.MyType]])] =
-      blk(VenueR.where(_._id eqs v.id)
+      blk(VenueR.where(_._id eqs v._id)
         .select(_.claims.subselect(_.userid), _.claims.subselect(_.status))
         .fetchAsync())
     // This assertion works.
@@ -209,9 +220,9 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     blk(v.insertAsync())
 
     // eqs
-    blk(VenueR.where(_._id eqs v.id).fetchAsync()).map(_.id) must_== Seq(v.id)
-    blk(VenueR.where(_._id eqs v.id).setReadPreference(ReadPreference.secondary).fetchAsync()).map(_.id) must_== Seq(v.id)
-    blk(VenueR.where(_._id eqs v.id).setReadPreference(ReadPreference.primary).fetchAsync()).map(_.id) must_== Seq(v.id)
+    blk(VenueR.where(_._id eqs v._id).fetchAsync()).map(_.id) must_== Seq(v._id)
+    blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.secondary).fetchAsync()).map(_.id) must_== Seq(v._id)
+    blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.primary).fetchAsync()).map(_.id) must_== Seq(v._id)
   }
 
   @Test
@@ -241,12 +252,12 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
   def testRegexQuery {
     val v = baseTestVenue()
     blk(v.insertAsync())
-    blk(VenueR.where(_._id eqs v.id).and(_.venuename startsWith "test v").countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v.id).and(_.venuename matches ".es. v".r).countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v.id).and(_.venuename matches "Tes. v".r).countAsync()) must_== 0
-    blk(VenueR.where(_._id eqs v.id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE)).countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v.id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legacyid.value)).countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v.id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legacyid.value)).countAsync()) must_== 0
+    blk(VenueR.where(_._id eqs v._id).and(_.venuename startsWith "test v").countAsync()) must_== 1
+    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches ".es. v".r).countAsync()) must_== 1
+    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches "Tes. v".r).countAsync()) must_== 0
+    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE)).countAsync()) must_== 1
+    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legacyid.value)).countAsync()) must_== 1
+    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legacyid.value)).countAsync()) must_== 0
     blk(VenueR.where(_.tags matches """some\s.*""".r).countAsync()) must_== 1
   }
 
@@ -286,6 +297,7 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     blk(VenueR.select(_.tags.slice(2)).getAsync()) must_== Some(List("1", "2"))
     blk(VenueR.select(_.tags.slice(-2)).getAsync()) must_== Some(List("3", "4"))
     blk(VenueR.select(_.tags.slice(1, 2)).getAsync()) must_== Some(List("2", "3"))
-  }
+  }*/
+
 }
 

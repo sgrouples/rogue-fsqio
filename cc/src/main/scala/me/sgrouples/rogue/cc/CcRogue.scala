@@ -27,30 +27,31 @@ trait CcRogue {
       }
     }
   }
-}
+
 
   /* Following are a collection of implicit conversions which take a meta-record and convert it to
    * a QueryBuilder. This allows users to write queries as "QueryType where ...".
    */
-/*  implicit def metaRecordToQueryBuilder[M <: MongoRecord[M]]
-  (rec: M with MongoMetaRecord[M]): Query[M, M, InitialState] =
+  implicit def ccMetaToQueryBuilder[M <: CcMeta[_]](meta: M): Query[M, M, InitialState] =
   Query[M, M, InitialState](
-    rec, rec.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+    meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
 
-  implicit def metaRecordToIndexBuilder[M <: MongoRecord[M]](rec: M with MongoMetaRecord[M]): IndexBuilder[M] =
-    IndexBuilder(rec)
+  implicit def metaRecordToIndexBuilder[M <: CcMeta[_]](meta: M): IndexBuilder[M] =
+    IndexBuilder(meta)
 
-  implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
+
+  implicit def queryToCcQuery[M <: CcMeta[_], R, State]
   (query: Query[M, R, State])
-  (implicit ev: ShardingOk[M with MongoMetaRecord[_], State]): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R, State] = {
+  (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M , R, query.meta.R, State] = {
     ExecutableQuery(
-      query.asInstanceOf[Query[M with MongoMetaRecord[_], R, State]],
-      LiftQueryExecutor,
-      LiftAsyncQueryExecutor
+      query.asInstanceOf[Query[M, R, State]],
+      CcQueryExecutor,
+      CcAsyncQueryExecutor
     )
   }
-
-  implicit def modifyQueryToLiftModifyQuery[M <: MongoRecord[_], State](
+}
+  /*
+  implicit def modifyQueryToLiftModifyQuery[M <: CcMeta[_], State](
                                                                          query: ModifyQuery[M, State]
                                                                        ): ExecutableModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], State] = {
     ExecutableModifyQuery(
@@ -60,7 +61,7 @@ trait CcRogue {
     )
   }
 
-  implicit def findAndModifyQueryToLiftFindAndModifyQuery[M <: MongoRecord[_], R](
+  implicit def findAndModifyQueryToLiftFindAndModifyQuery[M <: CcMeta[_], R](
                                                                                    query: FindAndModifyQuery[M, R]
                                                                                  ): ExecutableFindAndModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R] = {
     ExecutableFindAndModifyQuery(
@@ -70,8 +71,8 @@ trait CcRogue {
     )
   }
 
-  implicit def metaRecordToLiftQuery[M <: MongoRecord[M]](
-                                                           rec: M with MongoMetaRecord[M]
+  implicit def metaRecordToLiftQuery[M <: CcMeta[_]](
+                                                           meta: M
                                                          ): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], M, InitialState] = {
     val queryBuilder = metaRecordToQueryBuilder(rec)
     val liftQuery = queryToLiftQuery(queryBuilder)

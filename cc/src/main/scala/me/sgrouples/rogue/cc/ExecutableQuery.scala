@@ -5,15 +5,15 @@ package me.sgrouples.rogue.cc
 
 import com.mongodb.WriteConcern
 import io.fsq.field.Field
-import io.fsq.rogue.{AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, QueryExecutor, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _}
+import io.fsq.rogue.{AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, BsonQueryExecutor, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
-case class ExecutableQuery[MB <: CcMetaLike[_], M <: MB, RB, R, State](
+case class ExecutableQuery[MB <: CcMetaLike[_], M <: MB,  R, State](
                                                        query: Query[M, R, State],
-                                                       db: QueryExecutor[MB, RB],
+                                                       db: BsonQueryExecutor[MB],
                                                        dba: AsyncBsonQueryExecutor[MB]
                                                      )(implicit ev: ShardingOk[M, State]) {
 
@@ -177,8 +177,8 @@ case class ExecutableQuery[MB <: CcMetaLike[_], M <: MB, RB, R, State](
 
 }
 
-case class ExecutableModifyQuery[MB <: CcMetaLike[_], M <: MB, RB, State](query: ModifyQuery[M, State],
-                                                         db: QueryExecutor[MB, RB],
+case class ExecutableModifyQuery[MB <: CcMetaLike[_], M <: MB, State](query: ModifyQuery[M, State],
+                                                         db: BsonQueryExecutor[MB],
                                                          dba: AsyncBsonQueryExecutor[MB]) {
   def updateMulti(): Unit =
     db.updateMulti(query)
@@ -219,9 +219,9 @@ case class ExecutableModifyQuery[MB <: CcMetaLike[_], M <: MB, RB, State](query:
 
 }
 
-case class ExecutableFindAndModifyQuery[MB <: CcMetaLike[_], M <: MB, RB, R](
+case class ExecutableFindAndModifyQuery[MB <: CcMetaLike[_], M <: MB,  R](
                                                              query: FindAndModifyQuery[M, R],
-                                                             db: QueryExecutor[MB, RB],
+                                                             db: BsonQueryExecutor[MB],
                                                              dba: AsyncBsonQueryExecutor[MB]
                                                            ) {
   def updateOne(returnNew: Boolean = false): Option[R] =
@@ -239,9 +239,9 @@ case class ExecutableFindAndModifyQuery[MB <: CcMetaLike[_], M <: MB, RB, R](
 
 }
 
-class PaginatedQuery[MB <: CcMetaLike[_], M <: MB, RB, R, +State <: Unlimited with Unskipped](
+class PaginatedQuery[MB <: CcMetaLike[_], M <: MB,  R, +State <: Unlimited with Unskipped](
                                                                               q: Query[M, R, State],
-                                                                              db: QueryExecutor[MB, RB],
+                                                                              db: BsonQueryExecutor[MB],
                                                                               dba: AsyncBsonQueryExecutor[MB],
                                                                               val countPerPage: Int,
                                                                               val pageNum: Int = 1
