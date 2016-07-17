@@ -10,10 +10,12 @@ import org.bson.types.ObjectId
 import org.junit.{After, Before, Ignore, Test}
 import org.specs2.matcher.JUnitMustMatchers
 import CcRogue._
+import org.bson.{BsonDocument, BsonValue}
+
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Awaitable}
 
-class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
+class EndToEndBsonAsyncTest extends JUnitMustMatchers {
   val atMost = 5 seconds
 
   def blk[T](t: Awaitable[T]): T = Await.result(t, atMost)
@@ -27,12 +29,12 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     mayor_count = 3L,
     closed = false,
     popularity = List(1L, 2L, 3L),
-    categories =  List(new ObjectId()),
+    categories = List(new ObjectId()),
     latlng = LatLong(40.73, -73.98),
     last_updated = LocalDateTime.now(),
     status = VenueStatus.open,
-    claims = List(VenueClaimBson(uid = 1234L,status = ClaimStatus.pending),
-        VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
+    claims = List(VenueClaimBson(uid = 1234L, status = ClaimStatus.pending),
+      VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
     lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved),
     tags = List("test tag1", "some tag")
   )
@@ -40,63 +42,63 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
     VenueClaim(vid, 123L, ClaimStatus.approved)
 
+    /*
+      def baseTestTip(): Tip = {
+        Tip(new ObjectId(), legid = 234L, counts = Map("foo" -> 1L, "bar" -> 2L))
+      }
 
-  def baseTestTip(): Tip = {
-    Tip(new ObjectId(), legid = 234L, counts = Map("foo" -> 1L, "bar" -> 2L))
-  }
+      object VenueR extends RCcMeta[Venue] {
 
-  object VenueR extends RCcMeta[Venue] {
+      }
 
-  }
+      object VenueClaimR extends RCcMeta[VenueClaim] {
 
-  object VenueClaimR extends RCcMeta[VenueClaim] {
-
-  }
+      }
 
 
-    @Before
-  def setupMongoConnection: Unit = {
-    val m = TrivialAsyncORMTests.mongoAsync
-    CcMongo.defineDb("default", m, "rogue-test-async")
-  }
+        @Before
+      def setupMongoConnection: Unit = {
+        val m = TrivialAsyncORMTests.mongoAsync
+        CcMongo.defineDb("default", m, "rogue-test-async")
+      }
 
-  @After
-  def cleanupTestData: Unit = {
+      @After
+      def cleanupTestData: Unit = {
 
-    blk(VenueR.bulkDeleteAsync_!!!())
-    blk(VenueR.countAsync()) must_== 0
+        blk(VenueR.bulkDeleteAsync_!!!())
+        blk(VenueR.countAsync()) must_== 0
 
-    blk(VenueClaim.bulkDeleteAsync_!!!())
-    blk(VenueClaim.countAsync()) must_== 0
+        blk(VenueClaim.bulkDeleteAsync_!!!())
+        blk(VenueClaim.countAsync()) must_== 0
 
-    //blk(Like.allShards.bulkDeleteAsync_!!!())
+        //blk(Like.allShards.bulkDeleteAsync_!!!())
 
-    TrivialAsyncORMTests.disconnectFromMongo
-  }
+        TrivialAsyncORMTests.disconnectFromMongo
+      }
 
-  @Test
-  def eqsTests: Unit = {
-    val v = baseTestVenue()
-    blk(VenueR.insertOneAsync(v))
-    val vc = baseTestVenueClaim(v._id)
-    blk(VenueClaimR.insertOneAsync(vc))
+      @Test
+      def eqsTests: Unit = {
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
+        val vc = baseTestVenueClaim(v._id)
+        blk(VenueClaimR.insertOneAsync(vc))
 
-    // eqs
-    blk(ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync()).map(_.id) must_== Seq(v._id)
-    blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.venuename eqs v.venuename).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.closed eqs false).fetchAsync()).map(_.id) must_== List(v._id)
+        // eqs
+        blk(ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync()).map(_.id) must_== Seq(v._id)
+        blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
+        blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
+        blk(VenueR.where(_.venuename eqs v.venuename).fetchAsync()).map(_.id) must_== List(v._id)
+        blk(VenueR.where(_.closed eqs false).fetchAsync()).map(_.id) must_== List(v._id)
 
-    blk(VenueR.where(_.mayor eqs 432432).fetchAsync()).map(_.id) must_== Nil
-    blk(VenueR.where(_.closed eqs true).fetchAsync()).map(_.id) must_== Nil
+        blk(VenueR.where(_.mayor eqs 432432).fetchAsync()).map(_.id) must_== Nil
+        blk(VenueR.where(_.closed eqs true).fetchAsync()).map(_.id) must_== Nil
 
-    blk(VenueClaim.where(_.status eqs ClaimStatus.approved).fetchAsync()).map(_.id) must_== List(vc.id)
-    blk(VenueClaim.where(_.venueid eqs v._id).fetchAsync()).map(_.id) must_== List(vc.id)
-    blk(VenueClaim.where(_.venueid eqs v).fetchAsync()).map(_.id) must_== List(vc.id)
-  }
+        blk(VenueClaim.where(_.status eqs ClaimStatus.approved).fetchAsync()).map(_.id) must_== List(vc.id)
+        blk(VenueClaim.where(_.venueid eqs v._id).fetchAsync()).map(_.id) must_== List(vc.id)
+        blk(VenueClaim.where(_.venueid eqs v).fetchAsync()).map(_.id) must_== List(vc.id)
+      }*/
 
-  /*
+    /*
   @Test
   def testInequalityQueries: Unit = {
     val v = baseTestVenue()
@@ -299,5 +301,6 @@ class EndToEndBsonAsyncTest { extends JUnitMustMatchers {
     blk(VenueR.select(_.tags.slice(1, 2)).getAsync()) must_== Some(List("2", "3"))
   }*/
 
+  }
 }
 

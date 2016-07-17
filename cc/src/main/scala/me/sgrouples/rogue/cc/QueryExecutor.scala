@@ -9,8 +9,10 @@ import io.fsq.rogue._
 import io.fsq.spindle.types.MongoDisallowed
 import org.bson.BsonDocument
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.reflect.ClassTag
+import scala.collection.mutable.{Builder, ListBuffer}
 
 trait RogueBsonRead[R] {
   def fromDocument(dbo: BsonDocument): R
@@ -77,7 +79,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val rv = new ListBuffer[R]
-      adapter.query(query, None, readPreference)(dbo => rv += s.fromDBObject(dbo))
+      adapter.query(query, None, readPreference)(dbo => rv += s.fromDocument(dbo))
       rv.toList
     }
   }
@@ -90,7 +92,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val rv = Vector.newBuilder[R]
-      adapter.query(query, None, readPreference)(dbo => rv += s.fromDBObject(dbo))
+      adapter.query(query, None, readPreference)(dbo => rv += s.fromDocument(dbo))
       rv.result
     }
   }
@@ -121,7 +123,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
       ()
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
-      adapter.query(query, None, readPreference)(dbo => f(s.fromDBObject(dbo)))
+      adapter.query(query, None, readPreference)(dbo => f(s.fromDocument(dbo)))
     }
   }
 
@@ -156,7 +158,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
       val buf = new ListBuffer[R]
 
       adapter.query(query, Some(batchSize), readPreference) { dbo =>
-        buf += s.fromDBObject(dbo)
+        buf += s.fromDocument(dbo)
         drainBufferList(buf, rv, f, batchSize)
       }
       drainBufferList(buf, rv, f, 1)
@@ -196,7 +198,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
       val buf = new ListBuffer[R]
 
       adapter.query(query, Some(batchSize), readPreference) { dbo =>
-        buf += s.fromDBObject(dbo)
+        buf += s.fromDocument(dbo)
         drainBufferSeq(buf, rv, f, batchSize)
       }
       drainBufferSeq(buf, rv, f, 1)
@@ -267,7 +269,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
       None
     } else {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
-      adapter.findAndModify(query, returnNew, upsert=false, remove=false)(s.fromDBObject _)
+      adapter.findAndModify(query, returnNew, upsert=false, remove=false)(s.fromDocument _)
     }
   }
 
@@ -281,14 +283,14 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
     } else {
       try {
         val s = readSerializer[M, R](query.query.meta, query.query.select)
-        adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDBObject _)
+        adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocument _)
       } catch {
         case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[DuplicateKeyException] => {
           /* NOTE: have to retry upserts that fail with duplicate key,
            * see https://jira.mongodb.org/browse/SERVER-14322
            */
           val s = readSerializer[M, R](query.query.meta, query.query.select)
-          adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDBObject _)
+          adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocument _)
         }
       }
     }
@@ -303,7 +305,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val mod = FindAndModifyQuery(query, MongoModify(Nil))
-      adapter.findAndModify(mod, returnNew=false, upsert=false, remove=true)(s.fromDBObject _)
+      adapter.findAndModify(mod, returnNew=false, upsert=false, remove=true)(s.fromDocument _)
     }
   }
 
@@ -320,7 +322,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
       handler(state, Iter.EOF).state
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
-      adapter.iterate(query, state, s.fromDBObject _, readPreference)(handler)
+      adapter.iterate(query, state, s.fromDocument _, readPreference)(handler)
     }
   }
 
@@ -334,20 +336,20 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
       handler(state, Iter.EOF).state
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
-      adapter.iterateBatch(query, batchSize, state, s.fromDBObject _, readPreference)(handler)
+      adapter.iterateBatch(query, batchSize, state, s.fromDocument _, readPreference)(handler)
     }
   }
 
   def save[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
     val s = writeSerializer(record)
-    val dbo = s.toDBObject(record)
+    val dbo = s.toDocument(record)
     adapter.save(record, dbo, writeConcern)
     record
   }
 
   def insert[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
     val s = writeSerializer(record)
-    val dbo = s.toDBObject(record)
+    val dbo = s.toDocument(record)
     adapter.insert(record, dbo, writeConcern)
     record
   }
@@ -355,7 +357,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
   def insertAll[RecordType <: RB](records: Seq[RecordType], writeConcern: WriteConcern = defaultWriteConcern): Seq[RecordType] = {
     records.headOption.foreach(record => {
       val s = writeSerializer(record)
-      val dbos = records.map(s.toDBObject)
+      val dbos = records.map(s.toDocument)
       adapter.insertAll(record, dbos, writeConcern)
     })
     records
@@ -363,7 +365,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
 
   def remove[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
     val s = writeSerializer(record)
-    val dbo = s.toDBObject(record)
+    val dbo = s.toDocument(record)
     adapter.remove(record, dbo, writeConcern)
     record
   }
@@ -596,7 +598,7 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
       Nil
     } else {
       val rv = Vector.newBuilder[V]
-      adapter.distinct[M, V](query, field(query.meta).name, readPreference)(s => rv += s)
+    //  adapter.distinct[M, V](query, field(query.meta).name, readPreference)(s => rv += s)
       rv.result
     }
   }
@@ -609,7 +611,7 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val rv = new ListBuffer[R]
-      adapter.query(query, None, readPreference)(dbo => rv += s.fromDBObject(dbo))
+      adapter.query(query, None, readPreference)(dbo => rv += s.fromDocument(dbo))
       rv.toList
     }
   }
@@ -622,7 +624,7 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val rv = Vector.newBuilder[R]
-      adapter.query(query, None, readPreference)(dbo => rv += s.fromDBObject(dbo))
+      adapter.query(query, None, readPreference)(dbo => rv += s.fromDocument(dbo))
       rv.result
     }
   }
@@ -653,7 +655,7 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
       ()
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
-      adapter.query(query, None, readPreference)(dbo => f(s.fromDBObject(dbo)))
+      adapter.query(query, None, readPreference)(dbo => f(s.fromDocument(dbo)))
     }
   }
 
@@ -688,7 +690,7 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
       val buf = new ListBuffer[R]
 
       adapter.query(query, Some(batchSize), readPreference) { dbo =>
-        buf += s.fromDBObject(dbo)
+        buf += s.fromDocument(dbo)
         drainBufferList(buf, rv, f, batchSize)
       }
       drainBufferList(buf, rv, f, 1)
@@ -728,7 +730,7 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
       val buf = new ListBuffer[R]
 
       adapter.query(query, Some(batchSize), readPreference) { dbo =>
-        buf += s.fromDBObject(dbo)
+        buf += s.fromDocument(dbo)
         drainBufferSeq(buf, rv, f, batchSize)
       }
       drainBufferSeq(buf, rv, f, 1)
@@ -795,12 +797,13 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
                                     returnNew: Boolean = false,
                                     writeConcern: WriteConcern = defaultWriteConcern
                                   ): Option[R] = {
-    if (optimizer.isEmptyQuery(query)) {
+    None
+    /*if (optimizer.isEmptyQuery(query)) {
       None
     } else {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
-      adapter.findAndModify(query, returnNew, upsert=false, remove=false)(s.fromDBObject _)
-    }
+      adapter.findAndModify(query, returnNew, upsert=false, remove=false)(s.fromDocument _)
+    }*/
   }
 
   def findAndUpsertOne[M <: MB, R](
@@ -808,35 +811,37 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
                                     returnNew: Boolean = false,
                                     writeConcern: WriteConcern = defaultWriteConcern
                                   ): Option[R] = {
-    if (optimizer.isEmptyQuery(query)) {
+    None
+    /*if (optimizer.isEmptyQuery(query)) {
       None
     } else {
       try {
         val s = readSerializer[M, R](query.query.meta, query.query.select)
-        adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDBObject _)
+        adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocument _)
       } catch {
         case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[DuplicateKeyException] => {
           /* NOTE: have to retry upserts that fail with duplicate key,
            * see https://jira.mongodb.org/browse/SERVER-14322
            */
           val s = readSerializer[M, R](query.query.meta, query.query.select)
-          adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDBObject _)
+          adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocument _)
         }
       }
-    }
+    }*/
   }
 
   def findAndDeleteOne[M <: MB, R, State](
                                            query: Query[M, R, State],
                                            writeConcern: WriteConcern = defaultWriteConcern
                                          )(implicit ev: RequireShardKey[M, State]): Option[R] = {
-    if (optimizer.isEmptyQuery(query)) {
+    None
+    /*if (optimizer.isEmptyQuery(query)) {
       None
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val mod = FindAndModifyQuery(query, MongoModify(Nil))
-      adapter.findAndModify(mod, returnNew=false, upsert=false, remove=true)(s.fromDBObject _)
-    }
+      adapter.findAndModify(mod, returnNew=false, upsert=false, remove=true)(s.fromDocument _)
+    }*/
   }
 
   def explain[M <: MB](query: Query[M, _, _]): String = {
@@ -848,12 +853,13 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
                                     readPreference: Option[ReadPreference] = None)
                                    (handler: (S, Iter.Event[R]) => Iter.Command[S])
                                    (implicit ev: ShardingOk[M, State]): S = {
-    if (optimizer.isEmptyQuery(query)) {
+    /*if (optimizer.isEmptyQuery(query)) {
       handler(state, Iter.EOF).state
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
-      adapter.iterate(query, state, s.fromDBObject _, readPreference)(handler)
-    }
+      adapter.iterate(query, state, s.fromDocument _, readPreference)(handler)
+    }*/
+    state
   }
 
   def iterateBatch[S, M <: MB, R, State](query: Query[M, R, State],
@@ -866,28 +872,22 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
       handler(state, Iter.EOF).state
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
-      adapter.iterateBatch(query, batchSize, state, s.fromDBObject _, readPreference)(handler)
+      //adapter.iterateBatch(query, batchSize, state, s.fromDocument _, readPreference)(handler)
+      handler(state, Iter.EOF).state
     }
   }
 
-  def save[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
-    val s = writeSerializer(record)
-    val dbo = s.toDBObject(record)
-    adapter.save(record, dbo, writeConcern)
+  def insert[RecordType](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
+    //val s = writeSerializer(record)
+    //val dbo = s.toDocument(record)
+   // adapter.insert(record, dbo, writeConcern)
     record
   }
 
-  def insert[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
-    val s = writeSerializer(record)
-    val dbo = s.toDBObject(record)
-    adapter.insert(record, dbo, writeConcern)
-    record
-  }
-
-  def insertAll[RecordType <: RB](records: Seq[RecordType], writeConcern: WriteConcern = defaultWriteConcern): Seq[RecordType] = {
+  /*def insertAll[RecordType <: RB](records: Seq[RecordType], writeConcern: WriteConcern = defaultWriteConcern): Seq[RecordType] = {
     records.headOption.foreach(record => {
       val s = writeSerializer(record)
-      val dbos = records.map(s.toDBObject)
+      val dbos = records.map(s.toDocument)
       adapter.insertAll(record, dbos, writeConcern)
     })
     records
@@ -895,8 +895,9 @@ trait BsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
 
   def remove[RecordType <: RB](record: RecordType, writeConcern: WriteConcern = defaultWriteConcern): RecordType = {
     val s = writeSerializer(record)
-    val dbo = s.toDBObject(record)
+    val dbo = s.toDocument(record)
     adapter.remove(record, dbo, writeConcern)
     record
   }
+  */
 }

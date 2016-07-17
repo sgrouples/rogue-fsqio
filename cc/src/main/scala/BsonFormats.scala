@@ -97,6 +97,12 @@ trait BaseBsonFormats{
     override def write(t: LocalDateTime): BsonValue = new BsonDateTime(t.toInstant(ZoneOffset.UTC).toEpochMilli)
   }
 
+  //WARN to make it work, all enums must be in implicit scope for BsonFormat to work
+  implicit def enumFormat[T <: Enumeration](implicit enumeration :T) = new BsonFormat[T#Value] {
+    override def read(b: BsonValue): T#Value = enumeration.withName(b.asString().getValue())
+    override def write(t: T#Value): BsonValue = new BsonString(t.toString)
+  }
+
 }
 
 trait BsonCollectionFormats {

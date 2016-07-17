@@ -40,15 +40,14 @@ trait CcRogue {
     IndexBuilder(meta)
 
 
-  implicit def queryToCcQuery[M <: CcMeta[_], R, State]
+/*  implicit def queryToCcQuery[M <: CcMeta[_], R, State]
   (query: Query[M, R, State])
-  (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M , R, query.meta.R, State] = {
+  (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M ,  query.meta.R, State] = {
     ExecutableQuery(
-      query.asInstanceOf[Query[M, R, State]],
-      CcQueryExecutor,
+      query.asInstanceOf[Query[M, query.meta.R, State]],
       CcAsyncQueryExecutor
     )
-  }
+  }*/
 }
   /*
   implicit def modifyQueryToLiftModifyQuery[M <: CcMeta[_], State](

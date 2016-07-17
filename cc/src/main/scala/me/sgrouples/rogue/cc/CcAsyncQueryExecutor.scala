@@ -87,7 +87,7 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
           transformer(values)
         case None =>
           //TODO - better types !!!!
-          meta.format.read(dbo).asInstanceOf[R]
+          meta.read(dbo).asInstanceOf[R]
       }
     }
   }
@@ -95,7 +95,8 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
   override protected def writeSerializer[M <: CcMeta[_]](meta: M): RogueBsonWrite[meta.R] = {
     new RogueBsonWrite[meta.R] {
       override def toDocument(record: meta.R): BsonDocument = {
-        meta.format.write(record).asDocument()
+        meta.writeR(record).asDocument()
+        //meta.writeR(record.asInstanceOf[meta.R]).asDocument()
       }
     }
   }
