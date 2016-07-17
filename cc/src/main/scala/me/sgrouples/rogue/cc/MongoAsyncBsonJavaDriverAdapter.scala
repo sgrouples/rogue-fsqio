@@ -358,19 +358,18 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     else Future.successful(None)
   }
 
-  /*def insert(record: RB, dbo: BsonDocument, writeConcern: WriteConcern): Future[Unit] = {
-    val collection = dbCollectionFactory.getPrimaryDBCollection(record)
+  def insertOne[M <: MB, R](query: Query[M, R, _], doc: BsonDocument, writeConcern: WriteConcern): Future[Unit] = {
+    val collection = dbCollectionFactory.getPrimaryDBCollection(query)
     val callback = new UnitCallback[Void]
-    collection.insertOne(dbo, callback)
+    collection.insertOne(doc, callback)
     callback.future
   }
 
-  def insertAll(record: RB, dbos: Seq[BsonDocument], writeConcern: WriteConcern): Future[Unit] = {
-    val collection = dbCollectionFactory.getPrimaryDBCollection(record)
+  def insertMany[M <: MB, R](query: Query[M, R, _], docs: Seq[BsonDocument], writeConcern: WriteConcern): Future[Unit] = {
+    val collection = dbCollectionFactory.getPrimaryDBCollection(query)
     val callback = new UnitCallback[Void]
-    collection.insertMany(dbos, callback)
+    collection.insertMany(docs, callback)
     callback.future
   }
-  */
 
 }

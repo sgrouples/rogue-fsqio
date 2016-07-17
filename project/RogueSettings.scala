@@ -29,8 +29,8 @@ object RogueSettings {
             case _ => Seq()
         }
     },
-    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials"),
-    testOptions in Test ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=>MongoEmbedded.stop))
+    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials") /*,
+    testOptions in Test ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=>MongoEmbedded.stop))*/
 	)
 }
 

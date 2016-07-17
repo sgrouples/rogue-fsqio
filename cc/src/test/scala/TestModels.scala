@@ -34,3 +34,24 @@ case class Venue(_id: ObjectId, legId: Long, userId: Long, venuename: String, ma
 
 case class Tip(_id: ObjectId, legid:Long, counts: Map[String, Long], userId:Option[Long] = None)
 
+object Metas {
+
+  import me.sgrouples.rogue.BsonFormats._
+
+  implicit val evVenueStatus = VenueStatus
+
+  object VenueR extends RCcMeta[Venue]("venues") {
+
+  }
+
+  implicit val evClaimStatus = ClaimStatus
+  implicit val evRejReason = RejectReason
+
+  object VenueClaimR extends RCcMeta[VenueClaim]("venueclaims") {
+
+
+  }
+
+}
+
+

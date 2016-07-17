@@ -554,6 +554,17 @@ trait AsyncBsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
     }
   }
 
+  def insertOne[M <: MB, R](query: Query[M,R,_], r:R):Future[Unit] = {
+    val doc = writeSerializer[M](query.meta).toDocument(r.asInstanceOf[query.meta.R])
+    adapter.insertOne(query, doc, defaultWriteConcern)
+  }
+
+  def insertMany[M <: MB, R](query: Query[M,R,_], r:Seq[R]):Future[Unit] = {
+    val s = writeSerializer[M](query.meta)
+    val docs = r.map{ d => s.toDocument(r.asInstanceOf[query.meta.R])}
+    adapter.insertMany(query, docs, defaultWriteConcern)
+  }
+
 }
 
 

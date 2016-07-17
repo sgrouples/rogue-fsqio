@@ -40,6 +40,13 @@ trait CcRogue {
     IndexBuilder(meta)
 
 
+  implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[M, M, R, InitialState] = {
+    val query = Query[M, R, InitialState](
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+    InsertableQuery(query, CcAsyncQueryExecutor).asInstanceOf[InsertableQuery[M, M, R, InitialState]]
+  }
+
+
 /*  implicit def queryToCcQuery[M <: CcMeta[_], R, State]
   (query: Query[M, R, State])
   (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M ,  query.meta.R, State] = {

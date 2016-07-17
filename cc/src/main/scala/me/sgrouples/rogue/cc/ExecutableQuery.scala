@@ -291,3 +291,14 @@ class PaginatedQuery[MB <: CcMetaLike[_], M <: MB,  R, +State <: Unlimited with 
     dba.fetch(q.skip(countPerPage * (pageNum - 1)).limit(countPerPage))
   }
 }
+
+case class InsertableQuery[MB <: CcMetaLike[_], M <: MB, R, State](query: Query[M, R, State],
+  dba: AsyncBsonQueryExecutor[MB]) {
+
+  def insertOneAsync(t: R):Future[Unit] = {
+    dba.insertOne(query, t)
+  }
+  def insertManyAsync(ts: Seq[R]):Future[Unit] = {
+    dba.insertMany(query, ts)
+  }
+}
