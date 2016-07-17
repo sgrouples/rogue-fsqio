@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc
 
-import me.sgrouples.rogue.BsonFormat
+import me.sgrouples.rogue.{BsonFormat, BsonFormats}
 import org.bson.{BsonDocument, BsonValue}
 
 trait CcMetaLike[T] {
@@ -22,17 +22,22 @@ trait CcMeta[T] extends CcMetaLike[T] {
   def reader[F](fieldName: String): BsonFormat[F]
 }
 
-trait RCcMeta[T] extends CcMeta[T] with BsonFormat[T]{
+class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends BsonFormat[T] with CcMeta[T]{
   def connId = "default"
 
-
-  override def collectionName = "fakecolname"
-  //override def collectionName = classOf[R].getSimpleName.toLowerCase() + "s"
+  override def collectionName: String = collName
+  //I want : classOf[R].getSimpleName.toLowerCase() + "s", but don't know how
 
   override def dba(): com.mongodb.async.client.MongoDatabase = CcMongo.getDb(connId).get
 
   override def dbs(): com.mongodb.client.MongoDatabase = ???
 
   override def reader[F](fieldName: String): BsonFormat[F] = ???
+
+  override def read(b: BsonValue): T = f.read(b)
+
+  override def write(t: T): BsonValue = f.write(t)
+
+  override def writeR(t: R): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
 
 }
