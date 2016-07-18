@@ -64,10 +64,10 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       def cleanupTestData: Unit = {
 
         blk(VenueR.bulkDeleteAsync_!!!())
-//        blk(VenueR.countAsync()) must_== 0
+        blk(VenueR.countAsync()) must_== 0
 
         blk(VenueClaimR.bulkDeleteAsync_!!!())
-//        blk(VenueClaim.countAsync()) must_== 0
+        blk(VenueClaimR.countAsync()) must_== 0
 
         //blk(Like.allShards.bulkDeleteAsync_!!!())
 
