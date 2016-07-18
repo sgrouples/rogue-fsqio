@@ -63,13 +63,11 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       @After
       def cleanupTestData: Unit = {
 
-/*
         blk(VenueR.bulkDeleteAsync_!!!())
-        blk(VenueR.countAsync()) must_== 0
+//        blk(VenueR.countAsync()) must_== 0
 
-        blk(VenueClaim.bulkDeleteAsync_!!!())
-        blk(VenueClaim.countAsync()) must_== 0
-*/
+        blk(VenueClaimR.bulkDeleteAsync_!!!())
+//        blk(VenueClaim.countAsync()) must_== 0
 
         //blk(Like.allShards.bulkDeleteAsync_!!!())
 
@@ -79,8 +77,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       @Test
       def eqsTests: Unit = {
         val v = baseTestVenue()
-        blk(ccMetaToInsertQuery(VenueR).insertOneAsync(v))
-        //blk(VenueR.insertOneAsync(v))
+        blk(VenueR.insertOneAsync(v))
         val vc = baseTestVenueClaim(v._id)
         blk(VenueClaimR.insertOneAsync(vc))
 

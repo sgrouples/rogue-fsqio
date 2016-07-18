@@ -372,7 +372,7 @@ trait RogueBsonSerializer[From, To] extends RogueBsonRead[To] with RogueBsonWrit
 }
 */
 
-trait AsyncBsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
+trait AsyncBsonQueryExecutor[MB] extends Rogue {
   def adapter: MongoAsyncBsonJavaDriverAdapter[MB]
 
   def optimizer: QueryOptimizer
@@ -383,7 +383,7 @@ trait AsyncBsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
                                             select: Option[MongoSelect[M, R]]
                                           ): RogueBsonRead[R]
 
-  protected def writeSerializer[M <: MB](meta: M): RogueBsonWrite[meta.R]
+  protected def writeSerializer[M <: MB, R](meta: M): RogueBsonWrite[R]
 
   def count[M <: MB, State](query: Query[M, _, State],
                             readPreference: Option[ReadPreference] = None)
@@ -555,13 +555,13 @@ trait AsyncBsonQueryExecutor[MB <: CcMetaLike[_]] extends Rogue {
   }
 
   def insertOne[M <: MB, R](query: Query[M,R,_], r:R):Future[Unit] = {
-    val doc = writeSerializer[M](query.meta).toDocument(r.asInstanceOf[query.meta.R])
+    val doc = writeSerializer[M, R](query.meta).toDocument(r)
     adapter.insertOne(query, doc, defaultWriteConcern)
   }
 
   def insertMany[M <: MB, R](query: Query[M,R,_], r:Seq[R]):Future[Unit] = {
-    val s = writeSerializer[M](query.meta)
-    val docs = r.map{ d => s.toDocument(r.asInstanceOf[query.meta.R])}
+    val s = writeSerializer[M, R](query.meta)
+    val docs = r.map{ d => s.toDocument(r.asInstanceOf[R])}
     adapter.insertMany(query, docs, defaultWriteConcern)
   }
 

@@ -11,7 +11,7 @@ import io.fsq.rogue.MongoHelpers.MongoSelect
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
-case class ExecutableQuery[MB <: CcMetaLike[R], M <: MB,  R, State](
+case class ExecutableQuery[MB, M <: MB,  R, State](
                                                        query: Query[M, R, State],
                                                        dba: AsyncBsonQueryExecutor[MB]
                                                      )(implicit ev: ShardingOk[M, State]) {
@@ -204,10 +204,9 @@ case class ExecutableQuery[MB <: CcMetaLike[R], M <: MB,  R, State](
 
 }
 
-case class ExecutableModifyQuery[MB <: CcMetaLike[_], M <: MB, State](query: ModifyQuery[M, State],
-                                                         db: BsonQueryExecutor[MB],
+case class ExecutableModifyQuery[MB, M <: MB, State](query: ModifyQuery[M, State],
                                                          dba: AsyncBsonQueryExecutor[MB]) {
-  def updateMulti(): Unit =
+ /* def updateMulti(): Unit =
     db.updateMulti(query)
 
   def updateOne()(implicit ev: RequireShardKey[M, State]): Unit =
@@ -224,7 +223,7 @@ case class ExecutableModifyQuery[MB <: CcMetaLike[_], M <: MB, State](query: Mod
 
   def upsertOne(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State]): Unit =
     db.upsertOne(query, writeConcern)
-
+*/
   //async ops
   def updateMultiAsync(): Future[Unit] =
   dba.updateMulti(query)
@@ -246,17 +245,16 @@ case class ExecutableModifyQuery[MB <: CcMetaLike[_], M <: MB, State](query: Mod
 
 }
 
-case class ExecutableFindAndModifyQuery[MB <: CcMetaLike[_], M <: MB,  R](
+case class ExecutableFindAndModifyQuery[MB, M <: MB,  R](
                                                              query: FindAndModifyQuery[M, R],
-                                                             db: BsonQueryExecutor[MB],
                                                              dba: AsyncBsonQueryExecutor[MB]
                                                            ) {
-  def updateOne(returnNew: Boolean = false): Option[R] =
+ /* def updateOne(returnNew: Boolean = false): Option[R] =
     db.findAndUpdateOne(query, returnNew)
 
   def upsertOne(returnNew: Boolean = false): Option[R] =
     db.findAndUpsertOne(query, returnNew)
-
+*/
 
   def updateOneAsync(returnNew: Boolean = false): Future[Option[R]] =
     dba.findAndUpdateOne(query, returnNew)
@@ -266,13 +264,13 @@ case class ExecutableFindAndModifyQuery[MB <: CcMetaLike[_], M <: MB,  R](
 
 }
 
-class PaginatedQuery[MB <: CcMetaLike[_], M <: MB,  R, +State <: Unlimited with Unskipped](
+class PaginatedQuery[MB, M <: MB,  R, +State <: Unlimited with Unskipped](
                                                                               q: Query[M, R, State],
-                                                                              db: BsonQueryExecutor[MB],
                                                                               dba: AsyncBsonQueryExecutor[MB],
                                                                               val countPerPage: Int,
                                                                               val pageNum: Int = 1
                                                                             )(implicit ev: ShardingOk[M, State]) {
+/*
   def copy() = new PaginatedQuery(q, db, dba, countPerPage, pageNum)
 
   def setPage(p: Int) = if (p == pageNum) this else new PaginatedQuery(q, db, dba, countPerPage, p)
@@ -285,14 +283,15 @@ class PaginatedQuery[MB <: CcMetaLike[_], M <: MB,  R, +State <: Unlimited with 
     db.fetchList(q.skip(countPerPage * (pageNum - 1)).limit(countPerPage))
   }
 
-  def numPages = math.ceil(countAll.toDouble / countPerPage.toDouble).toInt max 1
+*/
+//  def numPages = math.ceil(countAll.toDouble / countPerPage.toDouble).toInt max 1
 
   def fetchAsync(): Future[Seq[R]] = {
     dba.fetch(q.skip(countPerPage * (pageNum - 1)).limit(countPerPage))
   }
 }
 
-case class InsertableQuery[MB <: CcMetaLike[_], M <: MB, R, State](query: Query[M, R, State],
+case class InsertableQuery[MB, M <: MB, R, State](query: Query[M, R, State],
   dba: AsyncBsonQueryExecutor[MB]) {
 
   def insertOneAsync(t: R):Future[Unit] = {

@@ -6,15 +6,18 @@ import com.mongodb.DBObject
 import com.mongodb.async.client.MongoCollection
 import org.bson.BsonDocument
 import io.fsq.rogue._
+import org.bson.codecs.configuration.CodecRegistries
 
 
 
 object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]] {
   type TCM = CcMeta[_]
   val bsonDocClass = classOf[BsonDocument]
+  //temorary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
+  val codecRegistry = CodecRegistries.fromRegistries(com.mongodb.MongoClient.getDefaultCodecRegistry())
   //[M <: MongoRecord[_] with MongoMetaRecord[_]
   override def getDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
-    query.meta.dba().getCollection(query.collectionName, bsonDocClass)
+    query.meta.dba().getCollection(query.collectionName, bsonDocClass).withCodecRegistry(codecRegistry)
   }
 
   override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
@@ -22,7 +25,7 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }
 
   protected def getPrimaryDBCollection(meta: CcMeta[_], collectionName: String): MongoCollection[BsonDocument] = {
-    meta.dba().getCollection(collectionName, bsonDocClass)
+    meta.dba().getCollection(collectionName, bsonDocClass).withCodecRegistry(codecRegistry)
   }
 
   /*override def getPrimaryDBCollection(record: MongoRecord[_]): MongoCollection[BsonDocument] = {
@@ -92,11 +95,10 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
     }
   }
 
-  override protected def writeSerializer[M <: CcMeta[_]](meta: M): RogueBsonWrite[meta.R] = {
-    new RogueBsonWrite[meta.R] {
-      override def toDocument(record: meta.R): BsonDocument = {
-        meta.writeR(record).asDocument()
-        //meta.writeR(record.asInstanceOf[meta.R]).asDocument()
+  override protected def writeSerializer[M <: CcMeta[_], R](meta: M): RogueBsonWrite[R] = {
+    new RogueBsonWrite[R] {
+      override def toDocument(record: R): BsonDocument = {
+        meta.writeAnyRef(record.asInstanceOf[AnyRef]).asDocument()
       }
     }
   }

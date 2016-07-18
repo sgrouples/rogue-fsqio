@@ -17,7 +17,8 @@ trait CcMeta[T] extends CcMetaLike[T] {
 
   def read(b: BsonValue): T
   def write(t:T): BsonValue
-  def writeR(t:this.R): BsonDocument
+  //TODO - how to make it play nice with types?
+  def writeAnyRef(t:AnyRef): BsonDocument
 
   def reader[F](fieldName: String): BsonFormat[F]
 }
@@ -38,6 +39,6 @@ class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends BsonFormat[
 
   override def write(t: T): BsonValue = f.write(t)
 
-  override def writeR(t: R): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
+  override def writeAnyRef(t: AnyRef): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
 
 }

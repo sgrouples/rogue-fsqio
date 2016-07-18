@@ -40,22 +40,23 @@ trait CcRogue {
     IndexBuilder(meta)
 
 
-  implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[M, M, R, InitialState] = {
+  implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, R, InitialState] = {
     val query = Query[M, R, InitialState](
       meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
-    InsertableQuery(query, CcAsyncQueryExecutor).asInstanceOf[InsertableQuery[M, M, R, InitialState]]
+    InsertableQuery(query, CcAsyncQueryExecutor).asInstanceOf[InsertableQuery[MB, M, R, InitialState]]
   }
 
 
-/*  implicit def queryToCcQuery[M <: CcMeta[_], R, State]
+  implicit def queryToCcQuery[MB <: CcMeta[_], M <: MB, R, State]
   (query: Query[M, R, State])
-  (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M ,  query.meta.R, State] = {
+  (implicit ev: ShardingOk[M, State]) = {
     ExecutableQuery(
-      query.asInstanceOf[Query[M, query.meta.R, State]],
+      query,
       CcAsyncQueryExecutor
-    )
-  }*/
-}
+    ) // .asInstanceOf[ExecutableQuery[CcMeta[_], M, R, State]]
+  }
+
+  //}
   /*
   implicit def modifyQueryToLiftModifyQuery[M <: CcMeta[_], State](
                                                                          query: ModifyQuery[M, State]
@@ -76,15 +77,31 @@ trait CcRogue {
       LiftAsyncQueryExecutor
     )
   }
-
-  implicit def metaRecordToLiftQuery[M <: CcMeta[_]](
-                                                           meta: M
-                                                         ): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], M, InitialState] = {
-    val queryBuilder = metaRecordToQueryBuilder(rec)
-    val liftQuery = queryToLiftQuery(queryBuilder)
-    liftQuery
+*/
+  implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](meta: M): ExecutableQuery[MB, M, R, InitialState] = {
+    val queryBuilder = ccMetaToQueryBuilder(meta)
+    val ccQuery = queryToCcQuery(queryBuilder)
+    ccQuery.asInstanceOf[ExecutableQuery[MB, M, R, InitialState]]
   }
 
+  /*
+  MB <: CcMetaLike[R], M <: MB,  R, State](
+                                                       query: Query[M, R, State],
+                                                       dba: AsyncBsonQueryExecutor[MB]
+                                                     )(implicit ev: ShardingOk[M, State]) {
+
+implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
+    (query: Query[M, R, State])
+    (implicit ev: ShardingOk[M with MongoMetaRecord[_], State]): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R, State] = {
+    ExecutableQuery(
+        query.asInstanceOf[Query[M with MongoMetaRecord[_], R, State]],
+        LiftQueryExecutor,
+        LiftAsyncQueryExecutor
+    )
+  }
+
+   */
+  /*
   implicit def fieldToQueryField[M <: BsonRecord[M], F: BSONType](f: Field[F, M]): QueryField[F, M] = new QueryField(f)
 
   implicit def bsonRecordFieldToBsonRecordQueryField[
@@ -273,5 +290,6 @@ trait CcRogue {
 
   implicit def BsonRecordIsBSONType[T <: BsonRecord[T]]: BSONType[T] = _BsonRecordIsBSONType.asInstanceOf[BSONType[T]]
 }*/
+}
 
 object CcRogue extends Rogue with CcRogue
