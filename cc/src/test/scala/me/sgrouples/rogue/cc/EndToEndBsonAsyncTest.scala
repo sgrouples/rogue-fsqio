@@ -137,30 +137,31 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(base.select(_.legacyid, _.userid, _.mayor).fetchAsync()) must_== List((v.legId, v.userId, v.mayor))
     blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetchAsync()) must_== List((v.legId, v.userId, v.mayor, v.mayor_count))
     blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetchAsync()) must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
-    //blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync()) must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
+    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync()) must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
   }
-/*
+
   @Test
   def selectEnum: Unit = {
-        val v = baseTestVenue()
-        blk(VenueR.insertOneAsync(v))
-    blk(VenueR.where(_._id eqs v._id).select(_.status).fetchAsync()) must_== List(VenueStatus.open)
+    val v = baseTestVenue()
+    blk(VenueR.insertOneAsync(v))
+    blk(VenueR.where(_.id eqs v._id).select(_.status).fetchAsync()) must_== List(VenueStatus.open)
   }
 
   @Test
   def selectCaseQueries: Unit = {
-        val v = baseTestVenue()
-        blk(VenueR.insertOneAsync(v))
+    val v = baseTestVenue()
+    blk(VenueR.insertOneAsync(v))
 
-    val base = VenueR.where(_._id eqs v._id)
-    blk(base.selectCase(_.legacyid, V1).fetchAsync()) must_== List(V1(v.legacyid.value))
-    blk(base.selectCase(_.legacyid, _.userid, V2).fetchAsync()) must_== List(V2(v.legacyid.value, v.userId.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, V3).fetchAsync()) must_== List(V3(v.legacyid.value, v.userId.value, v.mayor.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4).fetchAsync()) must_== List(V4(v.legacyid.value, v.userId.value, v.mayor.value, v.mayor_count.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5).fetchAsync()) must_== List(V5(v.legacyid.value, v.userId.value, v.mayor.value, v.mayor_count.value, v.closed.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync()) must_== List(V6(v.legacyid.value, v.userId.value, v.mayor.value, v.mayor_count.value, v.closed.value, v.tags.value))
+    val base = VenueR.where(_.id eqs v._id)
+    blk(base.selectCase(_.legacyid, V1).fetchAsync()) must_== List(V1(v.legId))
+    blk(base.selectCase(_.legacyid, _.userid, V2).fetchAsync()) must_== List(V2(v.legId, v.userId))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, V3).fetchAsync()) must_== List(V3(v.legId, v.userId, v.mayor))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4).fetchAsync()) must_== List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5).fetchAsync()) must_== List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync()) must_== List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
   }
 
+  /*
   @Test
   def selectSubfieldQueries: Unit = {
         val v = baseTestVenue()
@@ -180,7 +181,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     subclaims.size must_== 1
     subclaims.head.size must_== 1
     subclaims.head.head.userid must_== 1234
-    subclaims.head.head.status.value must_== ClaimStatus.pending
+    subclaims.head.head.status must_== ClaimStatus.pending
 
     // selecting a claims.userid when there is no top-level claims list should
     // have one element in the List for the one Venue, but an Empty for that
@@ -230,7 +231,6 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.secondary).fetchAsync()).map(_._id) must_== Seq(v._id)
     blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.primary).fetchAsync()).map(_._id) must_== Seq(v._id)
   }
-
   @Test
   def testFindAndModify {
     val v1 = blk(VenueR.where(_.venuename eqs "v1")
@@ -241,19 +241,18 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     val v2 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 5)
       .upsertOneAsync(returnNew = true))
-    v2.map(_.userid.value) must_== Some(5)
+    v2.map(_.userid) must_== Some(5)
 
     val v3 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 6)
       .upsertOneAsync(returnNew = false))
-    v3.map(_.userid.value) must_== Some(5)
+    v3.map(_.userid) must_== Some(5)
 
     val v4 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 7)
       .upsertOneAsync(returnNew = true))
-    v4.map(_.userid.value) must_== Some(7)
+    v4.map(_.userid) must_== Some(7)
   }
-
   @Test
   def testRegexQuery {
         val v = baseTestVenue()
@@ -262,22 +261,22 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(VenueR.where(_.id eqs v._id).and(_.venuename matches ".es. v".r).countAsync()) must_== 1
     blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "Tes. v".r).countAsync()) must_== 0
     blk(VenueR.where(_.id eqs v._id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE)).countAsync()) must_== 1
-    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legacyid.value)).countAsync()) must_== 1
-    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legacyid.value)).countAsync()) must_== 0
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legId)).countAsync()) must_== 1
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legId)).countAsync()) must_== 0
     blk(VenueR.where(_.tags matches """some\s.*""".r).countAsync()) must_== 1
   }
+*/
 
   @Test
   def testLimitAndBatch {
-    (1 to 50).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue()))()
+    (1 to 50).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue())))
     val q = VenueR.select(_.id)
     blk(q.limit(10).fetchAsync()).length must_== 10
     blk(q.limit(-10).fetchAsync()).length must_== 10
   }
-
   @Test
   def testCount {
-    (1 to 10).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue()))
+    (1 to 10).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue())))
     val q = VenueR.select(_.id)
     blk(q.countAsync()) must_== 10
     blk(q.limit(3).countAsync()) must_== 3
@@ -287,22 +286,25 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(q.skip(3).limit(5).countAsync()) must_== 5
     blk(q.skip(8).limit(4).countAsync()) must_== 2
   }
+/* distincts need codecs for Long, and probably Int in db
   @Test
   def testDistinct {
-    (1 to 5).foreach(_ => blk(baseTestVenue().userid(1).insertAsync()))
-    (1 to 5).foreach(_ => blk(baseTestVenue().userid(2).insertAsync()))
-    (1 to 5).foreach(_ => blk(baseTestVenue().userid(3).insertAsync()))
-    blk(VenueR.where(_.mayor eqs 789).distinctAsync(_.userid)).length must_== 3
-    blk(VenueR.where(_.mayor eqs 789).countDistinctAsync(_.userid)) must_== 3
+    (1 to 5).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue().copy(userId = 1L))))
+    (1 to 5).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue().copy(userId = 2L))))
+    (1 to 5).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue().copy(userId = 3L))))
+    blk(VenueR.where(_.mayor eqs 789L).distinctAsync(_.userid)).length must_== 3
+    blk(VenueR.where(_.mayor eqs 789L).countDistinctAsync(_.userid)) must_== 3
   }
+*/
 
   @Test
-  def testSlice {
-    blk(baseTestVenue().tags(List("1", "2", "3", "4")).insertAsync())
+  def testSlice():Unit = {
+    val v= baseTestVenue().copy(tags = List("1", "2", "3", "4"))
+    blk(VenueR.insertOneAsync(v))
     blk(VenueR.select(_.tags.slice(2)).getAsync()) must_== Some(List("1", "2"))
     blk(VenueR.select(_.tags.slice(-2)).getAsync()) must_== Some(List("3", "4"))
     blk(VenueR.select(_.tags.slice(1, 2)).getAsync()) must_== Some(List("2", "3"))
-  }*/
+  }
 
 }
 

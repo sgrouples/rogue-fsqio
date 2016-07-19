@@ -21,6 +21,18 @@ object RejectReason extends Enumeration {
   val wrongCode = Value("wrong code")
 }
 
+case class V1(legacyid: Long)
+
+case class V2(legacyid: Long, userid: Long)
+
+case class V3(legacyid: Long, userid: Long, mayor: Long)
+
+case class V4(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long)
+
+case class V5(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean)
+
+case class V6(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String])
+
 
 case class SourceBson(name:String, url:String)
 
@@ -46,9 +58,11 @@ object Metas {
     val mayor = new LongField("mayor", this)
     val venuename = new StringField("venuename", this)
     val closed = new BooleanField("closed", this)
+    val status = new EnumField[VenueStatus.type, VenueR.type]("status", this)
     val mayor_count = new LongField("mayor_count", this)
     val legacyid = new LongField("legId", this)
     val userid = new LongField("userId", this)
+    val tags = new ListField[String, VenueR.type]("tags", this)
 
   }
 
@@ -57,9 +71,14 @@ object Metas {
 
   object VenueClaimR extends RCcMeta[VenueClaim]("venueclaims") {
     val venueid = new ObjectIdField("_id", this)
-    val status = new EnumField[ClaimStatus.type, this.type]("status", this)
+    val status = new EnumField[ClaimStatus.type, VenueClaimR.type]("status", this)
   }
 
+  object TipR extends RCcMeta[Tip]("tips") {
+    val id = new ObjectIdField("_id", this)
+    val legacyid = new LongField("legid", this)
+
+  }
 }
 
 

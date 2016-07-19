@@ -10,6 +10,8 @@ import org.bson.{BsonDocument, BsonNull, BsonValue}
 import shapeless.ops.hlist.LiftAll
 import shapeless.syntax.SingletonOps
 
+import scala.reflect.ClassTag
+
 
 
 abstract class CField[V, O](val name:String, val owner :O) extends Field[V,O]
@@ -36,6 +38,14 @@ class BooleanField[O](name:String,o :O) extends MCField[Boolean, O](name, o){
 }
 class EnumField[T <: Enumeration, O](name:String, o:O)(implicit e: T) extends MCField[T#Value, O](name, o){
   override def defaultValue: T#Value = e(0)
+}
+
+class ListField[V, O](name:String, o:O) extends MCField[List[V], O](name, o){
+  override def defaultValue = Nil
+}
+
+class ArrayField[V :ClassTag, O](name:String, o:O) extends MCField[Array[V], O](name, o){
+  override def defaultValue = Array.empty[V]
 }
 
 
