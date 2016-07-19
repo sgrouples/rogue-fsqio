@@ -244,7 +244,7 @@ trait LowPrioBsonFormats {
        val f = headSer.value
        val resolved: Value = {
          val v = b.asDocument().get(fieldName)
-         if(v == null && v.isNull) {
+         if(v == null || v.isNull) {
            f.read(BsonNull.VALUE)
          } else {
            f.read(v)

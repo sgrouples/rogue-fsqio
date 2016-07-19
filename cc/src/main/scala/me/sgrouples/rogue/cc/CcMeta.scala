@@ -4,10 +4,11 @@ import me.sgrouples.rogue.{BsonFormat, BsonFormats}
 import org.bson.{BsonDocument, BsonValue}
 
 trait CcMetaLike[T] {
-  type R >: T
+  type R
 }
 
 trait CcMeta[T] extends CcMetaLike[T] {
+  type R = T
   //capture T to be able to cast to it
   //type R >: T
   def collectionName: String
@@ -24,6 +25,7 @@ trait CcMeta[T] extends CcMetaLike[T] {
 }
 
 class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends BsonFormat[T] with CcMeta[T]{
+  override type R = T
   def connId = "default"
 
   override def collectionName: String = collName

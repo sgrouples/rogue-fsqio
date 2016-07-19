@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.cc
 
 import java.time.LocalDateTime
+import java.util.regex.Pattern
 
 import io.fsq.rogue._
 //import io.fsq.rogue.test.TrivialAsyncORMTests
@@ -82,48 +83,50 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
         blk(VenueClaimR.insertOneAsync(vc))
 
         // eqs
-  /*      blk(ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync()).map(_.id) must_== Seq(v._id)
-        blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
-        blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_.id) must_== List(v._id)
-        blk(VenueR.where(_.venuename eqs v.venuename).fetchAsync()).map(_.id) must_== List(v._id)
-        blk(VenueR.where(_.closed eqs false).fetchAsync()).map(_.id) must_== List(v._id)
+        val q = ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id)
+        println(s"Ret class ${classOf[q.meta.R]}")
+        blk(ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync()).map(_._id) must_== Seq(v._id)
+        blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_._id) must_== List(v._id)
+        blk(VenueR.where(_.mayor eqs v.mayor).fetchAsync()).map(_._id) must_== List(v._id)
+        blk(VenueR.where(_.venuename eqs v.venuename).fetchAsync()).map(_._id) must_== List(v._id)
+        blk(VenueR.where(_.closed eqs false).fetchAsync()).map(_._id) must_== List(v._id)
 
-        blk(VenueR.where(_.mayor eqs 432432).fetchAsync()).map(_.id) must_== Nil
-        blk(VenueR.where(_.closed eqs true).fetchAsync()).map(_.id) must_== Nil
+        blk(VenueR.where(_.mayor eqs 432432).fetchAsync()).map(_._id) must_== Nil
+        blk(VenueR.where(_.closed eqs true).fetchAsync()).map(_._id) must_== Nil
 
-        blk(VenueClaim.where(_.status eqs ClaimStatus.approved).fetchAsync()).map(_.id) must_== List(vc.id)
-        blk(VenueClaim.where(_.venueid eqs v._id).fetchAsync()).map(_.id) must_== List(vc.id)
-        blk(VenueClaim.where(_.venueid eqs v).fetchAsync()).map(_.id) must_== List(vc.id)
-*/      }
+        blk(VenueClaimR.where(_.status eqs ClaimStatus.approved).fetchAsync()).map(_._id) must_== List(vc._id)
+        blk(VenueClaimR.where(_.venueid eqs v._id).fetchAsync()).map(_._id) must_== List(vc._id)
+      }
 
-    /*
+
   @Test
   def testInequalityQueries: Unit = {
     val v = baseTestVenue()
-    blk(v.insertAsync())
+    blk(VenueR.insertOneAsync(v))
     val vc = baseTestVenueClaim(v._id)
-    blk(vc.insertAsync())
+    blk(VenueClaimR.insertOneAsync(vc))
 
     // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
     // VenueClaim has status approved.
-    blk(VenueR.where(_.mayor_count neqs 5).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.mayor_count < 5).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.mayor_count lt 5).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.mayor_count <= 5).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.mayor_count lte 5).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueR.where(_.mayor_count > 5).fetchAsync()).map(_.id) must_== Nil
-    blk(VenueR.where(_.mayor_count gt 5).fetchAsync()).map(_.id) must_== Nil
-    blk(VenueR.where(_.mayor_count >= 5).fetchAsync()).map(_.id) must_== Nil
-    blk(VenueR.where(_.mayor_count gte 5).fetchAsync()).map(_.id) must_== Nil
-    blk(VenueR.where(_.mayor_count between(3, 5)).fetchAsync()).map(_.id) must_== List(v._id)
-    blk(VenueClaim.where(_.status neqs ClaimStatus.approved).fetchAsync()).map(_.id) must_== Nil
-    blk(VenueClaim.where(_.status neqs ClaimStatus.pending).fetchAsync()).map(_.id) must_== List(vc.id)
+    blk(VenueR.where(_.mayor_count neqs 5).fetchAsync()).map(_._id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count < 5).fetchAsync()).map(_._id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count lt 5).fetchAsync()).map(_._id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count <= 5).fetchAsync()).map(_._id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count lte 5).fetchAsync()).map(_._id) must_== List(v._id)
+    blk(VenueR.where(_.mayor_count > 5).fetchAsync()).map(_._id) must_== Nil
+    blk(VenueR.where(_.mayor_count gt 5).fetchAsync()).map(_._id) must_== Nil
+    blk(VenueR.where(_.mayor_count >= 5).fetchAsync()).map(_._id) must_== Nil
+    blk(VenueR.where(_.mayor_count gte 5).fetchAsync()).map(_._id) must_== Nil
+    blk(VenueR.where(_.mayor_count between(3, 5)).fetchAsync()).map(_._id) must_== List(v._id)
+    blk(VenueClaimR.where(_.status neqs ClaimStatus.approved).fetchAsync()).map(_._id) must_== Nil
+    blk(VenueClaimR.where(_.status neqs ClaimStatus.pending).fetchAsync()).map(_._id) must_== List(vc._id)
   }
 
+  /*
   @Test
   def selectQueries: Unit = {
-    val v = baseTestVenue()
-    blk(v.insertAsync())
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
 
     val base = VenueR.where(_._id eqs v._id)
     blk(base.select(_.legacyid).fetchAsync()) must_== List(v.legacyid.value)
@@ -136,15 +139,15 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
   @Test
   def selectEnum: Unit = {
-    val v = baseTestVenue()
-    blk(v.insertAsync())
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
     blk(VenueR.where(_._id eqs v._id).select(_.status).fetchAsync()) must_== List(VenueStatus.open)
   }
 
   @Test
   def selectCaseQueries: Unit = {
-    val v = baseTestVenue()
-    blk(v.insertAsync())
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
 
     val base = VenueR.where(_._id eqs v._id)
     blk(base.selectCase(_.legacyid, V1).fetchAsync()) must_== List(V1(v.legacyid.value))
@@ -157,8 +160,8 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
   @Test
   def selectSubfieldQueries: Unit = {
-    val v = baseTestVenue()
-    blk(v.insertAsync())
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
     val t = baseTestTip()
     blk(t.insertAsync())
 
@@ -216,13 +219,13 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     // Note: this isn't a real test of readpreference because the test mongo setup
     // doesn't have replicas. This basically just makes sure that readpreference
     // doesn't break everything.
-    val v = baseTestVenue()
-    blk(v.insertAsync())
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
 
     // eqs
-    blk(VenueR.where(_._id eqs v._id).fetchAsync()).map(_.id) must_== Seq(v._id)
-    blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.secondary).fetchAsync()).map(_.id) must_== Seq(v._id)
-    blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.primary).fetchAsync()).map(_.id) must_== Seq(v._id)
+    blk(VenueR.where(_._id eqs v._id).fetchAsync()).map(_._id) must_== Seq(v._id)
+    blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.secondary).fetchAsync()).map(_._id) must_== Seq(v._id)
+    blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.primary).fetchAsync()).map(_._id) must_== Seq(v._id)
   }
 
   @Test
@@ -250,29 +253,29 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
   @Test
   def testRegexQuery {
-    val v = baseTestVenue()
-    blk(v.insertAsync())
-    blk(VenueR.where(_._id eqs v._id).and(_.venuename startsWith "test v").countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches ".es. v".r).countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches "Tes. v".r).countAsync()) must_== 0
-    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE)).countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legacyid.value)).countAsync()) must_== 1
-    blk(VenueR.where(_._id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legacyid.value)).countAsync()) must_== 0
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename startsWith "test v").countAsync()) must_== 1
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches ".es. v".r).countAsync()) must_== 1
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "Tes. v".r).countAsync()) must_== 0
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE)).countAsync()) must_== 1
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legacyid.value)).countAsync()) must_== 1
+    blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legacyid.value)).countAsync()) must_== 0
     blk(VenueR.where(_.tags matches """some\s.*""".r).countAsync()) must_== 1
   }
 
   @Test
   def testLimitAndBatch {
-    (1 to 50).foreach(_ => blk(baseTestVenue().insertAsync()))
-    val q = VenueR.select(_._id)
+    (1 to 50).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue()))()
+    val q = VenueR.select(_.id)
     blk(q.limit(10).fetchAsync()).length must_== 10
     blk(q.limit(-10).fetchAsync()).length must_== 10
   }
 
   @Test
   def testCount {
-    (1 to 10).foreach(_ => blk(baseTestVenue().insertAsync()))
-    val q = VenueR.select(_._id)
+    (1 to 10).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue()))
+    val q = VenueR.select(_.id)
     blk(q.countAsync()) must_== 10
     blk(q.limit(3).countAsync()) must_== 3
     blk(q.limit(15).countAsync()) must_== 10

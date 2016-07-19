@@ -19,6 +19,8 @@ class CcMetaTest extends JUnitMustMatchers {
     val bson = IdOneEnumR.write(elem)
     IdOneEnumR.read(bson) must_== elem
 
+    println(classOf[IdOneEnumR.R])
+    classOf[IdOneEnumR.R] must_== classOf[IdOneEnum]
 
   }
 }

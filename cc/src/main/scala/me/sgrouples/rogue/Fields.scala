@@ -5,10 +5,25 @@ import labelled.{FieldType, field}
 import syntax.singleton._
 import record._
 import ops.record._
+import org.bson.types.ObjectId
 import org.bson.{BsonDocument, BsonNull, BsonValue}
+import shapeless.ops.hlist.LiftAll
 import shapeless.syntax.SingletonOps
 
-class CField(val name:String)
+
+object Owner
+
+class CField[V](val name:String) extends Field[V, Owner.type]{
+  override def owner = Owner
+}
+
+class IntField(name:String) extends CField[Int](name)
+class LongField(name:String) extends CField[Long](name)
+class StringField(name:String) extends CField[String](name)
+class ObjectIdField(name:String) extends CField[ObjectId](name)
+class BooleanField(name:String) extends CField[Boolean](name)
+class EnumField[T <: Enumeration](name:String)(implicit e: T) extends CField[T#Value](name)
+
 
 trait CcFields[T] {
   type RecRepr
@@ -36,13 +51,12 @@ trait LowPrioFields {
                                                                                                       t: Typeable[Wrapped],
                                                                                                       key: Witness.Aux[Key],
                                                                                                       remFormat: CcFieldFormat.Aux[Wrapped, Remaining, RecRemH]
-                                                                                                    ): CcFieldFormat.Aux[Wrapped, FieldType[Key, Value] :: Remaining, FieldType[Key, CField] :: RecRemH ] =
+                                                                                                    ): CcFieldFormat.Aux[Wrapped, FieldType[Key, Value] :: Remaining, FieldType[Key, CField[Value]] :: RecRemH ] =
       new CcFieldFormat[Wrapped, FieldType[Key, Value] :: Remaining]{
-        type RecRepr =  FieldType[Key, CField] :: RecRemH
+        type RecRepr =  FieldType[Key, CField[Value]] :: RecRemH
 
         override def flds = {
-          remFormat.flds
-          val cc = new CField(key.value.name)
+          val cc = new CField[Value](key.value.name)
           val f= field[Key](cc)
           val k= f :: remFormat.flds
           //this does not work too... val k= (key.value.name ->> cc ) :: remFormat.flds
@@ -64,10 +78,7 @@ trait LowPrioFields {
 
 object CcFields extends LowPrioFields{
   type Aux[T, R] = CcFields[T] { type RecRepr = R}
-  //  def apply[T](implicit lgen: LabelledGeneric[T]): Aux[T, lgen.Repr] = lgen
-
   def apply[T](implicit f: CcFields[T]): Aux[T, f.RecRepr] = f
-
 }
 
 

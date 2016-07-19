@@ -2,6 +2,7 @@ package me.sgrouples.rogue.cc
 import java.time.LocalDateTime
 
 import io.fsq.rogue.LatLong
+import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 
 
@@ -41,6 +42,11 @@ object Metas {
   implicit val evVenueStatus = VenueStatus
 
   object VenueR extends RCcMeta[Venue]("venues") {
+    val id = new ObjectIdField("_id")
+    val mayor = new LongField("mayor")
+    val venuename = new StringField("venuename")
+    val closed = new BooleanField("closed")
+    val mayor_count = new LongField("mayor_count")
 
   }
 
@@ -48,8 +54,8 @@ object Metas {
   implicit val evRejReason = RejectReason
 
   object VenueClaimR extends RCcMeta[VenueClaim]("venueclaims") {
-
-
+    val venueid = new ObjectIdField("_id")
+    val status = new EnumField[ClaimStatus.type]("status")
   }
 
 }
