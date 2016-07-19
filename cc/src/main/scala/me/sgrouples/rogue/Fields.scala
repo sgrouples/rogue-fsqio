@@ -8,13 +8,6 @@ import ops.record._
 import org.bson.{BsonDocument, BsonNull, BsonValue}
 import shapeless.syntax.SingletonOps
 
-
-object Owner
-
-trait CcField[V, R] extends Field[V, R] {
-  def format:BsonFormat[V]
-}
-
 class CField(val name:String)
 
 trait CcFields[T] {
