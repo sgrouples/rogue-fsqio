@@ -42,11 +42,13 @@ object Metas {
   implicit val evVenueStatus = VenueStatus
 
   object VenueR extends RCcMeta[Venue]("venues") {
-    val id = new ObjectIdField("_id")
-    val mayor = new LongField("mayor")
-    val venuename = new StringField("venuename")
-    val closed = new BooleanField("closed")
-    val mayor_count = new LongField("mayor_count")
+    val id = new ObjectIdField("_id", this)
+    val mayor = new LongField("mayor", this)
+    val venuename = new StringField("venuename", this)
+    val closed = new BooleanField("closed", this)
+    val mayor_count = new LongField("mayor_count", this)
+    val legacyid = new LongField("legId", this)
+    val userid = new LongField("userId", this)
 
   }
 
@@ -54,8 +56,8 @@ object Metas {
   implicit val evRejReason = RejectReason
 
   object VenueClaimR extends RCcMeta[VenueClaim]("venueclaims") {
-    val venueid = new ObjectIdField("_id")
-    val status = new EnumField[ClaimStatus.type]("status")
+    val venueid = new ObjectIdField("_id", this)
+    val status = new EnumField[ClaimStatus.type, this.type]("status", this)
   }
 
 }

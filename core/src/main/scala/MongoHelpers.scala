@@ -17,7 +17,7 @@ object MongoHelpers extends Rogue {
 
   sealed case class MongoModify(clauses: List[ModifyClause])
 
-  sealed case class MongoSelect[M, R](fields: List[SelectField[_, M]], transformer: List[Any] => R)
+  sealed case class MongoSelect[M, R](fields: IndexedSeq[SelectField[_, M]], transformer: IndexedSeq[Any] => R)
 
   object MongoBuilder {
     def buildCondition(cond: AndCondition, signature: Boolean = false): BasicDBObject = {

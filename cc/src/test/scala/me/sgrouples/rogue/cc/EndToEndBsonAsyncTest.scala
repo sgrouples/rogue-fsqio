@@ -122,21 +122,25 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(VenueClaimR.where(_.status neqs ClaimStatus.pending).fetchAsync()).map(_._id) must_== List(vc._id)
   }
 
-  /*
+
   @Test
   def selectQueries: Unit = {
-        val v = baseTestVenue()
-        blk(VenueR.insertOneAsync(v))
+    val v = baseTestVenue()
+    blk(VenueR.insertOneAsync(v))
 
-    val base = VenueR.where(_._id eqs v._id)
-    blk(base.select(_.legacyid).fetchAsync()) must_== List(v.legacyid.value)
-    blk(base.select(_.legacyid, _.userid).fetchAsync()) must_== List((v.legacyid.value, v.userid.value))
-    blk(base.select(_.legacyid, _.userid, _.mayor).fetchAsync()) must_== List((v.legacyid.value, v.userid.value, v.mayor.value))
-    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetchAsync()) must_== List((v.legacyid.value, v.userid.value, v.mayor.value, v.mayor_count.value))
-    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetchAsync()) must_== List((v.legacyid.value, v.userid.value, v.mayor.value, v.mayor_count.value, v.closed.value))
-    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync()) must_== List((v.legacyid.value, v.userid.value, v.mayor.value, v.mayor_count.value, v.closed.value, v.tags.value))
+    val base = VenueR.where(_.id eqs v._id)
+    //val f = mandatoryFieldToSelectField(VenueR.legacyid)
+
+    blk(base.select(_.legacyid).fetchAsync()) must_== List(v.legId)
+/*
+    blk(base.select(_.legacyid, _.userid).fetchAsync()) must_== List((v.legId, v.userid))
+    blk(base.select(_.legacyid, _.userid, _.mayor).fetchAsync()) must_== List((v.legId, v.userid, v.mayor))
+    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetchAsync()) must_== List((v.legId, v.userid, v.mayor, v.mayor_count))
+    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetchAsync()) must_== List((v.legacyid, v.userid, v.mayor, v.mayor_count, v.closed))
+*/
+    //blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync()) must_== List((v.legId, v.userid, v.mayor, v.mayor_count, v.closed, v.tags))
   }
-
+/*
   @Test
   def selectEnum: Unit = {
         val v = baseTestVenue()
@@ -189,8 +193,8 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
   @Ignore("These tests are broken because DummyField doesn't know how to convert a String to an Enum")
   def testSelectEnumSubfield: Unit = {
-    val v = baseTestVenue()
-    blk(v.insertAsync())
+        val v = baseTestVenue()
+        blk(VenueR.insertOneAsync(v))
 
     // This behavior is broken because we get a String back from mongo, and at
     // that point we only have a DummyField for the subfield, and that doesn't
@@ -284,7 +288,6 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(q.skip(3).limit(5).countAsync()) must_== 5
     blk(q.skip(8).limit(4).countAsync()) must_== 2
   }
-
   @Test
   def testDistinct {
     (1 to 5).foreach(_ => blk(baseTestVenue().userid(1).insertAsync()))

@@ -192,7 +192,7 @@ case class ExecutableQuery[MB, M <: MB,  R, State](
   }
 */
   def existsAsync(implicit ev: State <:< Unlimited with Unskipped): Future[Boolean] = {
-    val q = query.copy(select = Some(MongoSelect[M, Null](Nil, _ => null)))
+    val q = query.copy(select = Some(MongoSelect[M, Null](IndexedSeq.empty, _ => null)))
     dba.exists(q.limit(1))
   }
 

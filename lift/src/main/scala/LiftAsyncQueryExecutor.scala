@@ -81,7 +81,7 @@ class LiftAsyncQueryExecutor(override val adapter: MongoAsyncJavaDriverAdapter[M
                                                                                        ): RogueReadSerializer[R] = {
     new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
-        case Some(MongoSelect(Nil, transformer)) =>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
@@ -103,7 +103,7 @@ class LiftAsyncQueryExecutor(override val adapter: MongoAsyncJavaDriverAdapter[M
       }
 
       override def fromDocument(dbo: Document): R = select match {
-        case Some(MongoSelect(Nil, transformer)) =>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.

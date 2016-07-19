@@ -73,7 +73,7 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
   override protected def readSerializer[M <: CcMeta[_], R](meta: M, select: Option[MongoSelect[M, R]]): RogueBsonRead[R] = {
     new RogueBsonRead[R] {
       override def fromDocument(dbo: BsonDocument): R = select match {
-        case Some(MongoSelect(Nil, transformer)) =>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.

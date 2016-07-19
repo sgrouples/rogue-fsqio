@@ -6,11 +6,12 @@ package me.sgrouples.rogue.cc
 
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 
-import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
+import io.fsq.field.{RequiredField, Field => RField, OptionalField => ROptionalField}
 import io.fsq.rogue.{BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
 import java.util.Date
+
 import org.bson.types.ObjectId
 
 trait CcRogue {
@@ -256,12 +257,15 @@ implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
 
   implicit def mapFieldToMapModifyField[M <: BsonRecord[M], F](f: Field[Map[String, F], M]): MapModifyField[F, M] =
     new MapModifyField[F, M](f)
-
+*/
   // SelectField implicits
-  implicit def mandatoryFieldToSelectField[M <: BsonRecord[M], V]
-  (f: Field[V, M] with MandatoryTypedField[V]): SelectField[V, M] =
+/*
+  implicit def mandatoryFieldToSelectField[O, V]
+  (f: RField[V, O] with RequiredField[V, O]): SelectField[V, O] =
   new MandatorySelectField(f)
+*/
 
+  /*
   implicit def optionalFieldToSelectField[M <: BsonRecord[M], V]
   (f: Field[V, M] with OptionalTypedField[V]): SelectField[Option[V], M] =
     new OptionalSelectField(new ROptionalField[V, M] {

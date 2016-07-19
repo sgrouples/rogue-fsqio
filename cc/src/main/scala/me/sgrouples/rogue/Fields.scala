@@ -1,5 +1,5 @@
 package me.sgrouples.rogue
-import io.fsq.field.Field
+import io.fsq.field.{Field, RequiredField}
 import shapeless._
 import labelled.{FieldType, field}
 import syntax.singleton._
@@ -11,18 +11,32 @@ import shapeless.ops.hlist.LiftAll
 import shapeless.syntax.SingletonOps
 
 
-object Owner
 
-class CField[V](val name:String) extends Field[V, Owner.type]{
-  override def owner = Owner
+abstract class CField[V, O](val name:String, val owner :O) extends Field[V,O]
+
+
+
+abstract class MCField[V, O](name:String, owner:O) extends CField[V, O](name, owner) with RequiredField[V,O]
+
+
+class IntField[O](name:String, o:O) extends MCField[Int,O](name, o) {
+  override def defaultValue = 0
 }
-
-class IntField(name:String) extends CField[Int](name)
-class LongField(name:String) extends CField[Long](name)
-class StringField(name:String) extends CField[String](name)
-class ObjectIdField(name:String) extends CField[ObjectId](name)
-class BooleanField(name:String) extends CField[Boolean](name)
-class EnumField[T <: Enumeration](name:String)(implicit e: T) extends CField[T#Value](name)
+class LongField[O](name:String, o:O) extends MCField[Long,O](name, o){
+  override def defaultValue = 0L
+}
+class StringField[O](name:String, o:O) extends MCField[String, O](name, o){
+  override def defaultValue = ""
+}
+class ObjectIdField[O](name:String, o:O) extends MCField[ObjectId, O](name, o){
+  override def defaultValue = ObjectId.get()
+}
+class BooleanField[O](name:String,o :O) extends MCField[Boolean, O](name, o){
+  override def defaultValue = false
+}
+class EnumField[T <: Enumeration, O](name:String, o:O)(implicit e: T) extends MCField[T#Value, O](name, o){
+  override def defaultValue: T#Value = e(0)
+}
 
 
 trait CcFields[T] {
@@ -32,6 +46,7 @@ trait CcFields[T] {
 
 
 trait LowPrioFields {
+  object Owner
 
   abstract class CcFieldFormat[Wrapped, SubRepr](implicit tpe :Typeable[Wrapped]) {
     type RecRepr
@@ -51,12 +66,14 @@ trait LowPrioFields {
                                                                                                       t: Typeable[Wrapped],
                                                                                                       key: Witness.Aux[Key],
                                                                                                       remFormat: CcFieldFormat.Aux[Wrapped, Remaining, RecRemH]
-                                                                                                    ): CcFieldFormat.Aux[Wrapped, FieldType[Key, Value] :: Remaining, FieldType[Key, CField[Value]] :: RecRemH ] =
+                                                                                                    ): CcFieldFormat.Aux[Wrapped, FieldType[Key, Value] :: Remaining, FieldType[Key, CField[Value, Owner.type]] :: RecRemH ] =
       new CcFieldFormat[Wrapped, FieldType[Key, Value] :: Remaining]{
-        type RecRepr =  FieldType[Key, CField[Value]] :: RecRemH
+        type RecRepr =  FieldType[Key, CField[Value, Owner.type]] :: RecRemH
 
         override def flds = {
-          val cc = new CField[Value](key.value.name)
+          val cc = new CField[Value, Owner.type ](key.value.name, Owner){
+
+          }
           val f= field[Key](cc)
           val k= f :: remFormat.flds
           //this does not work too... val k= (key.value.name ->> cc ) :: remFormat.flds
