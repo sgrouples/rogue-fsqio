@@ -82,10 +82,9 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
           //LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, "_id")
           val values =
             fields.map(fld => {
-              meta.reader(fld.field.name).read(dbo.get(fld.field.name))
-              //val valueOpt = meta.fields
-              //LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, fld.field.name)
-              //fld.valueOrDefault(valueOpt)
+              val bsonV = dbo.get(fld.field.name)
+              val reader = meta.reader(fld.field.name)
+              reader.read(bsonV)
             })
           transformer(values)
         case None =>

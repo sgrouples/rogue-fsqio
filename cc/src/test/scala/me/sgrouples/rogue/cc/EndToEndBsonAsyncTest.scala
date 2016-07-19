@@ -132,13 +132,12 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     //val f = mandatoryFieldToSelectField(VenueR.legacyid)
 
     blk(base.select(_.legacyid).fetchAsync()) must_== List(v.legId)
-/*
-    blk(base.select(_.legacyid, _.userid).fetchAsync()) must_== List((v.legId, v.userid))
-    blk(base.select(_.legacyid, _.userid, _.mayor).fetchAsync()) must_== List((v.legId, v.userid, v.mayor))
-    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetchAsync()) must_== List((v.legId, v.userid, v.mayor, v.mayor_count))
-    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetchAsync()) must_== List((v.legacyid, v.userid, v.mayor, v.mayor_count, v.closed))
-*/
-    //blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync()) must_== List((v.legId, v.userid, v.mayor, v.mayor_count, v.closed, v.tags))
+
+    blk(base.select(_.legacyid, _.userid).fetchAsync()) must_== List((v.legId, v.userId))
+    blk(base.select(_.legacyid, _.userid, _.mayor).fetchAsync()) must_== List((v.legId, v.userId, v.mayor))
+    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetchAsync()) must_== List((v.legId, v.userId, v.mayor, v.mayor_count))
+    blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetchAsync()) must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
+    //blk(base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync()) must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
   }
 /*
   @Test
@@ -155,11 +154,11 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
     val base = VenueR.where(_._id eqs v._id)
     blk(base.selectCase(_.legacyid, V1).fetchAsync()) must_== List(V1(v.legacyid.value))
-    blk(base.selectCase(_.legacyid, _.userid, V2).fetchAsync()) must_== List(V2(v.legacyid.value, v.userid.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, V3).fetchAsync()) must_== List(V3(v.legacyid.value, v.userid.value, v.mayor.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4).fetchAsync()) must_== List(V4(v.legacyid.value, v.userid.value, v.mayor.value, v.mayor_count.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5).fetchAsync()) must_== List(V5(v.legacyid.value, v.userid.value, v.mayor.value, v.mayor_count.value, v.closed.value))
-    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync()) must_== List(V6(v.legacyid.value, v.userid.value, v.mayor.value, v.mayor_count.value, v.closed.value, v.tags.value))
+    blk(base.selectCase(_.legacyid, _.userid, V2).fetchAsync()) must_== List(V2(v.legacyid.value, v.userId.value))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, V3).fetchAsync()) must_== List(V3(v.legacyid.value, v.userId.value, v.mayor.value))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4).fetchAsync()) must_== List(V4(v.legacyid.value, v.userId.value, v.mayor.value, v.mayor_count.value))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5).fetchAsync()) must_== List(V5(v.legacyid.value, v.userId.value, v.mayor.value, v.mayor_count.value, v.closed.value))
+    blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync()) must_== List(V6(v.legacyid.value, v.userId.value, v.mayor.value, v.mayor_count.value, v.closed.value, v.tags.value))
   }
 
   @Test

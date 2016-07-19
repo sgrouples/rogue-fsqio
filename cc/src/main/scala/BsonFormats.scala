@@ -20,6 +20,11 @@ import scala.reflect.ClassTag
 trait BsonFormat[T] {
   def read(b: BsonValue): T
   def write(t:T): BsonValue
+  def flds: Map[String, BsonFormat[_]]
+}
+
+trait BasicBsonFormat[T] extends BsonFormat[T] {
+  override def flds = Map.empty
 }
 
 /**
@@ -27,32 +32,32 @@ trait BsonFormat[T] {
   */
 trait BaseBsonFormats{
 
-  implicit object BooleanBsonFormat extends BsonFormat[Boolean] {
+  implicit object BooleanBsonFormat extends BasicBsonFormat[Boolean] {
     override def read(b: BsonValue): Boolean = b.asBoolean().getValue()
     override def write(t: Boolean): BsonValue = new BsonBoolean(t)
   }
 
-  implicit object IntBsonFormat extends BsonFormat[Int] {
+  implicit object IntBsonFormat extends BasicBsonFormat[Int] {
     override def read(b: BsonValue): Int = b.asNumber().intValue()
     override def write(t: Int): BsonValue = new BsonInt32(t)
   }
 
-  implicit object LongBsonFormat extends BsonFormat[Long] {
+  implicit object LongBsonFormat extends BasicBsonFormat[Long] {
     override def read(b: BsonValue): Long = b.asNumber().longValue()
     override def write(t: Long): BsonValue = new BsonInt64(t)
   }
 
-  implicit object StringBsonFormat extends BsonFormat[String] {
+  implicit object StringBsonFormat extends BasicBsonFormat[String] {
     override def read(b: BsonValue): String = b.asString().getValue()
     override def write(t: String): BsonValue = new BsonString(t)
   }
 
-  implicit object ObjectIdBsonFormat extends BsonFormat[ObjectId] {
+  implicit object ObjectIdBsonFormat extends BasicBsonFormat[ObjectId] {
     override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
     override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
   }
 
-  implicit object DoubleBsonFormat extends BsonFormat[Double] {
+  implicit object DoubleBsonFormat extends BasicBsonFormat[Double] {
     override def read(b: BsonValue): Double = b.asDouble().doubleValue()
     override def write(t: Double): BsonValue = new BsonDouble(t)
   }
@@ -66,7 +71,7 @@ trait BaseBsonFormats{
     * @see [[org.bson.codecs.UuidCodec]]
     * this implementation does not support C_SHARP_LEGACY codec at all
     */
-  implicit object UUIDBsonFormat extends BsonFormat[UUID] {
+  implicit object UUIDBsonFormat extends BasicBsonFormat[UUID] {
     override def read(bv: BsonValue): UUID = {
       val b = bv.asBinary()
       val bytes = b.getData()
@@ -92,13 +97,13 @@ trait BaseBsonFormats{
   }
 
 
-  implicit object LocalDateTimeBsonFormat extends BsonFormat[LocalDateTime] {
+  implicit object LocalDateTimeBsonFormat extends BasicBsonFormat[LocalDateTime] {
     override def read(b: BsonValue): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
     override def write(t: LocalDateTime): BsonValue = new BsonDateTime(t.toInstant(ZoneOffset.UTC).toEpochMilli)
   }
 
   //WARN to make it work, all enums must be in implicit scope for BsonFormat to work
-  implicit def enumFormat[T <: Enumeration](implicit enumeration :T) = new BsonFormat[T#Value] {
+  implicit def enumFormat[T <: Enumeration](implicit enumeration :T) = new BasicBsonFormat[T#Value] {
     override def read(b: BsonValue): T#Value = enumeration.withName(b.asString().getValue())
     override def write(t: T#Value): BsonValue = new BsonString(t.toString)
   }
@@ -110,7 +115,7 @@ trait BsonCollectionFormats {
 
   private[rogue] type BF[T] = BsonFormat[T]
 
-  implicit def listFormat[T :BsonFormat] = new BsonFormat[List[T]] {
+  implicit def listFormat[T :BsonFormat] = new BasicBsonFormat[List[T]] {
     implicit val f = implicitly[BsonFormat[T]]
     def write(list: List[T]) = {
       new BsonArray(list.map(f.write(_)))
@@ -120,7 +125,7 @@ trait BsonCollectionFormats {
     }
   }
 
-  implicit def arrayFormat[T :BsonFormat : ClassTag] = new BsonFormat[Array[T]] {
+  implicit def arrayFormat[T :BsonFormat : ClassTag] = new BasicBsonFormat[Array[T]] {
     implicit val f = implicitly[BsonFormat[T]]
     def write(array: Array[T]) = {
       val buff = new ArrayBuffer[BsonValue](array.length)
@@ -144,6 +149,8 @@ trait BsonCollectionFormats {
     }
     def read(value: BsonValue) = if(value.isNull) None
     else Option(f.read(value))
+
+    override def flds: Map[String, BF[_]] = Map.empty
   }
 
   implicit def mapFormat[K :BsonFormat, V :BsonFormat] = new BsonFormat[Map[K, V]] {
@@ -163,6 +170,8 @@ trait BsonCollectionFormats {
         (fk.read(new BsonString(ks)), fv.read(v))
       }(collection.breakOut)
     }
+    //in general terms, yes, as we don't know keys
+    override def flds = Map.empty
   }
 
   //TODO - other collections - see SprayJson viaSeq
@@ -208,11 +217,13 @@ trait LowPrioBsonFormats {
   abstract class WrappedBsonFromat[Wrapped, SubRepr](implicit tpe :Typeable[Wrapped]) {
     def write(v: SubRepr): BsonValue
     def read(b: BsonValue): SubRepr
+    def flds: Map[String, BsonFormat[_]]
   }
 
   implicit def hHilBsonFormat[Wrapped](implicit tpe: Typeable[Wrapped]): WrappedBsonFromat[Wrapped, HNil] = new WrappedBsonFromat[Wrapped, HNil]{
     override def write(t: HNil): BsonValue = BsonNull.VALUE
     override def read(b: BsonValue) = HNil
+    def flds = Map.empty
   }
 
 
@@ -254,6 +265,8 @@ trait LowPrioBsonFormats {
        field[Key](resolved) :: remaining
 
      }
+
+     def flds =  remFormat.flds + (fieldName -> headSer.value)
    }
 
  /* For future support of coproducts
@@ -297,6 +310,7 @@ trait LowPrioBsonFormats {
                           ) : BsonFormat[T] = new BsonFormat[T] {
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
     override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
+    override val flds = sg.value.value.flds
   }
 
 }

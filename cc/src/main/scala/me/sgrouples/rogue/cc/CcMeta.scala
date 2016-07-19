@@ -21,11 +21,11 @@ trait CcMeta[T] extends CcMetaLike[T] {
   //TODO - how to make it play nice with types?
   def writeAnyRef(t:AnyRef): BsonDocument
 
-  def reader[F](fieldName: String): BsonFormat[F]
+  def reader(fieldName: String): BsonFormat[_]
 }
 
-class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends BsonFormat[T] with CcMeta[T]{
-  override type R = T
+class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
+
   def connId = "default"
 
   override def collectionName: String = collName
@@ -35,7 +35,11 @@ class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends BsonFormat[
 
   override def dbs(): com.mongodb.client.MongoDatabase = ???
 
-  override def reader[F](fieldName: String): BsonFormat[F] = ???
+  override def reader(fieldName: String): BsonFormat[_] = {
+    val r = f.flds.get(fieldName)
+    //throw up ?
+    r.get
+  }
 
   override def read(b: BsonValue): T = f.read(b)
 
