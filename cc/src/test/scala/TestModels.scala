@@ -33,7 +33,6 @@ case class V5(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, clos
 
 case class V6(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String])
 
-
 case class SourceBson(name:String, url:String)
 
 case class VenueClaimBson(uid: Long, status: ClaimStatus.Value, source: Option[SourceBson] = None, date: LocalDateTime = LocalDateTime.now())

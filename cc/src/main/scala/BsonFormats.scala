@@ -2,7 +2,6 @@ package me.sgrouples.rogue
 
 import java.nio.{ByteBuffer, ByteOrder}
 import java.time.{Instant, LocalDateTime, ZoneOffset}
-import java.util
 import java.util.UUID
 
 import shapeless._
@@ -236,9 +235,10 @@ trait LowPrioBsonFormats {
                                                                              ): WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] =
    new WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] {
      private[this] val fieldName  = key.value.name
+     private[this] val hs = headSer.value
      override def write(ft: FieldType[Key, Value] :: Remaining): BsonValue = {
        val rest = remFormat.write(ft.tail)
-       val serializedVal = headSer.value.write(ft.head)
+       val serializedVal = hs.write(ft.head)
        if(!serializedVal.isNull) {
          val fName = key.value.name
          if(rest.isNull) {
@@ -252,13 +252,12 @@ trait LowPrioBsonFormats {
      }
 
      override def read(b: BsonValue): FieldType[Key, Value] :: Remaining = {
-       val f = headSer.value
        val resolved: Value = {
          val v = b.asDocument().get(fieldName)
          if(v == null || v.isNull) {
-           f.read(BsonNull.VALUE)
+           hs.read(BsonNull.VALUE)
          } else {
-           f.read(v)
+           hs.read(v)
          }
        }
        val remaining = remFormat.read(b)
@@ -266,7 +265,10 @@ trait LowPrioBsonFormats {
 
      }
 
-     def flds =  remFormat.flds + (fieldName -> headSer.value)
+     def flds = {
+       val subfieldFlds = hs.flds.map { case (subfieldName, s) => (fieldName+"."+ subfieldName -> s)}
+       remFormat.flds ++ subfieldFlds + (fieldName -> hs)
+     }
    }
 
  /* For future support of coproducts

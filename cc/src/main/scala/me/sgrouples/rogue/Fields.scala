@@ -1,4 +1,7 @@
 package me.sgrouples.rogue
+import java.time.LocalDateTime
+import java.util.UUID
+
 import io.fsq.field.{Field, RequiredField}
 import shapeless._
 import labelled.{FieldType, field}
@@ -16,10 +19,7 @@ import scala.reflect.ClassTag
 
 abstract class CField[V, O](val name:String, val owner :O) extends Field[V,O]
 
-
-
 abstract class MCField[V, O](name:String, owner:O) extends CField[V, O](name, owner) with RequiredField[V,O]
-
 
 class IntField[O](name:String, o:O) extends MCField[Int,O](name, o) {
   override def defaultValue = 0
@@ -27,12 +27,24 @@ class IntField[O](name:String, o:O) extends MCField[Int,O](name, o) {
 class LongField[O](name:String, o:O) extends MCField[Long,O](name, o){
   override def defaultValue = 0L
 }
+class DoubleField[O](name:String, o:O) extends MCField[Double,O](name, o){
+  override def defaultValue = 0d
+}
 class StringField[O](name:String, o:O) extends MCField[String, O](name, o){
   override def defaultValue = ""
 }
 class ObjectIdField[O](name:String, o:O) extends MCField[ObjectId, O](name, o){
   override def defaultValue = ObjectId.get()
 }
+
+class UUIDIdField[O](name:String, o:O) extends MCField[UUID, O](name, o){
+  override def defaultValue = UUID.randomUUID()
+}
+
+class LocalDateTimeField[O](name:String, o:O) extends MCField[LocalDateTime, O](name, o){
+  override def defaultValue = LocalDateTime.now()
+}
+
 class BooleanField[O](name:String,o :O) extends MCField[Boolean, O](name, o){
   override def defaultValue = false
 }
@@ -47,7 +59,6 @@ class ListField[V, O](name:String, o:O) extends MCField[List[V], O](name, o){
 class ArrayField[V :ClassTag, O](name:String, o:O) extends MCField[Array[V], O](name, o){
   override def defaultValue = Array.empty[V]
 }
-
 
 trait CcFields[T] {
   type RecRepr
