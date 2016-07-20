@@ -4,7 +4,7 @@ import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.DBObject
 import com.mongodb.async.client.MongoCollection
-import org.bson.BsonDocument
+import org.bson.{BsonArray, BsonDocument, BsonValue}
 import io.fsq.rogue._
 import org.bson.codecs.configuration.CodecRegistries
 
@@ -69,6 +69,7 @@ object CcAsyncAdapter extends CcAsyncAdapter(CcAsyncDBCollectionFactory)
 class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter[CcMeta[_]]) extends AsyncBsonQueryExecutor[CcMeta[_]] {
   override def defaultWriteConcern = QueryHelpers.config.defaultWriteConcern
   override lazy val optimizer = new QueryOptimizer
+
   //M <: MongoRecord[_] with MongoMetaRecord[_], R]
   override protected def readSerializer[M <: CcMeta[_], R](meta: M, select: Option[MongoSelect[M, R]]): RogueBsonRead[R] = {
     new RogueBsonRead[R] {
@@ -80,11 +81,22 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
           transformer(null)
         case Some(MongoSelect(fields, transformer)) =>
           //LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, "_id")
+          println(s"Whole DBO ${dbo} ${dbo.getClass}")
           val values =
             fields.map(fld => {
-              val bsonV = dbo.get(fld.field.name)
-              val reader = meta.reader(fld.field.name)
-              reader.read(bsonV)
+              val bsonV = readBsonVal(dbo, fld.field.name)
+                //.get(fld.field.name)
+              println(s"BsonV is ${bsonV}")
+              println(s"field name is ${fld.field.name}")
+              println(s"Field  is ${fld}")
+              println(s"Field.field is ${fld.field}")
+              val reader = meta.reader(fld.field)
+              //TODO - does not in case reader is for non-array, and subselect returns array
+              if(bsonV.isArray) {
+                reader.readArray(bsonV.asArray())
+              } else {
+                reader.read(bsonV)
+              }
             })
           transformer(values)
         case None =>
@@ -92,6 +104,42 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
           meta.read(dbo).asInstanceOf[R]
       }
     }
+  }
+
+  /*
+  Lift record version:
+  fieldName.contains(".") match {
+      case true =>
+        val names = fieldName.split("\\.").toList.filter(_ != "$")
+        setInstanceFieldFromDocList(instance, dbo, names)
+      case false =>
+        val fld: Box[LField[_, _]] = instance.fieldByName(fieldName)
+        fld.flatMap (setLastFieldFromDoc(_, dbo, fieldName))
+    }
+   */
+  private[this] def readBsonVal(dbo: BsonDocument, fldName: String):BsonValue = {
+    val parts = fldName.split('.')
+    println(s"parts fldName ${fldName} len ${parts.length} ${parts}")
+    var i = 0
+    var d:BsonValue = dbo
+    while(i < parts.length) {
+      val key = parts(i)
+      if(d.isArray){
+        val r = new BsonArray()
+        val it = d.asArray().iterator()
+        while(it.hasNext){
+          r.add(it.next().asDocument().get(key))
+        }
+        d = r
+      } else {
+        d = d.asDocument().get(key)
+      }
+      println(s"Getting ${parts(i)} from ${d}")
+      println(s"Got ${d}")
+      i = i + 1
+    }
+    println(s"Returning ${d} ${d.getBsonType}")
+    d
   }
 
   override protected def writeSerializer[M <: CcMeta[_], R](meta: M): RogueBsonWrite[R] = {

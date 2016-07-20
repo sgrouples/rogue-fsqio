@@ -2,9 +2,10 @@ package me.sgrouples.rogue
 import java.time.LocalDateTime
 import java.util.UUID
 
-import io.fsq.field.{Field, RequiredField}
+import io.fsq.field.{Field, OptionalField, RequiredField}
 import shapeless._
 import labelled.{FieldType, field}
+import me.sgrouples.rogue.cc.CcMeta
 import syntax.singleton._
 import record._
 import ops.record._
@@ -20,6 +21,8 @@ import scala.reflect.ClassTag
 abstract class CField[V, O](val name:String, val owner :O) extends Field[V,O]
 
 abstract class MCField[V, O](name:String, owner:O) extends CField[V, O](name, owner) with RequiredField[V,O]
+
+abstract class OCField[V, O](name:String, owner:O) extends CField[V, O](name, owner) with OptionalField[V,O]
 
 class IntField[O](name:String, o:O) extends MCField[Int,O](name, o) {
   override def defaultValue = 0
@@ -59,6 +62,35 @@ class ListField[V, O](name:String, o:O) extends MCField[List[V], O](name, o){
 class ArrayField[V :ClassTag, O](name:String, o:O) extends MCField[Array[V], O](name, o){
   override def defaultValue = Array.empty[V]
 }
+
+class CClassField[C <: Product, MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[C, O]
+
+class CClassListField[C <: Product, MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[Seq[C], O]
+
+class CClassArrayField[C <: Product : ClassTag, O](name:String, o:O) extends MCField[Array[C], O](name, o){
+  override def defaultValue = Array.empty[C]
+}
+
+class MapField[V, O](name:String, o:O) extends MCField[Map[String, V], O](name, o){
+  override def defaultValue = Map.empty
+}
+
+
+class OptIntField[O](name:String, o:O) extends OCField[Int,O](name, o)
+class OptLongField[O](name:String, o:O) extends OCField[Long,O](name, o)
+class OptDoubleField[O](name:String, o:O) extends OCField[Double,O](name, o)
+class OptStringField[O](name:String, o:O) extends OCField[String, O](name, o)
+class OptObjectIdField[O](name:String, o:O) extends OCField[ObjectId, O](name, o)
+class OptUUIDIdField[O](name:String, o:O) extends OCField[UUID, O](name, o)
+class OptLocalDateTimeField[O](name:String, o:O) extends OCField[LocalDateTime, O](name, o)
+class OptBooleanField[O](name:String,o :O) extends OCField[Boolean, O](name, o)
+class OptEnumField[T <: Enumeration, O](name:String, o:O)(implicit e: T) extends OCField[T#Value, O](name, o)
+class OptListField[V, O](name:String, o:O) extends OCField[List[V], O](name, o)
+class OptArrayField[V :ClassTag, O](name:String, o:O) extends OCField[Array[V], O](name, o)
+class OptCClassField[C <: Product, MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[C, O]
+class OptCClassListField[C <: Product, O](name:String, o:O) extends OCField[List[C], O](name, o)
+class OptCClassArrayField[C <: Product : ClassTag, O](name:String, o:O) extends OCField[Array[C], O](name, o)
+class OptMapField[V, O](name:String, o:O) extends OCField[Map[String, V], O](name, o)
 
 trait CcFields[T] {
   type RecRepr

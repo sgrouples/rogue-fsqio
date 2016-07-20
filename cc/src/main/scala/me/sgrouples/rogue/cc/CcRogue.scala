@@ -12,6 +12,7 @@ import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
 import java.util.Date
 
+import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 
 trait CcRogue {
@@ -50,7 +51,7 @@ trait CcRogue {
 
   implicit def queryToCcQuery[MB <: CcMeta[_], M <: MB, R, State]
   (query: Query[M, R, State])
-  (implicit ev: ShardingOk[M, State]) = {
+  (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M, R, State] = {
     ExecutableQuery(
       query,
       CcAsyncQueryExecutor
@@ -58,17 +59,21 @@ trait CcRogue {
   }
 
   //}
+
   /*
-  implicit def modifyQueryToLiftModifyQuery[M <: CcMeta[_], State](
+  case class ExecutableModifyQuery[MB, M <: MB, State](query: ModifyQuery[M, State],
+                                                         dba: AsyncBsonQueryExecutor[MB]) {
+*/
+
+  implicit def modifyQueryToCCModifyQuery[MB <: CcMeta[_], M <: MB, R, State](
                                                                          query: ModifyQuery[M, State]
-                                                                       ): ExecutableModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], State] = {
+                                                                       ):ExecutableModifyQuery[CcMeta[_],M , State] = {
     ExecutableModifyQuery(
-      query.asInstanceOf[ModifyQuery[M with MongoMetaRecord[_], State]],
-      LiftQueryExecutor,
-      LiftAsyncQueryExecutor
+      query,
+      CcAsyncQueryExecutor
     )
   }
-
+/*
   implicit def findAndModifyQueryToLiftFindAndModifyQuery[M <: CcMeta[_], R](
                                                                                    query: FindAndModifyQuery[M, R]
                                                                                  ): ExecutableFindAndModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R] = {
@@ -90,16 +95,6 @@ trait CcRogue {
                                                        query: Query[M, R, State],
                                                        dba: AsyncBsonQueryExecutor[MB]
                                                      )(implicit ev: ShardingOk[M, State]) {
-
-implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
-    (query: Query[M, R, State])
-    (implicit ev: ShardingOk[M with MongoMetaRecord[_], State]): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R, State] = {
-    ExecutableQuery(
-        query.asInstanceOf[Query[M with MongoMetaRecord[_], R, State]],
-        LiftQueryExecutor,
-        LiftAsyncQueryExecutor
-    )
-  }
 
    */
   /*
@@ -150,14 +145,18 @@ implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
   implicit def dateFieldToDateQueryField[M <: BsonRecord[M]]
   (f: Field[java.util.Date, M]): DateQueryField[M] =
     new DateQueryField(f)
+*/
+  implicit def caseClassFieldToQueryField[C <: Product, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
+    new CClassQueryField[C, M, O](f, f.owner)
 
-  implicit def ccFieldToQueryField[M <: BsonRecord[M], F](f: MongoCaseClassField[M, F]): CaseClassQueryField[F, M] =
-    new CaseClassQueryField[F, M](f)
+  implicit def optCaseClassFieldToQueryField[C <: Product, M <: CcMeta[C], O](f: OptCClassField[C, M, O]): OptCClassQueryField[C, M, O] =
+    new OptCClassQueryField[C, M, O](f, f.owner)
 
-  implicit def ccListFieldToListQueryField[M <: BsonRecord[M], F]
-  (f: MongoCaseClassListField[M, F]): CaseClassListQueryField[F, M] =
-    new CaseClassListQueryField[F, M](liftField2Recordv2Field(f))
 
+  implicit def ccListFieldToListQueryField[C <: Product, M <: CcMeta[C], O]
+  (f: CClassListField[C, M, O]):CClassSeqQueryField[C,M,O] = new CClassSeqQueryField[C,M,O](f, f.owner)
+  /*
+  //(field: Field[List[B], M], rec: B, toBson: B => BsonValue)
   implicit def doubleFieldtoNumericQueryField[M <: BsonRecord[M], F]
   (f: Field[Double, M]): NumericQueryField[Double, M] =
     new NumericQueryField(f)
@@ -174,10 +173,6 @@ implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
   (f: Field[List[F], M]): EnumerationListQueryField[F, M] =
     new EnumerationListQueryField[F, M](f)
 
-  implicit def foreignObjectIdFieldToForeignObjectIdQueryField[M <: BsonRecord[M],
-  T <: MongoRecord[T] with ObjectIdKey[T]]
-  (f: Field[ObjectId, M] with HasMongoForeignObjectId[T]): ForeignObjectIdQueryField[ObjectId, M, T] =
-    new ForeignObjectIdQueryField[ObjectId, M, T](f, _.id)
 
   implicit def intFieldtoNumericQueryField[M <: BsonRecord[M], F](f: Field[Int, M]): NumericQueryField[Int, M] =
     new NumericQueryField(f)
@@ -197,7 +192,7 @@ implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
   implicit def objectIdFieldToObjectIdQueryField[M <: BsonRecord[M], F <: ObjectId](f: Field[F, M]): ObjectIdQueryField[F, M] =
     new ObjectIdQueryField(f)
 
-  implicit def mapFieldToMapQueryField[M <: BsonRecord[M], F](f: Field[Map[String, F], M]): MapQueryField[F, M] =
+  implicit def mapFieldToMapQueryField[M, F](f: RField[Map[String, F], M]): MapQueryField[F, M] =
     new MapQueryField[F, M](f)
 
   implicit def stringFieldToStringQueryField[F <: String, M <: BsonRecord[M]](f: Field[F, M]): StringQueryField[F, M] =
@@ -280,12 +275,8 @@ implicit def queryToLiftQuery[M <: MongoRecord[_], R, State]
     override def owner = f.owner
     override def defaultValue = f.defaultValue
   }
-
-  implicit def liftField2Recordv2Field[M <: Record[M], V](f: Field[V, M]): io.fsq.field.Field[V, M] = new io.fsq.field.Field[V, M] {
-    override def name = f.name
-    override def owner = f.owner
-  }
-
+*/
+  /*
   class BsonRecordIsBSONType[T <: BsonRecord[T]] extends BSONType[T] {
     override def asBSONObject(v: T): AnyRef = v.asDBObject
   }

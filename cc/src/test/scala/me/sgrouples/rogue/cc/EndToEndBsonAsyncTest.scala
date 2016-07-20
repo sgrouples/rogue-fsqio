@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.regex.Pattern
 
 import io.fsq.rogue._
+import me.sgrouples.rogue.LongField
 //import io.fsq.rogue.test.TrivialAsyncORMTests
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
@@ -16,8 +17,7 @@ import CcRogue._
 
 
 class EndToEndBsonAsyncTest extends JUnitMustMatchers {
-  import Metas.VenueClaimR
-  import Metas.VenueR
+  import Metas._
 
   val atMost = 5 seconds
 
@@ -161,36 +161,48 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync()) must_== List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
   }
 
-  /*
+
   @Test
   def selectSubfieldQueries: Unit = {
-        val v = baseTestVenue()
-        blk(VenueR.insertOneAsync(v))
+    val v = baseTestVenue()
+    blk(VenueR.insertOneAsync(v))
     val t = baseTestTip()
-    blk(t.insertAsync())
+    blk(TipR.insertOneAsync(t))
 
+    //TODO - no support for querying map fields now
     // select subfields
-    blk(Tip.where(_._id eqs t.id).select(_.counts at "foo").fetchAsync()) must_== Seq(Some(1L))
-    blk(VenueR.where(_._id eqs v._id).select(_.geolatlng.unsafeField[Double]("lat")).fetchAsync()) must_== List(Some(40.73))
+    //val q=TipR.where(_.id eqs t._id).select(_.counts at "foo")
+    //println(s"Q ${q.query}")
+    //blk(q.fetchAsync()) must_== Seq(Some(1L))
 
-    val subuserids: Seq[Option[List[Long]]] = blk(VenueR.where(_._id eqs v._id).select(_.claims.subselect(_.userid)).fetchAsync())
+    //todo - no unsafe fields now
+    //blk(VenueR.where(_.id eqs v._id).select(_.geolatlng.unsafeField[Double]("lat")).fetchAsync()) must_== List(Some(40.73))
+    val subuserids: Seq[Option[List[Long]]] = blk(VenueR.where(_.id eqs v._id).select(_.claims.subselect(_.uid)).fetchAsync())
+    println(s"Sub user ids ${subuserids}")
     subuserids must_== List(Some(List(1234, 5678)))
 
-    val q = VenueR.where(_.claims.subfield(_.userid) eqs 1234).select(_.claims.$$)
+    /*val q = VenueR.where(_.claims.subfield(_.uid) eqs 1234).select(_.claims.$$)
     val subclaims: Seq[List[VenueClaimBson]] = blk(q.fetchAsync())
     subclaims.size must_== 1
     subclaims.head.size must_== 1
-    subclaims.head.head.userid must_== 1234
+    subclaims.head.head.uid must_== 1234
     subclaims.head.head.status must_== ClaimStatus.pending
-
+*/
     // selecting a claims.userid when there is no top-level claims list should
     // have one element in the List for the one Venue, but an Empty for that
     // Venue since there's no list of claims there.
-    blk(VenueR.where(_._id eqs v._id).modify(_.claims unset).and(_.lastClaim unset).updateOneAsync())
-    blk(VenueR.where(_._id eqs v._id).select(_.lastClaim.subselect(_.userid)).fetchAsync()) must_== List(None)
-    blk(VenueR.where(_._id eqs v._id).select(_.claims.subselect(_.userid)).fetchAsync()) must_== List(None)
-  }
+    blk(VenueR.where(_.id eqs v._id).modify(_.claims unset).and(_.lastClaim unset).updateOneAsync())
+    //val x =caseClassFieldToQueryField(VenueR.lastClaim).subfield(_.uid)
 
+    //val d = VenueR.select(_.lastClaim.subfield(_.uid))
+    //val f= roptionalFieldToSelectField(ccMetaToQueryBuilder(VenueR).select(_.lastClaim.subfield(_.uid)))
+    //val q = VenueR.where(_.id eqs v._id).select(_.lastClaim.subfield(_.uid))
+
+    blk(VenueR.where(_.id eqs v._id).select(_.lastClaim.subfield(_.uid)).fetchAsync()) must_== List(None)
+    blk(VenueR.where(_.id eqs v._id).select(_.lastClaim.subselect(_.uid)).fetchAsync()) must_== List(None)
+    blk(VenueR.where(_.id eqs v._id).select(_.claims.subselect(_.uid)).fetchAsync()) must_== List(None)
+  }
+/*
   @Ignore("These tests are broken because DummyField doesn't know how to convert a String to an Enum")
   def testSelectEnumSubfield: Unit = {
         val v = baseTestVenue()

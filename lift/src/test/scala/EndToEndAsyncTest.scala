@@ -178,6 +178,12 @@ class EndToEndAsyncTest extends JUnitMustMatchers {
     // Venue since there's no list of claims there.
     blk(Venue.where(_._id eqs v.id).modify(_.claims unset).and(_.lastClaim unset).updateOneAsync())
     blk(Venue.where(_._id eqs v.id).select(_.lastClaim.subselect(_.userid)).fetchAsync()) must_== List(None)
+
+    val q1 = Venue.where(_._id eqs v.id).select(_.lastClaim.subselect(_.userid))
+    val q2 = queryToLiftQuery(Venue.select(_.lastClaim.subselect(_.userid)))
+    println(s"QQ ${q2}")
+
+
     blk(Venue.where(_._id eqs v.id).select(_.claims.subselect(_.userid)).fetchAsync()) must_== List(None)
   }
 

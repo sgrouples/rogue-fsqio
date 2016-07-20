@@ -18,12 +18,26 @@ import scala.reflect.ClassTag
 @implicitNotFound("implicit BsonFormat not found for ${T}")
 trait BsonFormat[T] {
   def read(b: BsonValue): T
+  def readArray(b:BsonArray): Seq[T]
   def write(t:T): BsonValue
   def flds: Map[String, BsonFormat[_]]
 }
 
-trait BasicBsonFormat[T] extends BsonFormat[T] {
+trait BsonArrayReader[T] {
+  this: BsonFormat[T] =>
+  override def readArray(b:BsonArray) = {
+    val sb = Seq.newBuilder[T]
+    val it = b.iterator()
+    while(it.hasNext){
+      sb += read(it.next())
+    }
+    sb.result()
+  }
+}
+
+trait BasicBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T]{
   override def flds = Map.empty
+
 }
 
 /**
@@ -114,7 +128,7 @@ trait BsonCollectionFormats {
 
   private[rogue] type BF[T] = BsonFormat[T]
 
-  implicit def listFormat[T :BsonFormat] = new BasicBsonFormat[List[T]] {
+  implicit def listFormat[T :BsonFormat] = new BsonFormat[List[T]] with BsonArrayReader[List[T]]{
     implicit val f = implicitly[BsonFormat[T]]
     def write(list: List[T]) = {
       new BsonArray(list.map(f.write(_)))
@@ -122,9 +136,11 @@ trait BsonCollectionFormats {
     def read(value: BsonValue): List[T] = {
       value.asArray().map(f.read(_)).toList
     }
+
+    override def flds: Map[String, BF[_]] = f.flds
   }
 
-  implicit def arrayFormat[T :BsonFormat : ClassTag] = new BasicBsonFormat[Array[T]] {
+  implicit def arrayFormat[T :BsonFormat : ClassTag] = new BsonFormat[Array[T]] with BsonArrayReader[Array[T]] {
     implicit val f = implicitly[BsonFormat[T]]
     def write(array: Array[T]) = {
       val buff = new ArrayBuffer[BsonValue](array.length)
@@ -134,6 +150,7 @@ trait BsonCollectionFormats {
     def read(value: BsonValue) = {
       value.asArray().map(f.read(_)).toArray
     }
+    override def flds: Map[String, BF[_]] = f.flds
   }
 
   implicit def optionFormat[T :BF]: BF[Option[T]] = new OptionFormat[T]
@@ -149,10 +166,19 @@ trait BsonCollectionFormats {
     def read(value: BsonValue) = if(value.isNull) None
     else Option(f.read(value))
 
-    override def flds: Map[String, BF[_]] = Map.empty
+    override def readArray(b:BsonArray) = {
+      val sb = Seq.newBuilder[Option[T]]
+      val it = b.iterator()
+      while(it.hasNext){
+        sb += read(it.next())
+      }
+      sb.result()
+    }
+
+    override def flds: Map[String, BF[_]] = f.flds
   }
 
-  implicit def mapFormat[K :BsonFormat, V :BsonFormat] = new BsonFormat[Map[K, V]] {
+  implicit def mapFormat[K :BsonFormat, V :BsonFormat] = new BsonFormat[Map[K, V]]  with BsonArrayReader[Map[K, V]] {
     implicit val fk = implicitly[BsonFormat[K]]
     implicit val fv = implicitly[BsonFormat[V]]
     def write(m: Map[K, V]) = {
@@ -171,7 +197,9 @@ trait BsonCollectionFormats {
     }
     //in general terms, yes, as we don't know keys
     override def flds = Map.empty
+
   }
+
 
   //TODO - other collections - see SprayJson viaSeq
   /*
@@ -309,9 +337,10 @@ trait LowPrioBsonFormats {
   implicit def bsonEncoder[T, Repr](implicit gen: LabelledGeneric.Aux[T, Repr],
                            sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
                            tpe: Typeable[T]
-                          ) : BsonFormat[T] = new BsonFormat[T] {
+                          ) : BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T]{
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
     override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
+
     override val flds = sg.value.value.flds
   }
 

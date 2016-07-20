@@ -47,8 +47,23 @@ case class Venue(_id: ObjectId, legId: Long, userId: Long, venuename: String, ma
 case class Tip(_id: ObjectId, legid:Long, counts: Map[String, Long], userId:Option[Long] = None)
 
 object Metas {
-
   import me.sgrouples.rogue.BsonFormats._
+
+   object SourceBsonR extends RCcMeta[SourceBson]("_"){
+     val name = new StringField("name", this)
+     val url = new StringField("url", this)
+   }
+
+   implicit val evClaimStatus = ClaimStatus
+
+
+  object VenueClaimBsonR extends RCcMeta[VenueClaimBson]("_") {
+    val uid = new LongField("uid", this)
+    val status = new EnumField[ClaimStatus.type, VenueClaimBsonR.type]("status", this)
+    val source = new OptCClassField[SourceBson, SourceBsonR.type, VenueClaimBsonR.type]("source", SourceBsonR, this)
+    val date = new LocalDateTimeField("date", this)
+  }
+
 
   implicit val evVenueStatus = VenueStatus
 
@@ -62,10 +77,13 @@ object Metas {
     val legacyid = new LongField("legId", this)
     val userid = new LongField("userId", this)
     val tags = new ListField[String, VenueR.type]("tags", this)
+    val geolatlng = new DoubleField("latlng",this)
+    //todo - maybe ListCaseClassField is needed ?
+    val claims = new CClassListField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("claims", VenueClaimBsonR, this)
+    val lastClaim = new OptCClassField[VenueClaimBson, VenueClaimBsonR.type , VenueR.type]("lastClaim", VenueClaimBsonR, this)
 
   }
 
-  implicit val evClaimStatus = ClaimStatus
   implicit val evRejReason = RejectReason
 
   object VenueClaimR extends RCcMeta[VenueClaim]("venueclaims") {
@@ -76,7 +94,8 @@ object Metas {
   object TipR extends RCcMeta[Tip]("tips") {
     val id = new ObjectIdField("_id", this)
     val legacyid = new LongField("legid", this)
-
+    val userId = new OptLongField("userId", this)
+    val counts = new MapField[Long, TipR.type]("counts", this)
   }
 }
 

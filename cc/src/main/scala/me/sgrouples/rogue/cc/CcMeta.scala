@@ -1,5 +1,6 @@
 package me.sgrouples.rogue.cc
 
+import io.fsq.field.Field
 import me.sgrouples.rogue.{BsonFormat, BsonFormats}
 import org.bson.{BsonDocument, BsonValue}
 
@@ -21,7 +22,7 @@ trait CcMeta[T] extends CcMetaLike[T] {
   //TODO - how to make it play nice with types?
   def writeAnyRef(t:AnyRef): BsonDocument
 
-  def reader(fieldName: String): BsonFormat[_]
+  def reader(field: Field[_,_]): BsonFormat[_]
 }
 
 class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
@@ -35,10 +36,13 @@ class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
 
   override def dbs(): com.mongodb.client.MongoDatabase = ???
 
-  override def reader(fieldName: String): BsonFormat[_] = {
+  override def reader(field: Field[_,_]): BsonFormat[_] = {
+    val fieldName = field.name
+   // if field.isInstanceOf[]
     val r = f.flds.get(fieldName)
-    //throw up ?
-    r.get
+    r.getOrElse{
+      throw new RuntimeException(s"No reader for field ${fieldName}, avaialble keys ${f.flds.keys.mkString(",")}")
+    }
   }
 
   override def read(b: BsonValue): T = f.read(b)

@@ -22,7 +22,7 @@ object RogueSettings {
     },
    
     resolvers ++= Seq(nexusReleases, nexusSnapshots),
-    scalacOptions ++= Seq("-deprecation", "-unchecked"),
+    scalacOptions ++= Seq("-deprecation", "-unchecked"), //, "-Xlog-implicit-conversions"),
     scalacOptions <++= scalaVersion map { scalaVersion =>
         scalaVersion.split('.') match {
             case Array(major, minor, _*) if major.toInt >= 2 && minor.toInt >= 10 => Seq("-feature", "-language:_")
