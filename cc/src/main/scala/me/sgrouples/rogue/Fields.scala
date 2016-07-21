@@ -17,7 +17,6 @@ import shapeless.syntax.SingletonOps
 import scala.reflect.ClassTag
 
 
-
 abstract class CField[V, O](val name:String, val owner :O) extends Field[V,O]
 
 abstract class MCField[V, O](name:String, owner:O) extends CField[V, O](name, owner) with RequiredField[V,O]
@@ -65,7 +64,9 @@ class ArrayField[V :ClassTag, O](name:String, o:O) extends MCField[Array[V], O](
 
 class CClassField[C <: Product, MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[C, O]
 
-class CClassListField[C <: Product, MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[Seq[C], O]
+class CClassListField[C <: Product, MC<: CcMeta[C], O](name:String, val childMeta: MC, owner:O) extends MCField[Seq[C], O](name, owner){
+  override def defaultValue: Seq[C] = Seq.empty[C]
+}
 
 class CClassArrayField[C <: Product : ClassTag, O](name:String, o:O) extends MCField[Array[C], O](name, o){
   override def defaultValue = Array.empty[C]

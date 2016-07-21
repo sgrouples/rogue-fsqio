@@ -181,13 +181,13 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     println(s"Sub user ids ${subuserids}")
     subuserids must_== List(Some(List(1234, 5678)))
 
-    /*val q = VenueR.where(_.claims.subfield(_.uid) eqs 1234).select(_.claims.$$)
-    val subclaims: Seq[List[VenueClaimBson]] = blk(q.fetchAsync())
+    val q = VenueR.where(_.claims.subfield(_.uid) eqs 1234).select(_.claims.$$)
+    val subclaims: Seq[Seq[VenueClaimBson]] = blk(q.fetchAsync())
     subclaims.size must_== 1
     subclaims.head.size must_== 1
     subclaims.head.head.uid must_== 1234
     subclaims.head.head.status must_== ClaimStatus.pending
-*/
+
     // selecting a claims.userid when there is no top-level claims list should
     // have one element in the List for the one Venue, but an Empty for that
     // Venue since there's no list of claims there.

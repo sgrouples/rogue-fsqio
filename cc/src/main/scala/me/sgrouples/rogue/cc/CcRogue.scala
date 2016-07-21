@@ -254,20 +254,24 @@ trait CcRogue {
     new MapModifyField[F, M](f)
 */
   // SelectField implicits
-/*
-  implicit def mandatoryFieldToSelectField[O, V]
-  (f: RField[V, O] with RequiredField[V, O]): SelectField[V, O] =
-  new MandatorySelectField(f)
-*/
 
   /*
-  implicit def optionalFieldToSelectField[M <: BsonRecord[M], V]
-  (f: Field[V, M] with OptionalTypedField[V]): SelectField[Option[V], M] =
+  /Users/mar/git/rogue-fsqio/lift/src/test/scala/EndToEndAsyncTest.scala:169:
+  applied implicit conversion from x$100.claims.type to ?{def $$: ?} = implicit def mandatoryFieldToSelectField[M <: net.liftweb.mongodb.record.BsonRecord[M], V](f: net.liftweb.record.Field[V,M] with net.liftweb.record.MandatoryTypedField[V]): io.fsq.rogue.SelectField[V,M]ESC[0m
+   */
+  implicit def mandatoryFieldToSelectField[M, V]
+  (f: MCField[V, M]): SelectField[V, M] =
+  new MandatorySelectField(f)
+
+
+  implicit def optionalFieldToSelectField[M <: CcMeta[_] , V]
+  (f: OCField[V, M]): SelectField[Option[V], M] =
     new OptionalSelectField(new ROptionalField[V, M] {
       override def name = f.name
       override def owner = f.owner
     })
 
+  /*
   implicit def mandatoryLiftField2RequiredRecordv2Field[M <: BsonRecord[M], V](
                                                                                 f: Field[V, M] with MandatoryTypedField[V]
                                                                               ): io.fsq.field.RequiredField[V, M] = new io.fsq.field.RequiredField[V, M] {

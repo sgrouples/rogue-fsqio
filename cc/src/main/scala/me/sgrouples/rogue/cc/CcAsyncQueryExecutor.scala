@@ -4,9 +4,11 @@ import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.DBObject
 import com.mongodb.async.client.MongoCollection
-import org.bson.{BsonArray, BsonDocument, BsonValue}
+import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
 import io.fsq.rogue._
 import org.bson.codecs.configuration.CodecRegistries
+
+import scala.util.Try
 
 
 
@@ -80,11 +82,12 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
           // of returned results is > 0.
           transformer(null)
         case Some(MongoSelect(fields, transformer)) =>
+          //TODO - optimze - extract readers for fields up, before using read serializer. this is super -ineffective
           //LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, "_id")
           println(s"Whole DBO ${dbo} ${dbo.getClass}")
           val values =
             fields.map(fld => {
-              val bsonV = readBsonVal(dbo, fld.field.name)
+              val (bsonV, readArray) = readBsonVal(dbo, fld.field.name)
                 //.get(fld.field.name)
               println(s"BsonV is ${bsonV}")
               println(s"field name is ${fld.field.name}")
@@ -92,11 +95,14 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
               println(s"Field.field is ${fld.field}")
               val reader = meta.reader(fld.field)
               //TODO - does not in case reader is for non-array, and subselect returns array
-              if(bsonV.isArray) {
-                reader.readArray(bsonV.asArray())
-              } else {
-                reader.read(bsonV)
-              }
+              //if fld is optional, we might read null, that's why we need try-catch .. or readOption?
+              fld.valueOrDefault(
+                if(readArray) {
+                  readOptArr(reader.readArray, bsonV.asArray())
+                } else {
+                  readOpt(reader.read, bsonV)
+                }
+              )
             })
           transformer(values)
         case None =>
@@ -105,6 +111,7 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
       }
     }
   }
+
 
   /*
   Lift record version:
@@ -117,29 +124,53 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
         fld.flatMap (setLastFieldFromDoc(_, dbo, fieldName))
     }
    */
-  private[this] def readBsonVal(dbo: BsonDocument, fldName: String):BsonValue = {
+
+
+  private[this] def readOpt[T](reader: BsonValue => T, v: BsonValue): Option[T] = {
+    if(v.isNull) None
+    else Option(reader(v))
+  }
+
+  private[this] def readOptArr[T](reader: BsonArray => Seq[T], v: BsonArray): Option[Seq[T]] = {
+    if(v.isNull) None
+    else Option(reader(v))
+  }
+
+  private[this] def readBsonVal(dbo: BsonDocument, fldName: String):(BsonValue, Boolean) = {
     val parts = fldName.split('.')
     println(s"parts fldName ${fldName} len ${parts.length} ${parts}")
     var i = 0
+    var needArray = false
     var d:BsonValue = dbo
     while(i < parts.length) {
-      val key = parts(i)
-      if(d.isArray){
-        val r = new BsonArray()
-        val it = d.asArray().iterator()
-        while(it.hasNext){
-          r.add(it.next().asDocument().get(key))
-        }
-        d = r
+      if(d==null) {
+        i = parts.length
+        d = BsonNull.VALUE
       } else {
-        d = d.asDocument().get(key)
+        val key = parts(i)
+        if (key == "$") {
+          //TODO - probably it means that array is needed
+          i = i+1
+        } else {
+          if (d.isArray) {
+            val r = new BsonArray()
+            val it = d.asArray().iterator()
+            while (it.hasNext) {
+              r.add(it.next().asDocument().get(key))
+            }
+            d = r
+            needArray = true
+          } else {
+            d = d.asDocument().get(key)
+          }
+          println(s"Getting ${parts(i)} from ${d}")
+          println(s"Got ${d}")
+          i = i + 1
+        }
       }
-      println(s"Getting ${parts(i)} from ${d}")
-      println(s"Got ${d}")
-      i = i + 1
     }
     println(s"Returning ${d} ${d.getBsonType}")
-    d
+    (d, needArray)
   }
 
   override protected def writeSerializer[M <: CcMeta[_], R](meta: M): RogueBsonWrite[R] = {

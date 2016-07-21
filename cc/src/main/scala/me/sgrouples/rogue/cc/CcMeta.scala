@@ -37,7 +37,7 @@ class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
   override def dbs(): com.mongodb.client.MongoDatabase = ???
 
   override def reader(field: Field[_,_]): BsonFormat[_] = {
-    val fieldName = field.name
+    val fieldName = field.name.replaceAll("\\.\\$","")
    // if field.isInstanceOf[]
     val r = f.flds.get(fieldName)
     r.getOrElse{
