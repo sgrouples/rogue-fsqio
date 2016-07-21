@@ -40,10 +40,21 @@ class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
     val fieldName = field.name.replaceAll("\\.\\$","")
    // if field.isInstanceOf[]
     val r = f.flds.get(fieldName)
-    r.getOrElse{
+    r.orElse(starReader(fieldName)).getOrElse{
       throw new RuntimeException(s"No reader for field ${fieldName}, avaialble keys ${f.flds.keys.mkString(",")}")
     }
   }
+
+  //special case for Map formats
+  private[this] def starReader(fieldName : String): Option[BsonFormat[_]] = {
+    val i = fieldName.lastIndexOf('.')
+    if(i>0) {
+      val newName = fieldName.substring(0, i +1) + "*"
+      f.flds.get(newName)
+    } else None
+  }
+
+
 
   override def read(b: BsonValue): T = f.read(b)
 

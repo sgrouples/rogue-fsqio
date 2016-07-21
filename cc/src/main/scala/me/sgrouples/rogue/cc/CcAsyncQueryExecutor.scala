@@ -56,17 +56,12 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
       None
     }
   }
-
-
 }
 
 
 class CcAsyncAdapter(dbCollectionFactory: AsyncBsonDBCollectionFactory[CcMeta[_]]) extends MongoAsyncBsonJavaDriverAdapter(dbCollectionFactory)
 
-
-
 object CcAsyncAdapter extends CcAsyncAdapter(CcAsyncDBCollectionFactory)
-
 
 class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter[CcMeta[_]]) extends AsyncBsonQueryExecutor[CcMeta[_]] {
   override def defaultWriteConcern = QueryHelpers.config.defaultWriteConcern

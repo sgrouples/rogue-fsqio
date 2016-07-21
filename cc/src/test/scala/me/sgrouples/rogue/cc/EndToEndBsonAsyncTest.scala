@@ -171,9 +171,9 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
     //TODO - no support for querying map fields now
     // select subfields
-    //val q=TipR.where(_.id eqs t._id).select(_.counts at "foo")
+    val q3=TipR.where(_.id eqs t._id).select(_.counts at "foo")
     //println(s"Q ${q.query}")
-    //blk(q.fetchAsync()) must_== Seq(Some(1L))
+    blk(q3.fetchAsync()) must_== Seq(Some(1L))
 
     //todo - no unsafe fields now
     //blk(VenueR.where(_.id eqs v._id).select(_.geolatlng.unsafeField[Double]("lat")).fetchAsync()) must_== List(Some(40.73))

@@ -195,8 +195,8 @@ trait BsonCollectionFormats {
         (fk.read(new BsonString(ks)), fv.read(v))
       }(collection.breakOut)
     }
-    //in general terms, yes, as we don't know keys
-    override def flds = Map.empty
+    //in general terms, yes, as we don't know keys, but we need 'star' format for values
+    override def flds = Map("*" -> fv)
 
   }
 
