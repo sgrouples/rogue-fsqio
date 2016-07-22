@@ -73,17 +73,16 @@ trait CcRogue {
       CcAsyncQueryExecutor
     )
   }
-/*
-  implicit def findAndModifyQueryToLiftFindAndModifyQuery[M <: CcMeta[_], R](
+
+  implicit def findAndModifyQueryToCcAndModifyQuery[M <: CcMeta[R], R](
                                                                                    query: FindAndModifyQuery[M, R]
-                                                                                 ): ExecutableFindAndModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R] = {
+                                                                                 ): ExecutableFindAndModifyQuery[CcMeta[_], M , R] = {
     ExecutableFindAndModifyQuery(
-      query.asInstanceOf[FindAndModifyQuery[M with MongoMetaRecord[_], R]],
-      LiftQueryExecutor,
-      LiftAsyncQueryExecutor
+      query,
+      CcAsyncQueryExecutor
     )
   }
-*/
+
   implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](meta: M): ExecutableQuery[MB, M, meta.R, InitialState] = {
     val queryBuilder = ccMetaToQueryBuilder(meta)
     val ccQuery = queryToCcQuery(queryBuilder)
