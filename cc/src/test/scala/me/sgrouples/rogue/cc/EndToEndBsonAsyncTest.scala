@@ -108,6 +108,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
     // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
     // VenueClaim has status approved.
+    val h = VenueR.where(_.mayor_count neqs 5).fetchAsync()
     blk(VenueR.where(_.mayor_count neqs 5).fetchAsync()).map(_._id) must_== List(v._id)
     blk(VenueR.where(_.mayor_count < 5).fetchAsync()).map(_._id) must_== List(v._id)
     blk(VenueR.where(_.mayor_count lt 5).fetchAsync()).map(_._id) must_== List(v._id)

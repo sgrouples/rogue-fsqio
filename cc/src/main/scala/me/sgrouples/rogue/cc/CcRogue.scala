@@ -34,8 +34,8 @@ trait CcRogue {
   /* Following are a collection of implicit conversions which take a meta-record and convert it to
    * a QueryBuilder. This allows users to write queries as "QueryType where ...".
    */
-  implicit def ccMetaToQueryBuilder[M <: CcMeta[_]](meta: M): Query[M, meta.R, InitialState] =
-  Query[M, meta.R, InitialState](
+  implicit def ccMetaToQueryBuilder[M <: CcMeta[_], R](meta: M with CcMeta[R]): Query[M, R, InitialState] =
+  Query[M, R, InitialState](
     meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
 
   implicit def metaRecordToIndexBuilder[M <: CcMeta[_]](meta: M): IndexBuilder[M] =
@@ -83,10 +83,12 @@ trait CcRogue {
     )
   }
 
-  implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](meta: M): ExecutableQuery[MB, M, meta.R, InitialState] = {
-    val queryBuilder = ccMetaToQueryBuilder(meta)
+  implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](meta: M): ExecutableQuery[MB, M, R, InitialState] = {
+    val queryBuilder = Query[M, R, InitialState](
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+
     val ccQuery = queryToCcQuery(queryBuilder)
-    ccQuery.asInstanceOf[ExecutableQuery[MB, M, meta.R, InitialState]]
+    ccQuery.asInstanceOf[ExecutableQuery[MB, M, R, InitialState]]
   }
 
   /*
