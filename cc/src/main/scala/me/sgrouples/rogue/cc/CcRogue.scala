@@ -42,10 +42,10 @@ trait CcRogue {
     IndexBuilder(meta)
 
 
-  implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, meta.R, InitialState] = {
-    val query = Query[M, meta.R, InitialState](
+  implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, R, InitialState] = {
+    val query = Query[M, R, InitialState](
       meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
-    InsertableQuery(query, CcAsyncQueryExecutor).asInstanceOf[InsertableQuery[MB, M, meta.R, InitialState]]
+    InsertableQuery(query, CcAsyncQueryExecutor).asInstanceOf[InsertableQuery[MB, M, R, InitialState]]
   }
 
 

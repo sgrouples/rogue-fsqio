@@ -4,7 +4,7 @@ import io.fsq.field.Field
 import me.sgrouples.rogue.{BsonFormat, BsonFormats}
 import org.bson.{BsonDocument, BsonValue}
 
-trait CcMetaLike[T] {
+trait CcMetaLike[-T] {
   type R
 }
 

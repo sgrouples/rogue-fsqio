@@ -243,7 +243,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.secondary).fetchAsync()).map(_._id) must_== Seq(v._id)
     blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.primary).fetchAsync()).map(_._id) must_== Seq(v._id)
   }
-  */
+
   @Test
   def testFindAndModify {
     val v1 = blk(VenueR.where(_.venuename eqs "v1")
@@ -266,7 +266,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       .upsertOneAsync(returnNew = true))
     v4.map(_.userid) must_== Some(7)
   }
-  /*
+
   @Test
   def testRegexQuery {
         val v = baseTestVenue()
