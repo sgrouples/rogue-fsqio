@@ -3,11 +3,18 @@ package me.sgrouples.rogue.cc
 import com.mongodb.MongoException
 import com.mongodb.async.client.{MongoClient, MongoCollection, MongoDatabase}
 import org.bson.BsonDocument
+import org.bson.codecs.{IntegerCodec, LongCodec}
+import org.bson.codecs.configuration.CodecRegistries
 
 /**
   * Replacement of Mongo/MongoAsync from Lift
   */
 object CcMongo {
+
+  val codecRegistry = CodecRegistries.fromRegistries(com.mongodb.MongoClient.getDefaultCodecRegistry(),
+    CodecRegistries.fromCodecs(new LongPrimitiveCodec, new IntegerPrimitiveCodec)
+  )
+
 
   private[this] val bsonDocument = classOf[BsonDocument]
   private[this] val dbs = new scala.collection.concurrent.TrieMap[String, (MongoClient, String)]
@@ -22,7 +29,7 @@ object CcMongo {
   /**
   * Get a DB reference
   */
-  def getDb(connId: String): Option[MongoDatabase] = dbs.get(connId).map{case(client, dbName) => client.getDatabase(dbName)}
+  def getDb(connId: String): Option[MongoDatabase] = dbs.get(connId).map{case(client, dbName) => client.getDatabase(dbName).withCodecRegistry(codecRegistry)}
 
   def useDB[T](ci: String)(f: (MongoDatabase) => T): T = {
     val db = getDb(ci) match {
@@ -62,3 +69,13 @@ object CcMongo {
   }
 
 }
+
+class LongPrimitiveCodec extends LongCodec {
+  override def getEncoderClass() = java.lang.Long.TYPE
+}
+
+class IntegerPrimitiveCodec extends IntegerCodec {
+  override def getEncoderClass() = java.lang.Integer.TYPE
+}
+
+

@@ -74,7 +74,7 @@ trait CcRogue {
     )
   }
 
-  implicit def findAndModifyQueryToCcAndModifyQuery[M <: CcMeta[R], R](
+  implicit def findAndModifyQueryToCcAndModifyQuery[M <: CcMeta[_], R](
                                                                                    query: FindAndModifyQuery[M, R]
                                                                                  ): ExecutableFindAndModifyQuery[CcMeta[_], M , R] = {
     ExecutableFindAndModifyQuery(

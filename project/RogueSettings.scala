@@ -56,8 +56,8 @@ object RogueDependencies {
     "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
   val mongoDeps = Seq(
-    "org.mongodb"              % "mongodb-driver"      % "3.2.2"     % "compile",
-    "org.mongodb"              % "mongodb-driver-async"% "3.2.2"     % "compile"
+    "org.mongodb"              % "mongodb-driver"      % "3.3.0"     % "compile",
+    "org.mongodb"              % "mongodb-driver-async"% "3.3.0"     % "compile"
   )
 
   val testDeps = Seq(

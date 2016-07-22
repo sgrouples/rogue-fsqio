@@ -254,6 +254,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     val v2 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 5)
       .upsertOneAsync(returnNew = true))
+
     v2.map(_.userid) must_== Some(5)
 
     val v3 = blk(VenueR.where(_.venuename eqs "v2")
@@ -266,7 +267,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       .upsertOneAsync(returnNew = true))
     v4.map(_.userid) must_== Some(7)
   }
-
+*/
   @Test
   def testRegexQuery {
         val v = baseTestVenue()
@@ -279,7 +280,6 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legId)).countAsync()) must_== 0
     blk(VenueR.where(_.tags matches """some\s.*""".r).countAsync()) must_== 1
   }
-*/
 
   @Test
   def testLimitAndBatch {
@@ -300,7 +300,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(q.skip(3).limit(5).countAsync()) must_== 5
     blk(q.skip(8).limit(4).countAsync()) must_== 2
   }
-/* distincts need codecs for Long, and probably Int in db
+// distincts need codecs for Long, and probably Int in db
   @Test
   def testDistinct {
     (1 to 5).foreach(_ => blk(VenueR.insertOneAsync(baseTestVenue().copy(userId = 1L))))
@@ -309,7 +309,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(VenueR.where(_.mayor eqs 789L).distinctAsync(_.userid)).length must_== 3
     blk(VenueR.where(_.mayor eqs 789L).countDistinctAsync(_.userid)) must_== 3
   }
-*/
+
 
   @Test
   def testSlice():Unit = {

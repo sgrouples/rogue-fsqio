@@ -16,10 +16,9 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   type TCM = CcMeta[_]
   val bsonDocClass = classOf[BsonDocument]
   //temorary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
-  val codecRegistry = CodecRegistries.fromRegistries(com.mongodb.MongoClient.getDefaultCodecRegistry())
   //[M <: MongoRecord[_] with MongoMetaRecord[_]
   override def getDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
-    query.meta.dba().getCollection(query.collectionName, bsonDocClass).withCodecRegistry(codecRegistry)
+    query.meta.dba().getCollection(query.collectionName, bsonDocClass)
   }
 
   override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
@@ -27,7 +26,7 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }
 
   protected def getPrimaryDBCollection(meta: CcMeta[_], collectionName: String): MongoCollection[BsonDocument] = {
-    meta.dba().getCollection(collectionName, bsonDocClass).withCodecRegistry(codecRegistry)
+    meta.dba().getCollection(collectionName, bsonDocClass)
   }
 
   /*override def getPrimaryDBCollection(record: MongoRecord[_]): MongoCollection[BsonDocument] = {
