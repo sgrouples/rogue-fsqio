@@ -126,12 +126,12 @@ class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] =>
   def future = p.future
 }
 
-class SingleDocumentOptCallback[R](f: BsonDocument=> R) extends SingleResultCallback[BsonDocument] with HasFuture[Option[R]] {
+class SingleDocumentOptCallback[R](f: BsonDocument=> Option[R]) extends SingleResultCallback[BsonDocument] with HasFuture[Option[R]] {
   private[this] val p = Promise[Option[R]]
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
     if (t == null) {
-      if (result != null) p.success(Option(f(result)))
+      if (result != null) p.success(f(result))
       else p.success(None)
     } else p.failure(t)
   }
@@ -140,13 +140,14 @@ class SingleDocumentOptCallback[R](f: BsonDocument=> R) extends SingleResultCall
 }
 
 //upsert only
-class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument=> R)(retry: SingleDocumentOptCallbackWithRetry[R] => Unit) extends SingleResultCallback[BsonDocument] with HasFuture[Option[R]] {
+class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument=> Option[R])(retry: SingleDocumentOptCallbackWithRetry[R] => Unit) extends SingleResultCallback[BsonDocument] with HasFuture[Option[R]] {
   private[this] var retried = false
   val p = Promise[Option[R]]
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
     if (t == null) {
-      if (result != null) p.success(Option(f(result)))
+      println(s"SingleDocumentOptCallbackWithRetry on result with ${result}")
+      if (result != null) p.success(f(result))
       else p.success(None)
     } else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
       retried = true
@@ -331,7 +332,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
                                 returnNew: Boolean,
                                 upsert: Boolean,
                                 remove: Boolean)
-                               (f: BsonDocument=> R): Future[Option[R]] = {
+                               (f: BsonDocument=> Option[R]): Future[Option[R]] = {
     val modClause = transformer.transformFindAndModify(mod)
     validator.validateFindAndModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty || remove) {

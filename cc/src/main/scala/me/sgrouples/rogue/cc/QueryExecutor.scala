@@ -16,6 +16,7 @@ import scala.collection.mutable.{Builder, ListBuffer}
 
 trait RogueBsonRead[R] {
   def fromDocument(dbo: BsonDocument): R
+  def fromDocumentOpt(dbo: BsonDocument): Option[R]
 }
 
 trait RogueBsonWrite[R] {
@@ -523,7 +524,7 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
       Future.successful(None)
     } else {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
-      adapter.findAndModify(query, returnNew, upsert = false, remove = false)(s.fromDocument _)
+      adapter.findAndModify(query, returnNew, upsert = false, remove = false)(s.fromDocumentOpt _)
     }
   }
 
@@ -534,10 +535,11 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                     writeConcern: WriteConcern = defaultWriteConcern
                                   ): Future[Option[R]] = {
     if (optimizer.isEmptyQuery(query)) {
+      println("EMpty query!!")
       Future.successful(None)
     } else {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
-      adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocument _)
+      adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocumentOpt _)
     }
   }
 
@@ -550,7 +552,7 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val mod = FindAndModifyQuery(query, MongoModify(Nil))
-      adapter.findAndModify(mod, returnNew = false, upsert = false, remove = true)(s.fromDocument _)
+      adapter.findAndModify(mod, returnNew = false, upsert = false, remove = true)(s.fromDocumentOpt _)
     }
   }
 

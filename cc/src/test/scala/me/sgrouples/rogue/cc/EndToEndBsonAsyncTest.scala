@@ -244,31 +244,42 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.secondary).fetchAsync()).map(_._id) must_== Seq(v._id)
     blk(VenueR.where(_._id eqs v._id).setReadPreference(ReadPreference.primary).fetchAsync()).map(_._id) must_== Seq(v._id)
   }
+*/
 
+  /* Orignal test was broken - Veny has lots more required parameters than just userId
+  case class Venue(_id: ObjectId, legId: Long, userId: Long, venuename: String, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String],
+                 popularity: List[Long], categories: List[ObjectId], latlng: LatLong, last_updated: LocalDateTime, status: VenueStatus.Value, claims: List[VenueClaimBson],
+                 lastClaim: VenueClaimBson)
+
+   */
   @Test
   def testFindAndModify {
     val v1 = blk(VenueR.where(_.venuename eqs "v1")
       .findAndModify(_.userid setTo 5)
       .upsertOneAsync(returnNew = false))
-    v1 must_== None
 
+    println("V1 ---- done ")
+
+    v1 must_== None
     val v2 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 5)
       .upsertOneAsync(returnNew = true))
 
-    v2.map(_.userid) must_== Some(5)
+    v2.map(_.userId) must_== Some(5)
 
+    /*
     val v3 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 6)
       .upsertOneAsync(returnNew = false))
-    v3.map(_.userid) must_== Some(5)
+    v3.map(_.userId) must_== Some(5)
 
     val v4 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 7)
       .upsertOneAsync(returnNew = true))
-    v4.map(_.userid) must_== Some(7)
-  }
+    v4.map(_.userId) must_== Some(7)
 */
+  }
+
   @Test
   def testRegexQuery {
         val v = baseTestVenue()

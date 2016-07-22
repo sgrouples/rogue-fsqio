@@ -99,11 +99,25 @@ class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter
               )
             })
           transformer(values)
+
         case None =>
           //TODO - better types !!!!
           meta.read(dbo).asInstanceOf[R]
       }
+
+      //same thing, but opt
+      override def fromDocumentOpt(dbo: BsonDocument): Option[R] = select match {
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
+         throw new RuntimeException("empty transformer for fromDocumentOpt not implemented, fields subset return in findAndModify not yet implemented")
+        case Some(MongoSelect(fields, transformer)) =>
+          throw new RuntimeException("fromDocumentOpt with fields subset return in findAndModify not yet implemented")
+        case None => {
+          println(s"fromDocumentOpt: ${dbo} ")
+          readOpt(meta.read, dbo).asInstanceOf[Option[R]]
+        }
+      }
     }
+
   }
 
 
