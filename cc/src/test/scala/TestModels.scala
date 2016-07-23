@@ -78,7 +78,6 @@ object Metas {
     val userid = new LongField("userId", this)
     val tags = new ListField[String, VenueR.type]("tags", this)
     val geolatlng = new DoubleField("latlng",this)
-    //todo - maybe ListCaseClassField is needed ?
     val claims = new CClassListField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("claims", VenueClaimBsonR, this)
     val lastClaim = new OptCClassField[VenueClaimBson, VenueClaimBsonR.type , VenueR.type]("lastClaim", VenueClaimBsonR, this)
 

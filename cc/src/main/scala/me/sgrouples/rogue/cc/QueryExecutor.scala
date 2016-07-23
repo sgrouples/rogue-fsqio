@@ -389,21 +389,13 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
   def count[M <: MB, State](query: Query[M, _, State],
                             readPreference: Option[ReadPreference] = None)
                            (implicit ev: ShardingOk[M, State]): Future[Long] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(0L)
-    } else {
       adapter.count(query, readPreference)
-    }
   }
 
   def exists[M <: MB, State](query: Query[M, _, State],
                              readPreference: Option[ReadPreference] = None)
                             (implicit ev: ShardingOk[M, State]): Future[Boolean] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(false)
-    } else {
       adapter.exists(query, readPreference)
-    }
   }
 
   def countDistinct[M <: MB, V, State](query: Query[M, _, State],
@@ -411,11 +403,7 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                        readPreference: Option[ReadPreference] = None)
                                       (field: M => Field[V, M])
                                       (implicit ev: ShardingOk[M, State]): Future[Long] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(0L)
-    } else {
       adapter.countDistinct(query, field(query.meta).name, ct, readPreference)
-    }
   }
 
 
@@ -424,22 +412,14 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                   readPreference: Option[ReadPreference] = None)
                                  (field: M => Field[V, M])
                                  (implicit ev: ShardingOk[M, State]): Future[Seq[V]] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(Nil)
-    } else {
       adapter.distinct(query, field(query.meta).name, ct, readPreference)
-    }
   }
 
   def fetch[M <: MB, R, State](query: Query[M, R, State],
                                readPreference: Option[ReadPreference] = None)
                               (implicit ev: ShardingOk[M, State]): Future[Seq[R]] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(Nil)
-    } else {
       val s = readSerializer[M, R](query.meta, query.select)
       adapter.find(query, s)
-    }
   }
 
 
@@ -456,14 +436,10 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                  readPreference: Option[ReadPreference] = None)
                                 (f: R => Unit)
                                 (implicit ev: ShardingOk[M, State]): Future[Unit] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
-    } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val docBlock: BsonDocument => Unit = doc => f(s.fromDocument(doc))
       //applies docBlock to each Document = conversion + f(R)
       adapter.foreach(query, docBlock)
-    }
   }
 
 
@@ -471,11 +447,7 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                     writeConcern: WriteConcern = defaultWriteConcern)
                                    (implicit ev1: Required[State, Unselected with Unlimited with Unskipped],
                                     ev2: ShardingOk[M, State]): Future[Unit] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
-    } else {
       adapter.delete(query, writeConcern)
-    }
   }
 
 
@@ -483,22 +455,14 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                  query: ModifyQuery[M, State],
                                  writeConcern: WriteConcern = defaultWriteConcern
                                )(implicit ev: RequireShardKey[M, State]): Future[Unit] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
-    } else {
       adapter.modify(query, upsert = false, multi = false, writeConcern = writeConcern)
-    }
   }
 
   def upsertOne[M <: MB, State](
                                  query: ModifyQuery[M, State],
                                  writeConcern: WriteConcern = defaultWriteConcern
                                )(implicit ev: RequireShardKey[M, State]): Future[Unit] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
-    } else {
       adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
-    }
   }
 
 
@@ -520,12 +484,8 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                     returnNew: Boolean = false,
                                     writeConcern: WriteConcern = defaultWriteConcern
                                   ): Future[Option[R]] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(None)
-    } else {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
       adapter.findAndModify(query, returnNew, upsert = false, remove = false)(s.fromDocumentOpt _)
-    }
   }
 
 
@@ -534,26 +494,17 @@ trait AsyncBsonQueryExecutor[MB] extends Rogue {
                                     returnNew: Boolean = false,
                                     writeConcern: WriteConcern = defaultWriteConcern
                                   ): Future[Option[R]] = {
-    if (optimizer.isEmptyQuery(query)) {
-      println("EMpty query!!")
-      Future.successful(None)
-    } else {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
       adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocumentOpt _)
-    }
   }
 
   def findAndDeleteOne[M <: MB, R, State](
                                            query: Query[M, R, State],
                                            writeConcern: WriteConcern = defaultWriteConcern
                                          )(implicit ev: RequireShardKey[M, State]): Future[Option[R]] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(None)
-    } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val mod = FindAndModifyQuery(query, MongoModify(Nil))
       adapter.findAndModify(mod, returnNew = false, upsert = false, remove = true)(s.fromDocumentOpt _)
-    }
   }
 
   def insertOne[M <: MB, R](query: Query[M,R,_], r:R):Future[Unit] = {
