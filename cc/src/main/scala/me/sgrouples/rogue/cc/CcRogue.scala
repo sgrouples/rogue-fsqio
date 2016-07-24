@@ -45,7 +45,7 @@ trait CcRogue {
   implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, R, InitialState] = {
     val query = Query[M, R, InitialState](
       meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
-    InsertableQuery(query, CcAsyncQueryExecutor).asInstanceOf[InsertableQuery[MB, M, R, InitialState]]
+    InsertableQuery(query, CcBsonExecutors).asInstanceOf[InsertableQuery[MB, M, R, InitialState]]
   }
 
 
@@ -54,8 +54,8 @@ trait CcRogue {
   (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M, R, State] = {
     ExecutableQuery(
       query,
-      CcAsyncQueryExecutor
-    ) // .asInstanceOf[ExecutableQuery[CcMeta[_], M, R, State]]
+      CcBsonExecutors
+    )
   }
 
   //}
@@ -70,7 +70,7 @@ trait CcRogue {
                                                                        ):ExecutableModifyQuery[CcMeta[_],M , State] = {
     ExecutableModifyQuery(
       query,
-      CcAsyncQueryExecutor
+      CcBsonExecutors
     )
   }
 
@@ -79,7 +79,7 @@ trait CcRogue {
                                                                                  ): ExecutableFindAndModifyQuery[CcMeta[_], M , R] = {
     ExecutableFindAndModifyQuery(
       query,
-      CcAsyncQueryExecutor
+      CcBsonExecutors
     )
   }
 

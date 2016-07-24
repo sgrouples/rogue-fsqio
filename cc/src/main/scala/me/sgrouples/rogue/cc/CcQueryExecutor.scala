@@ -1,13 +1,14 @@
+package me.sgrouples.rogue.cc
+
 import com.mongodb.client.MongoCollection
-import io.fsq.rogue.MongoHelpers.MongoSelect
-import io.fsq.rogue.{Query, QueryHelpers}
 import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
-import me.sgrouples.rogue.cc.{BsonReadWriteSerializers, _}
-import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
+import io.fsq.rogue.{Query, QueryHelpers}
+import org.bson.BsonDocument
 
 object CcDBCollectionFactory extends BsonDBCollectionFactory[CcMeta[_]] {
   type TCM = CcMeta[_]
   val bsonDocClass = classOf[BsonDocument]
+
   //temorary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
   //[M <: MongoRecord[_] with MongoMetaRecord[_]
   override def getDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
@@ -54,7 +55,7 @@ class CcAdapter(dbCollectionFactory: BsonDBCollectionFactory[CcMeta[_]]) extends
 
 object CcAdapter extends CcAdapter(CcDBCollectionFactory)
 
-class CcQueryExecutor(override val adapter: MongoBsonJavaDriverAdapter[CcMeta[_]]) extends BsonQueryExecutor[CcMeta[_]] with  BsonReadWriteSerializers[CcMeta[_]] {
+class CcQueryExecutor(override val adapter: MongoBsonJavaDriverAdapter[CcMeta[_]]) extends BsonQueryExecutor[CcMeta[_]] with BsonReadWriteSerializers[CcMeta[_]] {
   override def defaultWriteConcern = QueryHelpers.config.defaultWriteConcern
 }
 

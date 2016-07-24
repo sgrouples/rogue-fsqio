@@ -422,8 +422,3 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
   }
 
 }
-
-trait BsonExecutors[MB] {
-  def async: AsyncBsonQueryExecutor[MB]
-  def sync: BsonQueryExecutor[MB]
-}
