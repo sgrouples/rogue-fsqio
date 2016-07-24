@@ -1,24 +1,17 @@
-package me.sgrouples.rogue.cc
-
-import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
+import com.mongodb.client.MongoCollection
 import io.fsq.rogue.MongoHelpers.MongoSelect
-import com.mongodb.DBObject
-import com.mongodb.async.client.MongoCollection
+import io.fsq.rogue.{Query, QueryHelpers}
+import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
+import me.sgrouples.rogue.cc.{BsonReadWriteSerializers, _}
 import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
-import io.fsq.rogue._
-import org.bson.codecs.configuration.CodecRegistries
 
-import scala.util.Try
-
-
-
-object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]] {
+object CcDBCollectionFactory extends BsonDBCollectionFactory[CcMeta[_]] {
   type TCM = CcMeta[_]
   val bsonDocClass = classOf[BsonDocument]
   //temorary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
   //[M <: MongoRecord[_] with MongoMetaRecord[_]
   override def getDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
-    query.meta.dba().getCollection(query.collectionName, bsonDocClass)
+    query.meta.dbs().getCollection(query.collectionName, bsonDocClass)
   }
 
   override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
@@ -26,7 +19,7 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }
 
   protected def getPrimaryDBCollection(meta: CcMeta[_], collectionName: String): MongoCollection[BsonDocument] = {
-    meta.dba().getCollection(collectionName, bsonDocClass)
+    meta.dbs().getCollection(collectionName, bsonDocClass)
   }
 
   /*override def getPrimaryDBCollection(record: MongoRecord[_]): MongoCollection[BsonDocument] = {
@@ -34,7 +27,7 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }*/
 
   override def getInstanceName[M <: TCM](query: Query[M, _, _]): String = {
-    query.meta.dba().getName
+    query.meta.dbs().getName
   }
 
   /*override def getInstanceName(record: MongoRecord[_]): String =
@@ -57,13 +50,12 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }
 }
 
-class CcAsyncAdapter(dbCollectionFactory: AsyncBsonDBCollectionFactory[CcMeta[_]]) extends MongoAsyncBsonJavaDriverAdapter(dbCollectionFactory)
+class CcAdapter(dbCollectionFactory: BsonDBCollectionFactory[CcMeta[_]]) extends MongoBsonJavaDriverAdapter(dbCollectionFactory)
 
-object CcAsyncAdapter extends CcAsyncAdapter(CcAsyncDBCollectionFactory)
+object CcAdapter extends CcAdapter(CcDBCollectionFactory)
 
-class CcAsyncQueryExecutor(override val adapter: MongoAsyncBsonJavaDriverAdapter[CcMeta[_]]) extends AsyncBsonQueryExecutor[CcMeta[_]] with BsonReadWriteSerializers[CcMeta[_]] {
+class CcQueryExecutor(override val adapter: MongoBsonJavaDriverAdapter[CcMeta[_]]) extends BsonQueryExecutor[CcMeta[_]] with  BsonReadWriteSerializers[CcMeta[_]] {
   override def defaultWriteConcern = QueryHelpers.config.defaultWriteConcern
-
 }
 
-object CcAsyncQueryExecutor extends CcAsyncQueryExecutor(CcAsyncAdapter)
+object CcQueryExecutor extends CcQueryExecutor(CcAdapter)

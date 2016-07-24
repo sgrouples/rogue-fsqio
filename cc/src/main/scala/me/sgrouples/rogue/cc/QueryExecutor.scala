@@ -34,14 +34,12 @@ trait ReadWriteSerializers[MB] {
 
   protected def writeSerializer[M <: MB, R](meta: M): RogueBsonWrite[R]
 
+  def defaultWriteConcern: WriteConcern
+
 }
 
 trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
   def adapter: MongoAsyncBsonJavaDriverAdapter[MB]
-
-  def optimizer: QueryOptimizer
-
-  def defaultWriteConcern: WriteConcern
 
   def count[M <: MB, State](query: Query[M, _, State],
                             readPreference: Option[ReadPreference] = None)
@@ -127,11 +125,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
                                    query: ModifyQuery[M, State],
                                    writeConcern: WriteConcern = defaultWriteConcern
                                  ): Future[Unit] = {
-    if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
-    } else {
       adapter.modify(query, upsert = false, multi = true, writeConcern = writeConcern)
-    }
   }
 
 
@@ -179,9 +173,6 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
 
 trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
   def adapter: MongoBsonJavaDriverAdapter[MB]
-  def optimizer: QueryOptimizer
-
-  def defaultWriteConcern: WriteConcern
 
   def count[M <: MB, State](query: Query[M, _, State],
                             readPreference: Option[ReadPreference] = None)
@@ -430,4 +421,9 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     adapter.insertMany(query, docs, defaultWriteConcern)
   }
 
+}
+
+trait BsonExecutors[MB] {
+  def async: AsyncBsonQueryExecutor[MB]
+  def sync: BsonQueryExecutor[MB]
 }

@@ -267,7 +267,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
 
     v2.map(_.userId) must_== Some(5)
 
-    /*
+
     val v3 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 6)
       .upsertOneAsync(returnNew = false))
@@ -277,7 +277,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       .findAndModify(_.userid setTo 7)
       .upsertOneAsync(returnNew = true))
     v4.map(_.userId) must_== Some(7)
-*/
+
   }
 
   @Test
