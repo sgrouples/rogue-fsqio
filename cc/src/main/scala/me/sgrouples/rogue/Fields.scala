@@ -93,6 +93,7 @@ class OptCClassListField[C <: Product, O](name:String, o:O) extends OCField[List
 class OptCClassArrayField[C <: Product : ClassTag, O](name:String, o:O) extends OCField[Array[C], O](name, o)
 class OptMapField[V, O](name:String, o:O) extends OCField[Map[String, V], O](name, o)
 
+
 trait CcFields[T] {
   type RecRepr
   def flds:RecRepr

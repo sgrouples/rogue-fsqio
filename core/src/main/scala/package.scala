@@ -31,7 +31,7 @@ package object rogue {
 
     sealed trait Event[+R]
     case class Item[R](r: R) extends Event[R]
-    case class Error(e: Exception) extends Event[Nothing]
+    case class Error(e: Throwable) extends Event[Nothing]
     case object EOF extends Event[Nothing]
   }
 

@@ -80,7 +80,6 @@ object Metas {
     val geolatlng = new DoubleField("latlng",this)
     val claims = new CClassListField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("claims", VenueClaimBsonR, this)
     val lastClaim = new OptCClassField[VenueClaimBson, VenueClaimBsonR.type , VenueR.type]("lastClaim", VenueClaimBsonR, this)
-
   }
 
   implicit val evRejReason = RejectReason

@@ -309,10 +309,6 @@ trait QueryExecutor[MB, RB] extends Rogue {
     }
   }
 
-  def explain[M <: MB](query: Query[M, _, _]): String = {
-    adapter.explain(query)
-  }
-
   def iterate[S, M <: MB, R, State](query: Query[M, R, State],
                                     state: S,
                                     readPreference: Option[ReadPreference] = None)
