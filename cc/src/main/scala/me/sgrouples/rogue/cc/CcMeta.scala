@@ -34,14 +34,14 @@ class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
 
   override def dba(): com.mongodb.async.client.MongoDatabase = CcMongo.getDb(connId).get
 
-  override def dbs(): com.mongodb.client.MongoDatabase = ???
+  override def dbs(): com.mongodb.client.MongoDatabase = CcMongo.getDbSync(connId).get
 
   override def reader(field: Field[_,_]): BsonFormat[_] = {
     val fieldName = field.name.replaceAll("\\.\\$","")
    // if field.isInstanceOf[]
     val r = f.flds.get(fieldName)
     r.orElse(starReader(fieldName)).getOrElse{
-      throw new RuntimeException(s"No reader for field ${fieldName}, avaialble keys ${f.flds.keys.mkString(",")}")
+      throw new RuntimeException(s"No reader for field ${fieldName}, available keys ${f.flds.keys.mkString(",")}")
     }
   }
 

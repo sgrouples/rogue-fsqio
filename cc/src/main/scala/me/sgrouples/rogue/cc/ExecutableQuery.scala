@@ -3,7 +3,7 @@ package me.sgrouples.rogue.cc
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 // Copyright 2016 Sgrouples Inc. All Rights Reserved.
 
-import com.mongodb.WriteConcern
+import com.mongodb.{ReadPreference, WriteConcern}
 import io.fsq.field.Field
 import io.fsq.rogue.{AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.MongoSelect
@@ -27,8 +27,8 @@ case class ExecutableQuery[MB, M <: MB,  R, State](
     * Returns the number of distinct values returned by a query. The query must not have
     * limit or skip clauses.
     */
-  /*def countDistinct[V](field: M => Field[V, _]): Long =
-  ex.sync.countDistinct(query)(field.asInstanceOf[M => Field[V, M]])*/
+  def countDistinct[V](field: M => Field[V, _], readPreference:Option[ReadPreference] = None)(implicit ct: ClassTag[V]): Long =
+    ex.sync.countDistinct(query, readPreference, ct)(field.asInstanceOf[M => Field[V, M]])
 
   def countDistinctAsync[V](field: M => Field[V, _])(implicit ct: ClassTag[V]): Future[Long] =
     ex.async.countDistinct(query, ct)(field.asInstanceOf[M => Field[V, M]])
@@ -37,10 +37,9 @@ case class ExecutableQuery[MB, M <: MB,  R, State](
     * Returns a list of distinct values returned by a query. The query must not have
     * limit or skip clauses.
     */
-/*
-  def distinct[V](field: M => Field[V, _]): Seq[V] =
-  ex.sync.distinct(query)(field.asInstanceOf[M => Field[V, M]])
-*/
+
+  def distinct[V](field: M => Field[V, _], readPreference:Option[ReadPreference] = None)(implicit ct: ClassTag[V]): Seq[V] =
+    ex.sync.distinct(query, readPreference, ct)(field.asInstanceOf[M => Field[V, M]]).toSeq
 
   /**
     * Returns a list of distinct values returned by a query. The query must not have

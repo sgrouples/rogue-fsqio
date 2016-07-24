@@ -194,9 +194,10 @@ class MongoBsonJavaDriverAdapter[MB](
 
   def find[M <: MB, R](query: Query[M, _, _], serializer: RogueBsonRead[R], readPreference: Option[ReadPreference]): Seq[R] = {
     val mb = Seq.newBuilder[R]
+
     val it = findIterable(query, None, readPreference).iterator()
     while(it.hasNext){
-      serializer.fromDocumentOpt(it.next()).foreach(mb +=)
+      mb += serializer.fromDocument(it.next())
     }
     mb.result()
   }
