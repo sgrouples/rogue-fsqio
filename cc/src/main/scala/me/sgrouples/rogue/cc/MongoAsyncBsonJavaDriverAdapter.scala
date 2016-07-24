@@ -17,6 +17,7 @@ import org.bson.conversions.Bson
 import scala.collection.JavaConversions._
 import scala.concurrent.{Future, Promise}
 import scala.reflect.ClassTag
+import scala.util.Try
 
 
 trait AsyncBsonDBCollectionFactory[MB] {
@@ -146,9 +147,10 @@ class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument=> Option[R])(retry: 
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
     if (t == null) {
-      println(s"SingleDocumentOptCallbackWithRetry on result with ${result}")
-      if (result != null) p.success(f(result))
-      else p.success(None)
+      if (result != null) {
+        println(s"read on result from ${result}")
+        p.complete(Try(f(result)))
+      } else p.success(None)
     } else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
       retried = true
       retry(this)

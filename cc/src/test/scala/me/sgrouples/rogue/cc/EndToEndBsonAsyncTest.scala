@@ -33,12 +33,11 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
     closed = false,
     popularity = List(1L, 2L, 3L),
     categories = List(new ObjectId()),
-    latlng = LatLong(40.73, -73.98),
     last_updated = LocalDateTime.now(),
     status = VenueStatus.open,
     claims = List(VenueClaimBson(uid = 1234L, status = ClaimStatus.pending),
       VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
-    lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved),
+    lastClaim = Option(VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
     tags = List("test tag1", "some tag")
   )
 
@@ -255,18 +254,21 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
   @Test
   def testFindAndModify {
     val v1 = blk(VenueR.where(_.venuename eqs "v1")
-      .findAndModify(_.userid setTo 5)
+      .findAndModify(_.userid setTo 5) //all required fields have to be set, because they are required in CC
+      .and(_.legacyid setTo 0L).and(_.venuename setTo "").and(_.mayor_count setTo 0L)
+      .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
+      .and(_.status setTo VenueStatus.closed).and(_.mayor setTo 0L)
       .upsertOneAsync(returnNew = false))
-
-    println("V1 ---- done ")
 
     v1 must_== None
     val v2 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 5)
+      .and(_.legacyid setTo 0L).and(_.mayor_count setTo 0L)
+      .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
+      .and(_.status setTo VenueStatus.closed).and(_.mayor setTo 0L).and(_.userid setTo 0L)
       .upsertOneAsync(returnNew = true))
 
     v2.map(_.userId) must_== Some(5)
-
 
     val v3 = blk(VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userid setTo 6)

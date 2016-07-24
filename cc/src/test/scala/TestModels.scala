@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc
 import java.time.LocalDateTime
 
-import io.fsq.rogue.LatLong
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 
@@ -41,8 +40,8 @@ case class VenueClaim(_id: ObjectId, uid:Long, status: ClaimStatus.Value, reason
 
 
 case class Venue(_id: ObjectId, legId: Long, userId: Long, venuename: String, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String],
-                 popularity: List[Long], categories: List[ObjectId], latlng: LatLong, last_updated: LocalDateTime, status: VenueStatus.Value, claims: List[VenueClaimBson],
-                 lastClaim: VenueClaimBson)
+                 popularity: List[Long], categories: List[ObjectId], last_updated: LocalDateTime, status: VenueStatus.Value, claims: List[VenueClaimBson],
+                 lastClaim: Option[VenueClaimBson])
 
 case class Tip(_id: ObjectId, legid:Long, counts: Map[String, Long], userId:Option[Long] = None)
 
@@ -77,9 +76,9 @@ object Metas {
     val legacyid = new LongField("legId", this)
     val userid = new LongField("userId", this)
     val tags = new ListField[String, VenueR.type]("tags", this)
-    val geolatlng = new DoubleField("latlng",this)
     val claims = new CClassListField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("claims", VenueClaimBsonR, this)
     val lastClaim = new OptCClassField[VenueClaimBson, VenueClaimBsonR.type , VenueR.type]("lastClaim", VenueClaimBsonR, this)
+    val last_updated = new LocalDateTimeField("last_updated",this)
   }
 
   implicit val evRejReason = RejectReason

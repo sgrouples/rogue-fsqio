@@ -109,7 +109,6 @@ trait BaseBsonFormats{
     }
   }
 
-
   implicit object LocalDateTimeBsonFormat extends BasicBsonFormat[LocalDateTime] {
     override def read(b: BsonValue): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
     override def write(t: LocalDateTime): BsonValue = new BsonDateTime(t.toInstant(ZoneOffset.UTC).toEpochMilli)
@@ -134,7 +133,8 @@ trait BsonCollectionFormats {
       new BsonArray(list.map(f.write(_)))
     }
     def read(value: BsonValue): List[T] = {
-      value.asArray().map(f.read(_)).toList
+      if(value.isNull) Nil
+      else value.asArray().map(f.read(_)).toList
     }
 
     override def flds: Map[String, BF[_]] = f.flds
@@ -148,7 +148,8 @@ trait BsonCollectionFormats {
       new BsonArray(buff)
     }
     def read(value: BsonValue) = {
-      value.asArray().map(f.read(_)).toArray
+      if(value.isNull) new Array[T](0)
+      else value.asArray().map(f.read(_)).toArray
     }
     override def flds: Map[String, BF[_]] = f.flds
   }

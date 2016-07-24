@@ -3,6 +3,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import io.fsq.field.{Field, OptionalField, RequiredField}
+import io.fsq.rogue.LatLong
 import shapeless._
 import labelled.{FieldType, field}
 import me.sgrouples.rogue.cc.CcMeta
@@ -75,7 +76,6 @@ class CClassArrayField[C <: Product : ClassTag, O](name:String, o:O) extends MCF
 class MapField[V, O](name:String, o:O) extends MCField[Map[String, V], O](name, o){
   override def defaultValue = Map.empty
 }
-
 
 class OptIntField[O](name:String, o:O) extends OCField[Int,O](name, o)
 class OptLongField[O](name:String, o:O) extends OCField[Long,O](name, o)

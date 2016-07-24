@@ -1,9 +1,11 @@
 package me.sgrouples.rogue
 
+import java.time.{LocalDateTime, ZoneOffset}
+
 import io.fsq.field.Field
 import io.fsq.rogue._
 import me.sgrouples.rogue.cc.CcMeta
-import org.bson.BsonValue
+import org.bson.{BsonDateTime, BsonDocument, BsonValue}
 
 
 /**
@@ -90,7 +92,11 @@ class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObjec
 }
  */
 class CClassQueryField[C <: Product, M <: CcMeta[C], O](fld: CClassField[C, M,O], owner:O) extends AbstractQueryField[C, C, BsonValue, O](fld){
-  override def valueToDB(v: C): BsonValue = fld.childMeta.write(v)
+  override def valueToDB(v: C): BsonValue = {
+    val x = fld.childMeta.write(v)
+    println(s"writing value ${v} to db as ${x}")
+    x
+  }
   def subfield[V](f: M => Field[V,M]): SelectableDummyField[V, O] = {
     new SelectableDummyField[V, O](fld.name+"." + f(fld.childMeta).name, owner)
   }
@@ -107,6 +113,25 @@ class OptCClassQueryField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C
     println(s"R ${r}")
     r
   }
+}
+
+class CClassModifyField[C <: Product, M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
+  override def valueToDB(b: C):BsonDocument = fld.childMeta.write(b).asDocument()
+}
+
+/*
+class BsonRecordModifyField[M, B](field: Field[B, M], asDBObject: B => DBObject)
+    extends AbstractModifyField[B, DBObject, M](field) {
+  override def valueToDB(b: B) = asDBObject(b)
+}
+
+ */
+
+//class OptCClassModifyField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) extends AbstractModifyField[Option[C], BsonDocument, O](fld) {
+
+class LocalDateTimeModifyField[O](field:LocalDateTimeField[O]) extends AbstractModifyField[LocalDateTime, BsonDateTime, O](field) {
+  override def valueToDB(d: LocalDateTime) = new BsonDateTime(d.toInstant(ZoneOffset.UTC).toEpochMilli)
+  def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
 
 

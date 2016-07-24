@@ -9,7 +9,7 @@ import io.fsq.field.Field
 import io.fsq.rogue.MongoHelpers.{MongoModify, MongoSelect}
 import io.fsq.rogue._
 import io.fsq.spindle.types.MongoDisallowed
-import org.bson.BsonDocument
+import org.bson.{BsonDocument, BsonValue}
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -146,6 +146,11 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
                                     writeConcern: WriteConcern = defaultWriteConcern
                                   ): Future[Option[R]] = {
       val s = readSerializer[M, R](query.query.meta, query.query.select)
+    val ss = { dbo: BsonDocument =>
+      val x = s.fromDocumentOpt(dbo)
+      println(s"Find and upsert one from ${dbo}, got ${x}")
+      x
+    }
       adapter.findAndModify(query, returnNew, upsert = true, remove = false)(s.fromDocumentOpt _)
   }
 

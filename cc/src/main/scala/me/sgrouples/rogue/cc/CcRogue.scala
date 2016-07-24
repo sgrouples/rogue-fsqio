@@ -202,26 +202,36 @@ trait CcRogue {
   // ModifyField implicits
   implicit def fieldToModifyField[M <: BsonRecord[M], F: BSONType](f: Field[F, M]): ModifyField[F, M] = new ModifyField(f)
   implicit def fieldToSafeModifyField[M <: BsonRecord[M], F](f: Field[F, M]): SafeModifyField[F, M] = new SafeModifyField(f)
+*/
+  implicit def ccFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
+  (f: CClassField[C, M, O]): CClassModifyField[C, M, O] =
+    new CClassModifyField[C, M, O](f)
 
-  implicit def bsonRecordFieldToBsonRecordModifyField[M <: BsonRecord[M], B <: BsonRecord[B]]
-  (f: BsonRecordField[M, B]): BsonRecordModifyField[M, B] =
-    new BsonRecordModifyField[M, B](f, _.asDBObject)
+  /*
 
-  implicit def bsonRecordListFieldToBsonRecordListModifyField[
-  M <: BsonRecord[M],
-  B <: BsonRecord[B]
-  ](
-     f: BsonRecordListField[M, B]
-   )(
-     implicit mf: Manifest[B]
-   ): BsonRecordListModifyField[M, B] = {
-    val rec = f.setFromJValue(JArray(JInt(0) :: Nil)).openOrThrowException("a gross hack to get at the embedded record").head
-    new BsonRecordListModifyField[M, B](f, rec, _.asDBObject)(mf)
-  }
+implicit def optCcFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
+(f: OptCClassField[C, M, O]): OptCClassModifyField[C, M, O] =
+  new OptCClassModifyField[C, M, O](f)
 
-  implicit def dateFieldToDateModifyField[M <: BsonRecord[M]](f: Field[Date, M]): DateModifyField[M] =
-    new DateModifyField(f)
 
+implicit def bsonRecordListFieldToBsonRecordListModifyField[
+M <: BsonRecord[M],
+B <: BsonRecord[B]
+](
+   f: BsonRecordListField[M, B]
+ )(
+   implicit mf: Manifest[B]
+ ): BsonRecordListModifyField[M, B] = {
+  val rec = f.setFromJValue(JArray(JInt(0) :: Nil)).openOrThrowException("a gross hack to get at the embedded record").head
+  new BsonRecordListModifyField[M, B](f, rec, _.asDBObject)(mf)
+}
+
+*/
+  implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: LocalDateTimeField[O]): LocalDateTimeModifyField[O] =
+    new LocalDateTimeModifyField(f)
+  //implicit def datetimeRFieldToDateModifyField[M](f: RField[DateTime, M]): DateTimeModifyField[M] = new DateTimeModifyField(f)
+
+  /*/
   implicit def ccListFieldToListModifyField[M <: BsonRecord[M], V]
   (f: MongoCaseClassListField[M, V]): CaseClassListModifyField[V, M] =
     new CaseClassListModifyField[V, M](liftField2Recordv2Field(f))
