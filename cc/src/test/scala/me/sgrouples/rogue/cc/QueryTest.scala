@@ -241,10 +241,10 @@ class QueryTest extends JUnitMustMatchers {
     VenueR.scan(_.popularity at 0 not (_ lt 0)).toString()  must_==  """db.venues.find({ "popularity.0" : { "$not" : { "$lt" : 0}}})"""
   }
 
-  /*
+
   @Test
   def testModifyQueryShouldProduceACorrectJSONQueryString {
-    val d1 = new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC)
+    val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0) //, DateTimeZone.UTC)
 
     val query = """db.venues.update({ "legid" : 1}, """
     val suffix = ", false, false)"
@@ -256,19 +256,18 @@ class QueryTest extends JUnitMustMatchers {
 
     // Numeric
     VenueR.where(_.legacyid eqs 1).modify(_.mayor_count inc 3).toString() must_== query + """{ "$inc" : { "mayor_count" : 3}}""" + suffix
-    VenueR.where(_.legacyid eqs 1).modify(_.geolatlng.unsafeField[Double]("lat") inc 0.5).toString() must_== query + """{ "$inc" : { "latlng.lat" : 0.5}}""" + suffix
+    //VenueR.where(_.legacyid eqs 1).modify(_.geolatlng.unsafeField[Double]("lat") inc 0.5).toString() must_== query + """{ "$inc" : { "latlng.lat" : 0.5}}""" + suffix
 
     // Enumeration
     val query2 = """db.venueclaims.update({ "uid" : 1}, """
-    VenueClaimR.where(_.userid eqs 1).modify(_.status setTo ClaimStatus.approved).toString() must_== query2 + """{ "$set" : { "status" : "Approved"}}""" + suffix
+    VenueClaimR.where(_.userId eqs 1).modify(_.status setTo ClaimStatus.approved).toString() must_== query2 + """{ "$set" : { "status" : "Approved"}}""" + suffix
 
     // Calendar
     VenueR.where(_.legacyid eqs 1).modify(_.last_updated setTo d1).toString() must_== query + """{ "$set" : { "last_updated" : { "$date" : "2010-05-01T00:00:00.000Z"}}}""" + suffix
-    VenueR.where(_.legacyid eqs 1).modify(_.last_updated setTo d1.toDate).toString() must_== query + """{ "$set" : { "last_updated" : { "$date" : "2010-05-01T00:00:00.000Z"}}}""" + suffix
 
     // LatLong
     val ll = LatLong(37.4, -73.9)
-    VenueR.where(_.legacyid eqs 1).modify(_.geolatlng setTo ll).toString() must_== query + """{ "$set" : { "latlng" : [ 37.4 , -73.9]}}""" + suffix
+    //VenueR.where(_.legacyid eqs 1).modify(_.geolatlng setTo ll).toString() must_== query + """{ "$set" : { "latlng" : [ 37.4 , -73.9]}}""" + suffix
 
     // Lists
     VenueR.where(_.legacyid eqs 1).modify(_.popularity setTo List(5))      .toString() must_== query + """{ "$set" : { "popularity" : [ 5]}}""" + suffix
@@ -287,10 +286,10 @@ class QueryTest extends JUnitMustMatchers {
     VenueR.where(_.legacyid eqs 1).modify(_.popularity idx 0 inc 1)        .toString() must_== query + """{ "$inc" : { "popularity.0" : 1}}""" + suffix
 
     // Enumeration list
-    OAuthConsumer.modify(_.privileges addToSet ConsumerPrivilege.awardBadges).toString() must_== """db.oauthconsumers.update({ }, { "$addToSet" : { "privileges" : "Award badges"}}""" + suffix
+    //OAuthConsumer.modify(_.privileges addToSet ConsumerPrivilege.awardBadges).toString() must_== """db.oauthconsumers.update({ }, { "$addToSet" : { "privileges" : "Award badges"}}""" + suffix
 
     // BsonRecordField and BsonRecordListField with nested Enumeration
-    val claims = List(VenueClaimBson.createRecord.userid(1).status(ClaimStatus.approved).date(d1.toDate))
+    val claims = List(VenueClaimBson(1L, ClaimStatus.approved, None,d1))
     VenueR.where(_.legacyid eqs 1).modify(_.claims setTo claims)        .toString() must_== query + """{ "$set" : { "claims" : [ { "status" : "Approved" , "uid" : 1 , "source" : { "name" : "" , "url" : ""} , "date" : { "$date" : "2010-05-01T00:00:00.000Z"}}]}}""" + suffix
     VenueR.where(_.legacyid eqs 1).modify(_.lastClaim setTo claims.head).toString() must_== query + """{ "$set" : { "lastClaim" : { "status" : "Approved" , "uid" : 1 , "source" : { "name" : "" , "url" : ""} , "date" : { "$date" : "2010-05-01T00:00:00.000Z"}}}}""" + suffix
 
@@ -347,6 +346,7 @@ class QueryTest extends JUnitMustMatchers {
       .toString() must_== query + """{ "$pull" : { "claims" : { "uid" : 2097 , "status" : "Approved"}}}""" + suffix
   }
 
+  /*
   @Test
   def testProduceACorrectSignatureString {
     val d1 = new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC)
