@@ -5,7 +5,6 @@ import java.util.regex.Pattern
 
 import io.fsq.rogue._
 import me.sgrouples.rogue.LongField
-//import io.fsq.rogue.test.TrivialAsyncORMTests
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
 import org.junit.{After, Before, Test}
@@ -257,7 +256,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       .findAndModify(_.userid setTo 5) //all required fields have to be set, because they are required in CC
       .and(_.legacyid setTo 0L).and(_.venuename setTo "").and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
-      .and(_.status setTo VenueStatus.closed).and(_.mayor setTo 0L)
+      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L)
       .upsertOneAsync(returnNew = false))
 
     v1 must_== None
@@ -265,7 +264,7 @@ class EndToEndBsonAsyncTest extends JUnitMustMatchers {
       .findAndModify(_.userid setTo 5)
       .and(_.legacyid setTo 0L).and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
-      .and(_.status setTo VenueStatus.closed).and(_.mayor setTo 0L).and(_.userid setTo 0L)
+      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userid setTo 0L)
       .upsertOneAsync(returnNew = true))
 
     v2.map(_.userId) must_== Some(5)

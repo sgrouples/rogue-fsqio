@@ -250,7 +250,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
       .findAndModify(_.userid setTo 5) //all required fields have to be set, because they are required in CC
       .and(_.legacyid setTo 0L).and(_.venuename setTo "").and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
-      .and(_.status setTo VenueStatus.closed).and(_.mayor setTo 0L)
+      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L)
       .upsertOne(returnNew = false)
 
     v1 must_== None
@@ -258,7 +258,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
       .findAndModify(_.userid setTo 5)
       .and(_.legacyid setTo 0L).and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
-      .and(_.status setTo VenueStatus.closed).and(_.mayor setTo 0L).and(_.userid setTo 0L)
+      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userid setTo 0L)
       .upsertOne(returnNew = true)
 
     v2.map(_.userId) must_== Some(5)

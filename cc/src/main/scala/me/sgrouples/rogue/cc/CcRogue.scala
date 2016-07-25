@@ -6,6 +6,8 @@ package me.sgrouples.rogue.cc
 
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 
+import java.time.LocalDateTime
+
 import io.fsq.field.{RequiredField, Field => RField, OptionalField => ROptionalField}
 import io.fsq.rogue.{BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.AndCondition
@@ -142,11 +144,11 @@ trait CcRogue {
     val rec = f.setFromJValue(JArray(JInt(0) :: Nil)).openOrThrowException("a gross hack to get at the embedded record").head
     new BsonRecordListQueryField[M, B](f, rec, _.asDBObject)
   }
-
-  implicit def dateFieldToDateQueryField[M <: BsonRecord[M]]
-  (f: Field[java.util.Date, M]): DateQueryField[M] =
-    new DateQueryField(f)
 */
+  implicit def localDateTimeFieldToLocalDateTimeQueryField[O <: CcMeta[_]]
+  (f: RField[LocalDateTime, O]): LocalDateTimeQueryField[O] =
+    new LocalDateTimeQueryField(f)
+
   implicit def caseClassFieldToQueryField[C <: Product, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
     new CClassQueryField[C, M, O](f, f.owner)
 
@@ -300,6 +302,7 @@ B <: BsonRecord[B]
 
   implicit def BsonRecordIsBSONType[T <: BsonRecord[T]]: BSONType[T] = _BsonRecordIsBSONType.asInstanceOf[BSONType[T]]
 }*/
+  implicit val localDateIsFlattened = new Rogue.Flattened[LocalDateTime, LocalDateTime]
 }
 
 object CcRogue extends Rogue with CcRogue

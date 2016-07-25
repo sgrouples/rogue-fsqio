@@ -46,10 +46,10 @@ class CClassSeqQueryField[C <: Product, M <: CcMeta[C], O](fld: CClassListField[
     new DummyField[V, O](field.name + "." + name, fld.owner)
   }
 
-  def elemMatch[V](clauseFuncs: (O => QueryClause[_])*) = {
+  def elemMatch[V](clauseFuncs: (M => QueryClause[_])*) = {
     new ElemMatchWithPredicateClause(
       field.name,
-      clauseFuncs.map(cf => cf(fld.owner))
+      clauseFuncs.map(cf => cf(fld.childMeta))
     )
   }
 }
@@ -113,6 +113,16 @@ class OptCClassQueryField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C
     println(s"R ${r}")
     r
   }
+}
+
+class LocalDateTimeQueryField[M](field: Field[LocalDateTime, M])
+extends AbstractQueryField[LocalDateTime, LocalDateTime, BsonDateTime, M](field) {
+  override def valueToDB(d: LocalDateTime) = new BsonDateTime(d.toInstant(ZoneOffset.UTC).toEpochMilli)
+
+  def before(d: LocalDateTime) = new LtQueryClause(field.name, d)
+  def after(d: LocalDateTime) = new GtQueryClause(field.name, d)
+  def onOrBefore(d: LocalDateTime) = new LtEqQueryClause(field.name, d)
+  def onOrAfter(d: LocalDateTime) = new GtEqQueryClause(field.name, d)
 }
 
 class CClassModifyField[C <: Product, M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {

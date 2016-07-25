@@ -79,13 +79,17 @@ object Metas {
     val claims = new CClassListField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("claims", VenueClaimBsonR, this)
     val lastClaim = new OptCClassField[VenueClaimBson, VenueClaimBsonR.type , VenueR.type]("lastClaim", VenueClaimBsonR, this)
     val last_updated = new LocalDateTimeField("last_updated",this)
+    val popularity = new ListField[Long, VenueR.type]("popularity",this)
+    val categories = new ListField[ObjectId, VenueR.type]("categories", this)
   }
 
   implicit val evRejReason = RejectReason
 
   object VenueClaimR extends RCcMeta[VenueClaim]("venueclaims") {
-    val venueid = new ObjectIdField("_id", this)
+    val venueid = new ObjectIdField("vid", this)
     val status = new EnumField[ClaimStatus.type, VenueClaimR.type]("status", this)
+    val reason = new OptEnumField[RejectReason.type, VenueClaimR.type]("reason", this)
+    val userId = new LongField("uid", this)
   }
 
   object TipR extends RCcMeta[Tip]("tips") {

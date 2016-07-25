@@ -2,12 +2,16 @@
 
 package io.fsq.rogue
 
+import java.time.{LocalDateTime, ZoneOffset}
+
 import com.mongodb.DBObject
 import io.fsq.field.{Field, OptionalField, RequiredField}
 import java.util.Date
 import java.util.regex.Pattern
+
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
+
 import scala.util.matching.Regex
 
 object CondOps extends Enumeration {
@@ -218,6 +222,21 @@ class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M])
 
   def between(range: (DateTime, DateTime)) =
     new StrictBetweenQueryClause(field.name, ObjectId.createFromLegacyFormat((range._1.toDate.getTime / 1000).toInt, 0, 0), ObjectId.createFromLegacyFormat((range._2.toDate.getTime / 1000).toInt, 0, 0))
+
+  def before(d: LocalDateTime) =
+    new LtQueryClause(field.name, localDateTimeToOid(d))
+
+  def after(d: LocalDateTime) =
+    new GtQueryClause(field.name, localDateTimeToOid(d))
+
+  def between(d1: LocalDateTime, d2: LocalDateTime) =
+    new StrictBetweenQueryClause(field.name, localDateTimeToOid(d1), localDateTimeToOid(d2))
+
+  //different name because of the type erasure - can't dispatch by inner type
+  def betweenR(range: (LocalDateTime, LocalDateTime)) =
+    new StrictBetweenQueryClause(field.name, localDateTimeToOid(range._1), localDateTimeToOid(range._2))
+
+  private def localDateTimeToOid(d: LocalDateTime): ObjectId = ObjectId.createFromLegacyFormat(d.toEpochSecond(ZoneOffset.UTC).toInt , 0, 0)
 }
 
 class ForeignObjectIdQueryField[F <: ObjectId, M, T](
