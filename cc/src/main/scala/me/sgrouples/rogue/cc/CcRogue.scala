@@ -209,14 +209,21 @@ trait CcRogue {
   (f: CClassField[C, M, O]): CClassModifyField[C, M, O] =
     new CClassModifyField[C, M, O](f)
 
+  implicit def optCcFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
+  (f: OptCClassField[C, M, O]): OptCClassModifyField[C, M, O] =
+    new OptCClassModifyField[C, M, O](f)
+
   /*
 
 implicit def optCcFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
 (f: OptCClassField[C, M, O]): OptCClassModifyField[C, M, O] =
   new OptCClassModifyField[C, M, O](f)
+*/
 
+  implicit def ccListFieldToSeqModifyField[C <: Product, M <: CcMeta[C], O]
+  (f: CClassListField[C, M, O]):CClassSeqModifyField[C,M,O] = new CClassSeqModifyField[C,M,O](f)
 
-implicit def bsonRecordListFieldToBsonRecordListModifyField[
+  /*implicit def bsonRecordListFieldToBsonRecordListModifyField[
 M <: BsonRecord[M],
 B <: BsonRecord[B]
 ](
@@ -226,14 +233,13 @@ B <: BsonRecord[B]
  ): BsonRecordListModifyField[M, B] = {
   val rec = f.setFromJValue(JArray(JInt(0) :: Nil)).openOrThrowException("a gross hack to get at the embedded record").head
   new BsonRecordListModifyField[M, B](f, rec, _.asDBObject)(mf)
-}
+}*/
 
-*/
   implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: LocalDateTimeField[O]): LocalDateTimeModifyField[O] =
     new LocalDateTimeModifyField(f)
   //implicit def datetimeRFieldToDateModifyField[M](f: RField[DateTime, M]): DateTimeModifyField[M] = new DateTimeModifyField(f)
 
-  /*/
+  /*
   implicit def ccListFieldToListModifyField[M <: BsonRecord[M], V]
   (f: MongoCaseClassListField[M, V]): CaseClassListModifyField[V, M] =
     new CaseClassListModifyField[V, M](liftField2Recordv2Field(f))

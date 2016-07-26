@@ -1,6 +1,7 @@
 package me.sgrouples.rogue
 
 import java.time.{LocalDateTime, ZoneOffset}
+import java.util.Date
 
 import io.fsq.field.Field
 import io.fsq.rogue._
@@ -116,18 +117,60 @@ class OptCClassQueryField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C
 }
 
 class LocalDateTimeQueryField[M](field: Field[LocalDateTime, M])
-extends AbstractQueryField[LocalDateTime, LocalDateTime, BsonDateTime, M](field) {
-  override def valueToDB(d: LocalDateTime) = new BsonDateTime(d.toInstant(ZoneOffset.UTC).toEpochMilli)
+extends AbstractQueryField[LocalDateTime, LocalDateTime, Date, M](field) {
+  import LocalDateTimeToMongo._
+  override def valueToDB(d: LocalDateTime) = ldtToDate(d)
 
-  def before(d: LocalDateTime) = new LtQueryClause(field.name, d)
-  def after(d: LocalDateTime) = new GtQueryClause(field.name, d)
-  def onOrBefore(d: LocalDateTime) = new LtEqQueryClause(field.name, d)
-  def onOrAfter(d: LocalDateTime) = new GtEqQueryClause(field.name, d)
+  def before(d: LocalDateTime) = new LtQueryClause(field.name, ldtToDate(d))
+  def after(d: LocalDateTime) = new GtQueryClause(field.name, ldtToDate(d))
+  def onOrBefore(d: LocalDateTime) = new LtEqQueryClause(field.name, ldtToDate(d))
+  def onOrAfter(d: LocalDateTime) = new GtEqQueryClause(field.name, ldtToDate(d))
+
+
 }
 
 class CClassModifyField[C <: Product, M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
   override def valueToDB(b: C):BsonDocument = fld.childMeta.write(b).asDocument()
 }
+
+class OptCClassModifyField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
+  override def valueToDB(b: C):BsonDocument = fld.childMeta.write(b).asDocument()
+}
+
+
+class CClassSeqModifyField[C <: Product, M <: CcMeta[C], O](fld: CClassListField[C, M, O])
+  extends AbstractListModifyField[C, BsonDocument, O, Seq](fld) {
+  override def valueToDB(b: C):BsonDocument = fld.childMeta.write(b).asDocument()
+
+  def pullObjectWhere(clauseFuncs: (M => QueryClause[_])*) = {
+    new ModifyPullObjWithPredicateClause(
+      field.name,
+      clauseFuncs.map(cf => cf(fld.childMeta))
+    )
+  }
+}
+/*
+class CClassSeqQueryField[C <: Product, M <: CcMeta[C], O](fld: CClassListField[C, M , O], owner:O) //, toBson: B => BsonValue)
+  extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {
+  override def valueToDB(c: C) = fld.childMeta.write(c)
+
+
+class BsonRecordListModifyField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)(implicit mf: Manifest[B])
+    extends AbstractListModifyField[B, DBObject, M, List](field) {
+  override def valueToDB(b: B) = asDBObject(b)
+
+  // override def $: BsonRecordField[M, B] = {
+  //   new BsonRecordField[M, B](field.owner, rec.meta)(mf) {
+  //     override def name = field.name + ".$"
+  //   }
+  // }
+
+
+}
+
+ */
+
+
 
 /*
 class BsonRecordModifyField[M, B](field: Field[B, M], asDBObject: B => DBObject)
@@ -139,9 +182,13 @@ class BsonRecordModifyField[M, B](field: Field[B, M], asDBObject: B => DBObject)
 
 //class OptCClassModifyField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) extends AbstractModifyField[Option[C], BsonDocument, O](fld) {
 
-class LocalDateTimeModifyField[O](field:LocalDateTimeField[O]) extends AbstractModifyField[LocalDateTime, BsonDateTime, O](field) {
-  override def valueToDB(d: LocalDateTime) = new BsonDateTime(d.toInstant(ZoneOffset.UTC).toEpochMilli)
+class LocalDateTimeModifyField[O](field:LocalDateTimeField[O]) extends AbstractModifyField[LocalDateTime, Date, O](field) {
+  import LocalDateTimeToMongo._
+  override def valueToDB(d: LocalDateTime) = ldtToDate(d)
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
 
 
+object LocalDateTimeToMongo {
+  final def ldtToDate(d: LocalDateTime): Date = Date.from(d.toInstant(ZoneOffset.UTC))
+}
