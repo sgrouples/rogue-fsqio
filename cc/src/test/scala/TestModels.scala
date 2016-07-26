@@ -1,8 +1,10 @@
 package me.sgrouples.rogue.cc
 import java.time.LocalDateTime
 
+import io.fsq.rogue.EnumerationListModifyField
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
+import me.sgrouples.rogue.BsonFormats._
 
 
 object VenueStatus extends Enumeration {
@@ -45,8 +47,19 @@ case class Venue(_id: ObjectId, legId: Long, userId: Long, venuename: String, ma
 
 case class Tip(_id: ObjectId, legid:Long, counts: Map[String, Long], userId:Option[Long] = None)
 
+
+case class OneComment(timestamp: String, userid: Long, comment: String)
+
+case class Comment(comments: List[OneComment])
+
+object ConsumerPrivilege extends Enumeration {
+  val awardBadges = Value("Award badges")
+}
+
+
+case class OAuthConsumer(privileges: List[ConsumerPrivilege.Value])
+
 object Metas {
-  import me.sgrouples.rogue.BsonFormats._
 
    object SourceBsonR extends RCcMeta[SourceBson]("_"){
      val name = new StringField("name", this)
@@ -98,6 +111,18 @@ object Metas {
     val userId = new OptLongField("userId", this)
     val counts = new MapField[Long, TipR.type]("counts", this)
   }
+
+  implicit val consumerPrivilegeV = ConsumerPrivilege
+  object OAuthConsumerR extends RCcMeta[OAuthConsumer]("oauthconsumers") {
+    val privileges = new ListField[ConsumerPrivilege.Value, OAuthConsumerR.type]("privileges", this)
+  }
+
+
+  object CommentR extends RCcMeta[Comment]("comments") {
+    val comments = new ListField[OneComment.type , CommentR.type]("comments", this)
+  }
+
+
 }
 
 
