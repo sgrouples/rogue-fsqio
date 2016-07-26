@@ -8,13 +8,12 @@ import me.sgrouples.rogue.LongField
 //import io.fsq.rogue.test.TrivialORMTests
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
-import org.junit.{After, Before, Test}
+import org.junit.{ After, Before, Test }
 import org.specs2.matcher.JUnitMustMatchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Awaitable}
+import scala.concurrent.{ Await, Awaitable }
 import CcRogue._
-
 
 class EndToEndBsonTest extends JUnitMustMatchers {
   import Metas._
@@ -31,21 +30,21 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     categories = List(new ObjectId()),
     last_updated = LocalDateTime.now(),
     status = VenueStatus.open,
-    claims = List(VenueClaimBson(uid = 1234L, status = ClaimStatus.pending),
-      VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
+    claims = List(
+      VenueClaimBson(uid = 1234L, status = ClaimStatus.pending),
+      VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
+    ),
     lastClaim = Option(VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
     tags = List("test tag1", "some tag")
   )
 
-
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
-    VenueClaim(vid, 123L, ClaimStatus.approved)
+    VenueClaim(new ObjectId(), vid, 123L, ClaimStatus.approved)
   }
 
   def baseTestTip(): Tip = {
     Tip(new ObjectId(), legid = 234L, counts = Map("foo" -> 1L, "bar" -> 2L))
   }
-
 
   @Before
   def setupMongoConnection: Unit = {
@@ -76,7 +75,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     // eqs
     val q = ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id)
-    println(s"Ret class ${classOf[q.meta.R]}")
+    //println(s"Ret class ${classOf[q.meta.R]}")
     ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetch().map(_._id) must_== Seq(v._id)
     VenueR.where(_.mayor eqs v.mayor).fetch().map(_._id) must_== List(v._id)
     VenueR.where(_.mayor eqs v.mayor).fetch().map(_._id) must_== List(v._id)
@@ -86,10 +85,10 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     VenueR.where(_.mayor eqs 432432).fetch().map(_._id) must_== Nil
     VenueR.where(_.closed eqs true).fetch().map(_._id) must_== Nil
 
+    VenueClaimR.fetch().map(println)
     VenueClaimR.where(_.status eqs ClaimStatus.approved).fetch().map(_._id) must_== List(vc._id)
     VenueClaimR.where(_.venueid eqs v._id).fetch().map(_._id) must_== List(vc._id)
   }
-
 
   @Test
   def testInequalityQueries: Unit = {
@@ -110,11 +109,10 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     VenueR.where(_.mayor_count gt 5).fetch().map(_._id) must_== Nil
     VenueR.where(_.mayor_count >= 5).fetch().map(_._id) must_== Nil
     VenueR.where(_.mayor_count gte 5).fetch().map(_._id) must_== Nil
-    VenueR.where(_.mayor_count between(3, 5)).fetch().map(_._id) must_== List(v._id)
+    VenueR.where(_.mayor_count between (3, 5)).fetch().map(_._id) must_== List(v._id)
     VenueClaimR.where(_.status neqs ClaimStatus.approved).fetch().map(_._id) must_== Nil
     VenueClaimR.where(_.status neqs ClaimStatus.pending).fetch().map(_._id) must_== List(vc._id)
   }
-
 
   @Test
   def selectQueries: Unit = {
@@ -154,7 +152,6 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetch() must_== List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
   }
 
-
   @Test
   def selectSubfieldQueries: Unit = {
     val v = baseTestVenue()
@@ -164,14 +161,14 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     //TODO - no support for querying map fields now
     // select subfields
-    val q3=TipR.where(_.id eqs t._id).select(_.counts at "foo")
+    val q3 = TipR.where(_.id eqs t._id).select(_.counts at "foo")
     //println(s"Q ${q.query}")
     q3.fetch() must_== Seq(Some(1L))
 
     //todo - no unsafe fields now
     //VenueR.where(_.id eqs v._id).select(_.geolatlng.unsafeField[Double]("lat").fetch() must_== List(Some(40.73)
     val subuserids: Seq[Option[List[Long]]] = VenueR.where(_.id eqs v._id).select(_.claims.subselect(_.uid)).fetch()
-    println(s"Sub user ids ${subuserids}")
+    //println(s"Sub user ids ${subuserids}")
     subuserids must_== List(Some(List(1234, 5678)))
 
     val q = VenueR.where(_.claims.subfield(_.uid) eqs 1234).select(_.claims.$$)
@@ -317,10 +314,9 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     VenueR.where(_.mayor eqs 789L).countDistinct(_.userid) must_== 3
   }
 
-
   @Test
-  def testSlice():Unit = {
-    val v= baseTestVenue().copy(tags = List("1", "2", "3", "4"))
+  def testSlice(): Unit = {
+    val v = baseTestVenue().copy(tags = List("1", "2", "3", "4"))
     VenueR.insertOne(v)
     VenueR.select(_.tags.slice(2)).get() must_== Some(List("1", "2"))
     VenueR.select(_.tags.slice(-2)).get() must_== Some(List("3", "4"))

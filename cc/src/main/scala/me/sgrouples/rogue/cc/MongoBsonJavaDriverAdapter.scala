@@ -6,17 +6,16 @@ import io.fsq.rogue.Rogue._
 import io.fsq.rogue.index.UntypedMongoIndex
 import java.util.concurrent.TimeUnit
 
-import com.mongodb.client.{DistinctIterable, FindIterable, MongoCollection, MongoCursor}
+import com.mongodb.client.{ DistinctIterable, FindIterable, MongoCollection, MongoCursor }
 import com.mongodb.client.model._
-import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query, RogueException}
-import org.bson.{BSONObject, BsonDocument}
+import io.fsq.rogue.{ FindAndModifyQuery, ModifyQuery, Query, RogueException }
+import org.bson.{ BSONObject, BsonDocument }
 import org.bson.conversions.Bson
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
-
+import scala.util.{ Failure, Success, Try }
 
 trait BsonDBCollectionFactory[MB] {
   def getDBCollection[M <: MB](query: Query[M, _, _]): MongoCollection[BsonDocument]
@@ -35,15 +34,17 @@ trait BsonDBCollectionFactory[MB] {
 }
 
 class MongoBsonJavaDriverAdapter[MB](
-                                      dbCollectionFactory: BsonDBCollectionFactory[MB],
-                                      decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY
-                                    ) {
+    dbCollectionFactory: BsonDBCollectionFactory[MB],
+    decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY
+) {
 
   import io.fsq.rogue.MongoHelpers.MongoBuilder._
   import io.fsq.rogue.QueryHelpers._
 
-  private[rogue] def runCommand[M <: MB, T](descriptionFunc: () => String,
-                                            query: Query[M, _, _])(f: => T): T = {
+  private[rogue] def runCommand[M <: MB, T](
+    descriptionFunc: () => String,
+    query: Query[M, _, _]
+  )(f: => T): T = {
     // Use nanoTime instead of currentTimeMillis to time the query since
     // currentTimeMillis only has 10ms granularity on many systems.
     val start = System.nanoTime
@@ -67,20 +68,22 @@ class MongoBsonJavaDriverAdapter[MB](
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val condition: Bson = buildCondition(queryClause.condition)
     val coll = dbCollectionFactory.getDBCollection(query)
-      if (queryClause.lim.isDefined || queryClause.sk.isDefined) {
-        val options = new CountOptions()
-        queryClause.lim.map(options.limit(_))
-        queryClause.sk.map(options.skip(_))
-        coll.count(condition, options)
-      } else {
-        coll.count(condition)
-      }
+    if (queryClause.lim.isDefined || queryClause.sk.isDefined) {
+      val options = new CountOptions()
+      queryClause.lim.map(options.limit(_))
+      queryClause.sk.map(options.skip(_))
+      coll.count(condition, options)
+    } else {
+      coll.count(condition)
+    }
   }
 
-  def countDistinct[M <: MB, R](query: Query[M, _, _],
-                             key: String,
-                             ct: ClassTag[R],
-                             readPreference: Option[ReadPreference]): Long = {
+  def countDistinct[M <: MB, R](
+    query: Query[M, _, _],
+    key: String,
+    ct: ClassTag[R],
+    readPreference: Option[ReadPreference]
+  ): Long = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd: Bson = buildCondition(queryClause.condition)
@@ -89,23 +92,27 @@ class MongoBsonJavaDriverAdapter[MB](
     coll.distinct(key, cnd, rClass).asScala.toSet.size.toLong
   }
 
-  def distinct[M <: MB, R](query: Query[M, _, _],
-                           key: String,
-                           ct: ClassTag[R],
-                           readPreference: Option[ReadPreference]): Iterable[R] = {
+  def distinct[M <: MB, R](
+    query: Query[M, _, _],
+    key: String,
+    ct: ClassTag[R],
+    readPreference: Option[ReadPreference]
+  ): Iterable[R] = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
-    val cnd:Bson = buildCondition(queryClause.condition)
+    val cnd: Bson = buildCondition(queryClause.condition)
     val coll = dbCollectionFactory.getDBCollection(query)
     val rClass = ct.runtimeClass.asInstanceOf[Class[R]]
     coll.distinct[R](key, cnd, rClass).asScala
   }
 
-  def delete[M <: MB](query: Query[M, _, _],
-                      writeConcern: WriteConcern): Unit = {
+  def delete[M <: MB](
+    query: Query[M, _, _],
+    writeConcern: WriteConcern
+  ): Unit = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
-    val cnd:Bson = buildCondition(queryClause.condition)
+    val cnd: Bson = buildCondition(queryClause.condition)
     val coll = dbCollectionFactory.getPrimaryDBCollection(query)
     coll.deleteMany(cnd)
   }
@@ -120,11 +127,12 @@ class MongoBsonJavaDriverAdapter[MB](
     collection.insertMany(docs.toList.asJava)
   }
 
-
-  def modify[M <: MB](mod: ModifyQuery[M, _],
-                      upsert: Boolean,
-                      multi: Boolean,
-                      writeConcern: WriteConcern): Unit = {
+  def modify[M <: MB](
+    mod: ModifyQuery[M, _],
+    upsert: Boolean,
+    multi: Boolean,
+    writeConcern: WriteConcern
+  ): Unit = {
     val modClause = transformer.transformModify(mod)
     validator.validateModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty) {
@@ -140,11 +148,12 @@ class MongoBsonJavaDriverAdapter[MB](
     }
   }
 
-  def findAndModify[M <: MB, R](mod: FindAndModifyQuery[M, R],
-                                returnNew: Boolean,
-                                upsert: Boolean,
-                                remove: Boolean)
-                               (f: BsonDocument => R): Option[R] = {
+  def findAndModify[M <: MB, R](
+    mod: FindAndModifyQuery[M, R],
+    returnNew: Boolean,
+    upsert: Boolean,
+    remove: Boolean
+  )(f: BsonDocument => R): Option[R] = {
     val modClause = transformer.transformFindAndModify(mod)
     validator.validateFindAndModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty || remove) {
@@ -169,23 +178,23 @@ class MongoBsonJavaDriverAdapter[MB](
     }
   }
 
-   def findIterable[M <: MB, R](query: Query[M, _, _], batchSize: Option[Int] = None, readPreference: Option[ReadPreference] = None): FindIterable[BsonDocument] = {
-      val queryClause = transformer.transformQuery(query)
-      validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
-      val cnd:Bson = buildCondition(queryClause.condition)
-      val coll = {
-        val c = dbCollectionFactory.getDBCollection(query)
-        readPreference.fold(c)(c.withReadPreference(_))
-      }
-      val sel:Bson = queryClause.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
-      val ord = queryClause.order.map(buildOrder)
-      val cursor = coll.find(cnd).projection(sel)
+  def findIterable[M <: MB, R](query: Query[M, _, _], batchSize: Option[Int] = None, readPreference: Option[ReadPreference] = None): FindIterable[BsonDocument] = {
+    val queryClause = transformer.transformQuery(query)
+    validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
+    val cnd: Bson = buildCondition(queryClause.condition)
+    val coll = {
+      val c = dbCollectionFactory.getDBCollection(query)
+      readPreference.fold(c)(c.withReadPreference(_))
+    }
+    val sel: Bson = queryClause.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
+    val ord = queryClause.order.map(buildOrder)
+    val cursor = coll.find(cnd).projection(sel)
 
-      batchSize.map(cursor.batchSize _)
-      queryClause.lim.foreach(cursor.limit _)
-      queryClause.sk.foreach(cursor.skip _)
-      ord.foreach(cursor.sort _)
-      cursor
+    batchSize.map(cursor.batchSize _)
+    queryClause.lim.foreach(cursor.limit _)
+    queryClause.sk.foreach(cursor.skip _)
+    ord.foreach(cursor.sort _)
+    cursor
   }
 
   def fineOne[M <: MB, R](query: Query[M, _, _], serializer: RogueBsonRead[R]): Option[R] = {
@@ -196,18 +205,19 @@ class MongoBsonJavaDriverAdapter[MB](
     val mb = Seq.newBuilder[R]
 
     val it = findIterable(query, None, readPreference).iterator()
-    while(it.hasNext){
+    while (it.hasNext) {
       mb += serializer.fromDocument(it.next())
     }
     mb.result()
   }
 
-  def iterate[M <: MB, R, S](query: Query[M, R, _],
-                             initialState: S,
-                             f: BsonDocument => R,
-                             readPreference: Option[ReadPreference] = None)
-                            (handler: (S, Event[R]) => Command[S]): S = {
-    def getObject(cursor:  MongoCursor[BsonDocument]): Try[R] = {
+  def iterate[M <: MB, R, S](
+    query: Query[M, R, _],
+    initialState: S,
+    f: BsonDocument => R,
+    readPreference: Option[ReadPreference] = None
+  )(handler: (S, Event[R]) => Command[S]): S = {
+    def getObject(cursor: MongoCursor[BsonDocument]): Try[R] = {
       Try(f(cursor.next()))
     }
 
@@ -230,12 +240,13 @@ class MongoBsonJavaDriverAdapter[MB](
     iter(cursor, initialState)
   }
 
-  def iterateBatch[M <: MB, R, S](query: Query[M, R, _],
-                                  batchSize: Int,
-                                  initialState: S,
-                                  f: BsonDocument => R,
-                                  readPreference: Option[ReadPreference] = None)
-                                 (handler: (S, Event[Seq[R]]) => Command[S]): S = {
+  def iterateBatch[M <: MB, R, S](
+    query: Query[M, R, _],
+    batchSize: Int,
+    initialState: S,
+    f: BsonDocument => R,
+    readPreference: Option[ReadPreference] = None
+  )(handler: (S, Event[Seq[R]]) => Command[S]): S = {
     val buf = new ListBuffer[R]
 
     def getBatch(cursor: MongoCursor[BsonDocument]): Try[Seq[R]] = {
@@ -267,6 +278,5 @@ class MongoBsonJavaDriverAdapter[MB](
     val cursor = findIterable(query, Some(batchSize), readPreference).iterator()
     iter(cursor, initialState)
   }
-
 
 }

@@ -2,10 +2,10 @@
 
 package io.fsq.rogue
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{ LocalDateTime, ZoneOffset }
 
 import com.mongodb.DBObject
-import io.fsq.field.{Field, OptionalField, RequiredField}
+import io.fsq.field.{ Field, OptionalField, RequiredField }
 import java.util.Date
 import java.util.regex.Pattern
 
@@ -208,7 +208,6 @@ class NumericQueryField[V, M](field: Field[V, M])
   override def valueToDB(v: V) = v
 }
 
-
 class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M])
     extends NumericQueryField(field) {
   def before(d: DateTime) =
@@ -236,7 +235,7 @@ class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M])
   def betweenR(range: (LocalDateTime, LocalDateTime)) =
     new StrictBetweenQueryClause(field.name, localDateTimeToOid(range._1), localDateTimeToOid(range._2))
 
-  private def localDateTimeToOid(d: LocalDateTime): ObjectId = ObjectId.createFromLegacyFormat(d.toEpochSecond(ZoneOffset.UTC).toInt , 0, 0)
+  private def localDateTimeToOid(d: LocalDateTime): ObjectId = ObjectId.createFromLegacyFormat(d.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
 }
 
 class ForeignObjectIdQueryField[F <: ObjectId, M, T](
@@ -376,8 +375,8 @@ class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObjec
   }
 }
 
-class CaseClassListQueryField[M, B](field: Field[List[B], M],  asDBObject: B => DBObject)
-  extends AbstractListQueryField[B, B, DBObject, M, List](field) {
+class CaseClassListQueryField[M, B](field: Field[List[B], M], asDBObject: B => DBObject)
+    extends AbstractListQueryField[B, B, DBObject, M, List](field) {
   override def valueToDB(b: B) = asDBObject(b)
 
   /*def subfield[V, V1](f: B => Field[V, B])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], M] = {
@@ -410,7 +409,6 @@ class EnumerationListQueryField[V <: Enumeration#Value, M](field: Field[List[V],
     extends AbstractListQueryField[V, V, String, M, List](field) {
   override def valueToDB(v: V) = v.toString
 }
-
 
 // ********************************************************************************
 // *** Modify fields
@@ -470,8 +468,10 @@ class GeoModifyField[M](field: Field[LatLong, M])
     QueryHelpers.list(List(ll.lat, ll.long))
 
   def setTo(lat: Double, long: Double) =
-    new ModifyClause(ModOps.Set,
-                     field.name -> QueryHelpers.list(List(lat, long)))
+    new ModifyClause(
+      ModOps.Set,
+      field.name -> QueryHelpers.list(List(lat, long))
+    )
 }
 
 class NumericModifyField[V, M](override val field: Field[V, M]) extends AbstractModifyField[V, V, M](field) {
@@ -505,11 +505,15 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Fie
   def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB _)
 
   def setTo(vs: Traversable[V]) =
-    new ModifyClause(ModOps.Set,
-                     field.name -> QueryHelpers.list(valuesToDB(vs)))
+    new ModifyClause(
+      ModOps.Set,
+      field.name -> QueryHelpers.list(valuesToDB(vs))
+    )
   def push(v: V) =
-    new ModifyClause(ModOps.Push,
-                     field.name -> valueToDB(v))
+    new ModifyClause(
+      ModOps.Push,
+      field.name -> valueToDB(v)
+    )
 
   def push(vs: Traversable[V]) =
     new ModifyPushEachClause(field.name, valuesToDB(vs))
@@ -520,14 +524,17 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Fie
   def push(vs: Traversable[V], slice: Int, position: Int) =
     new ModifyPushEachSlicePositionClause(field.name, slice, position, valuesToDB(vs))
 
-
   def pushAll(vs: Traversable[V]) =
-    new ModifyClause(ModOps.PushAll,
-                     field.name -> QueryHelpers.list(valuesToDB(vs)))
+    new ModifyClause(
+      ModOps.PushAll,
+      field.name -> QueryHelpers.list(valuesToDB(vs))
+    )
 
   def addToSet(v: V) =
-    new ModifyClause(ModOps.AddToSet,
-                     field.name -> valueToDB(v))
+    new ModifyClause(
+      ModOps.AddToSet,
+      field.name -> valueToDB(v)
+    )
 
   def addToSet(vs: Traversable[V]) =
     new ModifyAddEachClause(field.name, valuesToDB(vs))
@@ -539,12 +546,16 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Fie
     new ModifyClause(ModOps.Pop, field.name -> 1)
 
   def pull(v: V) =
-    new ModifyClause(ModOps.Pull,
-                     field.name -> valueToDB(v))
+    new ModifyClause(
+      ModOps.Pull,
+      field.name -> valueToDB(v)
+    )
 
   def pullAll(vs: Traversable[V]) =
-    new ModifyClause(ModOps.PullAll,
-                     field.name -> QueryHelpers.list(valuesToDB(vs)))
+    new ModifyClause(
+      ModOps.PullAll,
+      field.name -> QueryHelpers.list(valuesToDB(vs))
+    )
 
   def pullWhere(clauseFuncs: (Field[V, M] => QueryClause[_])*) =
     new ModifyPullWithPredicateClause(
@@ -571,7 +582,7 @@ class ListModifyField[V: BSONType, M](field: Field[List[V], M])
 class CaseClassListModifyField[V, M](field: Field[List[V], M], asDBObject: V => DBObject)
     extends AbstractListModifyField[V, DBObject, M, List](field) {
   override def valueToDB(v: V) = asDBObject(v)
-    //QueryHelpers.asDBObject(v)
+  //QueryHelpers.asDBObject(v)
 }
 
 class EnumerationListModifyField[V <: Enumeration#Value, M](field: Field[List[V], M])
@@ -615,8 +626,10 @@ sealed abstract class SelectField[V, M](val field: Field[_, M], val slc: Option[
   def $$: SelectField[V, M]
 }
 
-final class MandatorySelectField[V, M](override val field: RequiredField[V, M],
-                                       override val slc: Option[(Int, Option[Int])] = None)
+final class MandatorySelectField[V, M](
+  override val field: RequiredField[V, M],
+  override val slc: Option[(Int, Option[Int])] = None
+)
     extends SelectField[V, M](field, slc) {
   override def valueOrDefault(v: Option[_]): Any = v.getOrElse(field.defaultValue)
   override def slice(s: Int): MandatorySelectField[V, M] = {
@@ -631,8 +644,10 @@ final class MandatorySelectField[V, M](override val field: RequiredField[V, M],
   }
 }
 
-final class OptionalSelectField[V, M](override val field: OptionalField[V, M],
-                                      override val slc: Option[(Int, Option[Int])] = None)
+final class OptionalSelectField[V, M](
+  override val field: OptionalField[V, M],
+  override val slc: Option[(Int, Option[Int])] = None
+)
     extends SelectField[Option[V], M](field, slc) {
   override def valueOrDefault(v: Option[_]): Any = v
   override def slice(s: Int): OptionalSelectField[V, M] = {

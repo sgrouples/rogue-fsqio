@@ -2,7 +2,7 @@
 
 package io.fsq.rogue.indexchecker
 
-import io.fsq.rogue.{DocumentScan, Index, IndexScan, MongoHelpers, PartialIndexScan, Query, QueryClause, QueryHelpers}
+import io.fsq.rogue.{ DocumentScan, Index, IndexScan, MongoHelpers, PartialIndexScan, Query, QueryClause, QueryHelpers }
 import io.fsq.rogue.index.UntypedMongoIndex
 
 trait IndexChecker {
@@ -76,14 +76,18 @@ object MongoIndexChecker extends IndexChecker {
           Index -> List(PartialIndexScan, IndexScan, DocumentScan),
           IndexScan -> List(DocumentScan)
         )
-        badExpectations.forall{ case (expectation, badActual) => {
-          if (clause.expectedIndexBehavior == expectation &&
+        badExpectations.forall {
+          case (expectation, badActual) => {
+            if (clause.expectedIndexBehavior == expectation &&
               badActual.exists(_ == clause.actualIndexBehavior)) {
-            signalError(query,
+              signalError(
+                query,
                 "Query is expecting %s on %s but actual behavior is %s. query = %s" format
-                (clause.expectedIndexBehavior, clause.fieldName, clause.actualIndexBehavior, query.toString))
-          } else true
-        }}
+                  (clause.expectedIndexBehavior, clause.fieldName, clause.actualIndexBehavior, query.toString)
+              )
+            } else true
+          }
+        }
       })
     })
   }
@@ -100,9 +104,10 @@ object MongoIndexChecker extends IndexChecker {
     lazy val indexString = indexes.map(idx => "{%s}".format(idx.toString())).mkString(", ")
     conditions.forall(clauses => {
       clauses.isEmpty || matchesUniqueIndex(clauses) ||
-          indexes.exists(idx => matchesIndex(idx.asListMap.keys.toList, clauses) && logIndexHit(query, idx)) ||
-          signalError(query, "Query does not match an index! query: %s, indexes: %s" format (
-              query.toString, indexString))
+        indexes.exists(idx => matchesIndex(idx.asListMap.keys.toList, clauses) && logIndexHit(query, idx)) ||
+        signalError(query, "Query does not match an index! query: %s, indexes: %s" format (
+          query.toString, indexString
+        ))
     })
   }
 
@@ -112,12 +117,14 @@ object MongoIndexChecker extends IndexChecker {
     clauses.exists(clause => clause.fieldName == "_id" && clause.actualIndexBehavior == Index)
   }
 
-  private def matchesIndex(index: List[String],
-                           clauses: List[QueryClause[_]]) = {
+  private def matchesIndex(
+    index: List[String],
+    clauses: List[QueryClause[_]]
+  ) = {
     // Unless explicitly hinted, MongoDB will only use an index if the first
     // field in the index matches some query field.
     clauses.exists(_.fieldName == index.head) &&
-        matchesCompoundIndex(index, clauses, scanning = false)
+      matchesCompoundIndex(index, clauses, scanning = false)
   }
 
   /**
@@ -129,9 +136,11 @@ object MongoIndexChecker extends IndexChecker {
    * @return true if every clause of the query is matched by a field of the
    *   index; false otherwise.
    */
-  private def matchesCompoundIndex(index: List[String],
-                                   clauses: List[QueryClause[_]],
-				   scanning: Boolean): Boolean = {
+  private def matchesCompoundIndex(
+    index: List[String],
+    clauses: List[QueryClause[_]],
+    scanning: Boolean
+  ): Boolean = {
     if (clauses.isEmpty) {
       // All of the clauses have been matched to an index field. We are done!
       true
@@ -149,8 +158,8 @@ object MongoIndexChecker extends IndexChecker {
               val expectationOk = !scanning || matchingClause.expectedIndexBehavior == IndexScan
               // If this field causes a scan, later fields must scan too.
               val nowScanning = scanning ||
-                  matchingClause.actualIndexBehavior == IndexScan ||
-                  matchingClause.actualIndexBehavior == PartialIndexScan
+                matchingClause.actualIndexBehavior == IndexScan ||
+                matchingClause.actualIndexBehavior == PartialIndexScan
               expectationOk && matchesCompoundIndex(rest, remainingClauses, scanning = nowScanning)
             }
             case Nil => {

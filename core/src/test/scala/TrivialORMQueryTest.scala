@@ -3,14 +3,13 @@
 package io.fsq.rogue.test
 
 import com.mongodb._
-import io.fsq.rogue.MongoHelpers.{AndCondition, MongoSelect}
+import io.fsq.rogue.MongoHelpers.{ AndCondition, MongoSelect }
 import io.fsq.rogue._
 import io.fsq.rogue.index.UntypedMongoIndex
-import io.fsq.rogue.test.TrivialORM.{Meta, Record}
+import io.fsq.rogue.test.TrivialORM.{ Meta, Record }
 import org.bson.Document
-import org.junit.{Before, Test}
+import org.junit.{ Before, Test }
 import org.specs2.matcher.JUnitMustMatchers
-
 
 object TrivialSyncORM extends {
 
@@ -53,19 +52,17 @@ object TrivialSyncORM extends {
     }
   }
 
-
-
   class MyQueryExecutor extends QueryExecutor[Meta[_], Record] {
     override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongo.getDB("testSync")))
     override val optimizer = new QueryOptimizer
     override val defaultWriteConcern: WriteConcern = WriteConcern.SAFE
 
     protected def readSerializer[M <: Meta[_], R](
-                                                   meta: M,
-                                                   select: Option[MongoSelect[M, R]]
-                                                 ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
+      meta: M,
+      select: Option[MongoSelect[M, R]]
+    ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
@@ -79,7 +76,7 @@ object TrivialSyncORM extends {
       }
 
       override def fromDocument(doc: Document): R = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
@@ -93,10 +90,12 @@ object TrivialSyncORM extends {
       }
     }
     override protected def writeSerializer(record: Record): RogueWriteSerializer[Record] = new RogueWriteSerializer[Record] {
-      override def toDBObject(record: Record): DBObject = { ???
+      override def toDBObject(record: Record): DBObject = {
+        ???
         ///record.meta.toDBObject(record)
       }
-      override def toDocument(r:Record): Document = { ???
+      override def toDocument(r: Record): Document = {
+        ???
         //record.meta.toDocument(r)
       }
     }
@@ -105,12 +104,12 @@ object TrivialSyncORM extends {
   object Implicits extends Rogue {
     implicit def meta2Query[M <: Meta[R], R](meta: M with Meta[R]): Query[M, R, InitialState] = {
       Query[M, R, InitialState](
-        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+      )
     }
   }
 
 }
-
 
 // TODO: Everything in the rogue-lift tests should move here, except for the lift-specific extensions.
 class TrivialORMQueryTest extends JUnitMustMatchers {

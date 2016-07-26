@@ -2,7 +2,7 @@
 
 package io.fsq.rogue
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{ LocalDateTime, ZoneOffset }
 
 import com.mongodb.DBObject
 import java.util.Date

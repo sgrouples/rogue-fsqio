@@ -5,12 +5,12 @@ package io.fsq.rogue.lift.test
 import com.mongodb.MongoClient
 import io.fsq.rogue.index._
 import io.fsq.rogue.lift.LiftRogue._
-import io.fsq.rogue.lift.{HasMongoForeignObjectId, ObjectIdKey}
-import io.fsq.rogue.test.{TrivialAsyncORMTests, TrivialSyncORM}
-import io.fsq.rogue.{LatLong, ShardKey, Sharded}
+import io.fsq.rogue.lift.{ HasMongoForeignObjectId, ObjectIdKey }
+import io.fsq.rogue.test.{ TrivialAsyncORMTests, TrivialSyncORM }
+import io.fsq.rogue.{ LatLong, ShardKey, Sharded }
 import net.liftweb.mongodb.record._
 import net.liftweb.mongodb.record.field._
-import net.liftweb.mongodb.{MongoAsync, MongoDB}
+import net.liftweb.mongodb.{ MongoAsync, MongoDB }
 import net.liftweb.record.field._
 import net.liftweb.util.ConnectionIdentifier
 import org.bson.types.ObjectId
@@ -272,7 +272,7 @@ case class V5(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, clos
 
 case class V6(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String])
 
-class CalendarFld private() extends MongoRecord[CalendarFld] with ObjectIdPk[CalendarFld] {
+class CalendarFld private () extends MongoRecord[CalendarFld] with ObjectIdPk[CalendarFld] {
   def meta = CalendarFld
 
   object inner extends BsonRecordField(this, CalendarInner)
@@ -283,7 +283,7 @@ object CalendarFld extends CalendarFld with MongoMetaRecord[CalendarFld] {
   override def connectionIdentifier = RogueTestMongo
 }
 
-class CalendarInner private() extends BsonRecord[CalendarInner] {
+class CalendarInner private () extends BsonRecord[CalendarInner] {
   def meta = CalendarInner
 
   object date extends DateTimeField(this)

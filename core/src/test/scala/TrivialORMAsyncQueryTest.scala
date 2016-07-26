@@ -1,13 +1,13 @@
 package io.fsq.rogue.test
 
 import com.mongodb._
-import com.mongodb.async.client.{MongoClients, MongoCollection, MongoDatabase}
-import io.fsq.rogue.MongoHelpers.{AndCondition, MongoSelect}
+import com.mongodb.async.client.{ MongoClients, MongoCollection, MongoDatabase }
+import io.fsq.rogue.MongoHelpers.{ AndCondition, MongoSelect }
 import io.fsq.rogue.index.UntypedMongoIndex
-import io.fsq.rogue.test.TrivialORM.{Meta, Record}
-import io.fsq.rogue.{QueryOptimizer, RogueReadSerializer, RogueWriteSerializer, _}
+import io.fsq.rogue.test.TrivialORM.{ Meta, Record }
+import io.fsq.rogue.{ QueryOptimizer, RogueReadSerializer, RogueWriteSerializer, _ }
 import org.bson.Document
-import org.junit.{Before, Test}
+import org.junit.{ Before, Test }
 import org.specs2.matcher.JUnitMustMatchers
 
 import scala.concurrent.Await
@@ -74,9 +74,9 @@ object TrivialAsyncORMTests {
 
      */
     override protected def readSerializer[M <: Meta[_], R](
-                                                            meta: M,
-                                                            select: Option[MongoSelect[M, R]]
-                                                          ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
+      meta: M,
+      select: Option[MongoSelect[M, R]]
+    ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
         case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
@@ -118,13 +118,13 @@ object TrivialAsyncORMTests {
       }
     }
 
-
   }
 
   object Implicits extends Rogue {
     implicit def meta2Query[M <: Meta[R], R](meta: M with Meta[R]): Query[M, R, InitialState] = {
       Query[M, R, InitialState](
-        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+      )
     }
   }
 

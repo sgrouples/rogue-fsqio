@@ -16,7 +16,7 @@ object MongoEmbedded {
 
   lazy val mongodConfig = {
     val mongoPort = System.getProperty("mongoTestPort","51101").toInt
-    println("Mongo will be started at " + mongoPort)
+    //println("Mongo will be started at " + mongoPort)
     val mongodNetwork = new Net(mongoPort, Network.localhostIsIPv6)
     val cmdOptions = new MongoCmdOptionsBuilder().useSmallFiles(true).useNoPrealloc(true).build()
     new MongodConfigBuilder()
@@ -44,7 +44,7 @@ object MongoEmbedded {
 
   def stop:Unit = synchronized {
     if(counter.decrementAndGet() == 0) {
-      println("Really stop mongo, last user exited")
+//      println("Really stop mongo, last user exited")
       shutdownMongo()
     }
   }

@@ -7,15 +7,15 @@ import com.mongodb.ReadPreference
 import io.fsq.rogue._
 import io.fsq.rogue.lift.LiftRogue._
 import org.bson.types.ObjectId
-import org.junit.{After, Before, Ignore, Test}
+import org.junit.{ After, Before, Ignore, Test }
 import org.specs2.matcher.JUnitMustMatchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Awaitable}
+import scala.concurrent.{ Await, Awaitable }
 
 /**
-  * Contains tests that test the interaction of Rogue with a real mongo.
-  */
+ * Contains tests that test the interaction of Rogue with a real mongo.
+ */
 class EndToEndAsyncTest extends JUnitMustMatchers {
   val atMost = 5 seconds
 
@@ -33,8 +33,10 @@ class EndToEndAsyncTest extends JUnitMustMatchers {
       .categories(List(new ObjectId()))
       .geolatlng(LatLong(40.73, -73.98))
       .status(VenueStatus.open)
-      .claims(List(VenueClaimBson.createRecord.userid(1234).status(ClaimStatus.pending),
-        VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)))
+      .claims(List(
+        VenueClaimBson.createRecord.userid(1234).status(ClaimStatus.pending),
+        VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)
+      ))
       .lastClaim(VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved))
       .tags(List("test tag1", "some tag"))
   }
@@ -49,8 +51,10 @@ class EndToEndAsyncTest extends JUnitMustMatchers {
   def baseTestTip(): Tip = {
     Tip.createRecord
       .legacyid(234)
-      .counts(Map("foo" -> 1L,
-        "bar" -> 2L))
+      .counts(Map(
+        "foo" -> 1L,
+        "bar" -> 2L
+      ))
   }
 
   @Before
@@ -112,7 +116,7 @@ class EndToEndAsyncTest extends JUnitMustMatchers {
     blk(Venue.where(_.mayor_count gt 5).fetchAsync()).map(_.id) must_== Nil
     blk(Venue.where(_.mayor_count >= 5).fetchAsync()).map(_.id) must_== Nil
     blk(Venue.where(_.mayor_count gte 5).fetchAsync()).map(_.id) must_== Nil
-    blk(Venue.where(_.mayor_count between(3, 5)).fetchAsync()).map(_.id) must_== List(v.id)
+    blk(Venue.where(_.mayor_count between (3, 5)).fetchAsync()).map(_.id) must_== List(v.id)
     blk(VenueClaim.where(_.status neqs ClaimStatus.approved).fetchAsync()).map(_.id) must_== Nil
     blk(VenueClaim.where(_.status neqs ClaimStatus.pending).fetchAsync()).map(_.id) must_== List(vc.id)
   }
@@ -181,8 +185,7 @@ class EndToEndAsyncTest extends JUnitMustMatchers {
 
     val q1 = Venue.where(_._id eqs v.id).select(_.lastClaim.subselect(_.userid))
     val q2 = queryToLiftQuery(Venue.select(_.lastClaim.subselect(_.userid)))
-    println(s"QQ ${q2}")
-
+    //println(s"QQ ${q2}")
 
     blk(Venue.where(_._id eqs v.id).select(_.claims.subselect(_.userid)).fetchAsync()) must_== List(None)
   }

@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc
 
 import io.fsq.field.Field
 import me.sgrouples.rogue.BsonFormat
-import org.bson.{BsonDocument, BsonValue}
+import org.bson.{ BsonDocument, BsonValue }
 
 trait CcMetaLike[-T] {
   type R
@@ -18,14 +18,14 @@ trait CcMeta[T] extends CcMetaLike[T] {
   def dbs(): com.mongodb.client.MongoDatabase
 
   def read(b: BsonValue): T
-  def write(t:T): BsonValue
+  def write(t: T): BsonValue
   //TODO - how to make it play nice with types?
-  def writeAnyRef(t:AnyRef): BsonDocument
+  def writeAnyRef(t: AnyRef): BsonDocument
 
-  def reader(field: Field[_,_]): BsonFormat[_]
+  def reader(field: Field[_, _]): BsonFormat[_]
 }
 
-class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
+class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] {
 
   def connId = "default"
 
@@ -36,25 +36,23 @@ class RCcMeta[T](collName: String)(implicit f:BsonFormat[T]) extends CcMeta[T]{
 
   override def dbs(): com.mongodb.client.MongoDatabase = CcMongo.getDbSync(connId).get
 
-  override def reader(field: Field[_,_]): BsonFormat[_] = {
-    val fieldName = field.name.replaceAll("\\.\\$","")
-   // if field.isInstanceOf[]
+  override def reader(field: Field[_, _]): BsonFormat[_] = {
+    val fieldName = field.name.replaceAll("\\.\\$", "")
+    // if field.isInstanceOf[]
     val r = f.flds.get(fieldName)
-    r.orElse(starReader(fieldName)).getOrElse{
+    r.orElse(starReader(fieldName)).getOrElse {
       throw new RuntimeException(s"No reader for field ${fieldName}, available keys ${f.flds.keys.mkString(",")}")
     }
   }
 
   //special case for Map formats
-  private[this] def starReader(fieldName : String): Option[BsonFormat[_]] = {
+  private[this] def starReader(fieldName: String): Option[BsonFormat[_]] = {
     val i = fieldName.lastIndexOf('.')
-    if(i>0) {
-      val newName = fieldName.substring(0, i +1) + "*"
+    if (i > 0) {
+      val newName = fieldName.substring(0, i + 1) + "*"
       f.flds.get(newName)
     } else None
   }
-
-
 
   override def read(b: BsonValue): T = f.read(b)
 

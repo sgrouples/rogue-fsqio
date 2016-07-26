@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 
-import com.mongodb.async.client.{MongoClient, MongoClients}
-import com.mongodb.{MongoClient => MongoClientSync}
+import com.mongodb.async.client.{ MongoClient, MongoClients }
+import com.mongodb.{ MongoClient => MongoClientSync }
 
 object MongoTestConn {
 

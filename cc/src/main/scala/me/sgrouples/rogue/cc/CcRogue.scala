@@ -1,15 +1,15 @@
 package me.sgrouples.rogue.cc
 
 /**
-  * Created by mar on 12.07.2016.
-  */
+ * Created by mar on 12.07.2016.
+ */
 
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 
 import java.time.LocalDateTime
 
-import io.fsq.field.{RequiredField, Field => RField, OptionalField => ROptionalField}
-import io.fsq.rogue.{BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _}
+import io.fsq.field.{ RequiredField, Field => RField, OptionalField => ROptionalField }
+import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
 import java.util.Date
@@ -18,42 +18,38 @@ import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 
 trait CcRogue {
-  def OrQuery[M, R]
-  (subqueries: Query[M, R, _]*)
-  : Query[M, R, Unordered with Unselected with Unlimited with Unskipped with HasOrClause] = {
+  def OrQuery[M, R](subqueries: Query[M, R, _]*): Query[M, R, Unordered with Unselected with Unlimited with Unskipped with HasOrClause] = {
     subqueries.toList match {
       case Nil => throw new RogueException("No subqueries supplied to OrQuery", null)
       case q :: qs => {
         val orCondition = QueryHelpers.orConditionFromQueries(q :: qs)
         Query[M, R, Unordered with Unselected with Unlimited with Unskipped with HasOrClause](
           q.meta, q.collectionName, None, None, None, None, None,
-          AndCondition(Nil, Some(orCondition)), None, None, None)
+          AndCondition(Nil, Some(orCondition)), None, None, None
+        )
       }
     }
   }
-
 
   /* Following are a collection of implicit conversions which take a meta-record and convert it to
    * a QueryBuilder. This allows users to write queries as "QueryType where ...".
    */
   implicit def ccMetaToQueryBuilder[M <: CcMeta[_], R](meta: M with CcMeta[R]): Query[M, R, InitialState] =
-  Query[M, R, InitialState](
-    meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+    Query[M, R, InitialState](
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+    )
 
   implicit def metaRecordToIndexBuilder[M <: CcMeta[_]](meta: M): IndexBuilder[M] =
     IndexBuilder(meta)
 
-
   implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, R, InitialState] = {
     val query = Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+    )
     InsertableQuery(query, CcBsonExecutors).asInstanceOf[InsertableQuery[MB, M, R, InitialState]]
   }
 
-
-  implicit def queryToCcQuery[MB <: CcMeta[_], M <: MB, R, State]
-  (query: Query[M, R, State])
-  (implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M, R, State] = {
+  implicit def queryToCcQuery[MB <: CcMeta[_], M <: MB, R, State](query: Query[M, R, State])(implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M, R, State] = {
     ExecutableQuery(
       query,
       CcBsonExecutors
@@ -68,8 +64,8 @@ trait CcRogue {
 */
 
   implicit def modifyQueryToCCModifyQuery[MB <: CcMeta[_], M <: MB, R, State](
-                                                                         query: ModifyQuery[M, State]
-                                                                       ):ExecutableModifyQuery[CcMeta[_],M , State] = {
+    query: ModifyQuery[M, State]
+  ): ExecutableModifyQuery[CcMeta[_], M, State] = {
     ExecutableModifyQuery(
       query,
       CcBsonExecutors
@@ -77,8 +73,8 @@ trait CcRogue {
   }
 
   implicit def findAndModifyQueryToCcAndModifyQuery[M <: CcMeta[_], R](
-                                                                                   query: FindAndModifyQuery[M, R]
-                                                                                 ): ExecutableFindAndModifyQuery[CcMeta[_], M , R] = {
+    query: FindAndModifyQuery[M, R]
+  ): ExecutableFindAndModifyQuery[CcMeta[_], M, R] = {
     ExecutableFindAndModifyQuery(
       query,
       CcBsonExecutors
@@ -87,7 +83,8 @@ trait CcRogue {
 
   implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](meta: M): ExecutableQuery[MB, M, R, InitialState] = {
     val queryBuilder = Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None)
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+    )
 
     val ccQuery = queryToCcQuery(queryBuilder)
     ccQuery.asInstanceOf[ExecutableQuery[MB, M, R, InitialState]]
@@ -145,24 +142,20 @@ trait CcRogue {
     new BsonRecordListQueryField[M, B](f, rec, _.asDBObject)
   }
 */
-  implicit def localDateTimeFieldToLocalDateTimeQueryField[O <: CcMeta[_]]
-  (f: RField[LocalDateTime, O]): LocalDateTimeQueryField[O] =
+  implicit def localDateTimeFieldToLocalDateTimeQueryField[O <: CcMeta[_]](f: RField[LocalDateTime, O]): LocalDateTimeQueryField[O] =
     new LocalDateTimeQueryField(f)
 
-  implicit def caseClassFieldToQueryField[C , M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
+  implicit def caseClassFieldToQueryField[C, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
     new CClassQueryField[C, M, O](f, f.owner)
 
-  implicit def optCaseClassFieldToQueryField[C , M <: CcMeta[C], O](f: OptCClassField[C, M, O]): OptCClassQueryField[C, M, O] =
+  implicit def optCaseClassFieldToQueryField[C, M <: CcMeta[C], O](f: OptCClassField[C, M, O]): OptCClassQueryField[C, M, O] =
     new OptCClassQueryField[C, M, O](f, f.owner)
 
-
-  implicit def selectableDummyFieldToQueryField[C , M <: CcMeta[C], O](f: SelectableDummyCCField[C, M, O]): CClassLikeQueryField[C, M, O] = {
+  implicit def selectableDummyFieldToQueryField[C, M <: CcMeta[C], O](f: SelectableDummyCCField[C, M, O]): CClassLikeQueryField[C, M, O] = {
     new CClassLikeQueryField[C, M, O](f, f.meta, f.owner)
   }
 
-
-  implicit def ccListFieldToListQueryField[C , M <: CcMeta[C], O]
-  (f: CClassListField[C, M, O]):CClassSeqQueryField[C,M,O] = new CClassSeqQueryField[C,M,O](f, f.owner)
+  implicit def ccListFieldToListQueryField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqQueryField[C, M, O] = new CClassSeqQueryField[C, M, O](f, f.owner)
   /*
   //(field: Field[List[B], M], rec: B, toBson: B => BsonValue)
   implicit def doubleFieldtoNumericQueryField[M <: BsonRecord[M], F]
@@ -210,12 +203,10 @@ trait CcRogue {
   implicit def fieldToModifyField[M <: BsonRecord[M], F: BSONType](f: Field[F, M]): ModifyField[F, M] = new ModifyField(f)
   implicit def fieldToSafeModifyField[M <: BsonRecord[M], F](f: Field[F, M]): SafeModifyField[F, M] = new SafeModifyField(f)
 */
-  implicit def ccFieldToCcModifyField[C , M <: CcMeta[C], O]
-  (f: CClassField[C, M, O]): CClassModifyField[C, M, O] =
+  implicit def ccFieldToCcModifyField[C, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassModifyField[C, M, O] =
     new CClassModifyField[C, M, O](f)
 
-  implicit def optCcFieldToCcModifyField[C , M <: CcMeta[C], O]
-  (f: OptCClassField[C, M, O]): OptCClassModifyField[C, M, O] =
+  implicit def optCcFieldToCcModifyField[C, M <: CcMeta[C], O](f: OptCClassField[C, M, O]): OptCClassModifyField[C, M, O] =
     new OptCClassModifyField[C, M, O](f)
 
   /*
@@ -225,8 +216,7 @@ implicit def optCcFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
   new OptCClassModifyField[C, M, O](f)
 */
 
-  implicit def ccListFieldToCCSeqModifyField[C, M <: CcMeta[C], O]
-  (f: CClassListField[C, M, O]):CClassSeqModifyField[C,M,O] = new CClassSeqModifyField[C,M,O](f)
+  implicit def ccListFieldToCCSeqModifyField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqModifyField[C, M, O] = new CClassSeqModifyField[C, M, O](f)
 
   /*implicit def bsonRecordListFieldToBsonRecordListModifyField[
 M <: BsonRecord[M],
@@ -283,13 +273,10 @@ B <: BsonRecord[B]
   /Users/mar/git/rogue-fsqio/lift/src/test/scala/EndToEndAsyncTest.scala:169:
   applied implicit conversion from x$100.claims.type to ?{def $$: ?} = implicit def mandatoryFieldToSelectField[M <: net.liftweb.mongodb.record.BsonRecord[M], V](f: net.liftweb.record.Field[V,M] with net.liftweb.record.MandatoryTypedField[V]): io.fsq.rogue.SelectField[V,M]ESC[0m
    */
-  implicit def mandatoryFieldToSelectField[M, V]
-  (f: MCField[V, M]): SelectField[V, M] =
-  new MandatorySelectField(f)
+  implicit def mandatoryFieldToSelectField[M, V](f: MCField[V, M]): SelectField[V, M] =
+    new MandatorySelectField(f)
 
-
-  implicit def optionalFieldToSelectField[M <: CcMeta[_] , V]
-  (f: OCField[V, M]): SelectField[Option[V], M] =
+  implicit def optionalFieldToSelectField[M <: CcMeta[_], V](f: OCField[V, M]): SelectField[Option[V], M] =
     new OptionalSelectField(new ROptionalField[V, M] {
       override def name = f.name
       override def owner = f.owner

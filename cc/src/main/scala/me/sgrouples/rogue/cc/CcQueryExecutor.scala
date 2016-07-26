@@ -1,8 +1,8 @@
 package me.sgrouples.rogue.cc
 
 import com.mongodb.client.MongoCollection
-import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
-import io.fsq.rogue.{Query, QueryHelpers}
+import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
+import io.fsq.rogue.{ Query, QueryHelpers }
 import org.bson.BsonDocument
 
 object CcDBCollectionFactory extends BsonDBCollectionFactory[CcMeta[_]] {
@@ -35,12 +35,12 @@ object CcDBCollectionFactory extends BsonDBCollectionFactory[CcMeta[_]] {
     record.meta.connectionIdentifier.toString
 */
   /**
-    * Retrieves the list of indexes declared for the record type associated with a
-    * query. If the record type doesn't declare any indexes, then returns None.
-    *
-    * @param query the query
-    * @return the list of indexes, or an empty list.
-    */
+   * Retrieves the list of indexes declared for the record type associated with a
+   * query. If the record type doesn't declare any indexes, then returns None.
+   *
+   * @param query the query
+   * @return the list of indexes, or an empty list.
+   */
   override def getIndexes[M <: TCM](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]] = {
     val queryMetaRecord = query.meta
     if (queryMetaRecord.isInstanceOf[IndexedRecord[_]]) {

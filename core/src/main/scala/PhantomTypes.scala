@@ -111,7 +111,6 @@ object RequireShardKey {
   implicit def unsharded[M, State](implicit ev: M !<:< Sharded): RequireShardKey[M, State] = null
 }
 
-
 sealed trait MaybeIndexed
 sealed trait Indexable extends MaybeIndexed
 sealed trait IndexScannable extends MaybeIndexed

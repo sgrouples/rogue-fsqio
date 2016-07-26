@@ -1,16 +1,14 @@
 package me.sgrouples.rogue.cc
 
-import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
+import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.DBObject
 import com.mongodb.async.client.MongoCollection
-import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
+import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
 import io.fsq.rogue._
 import org.bson.codecs.configuration.CodecRegistries
 
 import scala.util.Try
-
-
 
 object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]] {
   type TCM = CcMeta[_]
@@ -41,12 +39,12 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
     record.meta.connectionIdentifier.toString
 */
   /**
-    * Retrieves the list of indexes declared for the record type associated with a
-    * query. If the record type doesn't declare any indexes, then returns None.
-    *
-    * @param query the query
-    * @return the list of indexes, or an empty list.
-    */
+   * Retrieves the list of indexes declared for the record type associated with a
+   * query. If the record type doesn't declare any indexes, then returns None.
+   *
+   * @param query the query
+   * @return the list of indexes, or an empty list.
+   */
   override def getIndexes[M <: TCM](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]] = {
     val queryMetaRecord = query.meta
     if (queryMetaRecord.isInstanceOf[IndexedRecord[_]]) {

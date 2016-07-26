@@ -4,12 +4,12 @@ import org.bson.types.ObjectId
 import org.junit.Test
 import org.specs2.matcher.JUnitMustMatchers
 
-case class IdOneEnum(_id:ObjectId, one: String, en : VenueStatus.Value)
+case class IdOneEnum(_id: ObjectId, one: String, en: VenueStatus.Value)
 
 class CcMetaTest extends JUnitMustMatchers {
 
   @Test
-  def testMetaR():Unit = {
+  def testMetaR(): Unit = {
     //reguired implicits for implicit call of BsonFormat[IdOneEnum] inside constructor of RCcMeta[IdOneEnum]
     implicit val ev = VenueStatus
     import me.sgrouples.rogue.BsonFormats._
@@ -19,7 +19,7 @@ class CcMetaTest extends JUnitMustMatchers {
     val bson = IdOneEnumR.write(elem)
     IdOneEnumR.read(bson) must_== elem
 
-    println(classOf[IdOneEnumR.R])
+    //println(classOf[IdOneEnumR.R])
     classOf[IdOneEnumR.R] must_== classOf[IdOneEnum]
 
   }

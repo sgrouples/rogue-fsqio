@@ -3,7 +3,7 @@
 package io.fsq.rogue
 
 import com.mongodb.DBObject
-import io.fsq.field.{Field => RField, OptionalField => ROptionalField, RequiredField => RRequiredField}
+import io.fsq.field.{ Field => RField, OptionalField => ROptionalField, RequiredField => RRequiredField }
 import java.util.Date
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
@@ -12,7 +12,7 @@ import org.joda.time.DateTime
  * A utility trait containing typing shorthands, and a collection of implicit conversions that make query
  * syntax much simpler.
  *
- *@see AbstractQuery for an example of the use of implicit conversions.
+ * @see AbstractQuery for an example of the use of implicit conversions.
  */
 trait Rogue {
 
@@ -42,11 +42,12 @@ trait Rogue {
   implicit def rseqFieldToSeqQueryField[M, F: BSONType](f: RField[Seq[F], M]): SeqQueryField[F, M] = new SeqQueryField[F, M](f)
   implicit def rmapFieldToMapQueryField[M, F](f: RField[Map[String, F], M]): MapQueryField[F, M] = new MapQueryField[F, M](f)
 
-  /** ModifyField implicits
-    *
-    * These are dangerous in the general case, unless the field type can be safely serialized
-    * or the field class handles necessary serialization. We specialize some safe cases.
-    **/
+  /**
+   * ModifyField implicits
+   *
+   * These are dangerous in the general case, unless the field type can be safely serialized
+   * or the field class handles necessary serialization. We specialize some safe cases.
+   */
   implicit def rfieldToSafeModifyField[M, F](f: RField[F, M]): SafeModifyField[F, M] = new SafeModifyField(f)
   implicit def booleanRFieldToModifyField[M](f: RField[Boolean, M]): ModifyField[Boolean, M] = new ModifyField(f)
   implicit def charRFieldToModifyField[M](f: RField[Char, M]): ModifyField[Char, M] = new ModifyField(f)
@@ -63,12 +64,10 @@ trait Rogue {
   implicit def dateRFieldToDateModifyField[M](f: RField[Date, M]): DateModifyField[M] = new DateModifyField(f)
   implicit def datetimeRFieldToDateModifyField[M](f: RField[DateTime, M]): DateTimeModifyField[M] = new DateTimeModifyField(f)
 
-  implicit def renumerationFieldToEnumerationModifyField[M, F <: Enumeration#Value]
-      (f: RField[F, M]): EnumerationModifyField[M, F] =
+  implicit def renumerationFieldToEnumerationModifyField[M, F <: Enumeration#Value](f: RField[F, M]): EnumerationModifyField[M, F] =
     new EnumerationModifyField(f)
 
-  implicit def renumerationListFieldToEnumerationListModifyField[M, F <: Enumeration#Value]
-      (f: RField[List[F], M]): EnumerationListModifyField[F, M] =
+  implicit def renumerationListFieldToEnumerationListModifyField[M, F <: Enumeration#Value](f: RField[List[F], M]): EnumerationListModifyField[F, M] =
     new EnumerationListModifyField[F, M](f)
 
   implicit def rlatLongFieldToGeoQueryModifyField[M](f: RField[LatLong, M]): GeoModifyField[M] =
@@ -85,11 +84,11 @@ trait Rogue {
 
   // SelectField implicits
   implicit def roptionalFieldToSelectField[M, V](
-      f: ROptionalField[V, M]
+    f: ROptionalField[V, M]
   ): SelectField[Option[V], M] = new OptionalSelectField(f)
 
   implicit def rrequiredFieldToSelectField[M, V](
-      f: RRequiredField[V, M]
+    f: RRequiredField[V, M]
   ): SelectField[V, M] = new MandatorySelectField(f)
 
   class Flattened[A, B]

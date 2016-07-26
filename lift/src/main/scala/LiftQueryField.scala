@@ -4,7 +4,7 @@ package io.fsq.rogue.lift
 
 import com.mongodb.DBObject
 import io.fsq.field.Field
-import io.fsq.rogue.{AbstractListModifyField, AbstractListQueryField, SelectableDummyField}
+import io.fsq.rogue.{ AbstractListModifyField, AbstractListQueryField, SelectableDummyField }
 
 class CaseClassQueryField[V, M](val field: Field[V, M]) {
   def unsafeField[F](name: String): SelectableDummyField[F, M] = {

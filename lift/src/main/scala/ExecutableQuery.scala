@@ -41,13 +41,12 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
     db.distinct(query)(field.asInstanceOf[M => Field[V, M]])
 
   /**
-    * Returns a list of distinct values returned by a query. The query must not have
-    * limit or skip clauses.
-    */
+   * Returns a list of distinct values returned by a query. The query must not have
+   * limit or skip clauses.
+   */
   def distinctAsync[V](field: M => Field[V, _])(implicit ct: ClassTag[V]): Future[Seq[V]] = {
     dba.distinct(query, ct)(field.asInstanceOf[M => Field[V, M]])
   }
-
 
   /**
    * Checks if there are any records that match this query.
@@ -88,7 +87,6 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
   def fetchBatch[T](batchSize: Int)(f: Seq[R] => Seq[T]): Seq[T] =
     db.fetchBatch(query, batchSize)(f)
 
-
   /**
    * Fetches the first record that matches the query. The query must not contain a "limited" clause.
    * @return an option record containing either the first result that matches the
@@ -102,9 +100,9 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
    * a "limit" clause.
    * @param countPerPage the number of records to be contained in each page of the result.
    */
-  def paginate(countPerPage: Int)
-              (implicit ev1: Required[State, Unlimited with Unskipped],
-               ev2: ShardingOk[M, State]): PaginatedQuery[MB, M, RB, R, Unlimited with Unskipped] = {
+  def paginate(countPerPage: Int)(implicit
+    ev1: Required[State, Unlimited with Unskipped],
+    ev2: ShardingOk[M, State]): PaginatedQuery[MB, M, RB, R, Unlimited with Unskipped] = {
     new PaginatedQuery(ev1(query), db, dba, countPerPage)
   }
 
@@ -113,8 +111,7 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
    * "limit", or "select" clauses. Sends the delete operation to mongo, and returns - does
    * <em>not</em> wait for the delete to be finished.
    */
-  def bulkDelete_!!!()
-                    (implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Unit =
+  def bulkDelete_!!!()(implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Unit =
     db.bulkDelete_!!(query)
 
   /**
@@ -122,8 +119,7 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
    * "limit", or "select" clauses. Sends the delete operation to mongo, and waits for the
    * delete operation to complete before returning to the caller.
    */
-  def bulkDelete_!!(concern: WriteConcern)
-                   (implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Unit =
+  def bulkDelete_!!(concern: WriteConcern)(implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Unit =
     db.bulkDelete_!!(query, concern)
 
   /**
@@ -149,7 +145,7 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
   // async ops
   def countAsync(): Future[Long] = dba.count(query)
 
-  def foreachAsync(f :R => Unit): Future[Unit] = dba.foreach(query)(f)
+  def foreachAsync(f: R => Unit): Future[Unit] = dba.foreach(query)(f)
 
   def fetchAsync(): Future[Seq[R]] = dba.fetch(query)
 
@@ -157,9 +153,9 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
 
   def getAsync[S2]()(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2]): Future[Option[R]] = dba.fetchOne(query)
 
-  def paginateAsync(countPerPage: Int)
-              (implicit ev1: Required[State, Unlimited with Unskipped],
-               ev2: ShardingOk[M, State]) = {
+  def paginateAsync(countPerPage: Int)(implicit
+    ev1: Required[State, Unlimited with Unskipped],
+    ev2: ShardingOk[M, State]) = {
     new PaginatedQuery(ev1(query), db, dba, countPerPage)
   }
 
@@ -170,15 +166,17 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
 
   def bulkDeleteAsync_!!!()(implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Future[Unit] = dba.bulkDelete_!!(query)
 
-  def bulkDeleteAsync_!!(concern: WriteConcern) (implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Future[Unit] = dba.bulkDelete_!!(query, concern)
+  def bulkDeleteAsync_!!(concern: WriteConcern)(implicit ev1: Required[State, Unselected with Unlimited with Unskipped]): Future[Unit] = dba.bulkDelete_!!(query, concern)
 
   def findAndDeleteOneAsync()(implicit ev: RequireShardKey[M, State]): Future[Option[R]] = dba.findAndDeleteOne(query)
 
 }
 
-case class ExecutableModifyQuery[MB, M <: MB, RB, State](query: ModifyQuery[M, State],
-                                                         db: QueryExecutor[MB, RB],
-                                                         dba: AsyncQueryExecutor[MB, RB]) {
+case class ExecutableModifyQuery[MB, M <: MB, RB, State](
+    query: ModifyQuery[M, State],
+    db: QueryExecutor[MB, RB],
+    dba: AsyncQueryExecutor[MB, RB]
+) {
   def updateMulti(): Unit =
     db.updateMulti(query)
 
@@ -228,7 +226,6 @@ case class ExecutableFindAndModifyQuery[MB, M <: MB, RB, R](
 
   def upsertOne(returnNew: Boolean = false): Option[R] =
     db.findAndUpsertOne(query, returnNew)
-
 
   def updateOneAsync(returnNew: Boolean = false): Future[Option[R]] =
     dba.findAndUpdateOne(query, returnNew)

@@ -2,13 +2,13 @@
 
 package io.fsq.rogue.lift
 
-import com.mongodb.{DBCollection, DBObject}
-import io.fsq.rogue.{DBCollectionFactory, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer, RogueReadSerializer, RogueWriteSerializer}
+import com.mongodb.{ DBCollection, DBObject }
+import io.fsq.rogue.{ DBCollectionFactory, MongoJavaDriverAdapter, Query, QueryExecutor, QueryHelpers, QueryOptimizer, RogueReadSerializer, RogueWriteSerializer }
 import io.fsq.rogue.MongoHelpers.MongoSelect
-import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
+import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import net.liftweb.common.Box
 import net.liftweb.mongodb.MongoDB
-import net.liftweb.mongodb.record.{BsonRecord, MongoMetaRecord, MongoRecord}
+import net.liftweb.mongodb.record.{ BsonRecord, MongoMetaRecord, MongoRecord }
 import net.liftweb.mongodb.record.field.BsonRecordField
 import org.bson.Document
 import org.bson.types.BasicBSONList
@@ -16,14 +16,14 @@ import java.util
 
 object LiftDBCollectionFactory extends DBCollectionFactory[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def getDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): DBCollection = {
-    MongoDB.useSession(query.meta.connectionIdentifier){ db =>
+    MongoDB.useSession(query.meta.connectionIdentifier) { db =>
       db.getCollection(query.collectionName)
     }
   }
   protected def getPrimaryDBCollection(meta: MongoMetaRecord[_], collectionName: String): DBCollection = {
-    MongoDB.useSession(meta/* TODO: .master*/.connectionIdentifier){ db =>
+    MongoDB.useSession(meta /* TODO: .master*/ .connectionIdentifier) { db =>
       db.getCollection(collectionName)
-    }    
+    }
   }
   override def getPrimaryDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): DBCollection = {
     getPrimaryDBCollection(query.meta, query.collectionName)
@@ -66,12 +66,12 @@ class LiftQueryExecutor(
   override lazy val optimizer = new QueryOptimizer
 
   override protected def readSerializer[M <: MongoRecord[_] with MongoMetaRecord[_], R](
-      meta: M,
-      select: Option[MongoSelect[M, R]]
+    meta: M,
+    select: Option[MongoSelect[M, R]]
   ): RogueReadSerializer[R] = {
     new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
-        case Some(MongoSelect(fields, transformer))  if fields.isEmpty=>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
@@ -132,7 +132,7 @@ class LiftQueryExecutor(
 object LiftQueryExecutor extends LiftQueryExecutor(LiftAdapter)
 
 object LiftQueryExecutorHelpers {
-  import net.liftweb.record.{Field => LField}
+  import net.liftweb.record.{ Field => LField }
 
   def setInstanceFieldFromDboList(instance: BsonRecord[_], dbo: DBObject, fieldNames: List[String]): Option[_] = {
     fieldNames match {
@@ -145,7 +145,7 @@ object LiftQueryExecutorHelpers {
           case obj: DBObject => fld.flatMap(setFieldFromDbo(_, obj, rest))
           case list: BasicBSONList => fallbackValueFromDbObject(dbo, fieldNames)
           case null => None
-      }
+        }
       case Nil => throw new UnsupportedOperationException("was called with empty list, shouldn't possibly happen")
     }
   }
@@ -159,7 +159,7 @@ object LiftQueryExecutorHelpers {
         val fld: Box[LField[_, _]] = instance.fieldByName(name)
         dbo.get(name) match {
           case obj: Document => fld.flatMap(setFieldFromDoc(_, obj, rest))
-            //ArrayList
+          //ArrayList
           case list: util.ArrayList[_] => fallbackValueFromDoc(dbo, fieldNames)
           case null => None
         }
@@ -202,7 +202,7 @@ object LiftQueryExecutorHelpers {
         setInstanceFieldFromDboList(instance, dbo, names)
       case false =>
         val fld: Box[LField[_, _]] = instance.fieldByName(fieldName)
-        fld.flatMap (setLastFieldFromDbo(_, dbo, fieldName))
+        fld.flatMap(setLastFieldFromDbo(_, dbo, fieldName))
     }
   }
 
@@ -213,10 +213,9 @@ object LiftQueryExecutorHelpers {
         setInstanceFieldFromDocList(instance, dbo, names)
       case false =>
         val fld: Box[LField[_, _]] = instance.fieldByName(fieldName)
-        fld.flatMap (setLastFieldFromDoc(_, dbo, fieldName))
+        fld.flatMap(setLastFieldFromDoc(_, dbo, fieldName))
     }
   }
-
 
   def fallbackValueFromDbObject(dbo: DBObject, fieldNames: List[String]): Option[_] = {
     import scala.collection.JavaConverters._

@@ -1,48 +1,48 @@
 package me.sgrouples.rogue
 
-import java.nio.{ByteBuffer, ByteOrder}
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.nio.{ ByteBuffer, ByteOrder }
+import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.UUID
 
 import org.bson._
 import org.bson.types.ObjectId
 import shapeless._
-import shapeless.labelled.{FieldType, field}
+import shapeless.labelled.{ FieldType, field }
 
 import scala.annotation.implicitNotFound
 import scala.collection.mutable.ArrayBuffer
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.{ higherKinds, implicitConversions }
 import scala.reflect.ClassTag
 
 @implicitNotFound("implicit BsonFormat not found for ${T}")
 trait BsonFormat[T] {
   def read(b: BsonValue): T
-  def readArray(b:BsonArray): Seq[T]
-  def write(t:T): BsonValue
+  def readArray(b: BsonArray): Seq[T]
+  def write(t: T): BsonValue
   def flds: Map[String, BsonFormat[_]]
 }
 
 trait BsonArrayReader[T] {
   this: BsonFormat[T] =>
-  override def readArray(b:BsonArray) = {
+  override def readArray(b: BsonArray) = {
     val sb = Seq.newBuilder[T]
     val it = b.iterator()
-    while(it.hasNext){
+    while (it.hasNext) {
       sb += read(it.next())
     }
     sb.result()
   }
 }
 
-trait BasicBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T]{
+trait BasicBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T] {
   override def flds = Map.empty
 
 }
 
 /**
-  * Basic bson serializers
-  */
-trait BaseBsonFormats{
+ * Basic bson serializers
+ */
+trait BaseBsonFormats {
 
   implicit object BooleanBsonFormat extends BasicBsonFormat[Boolean] {
     override def read(b: BsonValue): Boolean = b.asBoolean().getValue()
@@ -75,23 +75,23 @@ trait BaseBsonFormats{
   }
 
   /**
-    * care must be taken - because of different UUID formats.
-    * by default codec can read any type, but for write - decision must be made
-    * either format 3 - JAVA_LEGACY or format 4 - UUID_STANDARD
-    * recommendation is to use UUID_STANDARD, but java driver uses JAVA_LEGACY by default
-    * @see [https://jira.mongodb.org/browse/JAVA-403] for explanation
-    * @see [[org.bson.codecs.UuidCodec]]
-    * this implementation does not support C_SHARP_LEGACY codec at all
-    */
+   * care must be taken - because of different UUID formats.
+   * by default codec can read any type, but for write - decision must be made
+   * either format 3 - JAVA_LEGACY or format 4 - UUID_STANDARD
+   * recommendation is to use UUID_STANDARD, but java driver uses JAVA_LEGACY by default
+   * @see [https://jira.mongodb.org/browse/JAVA-403] for explanation
+   * @see [[org.bson.codecs.UuidCodec]]
+   * this implementation does not support C_SHARP_LEGACY codec at all
+   */
   implicit object UUIDBsonFormat extends BasicBsonFormat[UUID] {
     override def read(bv: BsonValue): UUID = {
       val b = bv.asBinary()
       val bytes = b.getData()
       val bb = ByteBuffer.wrap(b.getData)
-      if(b.getType == BsonBinarySubType.UUID_LEGACY.getValue)
-          bb.order(ByteOrder.LITTLE_ENDIAN)
+      if (b.getType == BsonBinarySubType.UUID_LEGACY.getValue)
+        bb.order(ByteOrder.LITTLE_ENDIAN)
       else
-          bb.order(ByteOrder.BIG_ENDIAN)
+        bb.order(ByteOrder.BIG_ENDIAN)
       new UUID(bb.getLong(0), bb.getLong(8))
     }
 
@@ -114,7 +114,7 @@ trait BaseBsonFormats{
   }
 
   //WARN to make it work, all enums must be in implicit scope for BsonFormat to work
-  implicit def enumFormat[T <: Enumeration](implicit enumeration :T) = new BasicBsonFormat[T#Value] {
+  implicit def enumFormat[T <: Enumeration](implicit enumeration: T) = new BasicBsonFormat[T#Value] {
     override def read(b: BsonValue): T#Value = enumeration.withName(b.asString().getValue())
     override def write(t: T#Value): BsonValue = new BsonString(t.toString)
   }
@@ -124,38 +124,38 @@ trait BaseBsonFormats{
 trait BsonCollectionFormats {
   import scala.collection.JavaConversions._
 
-  private[rogue] type BF[T] = BsonFormat[T]
+  private[rogue]type BF[T] = BsonFormat[T]
 
-  implicit def listFormat[T :BsonFormat] = new BsonFormat[List[T]] with BsonArrayReader[List[T]]{
+  implicit def listFormat[T: BsonFormat] = new BsonFormat[List[T]] with BsonArrayReader[List[T]] {
     implicit val f = implicitly[BsonFormat[T]]
     def write(list: List[T]) = {
       new BsonArray(list.map(f.write(_)))
     }
     def read(value: BsonValue): List[T] = {
-      if(value.isNull) Nil
+      if (value.isNull) Nil
       else value.asArray().map(f.read(_)).toList
     }
 
     override def flds: Map[String, BF[_]] = f.flds
   }
 
-  implicit def arrayFormat[T :BsonFormat : ClassTag] = new BsonFormat[Array[T]] with BsonArrayReader[Array[T]] {
+  implicit def arrayFormat[T: BsonFormat: ClassTag] = new BsonFormat[Array[T]] with BsonArrayReader[Array[T]] {
     implicit val f = implicitly[BsonFormat[T]]
     def write(array: Array[T]) = {
       val buff = new ArrayBuffer[BsonValue](array.length)
-      array.foreach( e => buff += f.write(e) )
+      array.foreach(e => buff += f.write(e))
       new BsonArray(buff)
     }
     def read(value: BsonValue) = {
-      if(value.isNull) new Array[T](0)
+      if (value.isNull) new Array[T](0)
       else value.asArray().map(f.read(_)).toArray
     }
     override def flds: Map[String, BF[_]] = f.flds
   }
 
-  implicit def optionFormat[T :BF]: BF[Option[T]] = new OptionFormat[T]
+  implicit def optionFormat[T: BF]: BF[Option[T]] = new OptionFormat[T]
 
-  class OptionFormat[T : BsonFormat] extends BF[Option[T]] {
+  class OptionFormat[T: BsonFormat] extends BF[Option[T]] {
     implicit val f = implicitly[BsonFormat[T]]
     def write(option: Option[T]) = {
       option match {
@@ -163,13 +163,13 @@ trait BsonCollectionFormats {
         case None => BsonNull.VALUE
       }
     }
-    def read(value: BsonValue) = if(value.isNull) None
+    def read(value: BsonValue) = if (value.isNull) None
     else Option(f.read(value))
 
-    override def readArray(b:BsonArray) = {
+    override def readArray(b: BsonArray) = {
       val sb = Seq.newBuilder[Option[T]]
       val it = b.iterator()
-      while(it.hasNext){
+      while (it.hasNext) {
         sb += read(it.next())
       }
       sb.result()
@@ -178,28 +178,29 @@ trait BsonCollectionFormats {
     override def flds: Map[String, BF[_]] = f.flds
   }
 
-  implicit def mapFormat[K :BsonFormat, V :BsonFormat] = new BsonFormat[Map[K, V]]  with BsonArrayReader[Map[K, V]] {
+  implicit def mapFormat[K: BsonFormat, V: BsonFormat] = new BsonFormat[Map[K, V]] with BsonArrayReader[Map[K, V]] {
     implicit val fk = implicitly[BsonFormat[K]]
     implicit val fv = implicitly[BsonFormat[V]]
     def write(m: Map[K, V]) = {
       val doc = new BsonDocument()
-      m.foreach{ case (k, v) =>
-        val kv = fk.write(k)
-        val vv = fv.write(v)
-        if(kv.isString && !vv.isNull) doc.append(kv.asString().getValue, vv)
+      m.foreach {
+        case (k, v) =>
+          val kv = fk.write(k)
+          val vv = fv.write(v)
+          if (kv.isString && !vv.isNull) doc.append(kv.asString().getValue, vv)
       }
       doc
     }
     def read(value: BsonValue) = {
-      value.asDocument().map{ case(ks,v) =>
-        (fk.read(new BsonString(ks)), fv.read(v))
+      value.asDocument().map {
+        case (ks, v) =>
+          (fk.read(new BsonString(ks)), fv.read(v))
       }(collection.breakOut)
     }
     //in general terms, yes, as we don't know keys, but we need 'star' format for values
     override def flds = Map("*" -> fv)
 
   }
-
 
   //TODO - other collections - see SprayJson viaSeq
   /*
@@ -220,9 +221,7 @@ trait BsonCollectionFormats {
 
 trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats
 
-
 object BsonFormats extends StandardBsonFormats with BsonFormats
-
 
 trait BsonFormats extends LowPrioBsonFormats {
   this: StandardBsonFormats =>
@@ -237,69 +236,67 @@ trait FamilyFormats extends LowPriorityFamilyFormats {
 object FamilyFormats extends DefaultJsonProtocol with FamilyFormats
  */
 
-
 trait LowPrioBsonFormats {
   this: BaseBsonFormats with BsonFormats =>
 
-  abstract class WrappedBsonFromat[Wrapped, SubRepr](implicit tpe :Typeable[Wrapped]) {
+  abstract class WrappedBsonFromat[Wrapped, SubRepr](implicit tpe: Typeable[Wrapped]) {
     def write(v: SubRepr): BsonValue
     def read(b: BsonValue): SubRepr
     def flds: Map[String, BsonFormat[_]]
   }
 
-  implicit def hHilBsonFormat[Wrapped](implicit tpe: Typeable[Wrapped]): WrappedBsonFromat[Wrapped, HNil] = new WrappedBsonFromat[Wrapped, HNil]{
+  implicit def hHilBsonFormat[Wrapped](implicit tpe: Typeable[Wrapped]): WrappedBsonFromat[Wrapped, HNil] = new WrappedBsonFromat[Wrapped, HNil] {
     override def write(t: HNil): BsonValue = BsonNull.VALUE
     override def read(b: BsonValue) = HNil
     def flds = Map.empty
   }
 
-
   implicit def hListFormat[Wrapped, Key <: Symbol, Value, Remaining <: HList](
-                                                                               implicit
-                                                                               t: Typeable[Wrapped],
-                                                                               key: Witness.Aux[Key],
-                                                                               headSer: Lazy[BsonFormat[Value]],
-                                                                               remFormat: WrappedBsonFromat[Wrapped, Remaining]
-                                                                             ): WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] =
-   new WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] {
-     private[this] val fieldName  = key.value.name
-     private[this] val hs = headSer.value
-     override def write(ft: FieldType[Key, Value] :: Remaining): BsonValue = {
-       val rest = remFormat.write(ft.tail)
-       val serializedVal = hs.write(ft.head)
-       if(!serializedVal.isNull) {
-         val fName = key.value.name
-         if(rest.isNull) {
-           new BsonDocument(fName, serializedVal)
-         } else {
-           rest.asDocument().append(fName, serializedVal)
-         }
-       } else {
-         rest
-       }
-     }
+    implicit
+    t: Typeable[Wrapped],
+    key: Witness.Aux[Key],
+    headSer: Lazy[BsonFormat[Value]],
+    remFormat: WrappedBsonFromat[Wrapped, Remaining]
+  ): WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] =
+    new WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] {
+      private[this] val fieldName = key.value.name
+      private[this] val hs = headSer.value
+      override def write(ft: FieldType[Key, Value] :: Remaining): BsonValue = {
+        val rest = remFormat.write(ft.tail)
+        val serializedVal = hs.write(ft.head)
+        if (!serializedVal.isNull) {
+          val fName = key.value.name
+          if (rest.isNull) {
+            new BsonDocument(fName, serializedVal)
+          } else {
+            rest.asDocument().append(fName, serializedVal)
+          }
+        } else {
+          rest
+        }
+      }
 
-     override def read(b: BsonValue): FieldType[Key, Value] :: Remaining = {
-       val resolved: Value = {
-         val v = b.asDocument().get(fieldName)
-         if(v == null || v.isNull) {
-           hs.read(BsonNull.VALUE)
-         } else {
-           hs.read(v)
-         }
-       }
-       val remaining = remFormat.read(b)
-       field[Key](resolved) :: remaining
+      override def read(b: BsonValue): FieldType[Key, Value] :: Remaining = {
+        val resolved: Value = {
+          val v = b.asDocument().get(fieldName)
+          if (v == null || v.isNull) {
+            hs.read(BsonNull.VALUE)
+          } else {
+            hs.read(v)
+          }
+        }
+        val remaining = remFormat.read(b)
+        field[Key](resolved) :: remaining
 
-     }
+      }
 
-     def flds = {
-       val subfieldFlds = hs.flds.map { case (subfieldName, s) => (fieldName+"."+ subfieldName -> s)}
-       remFormat.flds ++ subfieldFlds + (fieldName -> hs)
-     }
-   }
+      def flds = {
+        val subfieldFlds = hs.flds.map { case (subfieldName, s) => (fieldName + "." + subfieldName -> s) }
+        remFormat.flds ++ subfieldFlds + (fieldName -> hs)
+      }
+    }
 
- /* For future support of coproducts
+  /* For future support of coproducts
  implicit def cNilFormat[Wrapped](
                                     implicit
                                     t: Typeable[Wrapped]
@@ -333,11 +330,10 @@ trait LowPrioBsonFormats {
     }
   */
 
-
-  implicit def bsonEncoder[T, Repr](implicit gen: LabelledGeneric.Aux[T, Repr],
-                           sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
-                           tpe: Typeable[T]
-                          ) : BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T]{
+  implicit def bsonEncoder[T, Repr](implicit
+    gen: LabelledGeneric.Aux[T, Repr],
+    sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
+    tpe: Typeable[T]): BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T] {
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
     override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
 

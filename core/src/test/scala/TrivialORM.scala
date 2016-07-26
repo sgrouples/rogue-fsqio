@@ -2,14 +2,16 @@
 
 package io.fsq.rogue.test
 
-import com.mongodb.{BasicDBObjectBuilder, DBObject}
+import com.mongodb.{ BasicDBObjectBuilder, DBObject }
 import io.fsq.field.OptionalField
 import org.bson.Document
 
-/** A trivial ORM layer that implements the interfaces rogue needs. The goal is
-  * to make sure that rogue-core works without the assistance of rogue-lift.
-  * Ideally this would be even smaller; as it is, I needed to copy-paste some
-  * code from the Lift implementations. */
+/**
+ * A trivial ORM layer that implements the interfaces rogue needs. The goal is
+ * to make sure that rogue-core works without the assistance of rogue-lift.
+ * Ideally this would be even smaller; as it is, I needed to copy-paste some
+ * code from the Lift implementations.
+ */
 object TrivialORM {
 
   trait Record {

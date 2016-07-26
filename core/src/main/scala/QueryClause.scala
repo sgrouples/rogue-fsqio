@@ -14,7 +14,7 @@ abstract class QueryClause[V](val fieldName: String, val actualIndexBehavior: Ma
 }
 
 abstract class IndexableQueryClause[V, Ind <: MaybeIndexed](fname: String, actualIB: Ind, conds: (CondOps.Value, V)*)
-    extends QueryClause[V](fname, actualIB, conds: _*)
+  extends QueryClause[V](fname, actualIB, conds: _*)
 
 trait ShardKeyClause
 
@@ -113,7 +113,6 @@ case class RegexQueryClause[Ind <: MaybeIndexed](override val fieldName: String,
 
 }
 
-
 case class RawQueryClause(f: BasicDBObjectBuilder => Unit)
     extends IndexableQueryClause("raw", DocumentScan) {
   override def extend(q: BasicDBObjectBuilder, signature: Boolean) {
@@ -189,7 +188,7 @@ class ModifyPushEachSliceClause(fieldName: String, slice: Int, values: Traversab
 }
 
 class ModifyPushEachSlicePositionClause(fieldName: String, slice: Int, position: Int, values: Traversable[_])
-  extends ModifyClause(ModOps.Push) {
+    extends ModifyClause(ModOps.Push) {
   override def extend(q: BasicDBObjectBuilder): Unit = {
     q.push(fieldName).add("$each", QueryHelpers.list(values)).add("$slice", slice).add("$position", position).pop
   }

@@ -10,7 +10,7 @@ import java.util.Calendar
 import java.util.regex.Pattern
 
 import org.bson.types.ObjectId
-import org.junit.{After, Before, Ignore, Test}
+import org.junit.{ After, Before, Ignore, Test }
 import org.specs2.matcher.JUnitMustMatchers
 
 /**
@@ -19,34 +19,38 @@ import org.specs2.matcher.JUnitMustMatchers
 class EndToEndTest extends JUnitMustMatchers {
   def baseTestVenue(): Venue = {
     Venue.createRecord
-         .legacyid(123)
-         .userid(456)
-         .venuename("test venue")
-         .mayor(789)
-         .mayor_count(3)
-         .closed(false)
-         .popularity(List(1L, 2L, 3L))
-         .categories(List(new ObjectId()))
-         .geolatlng(LatLong(40.73, -73.98))
-         .status(VenueStatus.open)
-         .claims(List(VenueClaimBson.createRecord.userid(1234).status(ClaimStatus.pending),
-                      VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)))
-         .lastClaim(VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved))
-         .tags(List("test tag1", "some tag"))
+      .legacyid(123)
+      .userid(456)
+      .venuename("test venue")
+      .mayor(789)
+      .mayor_count(3)
+      .closed(false)
+      .popularity(List(1L, 2L, 3L))
+      .categories(List(new ObjectId()))
+      .geolatlng(LatLong(40.73, -73.98))
+      .status(VenueStatus.open)
+      .claims(List(
+        VenueClaimBson.createRecord.userid(1234).status(ClaimStatus.pending),
+        VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)
+      ))
+      .lastClaim(VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved))
+      .tags(List("test tag1", "some tag"))
   }
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
     VenueClaim.createRecord
-              .venueid(vid)
-              .userid(123)
-              .status(ClaimStatus.approved)
+      .venueid(vid)
+      .userid(123)
+      .status(ClaimStatus.approved)
   }
 
   def baseTestTip(): Tip = {
     Tip.createRecord
-       .legacyid(234)
-       .counts(Map("foo" -> 1L,
-                   "bar" -> 2L))
+      .legacyid(234)
+      .counts(Map(
+        "foo" -> 1L,
+        "bar" -> 2L
+      ))
   }
 
   @Before
@@ -73,18 +77,18 @@ class EndToEndTest extends JUnitMustMatchers {
     val vc = baseTestVenueClaim(v.id).save(true)
 
     // eqs
-    metaRecordToQueryBuilder(Venue).where(_._id eqs v.id).fetch().map(_.id)                         must_== List(v.id)
-    Venue.where(_.mayor eqs v.mayor.value).fetch().map(_.id)              must_== List(v.id)
-    Venue.where(_.mayor eqs v.mayor.value).fetch().map(_.id)              must_== List(v.id)
-    Venue.where(_.venuename eqs v.venuename.value).fetch().map(_.id)      must_== List(v.id)
-    Venue.where(_.closed eqs false).fetch().map(_.id)                     must_== List(v.id)
+    metaRecordToQueryBuilder(Venue).where(_._id eqs v.id).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.mayor eqs v.mayor.value).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.mayor eqs v.mayor.value).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.venuename eqs v.venuename.value).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.closed eqs false).fetch().map(_.id) must_== List(v.id)
 
-    Venue.where(_.mayor eqs 432432).fetch().map(_.id)                     must_== Nil
-    Venue.where(_.closed eqs true).fetch().map(_.id)                      must_== Nil
+    Venue.where(_.mayor eqs 432432).fetch().map(_.id) must_== Nil
+    Venue.where(_.closed eqs true).fetch().map(_.id) must_== Nil
 
     VenueClaim.where(_.status eqs ClaimStatus.approved).fetch().map(_.id) must_== List(vc.id)
-    VenueClaim.where(_.venueid eqs v.id).fetch().map(_.id)                must_== List(vc.id)
-    VenueClaim.where(_.venueid eqs v).fetch().map(_.id)                   must_== List(vc.id)
+    VenueClaim.where(_.venueid eqs v.id).fetch().map(_.id) must_== List(vc.id)
+    VenueClaim.where(_.venueid eqs v).fetch().map(_.id) must_== List(vc.id)
   }
 
   @Test
@@ -94,18 +98,18 @@ class EndToEndTest extends JUnitMustMatchers {
 
     // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
     // VenueClaim has status approved.
-    Venue.where(_.mayor_count neqs 5).fetch().map(_.id)                     must_== List(v.id)
-    Venue.where(_.mayor_count < 5).fetch().map(_.id)                        must_== List(v.id)
-    Venue.where(_.mayor_count lt 5).fetch().map(_.id)                       must_== List(v.id)
-    Venue.where(_.mayor_count <= 5).fetch().map(_.id)                       must_== List(v.id)
-    Venue.where(_.mayor_count lte 5).fetch().map(_.id)                      must_== List(v.id)
-    Venue.where(_.mayor_count > 5).fetch().map(_.id)                        must_== Nil
-    Venue.where(_.mayor_count gt 5).fetch().map(_.id)                       must_== Nil
-    Venue.where(_.mayor_count >= 5).fetch().map(_.id)                       must_== Nil
-    Venue.where(_.mayor_count gte 5).fetch().map(_.id)                      must_== Nil
-    Venue.where(_.mayor_count between (3, 5)).fetch().map(_.id)             must_== List(v.id)
-    VenueClaim.where (_.status neqs ClaimStatus.approved).fetch().map(_.id) must_== Nil
-    VenueClaim.where (_.status neqs ClaimStatus.pending).fetch().map(_.id)  must_== List(vc.id)
+    Venue.where(_.mayor_count neqs 5).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.mayor_count < 5).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.mayor_count lt 5).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.mayor_count <= 5).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.mayor_count lte 5).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_.mayor_count > 5).fetch().map(_.id) must_== Nil
+    Venue.where(_.mayor_count gt 5).fetch().map(_.id) must_== Nil
+    Venue.where(_.mayor_count >= 5).fetch().map(_.id) must_== Nil
+    Venue.where(_.mayor_count gte 5).fetch().map(_.id) must_== Nil
+    Venue.where(_.mayor_count between (3, 5)).fetch().map(_.id) must_== List(v.id)
+    VenueClaim.where(_.status neqs ClaimStatus.approved).fetch().map(_.id) must_== Nil
+    VenueClaim.where(_.status neqs ClaimStatus.pending).fetch().map(_.id) must_== List(vc.id)
   }
 
   @Test
@@ -177,16 +181,16 @@ class EndToEndTest extends JUnitMustMatchers {
     // know how to convert the String to an Enum.
 
     val statuses: List[Option[VenueClaimBson.status.MyType]] =
-          Venue.where(_._id eqs v.id).select(_.lastClaim.subselect(_.status)) .fetch()
+      Venue.where(_._id eqs v.id).select(_.lastClaim.subselect(_.status)).fetch()
     // This assertion works.
     statuses must_== List(Some("Approved"))
     // This assertion is what we want, and it fails.
     // statuses must_== List(Some(ClaimStatus.approved))
 
     val subuseridsAndStatuses: List[(Option[List[Long]], Option[List[VenueClaimBson.status.MyType]])] =
-          Venue.where(_._id eqs v.id)
-               .select(_.claims.subselect(_.userid), _.claims.subselect(_.status))
-               .fetch()
+      Venue.where(_._id eqs v.id)
+        .select(_.claims.subselect(_.userid), _.claims.subselect(_.status))
+        .fetch()
     // This assertion works.
     subuseridsAndStatuses must_== List((Some(List(1234, 5678)), Some(List("Pending approval", "Approved"))))
 
@@ -202,31 +206,31 @@ class EndToEndTest extends JUnitMustMatchers {
     val v = baseTestVenue().save(true)
 
     // eqs
-    Venue.where(_._id eqs v.id).fetch().map(_.id)                         must_== List(v.id)
-    Venue.where(_._id eqs v.id).setReadPreference(ReadPreference.secondary).fetch().map(_.id)        must_== List(v.id)
-    Venue.where(_._id eqs v.id).setReadPreference(ReadPreference.primary).fetch().map(_.id)       must_== List(v.id)
+    Venue.where(_._id eqs v.id).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_._id eqs v.id).setReadPreference(ReadPreference.secondary).fetch().map(_.id) must_== List(v.id)
+    Venue.where(_._id eqs v.id).setReadPreference(ReadPreference.primary).fetch().map(_.id) must_== List(v.id)
   }
 
   @Test
   def testFindAndModify {
     val v1 = Venue.where(_.venuename eqs "v1")
-        .findAndModify(_.userid setTo 5)
-        .upsertOne(returnNew = false)
+      .findAndModify(_.userid setTo 5)
+      .upsertOne(returnNew = false)
     v1 must_== None
 
     val v2 = Venue.where(_.venuename eqs "v2")
-        .findAndModify(_.userid setTo 5)
-        .upsertOne(returnNew = true)
+      .findAndModify(_.userid setTo 5)
+      .upsertOne(returnNew = true)
     v2.map(_.userid.value) must_== Some(5)
 
     val v3 = Venue.where(_.venuename eqs "v2")
-        .findAndModify(_.userid setTo 6)
-        .upsertOne(returnNew = false)
+      .findAndModify(_.userid setTo 6)
+      .upsertOne(returnNew = false)
     v3.map(_.userid.value) must_== Some(5)
 
     val v4 = Venue.where(_.venuename eqs "v2")
-        .findAndModify(_.userid setTo 7)
-        .upsertOne(returnNew = true)
+      .findAndModify(_.userid setTo 7)
+      .upsertOne(returnNew = true)
     v4.map(_.userid.value) must_== Some(7)
   }
 
@@ -251,51 +255,57 @@ class EndToEndTest extends JUnitMustMatchers {
     val ids = vs.map(_.id)
 
     val items1 = Venue.where(_._id in ids)
-        .iterate[List[Venue]](Nil){ case (accum, event) => {
-      if (accum.length >= 3) {
-        Return(accum)
-      } else {
-        event match {
-          case Item(i) if i.legacyid.value % 2 == 0 => Continue(i :: accum)
-          case Item(_) => Continue(accum)
-          case EOF => Return(accum)
-          case Error(e) => Return(accum)
+      .iterate[List[Venue]](Nil) {
+        case (accum, event) => {
+          if (accum.length >= 3) {
+            Return(accum)
+          } else {
+            event match {
+              case Item(i) if i.legacyid.value % 2 == 0 => Continue(i :: accum)
+              case Item(_) => Continue(accum)
+              case EOF => Return(accum)
+              case Error(e) => Return(accum)
+            }
+          }
         }
       }
-    }}
 
     items1.map(_.legacyid.value) must_== List(6, 4, 2)
 
     val items2 = Venue.where(_._id in ids)
-        .iterateBatch[List[Venue]](2, Nil){ case (accum, event) => {
-      if (accum.length >= 3) {
-        Return(accum)
-      } else {
-        event match {
-          case Item(items) => {
-            Continue(accum ++ items.filter(_.legacyid.value % 3 == 1))
+      .iterateBatch[List[Venue]](2, Nil) {
+        case (accum, event) => {
+          if (accum.length >= 3) {
+            Return(accum)
+          } else {
+            event match {
+              case Item(items) => {
+                Continue(accum ++ items.filter(_.legacyid.value % 3 == 1))
+              }
+              case EOF => Return(accum)
+              case Error(e) => Return(accum)
+            }
           }
-          case EOF => Return(accum)
-          case Error(e) => Return(accum)
         }
       }
-    }}
 
     items2.map(_.legacyid.value) must_== List(1, 4, 7)
 
     def findIndexOfWithLimit(id: Long, limit: Int) = {
-      Venue.where(_._id in ids).iterate(1){ case (idx, event) => {
-        if (idx >= limit) {
-          Return(-1)
-        } else {
-          event match {
-            case Item(i) if i.legacyid.value == id => Return(idx)
-            case Item(i) => Continue(idx+1)
-            case EOF => Return(-2)
-            case Error(e) => Return(-3)
+      Venue.where(_._id in ids).iterate(1) {
+        case (idx, event) => {
+          if (idx >= limit) {
+            Return(-1)
+          } else {
+            event match {
+              case Item(i) if i.legacyid.value == id => Return(idx)
+              case Item(i) => Continue(idx + 1)
+              case EOF => Return(-2)
+              case Error(e) => Return(-3)
+            }
           }
         }
-      }}
+      }
     }
 
     findIndexOfWithLimit(5, 2) must_== -1
@@ -308,14 +318,15 @@ class EndToEndTest extends JUnitMustMatchers {
     val inner = CalendarInner.createRecord.date(Calendar.getInstance())
     CalendarFld.createRecord.inner(inner).save(true)
 
-    val q = CalendarFld select(_.inner.subfield(_.date))
+    val q = CalendarFld select (_.inner.subfield(_.date))
     val cnt = q.count()
     val list = q.iterate(List[Calendar]()) {
       case (list, Iter.Item(cal)) =>
         val c: Calendar = cal.get //class cast exception was here
         c.set(Calendar.HOUR_OF_DAY, 0)
         Iter.Continue(c :: list)
-      case (list, Iter.Error(e)) => e.printStackTrace(); Iter.Continue(list)
+      case (list, Iter.Error(e)) =>
+        e.printStackTrace(); Iter.Continue(list)
       case (list, _) => Iter.Return(list)
     }
     list.length must_== (cnt)

@@ -3,9 +3,9 @@
 package io.fsq.rogue.lift
 
 import com.mongodb.DBObject
-import net.liftweb.json.{Extraction, Formats, Serializer, TypeInfo}
-import net.liftweb.json.JsonAST.{JObject, JValue}
-import net.liftweb.mongodb.{JObjectParser, ObjectIdSerializer}
+import net.liftweb.json.{ Extraction, Formats, Serializer, TypeInfo }
+import net.liftweb.json.JsonAST.{ JObject, JValue }
+import net.liftweb.mongodb.{ JObjectParser, ObjectIdSerializer }
 
 object LiftQueryHelpers {
 
@@ -13,7 +13,7 @@ object LiftQueryHelpers {
     val DBObjectClass = classOf[DBObject]
 
     def deserialize(implicit formats: Formats): PartialFunction[(TypeInfo, JValue), DBObject] = {
-      case (TypeInfo(klass, _), json : JObject) if DBObjectClass.isAssignableFrom(klass) =>
+      case (TypeInfo(klass, _), json: JObject) if DBObjectClass.isAssignableFrom(klass) =>
         JObjectParser.parse(json)
     }
 

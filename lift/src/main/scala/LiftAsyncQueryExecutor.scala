@@ -1,15 +1,13 @@
 package io.fsq.rogue.lift
 
-import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
+import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.DBObject
 import com.mongodb.async.client.MongoCollection
-import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
+import net.liftweb.mongodb.record.{ MongoMetaRecord, MongoRecord }
 import net.liftweb.mongodb.MongoAsync
 import org.bson.Document
 import io.fsq.rogue._
-
-
 
 object LiftAsyncDBCollectionFactory extends AsyncDBCollectionFactory[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def getDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): MongoCollection[Document] = {
@@ -25,7 +23,7 @@ object LiftAsyncDBCollectionFactory extends AsyncDBCollectionFactory[MongoRecord
   }
 
   protected def getPrimaryDBCollection(meta: MongoMetaRecord[_], collectionName: String): MongoCollection[Document] = {
-    MongoAsync.useSession(meta/* TODO: .master*/.connectionIdentifier){ db =>
+    MongoAsync.useSession(meta /* TODO: .master*/ .connectionIdentifier) { db =>
       db.getCollection(collectionName)
     }
   }
@@ -41,14 +39,13 @@ object LiftAsyncDBCollectionFactory extends AsyncDBCollectionFactory[MongoRecord
   override def getInstanceName(record: MongoRecord[_]): String =
     record.meta.connectionIdentifier.toString
 
-
   /**
-    * Retrieves the list of indexes declared for the record type associated with a
-    * query. If the record type doesn't declare any indexes, then returns None.
-    *
-    * @param query the query
-    * @return the list of indexes, or an empty list.
-    */
+   * Retrieves the list of indexes declared for the record type associated with a
+   * query. If the record type doesn't declare any indexes, then returns None.
+   *
+   * @param query the query
+   * @return the list of indexes, or an empty list.
+   */
   override def getIndexes[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]] = {
     val queryMetaRecord = query.meta
     if (queryMetaRecord.isInstanceOf[IndexedRecord[_]]) {
@@ -58,30 +55,24 @@ object LiftAsyncDBCollectionFactory extends AsyncDBCollectionFactory[MongoRecord
     }
   }
 
-
-
-
 }
 
 class LiftAsyncAdapter(dbCollectionFactory: AsyncDBCollectionFactory[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]]) extends MongoAsyncJavaDriverAdapter(dbCollectionFactory)
 
-
 object LiftAsyncAdapter extends LiftAsyncAdapter(LiftAsyncDBCollectionFactory)
-
 
 class LiftAsyncQueryExecutor(override val adapter: MongoAsyncJavaDriverAdapter[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]]) extends AsyncQueryExecutor[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def defaultWriteConcern = QueryHelpers.config.defaultWriteConcern
 
   override lazy val optimizer = new QueryOptimizer
 
-
   override protected def readSerializer[M <: MongoRecord[_] with MongoMetaRecord[_], R](
-                                                                                         meta: M,
-                                                                                         select: Option[MongoSelect[M, R]]
-                                                                                       ): RogueReadSerializer[R] = {
+    meta: M,
+    select: Option[MongoSelect[M, R]]
+  ): RogueReadSerializer[R] = {
     new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
@@ -103,7 +94,7 @@ class LiftAsyncQueryExecutor(override val adapter: MongoAsyncJavaDriverAdapter[M
       }
 
       override def fromDocument(dbo: Document): R = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty=>
+        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
