@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import io.fsq.rogue.EnumerationListModifyField
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.BsonFormats._
+import BsonFormats._
 
 
 object VenueStatus extends Enumeration {

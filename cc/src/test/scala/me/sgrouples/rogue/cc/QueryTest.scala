@@ -11,6 +11,8 @@ import java.util.regex.Pattern
 import javax.xml.crypto.dsig.Transform
 
 import com.mongodb.util.{JSON, JSONSerializers}
+import io.fsq.field.Field
+import me.sgrouples.rogue.CClassListField
 import me.sgrouples.rogue.cc.Metas._
 import org.bson.{BSON, BsonDateTime, BsonDocument, Transformer}
 import org.bson.types._
@@ -443,16 +445,17 @@ class QueryTest extends JUnitMustMatchers {
     // or queries
     VenueR.where(_.mayor eqs 1).or(_.where(_.id eqs oid)).signature() must_== """db.venues.find({ "mayor" : 0 , "$or" : [ { "_id" : 0}]})"""
   }
-  /*
+
     @Test
     def testFindAndModifyQueryShouldProduceACorrectJSONQueryString {
       VenueR.where(_.legacyid eqs 1).findAndModify(_.venuename setTo "fshq").toString().must_==(
-        """db.venues.findAndModify({ query: { "legid" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })""")
+        """db.venues.findAndModify({ query: { "legId" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })""")
       VenueR.where(_.legacyid eqs 1).orderAsc(_.popularity).findAndModify(_.venuename setTo "fshq").toString().must_==(
-        """db.venues.findAndModify({ query: { "legid" : 1}, sort: { "popularity" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })""")
+        """db.venues.findAndModify({ query: { "legId" : 1}, sort: { "popularity" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })""")
       VenueR.where(_.legacyid eqs 1).select(_.mayor, _.closed).findAndModify(_.venuename setTo "fshq").toString().must_==(
-        """db.venues.findAndModify({ query: { "legid" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, fields: { "mayor" : 1 , "closed" : 1}, upsert: false })""")
+        """db.venues.findAndModify({ query: { "legId" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, fields: { "mayor" : 1 , "closed" : 1}, upsert: false })""")
     }
+
 
     @Test
     def testOrQueryShouldProduceACorrectJSONQueryString {
@@ -460,21 +463,21 @@ class QueryTest extends JUnitMustMatchers {
       VenueR.or(
         _.where(_.legacyid eqs 1),
         _.where(_.mayor eqs 2))
-        .toString() must_== """db.venues.find({ "$or" : [ { "legid" : 1} , { "mayor" : 2}]})"""
+        .toString() must_== """db.venues.find({ "$or" : [ { "legId" : 1} , { "mayor" : 2}]})"""
 
       // Compound $or
       VenueR.where(_.tags size 0)
         .or(
           _.where(_.legacyid eqs 1),
           _.where(_.mayor eqs 2))
-        .toString() must_== """db.venues.find({ "tags" : { "$size" : 0} , "$or" : [ { "legid" : 1} , { "mayor" : 2}]})"""
+        .toString() must_== """db.venues.find({ "tags" : { "$size" : 0} , "$or" : [ { "legId" : 1} , { "mayor" : 2}]})"""
 
       // $or with additional "and" clauses
       VenueR.where(_.tags size 0)
         .or(
           _.where(_.legacyid eqs 1).and(_.closed eqs true),
           _.where(_.mayor eqs 2))
-        .toString() must_== """db.venues.find({ "tags" : { "$size" : 0} , "$or" : [ { "legid" : 1 , "closed" : true} , { "mayor" : 2}]})"""
+        .toString() must_== """db.venues.find({ "tags" : { "$size" : 0} , "$or" : [ { "legId" : 1 , "closed" : true} , { "mayor" : 2}]})"""
 
       // Nested $or
       VenueR.or(
@@ -483,153 +486,155 @@ class QueryTest extends JUnitMustMatchers {
             _.where(_.closed eqs true),
             _.where(_.closed exists false)),
         _.where(_.mayor eqs 2))
-        .toString() must_== """db.venues.find({ "$or" : [ { "legid" : 1 , "$or" : [ { "closed" : true} , { "closed" : { "$exists" : false}}]} , { "mayor" : 2}]})"""
+        .toString() must_== """db.venues.find({ "$or" : [ { "legId" : 1 , "$or" : [ { "closed" : true} , { "closed" : { "$exists" : false}}]} , { "mayor" : 2}]})"""
 
       // $or with modify
       VenueR.or(
         _.where(_.legacyid eqs 1),
         _.where(_.mayor eqs 2))
-        .modify(_.userid setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legid" : 1} , { "mayor" : 2}]}, { "$set" : { "userid" : 1}}, false, false)"""
+        .modify(_.userid setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legId" : 1} , { "mayor" : 2}]}, { "$set" : { "userId" : 1}}, false, false)"""
 
       // $or with optional where clause
       VenueR.or(
         _.where(_.legacyid eqs 1),
         _.whereOpt(None)(_.mayor eqs _))
-        .modify(_.userid setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legid" : 1}]}, { "$set" : { "userid" : 1}}, false, false)"""
+        .modify(_.userid setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legId" : 1}]}, { "$set" : { "userId" : 1}}, false, false)"""
 
       VenueR.or(
         _.where(_.legacyid eqs 1),
         _.whereOpt(Some(2))(_.mayor eqs _))
-        .modify(_.userid setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legid" : 1} , { "mayor" : 2}]}, { "$set" : { "userid" : 1}}, false, false)"""
+        .modify(_.userid setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legId" : 1} , { "mayor" : 2}]}, { "$set" : { "userId" : 1}}, false, false)"""
 
       // OrQuery syntax
       val q1 = VenueR.where(_.legacyid eqs 1)
       val q2 = VenueR.where(_.legacyid eqs 2)
       OrQuery(q1, q2).toString() must_==
-        """db.venues.find({ "$or" : [ { "legid" : 1} , { "legid" : 2}]})"""
+        """db.venues.find({ "$or" : [ { "legId" : 1} , { "legId" : 2}]})"""
       OrQuery(q1, q2).and(_.mayor eqs 0).toString() must_==
-        """db.venues.find({ "mayor" : 0 , "$or" : [ { "legid" : 1} , { "legid" : 2}]})"""
+        """db.venues.find({ "mayor" : 0 , "$or" : [ { "legId" : 1} , { "legId" : 2}]})"""
       OrQuery(q1, q2.or(_.where(_.closed eqs true), _.where(_.closed exists false))).toString() must_==
-        """db.venues.find({ "$or" : [ { "legid" : 1} , { "legid" : 2 , "$or" : [ { "closed" : true} , { "closed" : { "$exists" : false}}]}]})"""
+        """db.venues.find({ "$or" : [ { "legId" : 1} , { "legId" : 2 , "$or" : [ { "closed" : true} , { "closed" : { "$exists" : false}}]}]})"""
     }
 
-    @Test
+
+    /*@Test
     def testHints {
       VenueR.where(_.legacyid eqs 1).hint(VenueR.idIdx).toString()        must_== """db.venues.find({ "legId" : 1}).hint({ "_id" : 1})"""
       VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdx).toString()       must_== """db.venues.find({ "legId" : 1}).hint({ "legid" : -1})"""
       VenueR.where(_.legacyid eqs 1).hint(VenueR.geoIdx).toString()       must_== """db.venues.find({ "legId" : 1}).hint({ "latlng" : "2d"})"""
       VenueR.where(_.legacyid eqs 1).hint(VenueR.geoCustomIdx).toString() must_== """db.venues.find({ "legId" : 1}).hint({ "latlng" : "custom" , "tags" : 1})"""
     }
-
+*/
     @Test
     def testDollarSelector {
+
       VenueR.where(_.legacyid eqs 1)
-        .and(_.claims.subfield(_.userid) contains 2)
+        .and(_.claims.subfield(_.uid) contains 2)
         .modify(_.claims.$.subfield(_.status) setTo ClaimStatus.approved)
-        .toString() must_== """db.venues.update({ "legid" : 1 , "claims.uid" : 2}, { "$set" : { "claims.$.status" : "Approved"}}, false, false)"""
+        .toString() must_== """db.venues.update({ "legId" : 1 , "claims.uid" : 2}, { "$set" : { "claims.$.status" : "Approved"}}, false, false)"""
 
       VenueR.where(_.legacyid eqs 1)
         .and(_.tags contains "sometag")
         .modify(_.tags.$ setTo "othertag")
-        .toString() must_== """db.venues.update({ "legid" : 1 , "tags" : "sometag"}, { "$set" : { "tags.$" : "othertag"}}, false, false)"""
+        .toString() must_== """db.venues.update({ "legId" : 1 , "tags" : "sometag"}, { "$set" : { "tags.$" : "othertag"}}, false, false)"""
 
       VenueR.where(_.legacyid eqs 1)
         .and(_.tags contains "sometag")
         .select(_.tags.$$)
         .toString() must_== """db.venues.find({ "legId" : 1 , "tags" : "sometag"}, { "tags.$" : 1})"""
     }
+  /*
+      @Test
+      def testWhereOpt {
+        val someId = Some(1L)
+        val noId: Option[Long] = None
+        val someList = Some(List(1L, 2L))
+        val noList: Option[List[Long]] = None
 
-    @Test
-    def testWhereOpt {
-      val someId = Some(1L)
-      val noId: Option[Long] = None
-      val someList = Some(List(1L, 2L))
-      val noList: Option[List[Long]] = None
+        // whereOpt
+        VenueR.whereOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "legId" : 1})"""
+        VenueR.whereOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
+        VenueR.whereOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "legId" : 1 , "mayor" : 2})"""
+        VenueR.whereOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "mayor" : 2})"""
 
-      // whereOpt
-      VenueR.whereOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "legId" : 1})"""
-      VenueR.whereOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
-      VenueR.whereOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "legId" : 1 , "mayor" : 2})"""
-      VenueR.whereOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "mayor" : 2})"""
+        // whereOpt: lists
+        VenueR.whereOpt(someList)(_.legacyid in _).toString() must_== """db.venues.find({ "legId" : { "$in" : [ 1 , 2]}})"""
+        VenueR.whereOpt(noList)(_.legacyid in _).toString() must_== """db.venues.find({ })"""
 
-      // whereOpt: lists
-      VenueR.whereOpt(someList)(_.legacyid in _).toString() must_== """db.venues.find({ "legId" : { "$in" : [ 1 , 2]}})"""
-      VenueR.whereOpt(noList)(_.legacyid in _).toString() must_== """db.venues.find({ })"""
+        // whereOpt: enum
+        val someEnum = Some(VenueStatus.open)
+        val noEnum: Option[VenueStatus.type#Value] = None
+        VenueR.whereOpt(someEnum)(_.status eqs _).toString() must_== """db.venues.find({ "status" : "Open"})"""
+        VenueR.whereOpt(noEnum)(_.status eqs _).toString() must_== """db.venues.find({ })"""
 
-      // whereOpt: enum
-      val someEnum = Some(VenueStatus.open)
-      val noEnum: Option[VenueStatus.type#Value] = None
-      VenueR.whereOpt(someEnum)(_.status eqs _).toString() must_== """db.venues.find({ "status" : "Open"})"""
-      VenueR.whereOpt(noEnum)(_.status eqs _).toString() must_== """db.venues.find({ })"""
+        // whereOpt: date
+        val someDate = Some(new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC))
+        val noDate: Option[DateTime] = None
+        VenueR.whereOpt(someDate)(_.last_updated after _).toString() must_== """db.venues.find({ "last_updated" : { "$gt" : { "$date" : "2010-05-01T00:00:00.000Z"}}})"""
+        VenueR.whereOpt(noDate)(_.last_updated after _).toString() must_== """db.venues.find({ })"""
 
-      // whereOpt: date
-      val someDate = Some(new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC))
-      val noDate: Option[DateTime] = None
-      VenueR.whereOpt(someDate)(_.last_updated after _).toString() must_== """db.venues.find({ "last_updated" : { "$gt" : { "$date" : "2010-05-01T00:00:00.000Z"}}})"""
-      VenueR.whereOpt(noDate)(_.last_updated after _).toString() must_== """db.venues.find({ })"""
+        // andOpt
+        VenueR.where(_.mayor eqs 2).andOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "mayor" : 2 , "legid" : 1})"""
+        VenueR.where(_.mayor eqs 2).andOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "mayor" : 2})"""
 
-      // andOpt
-      VenueR.where(_.mayor eqs 2).andOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "mayor" : 2 , "legid" : 1})"""
-      VenueR.where(_.mayor eqs 2).andOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "mayor" : 2})"""
+        // scanOpt
+        VenueR.scanOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "legId" : 1})"""
+        VenueR.scanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
+        VenueR.scanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "legId" : 1 , "mayor" : 2})"""
+        VenueR.scanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "mayor" : 2})"""
 
-      // scanOpt
-      VenueR.scanOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "legId" : 1})"""
-      VenueR.scanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
-      VenueR.scanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "legId" : 1 , "mayor" : 2})"""
-      VenueR.scanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "mayor" : 2})"""
+        // iscanOpt
+        VenueR.iscanOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "legId" : 1})"""
+        VenueR.iscanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
+        VenueR.iscanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "legId" : 1 , "mayor" : 2})"""
+        VenueR.iscanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "mayor" : 2})"""
 
-      // iscanOpt
-      VenueR.iscanOpt(someId)(_.legacyid eqs _).toString() must_== """db.venues.find({ "legId" : 1})"""
-      VenueR.iscanOpt(noId)(_.legacyid eqs _).toString() must_== """db.venues.find({ })"""
-      VenueR.iscanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "legId" : 1 , "mayor" : 2})"""
-      VenueR.iscanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).toString() must_== """db.venues.find({ "mayor" : 2})"""
+        // modify
+        val q = VenueR.where(_.legacyid eqs 1)
+        val prefix = """db.venues.update({ "legid" : 1}, """
+        val suffix = ", false, false)"
 
-      // modify
-      val q = VenueR.where(_.legacyid eqs 1)
-      val prefix = """db.venues.update({ "legid" : 1}, """
-      val suffix = ", false, false)"
-
-      q.modifyOpt(someId)(_.legacyid setTo _).toString() must_== prefix + """{ "$set" : { "legid" : 1}}""" + suffix
-      q.modifyOpt(noId)(_.legacyid setTo _).toString() must_== prefix + """{ }""" + suffix
-      q.modifyOpt(someEnum)(_.status setTo _).toString() must_== prefix + """{ "$set" : { "status" : "Open"}}""" + suffix
-      q.modifyOpt(noEnum)(_.status setTo _).toString() must_== prefix + """{ }""" + suffix
-    }
-
-    @Test
-    def testShardKey {
-      LikeR.where(_.checkin eqs 123).toString() must_== """db.likes.find({ "checkin" : 123})"""
-      LikeR.where(_.userid eqs 123).toString() must_== """db.likes.find({ "userid" : 123})"""
-      LikeR.where(_.userid eqs 123).allShards.toString() must_== """db.likes.find({ "userid" : 123})"""
-      LikeR.where(_.userid eqs 123).allShards.noop().toString() must_== """db.likes.update({ "userid" : 123}, { }, false, false)"""
-      LikeR.withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({ "userid" : 123})"""
-      LikeR.withShardKey(_.userid in List(123L, 456L)).toString() must_== """db.likes.find({ "userid" : { "$in" : [ 123 , 456]}})"""
-      LikeR.withShardKey(_.userid eqs 123).and(_.checkin eqs 1).toString() must_== """db.likes.find({ "userid" : 123 , "checkin" : 1})"""
-      LikeR.where(_.checkin eqs 1).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({ "checkin" : 1 , "userid" : 123})"""
-    }
-
-    @Test
-    def testCommonSuperclassForPhantomTypes {
-      def maybeLimit(legid: Long, limitOpt: Option[Int]) = {
-        limitOpt match {
-          case Some(limit) => VenueR.where(_.legacyid eqs legid).limit(limit)
-          case None => VenueR.where(_.legacyid eqs legid)
-        }
+        q.modifyOpt(someId)(_.legacyid setTo _).toString() must_== prefix + """{ "$set" : { "legid" : 1}}""" + suffix
+        q.modifyOpt(noId)(_.legacyid setTo _).toString() must_== prefix + """{ }""" + suffix
+        q.modifyOpt(someEnum)(_.status setTo _).toString() must_== prefix + """{ "$set" : { "status" : "Open"}}""" + suffix
+        q.modifyOpt(noEnum)(_.status setTo _).toString() must_== prefix + """{ }""" + suffix
       }
 
-      maybeLimit(1, None).toString() must_== """db.venues.find({ "legId" : 1})"""
-      maybeLimit(1, Some(5)).toString() must_== """db.venues.find({ "legId" : 1}).limit(5)"""
-    }
+      @Test
+      def testShardKey {
+        LikeR.where(_.checkin eqs 123).toString() must_== """db.likes.find({ "checkin" : 123})"""
+        LikeR.where(_.userid eqs 123).toString() must_== """db.likes.find({ "userid" : 123})"""
+        LikeR.where(_.userid eqs 123).allShards.toString() must_== """db.likes.find({ "userid" : 123})"""
+        LikeR.where(_.userid eqs 123).allShards.noop().toString() must_== """db.likes.update({ "userid" : 123}, { }, false, false)"""
+        LikeR.withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({ "userid" : 123})"""
+        LikeR.withShardKey(_.userid in List(123L, 456L)).toString() must_== """db.likes.find({ "userid" : { "$in" : [ 123 , 456]}})"""
+        LikeR.withShardKey(_.userid eqs 123).and(_.checkin eqs 1).toString() must_== """db.likes.find({ "userid" : 123 , "checkin" : 1})"""
+        LikeR.where(_.checkin eqs 1).withShardKey(_.userid eqs 123).toString() must_== """db.likes.find({ "checkin" : 1 , "userid" : 123})"""
+      }
 
-    @Test
-    def testSetReadPreference: Unit = {
-      type Q = Query[Venue, Venue, _]
+      @Test
+      def testCommonSuperclassForPhantomTypes {
+        def maybeLimit(legid: Long, limitOpt: Option[Int]) = {
+          limitOpt match {
+            case Some(limit) => VenueR.where(_.legacyid eqs legid).limit(limit)
+            case None => VenueR.where(_.legacyid eqs legid)
+          }
+        }
 
-      VenueR.where(_.mayor eqs 2).asInstanceOf[Q].readPreference must_== None
-      VenueR.where(_.mayor eqs 2).setReadPreference(ReadPreference.secondary).asInstanceOf[Q].readPreference must_== Some(ReadPreference.secondary)
-      VenueR.where(_.mayor eqs 2).setReadPreference(ReadPreference.primary).asInstanceOf[Q].readPreference must_== Some(ReadPreference.primary)
-      VenueR.where(_.mayor eqs 2).setReadPreference(ReadPreference.secondary).setReadPreference(ReadPreference.primary).asInstanceOf[Q].readPreference must_== Some(ReadPreference.primary)
-    }
+        maybeLimit(1, None).toString() must_== """db.venues.find({ "legId" : 1})"""
+        maybeLimit(1, Some(5)).toString() must_== """db.venues.find({ "legId" : 1}).limit(5)"""
+      }
 
-  */
+      @Test
+      def testSetReadPreference: Unit = {
+        type Q = Query[Venue, Venue, _]
+
+        VenueR.where(_.mayor eqs 2).asInstanceOf[Q].readPreference must_== None
+        VenueR.where(_.mayor eqs 2).setReadPreference(ReadPreference.secondary).asInstanceOf[Q].readPreference must_== Some(ReadPreference.secondary)
+        VenueR.where(_.mayor eqs 2).setReadPreference(ReadPreference.primary).asInstanceOf[Q].readPreference must_== Some(ReadPreference.primary)
+        VenueR.where(_.mayor eqs 2).setReadPreference(ReadPreference.secondary).setReadPreference(ReadPreference.primary).asInstanceOf[Q].readPreference must_== Some(ReadPreference.primary)
+      }
+
+    */
 
 }

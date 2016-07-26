@@ -149,14 +149,19 @@ trait CcRogue {
   (f: RField[LocalDateTime, O]): LocalDateTimeQueryField[O] =
     new LocalDateTimeQueryField(f)
 
-  implicit def caseClassFieldToQueryField[C <: Product, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
+  implicit def caseClassFieldToQueryField[C , M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
     new CClassQueryField[C, M, O](f, f.owner)
 
-  implicit def optCaseClassFieldToQueryField[C <: Product, M <: CcMeta[C], O](f: OptCClassField[C, M, O]): OptCClassQueryField[C, M, O] =
+  implicit def optCaseClassFieldToQueryField[C , M <: CcMeta[C], O](f: OptCClassField[C, M, O]): OptCClassQueryField[C, M, O] =
     new OptCClassQueryField[C, M, O](f, f.owner)
 
 
-  implicit def ccListFieldToListQueryField[C <: Product, M <: CcMeta[C], O]
+  implicit def selectableDummyFieldToQueryField[C , M <: CcMeta[C], O](f: SelectableDummyCCField[C, M, O]): CClassLikeQueryField[C, M, O] = {
+    new CClassLikeQueryField[C, M, O](f, f.meta, f.owner)
+  }
+
+
+  implicit def ccListFieldToListQueryField[C , M <: CcMeta[C], O]
   (f: CClassListField[C, M, O]):CClassSeqQueryField[C,M,O] = new CClassSeqQueryField[C,M,O](f, f.owner)
   /*
   //(field: Field[List[B], M], rec: B, toBson: B => BsonValue)
@@ -205,11 +210,11 @@ trait CcRogue {
   implicit def fieldToModifyField[M <: BsonRecord[M], F: BSONType](f: Field[F, M]): ModifyField[F, M] = new ModifyField(f)
   implicit def fieldToSafeModifyField[M <: BsonRecord[M], F](f: Field[F, M]): SafeModifyField[F, M] = new SafeModifyField(f)
 */
-  implicit def ccFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
+  implicit def ccFieldToCcModifyField[C , M <: CcMeta[C], O]
   (f: CClassField[C, M, O]): CClassModifyField[C, M, O] =
     new CClassModifyField[C, M, O](f)
 
-  implicit def optCcFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
+  implicit def optCcFieldToCcModifyField[C , M <: CcMeta[C], O]
   (f: OptCClassField[C, M, O]): OptCClassModifyField[C, M, O] =
     new OptCClassModifyField[C, M, O](f)
 
@@ -220,7 +225,7 @@ implicit def optCcFieldToCcModifyField[C <: Product, M <: CcMeta[C], O]
   new OptCClassModifyField[C, M, O](f)
 */
 
-  implicit def ccListFieldToSeqModifyField[C <: Product, M <: CcMeta[C], O]
+  implicit def ccListFieldToCCSeqModifyField[C, M <: CcMeta[C], O]
   (f: CClassListField[C, M, O]):CClassSeqModifyField[C,M,O] = new CClassSeqModifyField[C,M,O](f)
 
   /*implicit def bsonRecordListFieldToBsonRecordListModifyField[

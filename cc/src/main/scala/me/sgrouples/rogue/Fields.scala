@@ -63,13 +63,13 @@ class ArrayField[V :ClassTag, O](name:String, o:O) extends MCField[Array[V], O](
   override def defaultValue = Array.empty[V]
 }
 
-class CClassField[C <: Product, MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[C, O]
+class CClassField[C , MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[C, O]
 
-class CClassListField[C <: Product, MC<: CcMeta[C], O](name:String, val childMeta: MC, owner:O) extends MCField[Seq[C], O](name, owner){
+class CClassListField[C , MC<: CcMeta[C], O](name:String, val childMeta: MC, owner:O) extends MCField[Seq[C], O](name, owner){
   override def defaultValue: List[C] = Nil
 }
 
-class CClassArrayField[C <: Product : ClassTag, O](name:String, o:O) extends MCField[Array[C], O](name, o){
+class CClassArrayField[C : ClassTag, O](name:String, o:O) extends MCField[Array[C], O](name, o){
   override def defaultValue = Array.empty[C]
 }
 
@@ -88,9 +88,9 @@ class OptBooleanField[O](name:String,o :O) extends OCField[Boolean, O](name, o)
 class OptEnumField[T <: Enumeration, O](name:String, o:O)(implicit e: T) extends OCField[T#Value, O](name, o)
 class OptListField[V, O](name:String, o:O) extends OCField[List[V], O](name, o)
 class OptArrayField[V :ClassTag, O](name:String, o:O) extends OCField[Array[V], O](name, o)
-class OptCClassField[C <: Product, MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[C, O]
-class OptCClassListField[C <: Product, O](name:String, o:O) extends OCField[List[C], O](name, o)
-class OptCClassArrayField[C <: Product : ClassTag, O](name:String, o:O) extends OCField[Array[C], O](name, o)
+class OptCClassField[C , MC<: CcMeta[C], O](val name:String, val childMeta: MC, val owner:O) extends Field[C, O]
+class OptCClassListField[C, O](name:String, o:O) extends OCField[List[C], O](name, o)
+class OptCClassArrayField[C : ClassTag, O](name:String, o:O) extends OCField[Array[C], O](name, o)
 class OptMapField[V, O](name:String, o:O) extends OCField[Map[String, V], O](name, o)
 
 

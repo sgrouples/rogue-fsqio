@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 
 import io.fsq.field.Field
-import me.sgrouples.rogue.{BsonFormat, BsonFormats}
+import me.sgrouples.rogue.BsonFormat
 import org.bson.{BsonDocument, BsonValue}
 
 trait CcMetaLike[-T] {

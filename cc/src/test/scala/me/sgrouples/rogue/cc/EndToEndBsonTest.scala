@@ -64,7 +64,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     //Like.allShards.bulkDelete_!!!()
 
-    MongoTestConn.disconnectFromMongo
+    MongoTestConn.disconnectFromMongoSync
   }
 
   @Test

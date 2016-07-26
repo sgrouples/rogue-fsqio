@@ -31,7 +31,7 @@ abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field
 // - B -
 //abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field[CC[F], M])
 
-class CClassSeqQueryField[C <: Product, M <: CcMeta[C], O](fld: CClassListField[C, M , O], owner:O) //, toBson: B => BsonValue)
+class CClassSeqQueryField[C , M <: CcMeta[C], O](fld: CClassListField[C, M , O], owner:O) //, toBson: B => BsonValue)
   extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {
   override def valueToDB(c: C) = fld.childMeta.write(c)
 
@@ -92,7 +92,7 @@ class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObjec
   }
 }
  */
-class CClassQueryField[C <: Product, M <: CcMeta[C], O](fld: CClassField[C, M,O], owner:O) extends AbstractQueryField[C, C, BsonValue, O](fld){
+class CClassQueryField[C, M <: CcMeta[C], O](fld: CClassField[C, M,O], owner:O) extends AbstractQueryField[C, C, BsonValue, O](fld){
   override def valueToDB(v: C): BsonValue = {
     val x = fld.childMeta.write(v)
     println(s"writing value ${v} to db as ${x}")
@@ -104,7 +104,21 @@ class CClassQueryField[C <: Product, M <: CcMeta[C], O](fld: CClassField[C, M,O]
   def subselect[V](f: M => Field[V, M]): SelectableDummyField[V, O] = subfield(f)
 }
 
-class OptCClassQueryField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C, M, O], owner:O) extends AbstractQueryField[C, C, BsonValue, O](fld){
+class CClassLikeQueryField[C, M <: CcMeta[C], O](fld: Field[C, O], meta:M, owner:O) extends AbstractQueryField[C, C, BsonValue, O](fld){
+  override def valueToDB(v: C): BsonValue = {
+    val x = meta.write(v)
+    println(s"writing value ${v} to db as ${x}")
+    x
+  }
+  def subfield[V](f: M => Field[V,M]): SelectableDummyField[V, O] = {
+    new SelectableDummyField[V, O](fld.name+"." + f(meta).name, owner)
+  }
+  def subselect[V](f: M => Field[V, M]): SelectableDummyField[V, O] = subfield(f)
+}
+
+
+
+class OptCClassQueryField[C , M <: CcMeta[C], O](fld: OptCClassField[C, M, O], owner:O) extends AbstractQueryField[C, C, BsonValue, O](fld){
   override def valueToDB(v: C): BsonValue = fld.childMeta.write(v)
   def subfield[V](f: M => Field[V,M]): SelectableDummyField[V, O] = {
     new SelectableDummyField[V, O](fld.name+"." + f(fld.childMeta).name, owner)
@@ -129,16 +143,16 @@ extends AbstractQueryField[LocalDateTime, LocalDateTime, Date, M](field) {
 
 }
 
-class CClassModifyField[C <: Product, M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
+class CClassModifyField[C , M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
   override def valueToDB(b: C):BsonDocument = fld.childMeta.write(b).asDocument()
 }
 
-class OptCClassModifyField[C <: Product, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
+class OptCClassModifyField[C , M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
   override def valueToDB(b: C):BsonDocument = fld.childMeta.write(b).asDocument()
 }
 
 
-class CClassSeqModifyField[C <: Product, M <: CcMeta[C], O](fld: CClassListField[C, M, O])
+class CClassSeqModifyField[C , M <: CcMeta[C], O](fld: CClassListField[C, M, O])
   extends AbstractListModifyField[C, BsonDocument, O, Seq](fld) {
   override def valueToDB(b: C):BsonDocument = fld.childMeta.write(b).asDocument()
 
@@ -148,7 +162,13 @@ class CClassSeqModifyField[C <: Product, M <: CcMeta[C], O](fld: CClassListField
       clauseFuncs.map(cf => cf(fld.childMeta))
     )
   }
+
+  override def $ = new SelectableDummyCCField[C, M, O](fld.name + ".$", fld.childMeta, fld.owner)
+
 }
+
+class SelectableDummyCCField[V, M <: CcMeta[V], O](name: String, val meta:M, owner:O) extends SelectableDummyField[V, O](name, owner)
+
 /*
 class CClassSeqQueryField[C <: Product, M <: CcMeta[C], O](fld: CClassListField[C, M , O], owner:O) //, toBson: B => BsonValue)
   extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {

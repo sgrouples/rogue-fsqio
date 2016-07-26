@@ -3,9 +3,11 @@
 package io.fsq.rogue.lift.test
 
 import com.mongodb.ReadPreference
-import io.fsq.rogue.{BSONType, Degrees, LatLong, MongoType, Query, QueryOptimizer, Radians}
+import io.fsq.rogue._
 import io.fsq.rogue.lift.LiftRogue._
 import java.util.regex.Pattern
+
+import io.fsq.field.Field
 import net.liftweb.mongodb.record._
 import net.liftweb.mongodb.record.field._
 import net.liftweb.record._
@@ -504,6 +506,10 @@ class QueryTest extends JUnitMustMatchers {
 
   @Test
   def testDollarSelector {
+    val i: Field[VenueClaimBson, Venue] = Venue.claims.$
+    val j = i.subfield(_.status)
+    val k: SelectableDummyField[_root_.io.fsq.rogue.lift.test.ClaimStatus.Value, Venue] = Venue.claims.$.subfield(_.status)
+
     Venue.where(_.legacyid eqs 1)
          .and(_.claims.subfield(_.userid) contains 2)
          .modify(_.claims.$.subfield(_.status) setTo ClaimStatus.approved)

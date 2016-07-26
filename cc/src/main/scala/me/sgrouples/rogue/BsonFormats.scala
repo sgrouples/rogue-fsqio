@@ -4,15 +4,14 @@ import java.nio.{ByteBuffer, ByteOrder}
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 
-import shapeless._
-import labelled.{FieldType, field}
 import org.bson._
 import org.bson.types.ObjectId
+import shapeless._
+import shapeless.labelled.{FieldType, field}
 
 import scala.annotation.implicitNotFound
 import scala.collection.mutable.ArrayBuffer
-import scala.language.implicitConversions
-import scala.language.higherKinds
+import scala.language.{higherKinds, implicitConversions}
 import scala.reflect.ClassTag
 
 @implicitNotFound("implicit BsonFormat not found for ${T}")
