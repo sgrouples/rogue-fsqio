@@ -127,7 +127,7 @@ class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O])
 
 class SelectableDummyCCField[V, M <: CcMeta[V], O](name: String, val meta: M, owner: O) extends SelectableDummyField[V, O](name, owner)
 
-class LocalDateTimeModifyField[O](field: LocalDateTimeField[O]) extends AbstractModifyField[LocalDateTime, Date, O](field) {
+class LocalDateTimeModifyField[O](field: Field[LocalDateTime, O]) extends AbstractModifyField[LocalDateTime, Date, O](field) {
   import LocalDateTimeToMongo._
   override def valueToDB(d: LocalDateTime) = ldtToDate(d)
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)

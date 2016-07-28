@@ -27,7 +27,7 @@ trait CcMeta[T] extends CcMetaLike[T] {
 
 class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] {
 
-  def connId = "default"
+  def connId = "lift" //default connection identifier is "lift" for backwards compat with lift-rogue
 
   override def collectionName: String = collName
   //I want : classOf[R].getSimpleName.toLowerCase() + "s", but don't know how

@@ -230,7 +230,7 @@ B <: BsonRecord[B]
   new BsonRecordListModifyField[M, B](f, rec, _.asDBObject)(mf)
 }*/
 
-  implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: LocalDateTimeField[O]): LocalDateTimeModifyField[O] =
+  implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: RField[LocalDateTime, O]): LocalDateTimeModifyField[O] =
     new LocalDateTimeModifyField(f)
   //implicit def datetimeRFieldToDateModifyField[M](f: RField[DateTime, M]): DateTimeModifyField[M] = new DateTimeModifyField(f)
 
