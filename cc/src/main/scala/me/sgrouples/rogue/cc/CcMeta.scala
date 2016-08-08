@@ -25,7 +25,7 @@ trait CcMeta[T] extends CcMetaLike[T] {
   def reader(field: Field[_, _]): BsonFormat[_]
 }
 
-class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] {
+class RCcMeta[T](collName: String)(implicit private val f: BsonFormat[T]) extends CcMeta[T] {
 
   def connId = "default"
 
@@ -61,3 +61,4 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   override def writeAnyRef(t: AnyRef): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
 
 }
+
