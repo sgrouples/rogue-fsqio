@@ -6,11 +6,13 @@ object RogueSettings {
   val nexus = "https://nexus.groupl.es/"
   val nexusReleases = "releases" at nexus+"repository/maven-releases/"
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
+
+  val projectScalaVersion = "2.11.8"
 	
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "2.5.1-MongoAsync-shapeless-12",
     organization := "io.fsq",
-    scalaVersion := "2.11.8",
+    scalaVersion := projectScalaVersion,
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
@@ -65,6 +67,7 @@ object RogueDependencies {
     "org.specs2"              %% "specs2-core"              % specsVer % "test",
     "org.specs2"              %% "specs2-matcher"              % specsVer % "test",
     "org.specs2"              %% "specs2-junit"              % specsVer % "test",
+    "org.scalatest" % "scalatest_2.11" % "3.0.0-RC4" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
   )
@@ -75,6 +78,9 @@ object RogueDependencies {
   
   val rogueLiftDeps = mongoDeps ++ joda ++ liftDeps ++ liftRecordDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless) ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(
+    shapeless,
+    "org.scala-lang" % "scala-reflect" % RogueSettings.projectScalaVersion
+  ) ++ testDeps
 	
 }
