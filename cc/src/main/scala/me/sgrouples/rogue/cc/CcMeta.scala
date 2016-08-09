@@ -2,7 +2,8 @@ package me.sgrouples.rogue.cc
 
 import io.fsq.field.Field
 import me.sgrouples.rogue.BsonFormat
-import org.bson.{ BsonDocument, BsonValue }
+import me.sgrouples.rogue.naming.{LowerCaseNamingStrategy, NamingStrategy}
+import org.bson.{BsonDocument, BsonValue}
 
 trait CcMetaLike[-T] {
   type R
@@ -60,4 +61,11 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
 
   override def writeAnyRef(t: AnyRef): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
 
+}
+
+object RCcMeta {
+
+  def apply[T : BsonFormat : Manifest](implicit namingStrategy: NamingStrategy = LowerCaseNamingStrategy) = {
+    new RCcMeta[T](namingStrategy[T])
+  }
 }
