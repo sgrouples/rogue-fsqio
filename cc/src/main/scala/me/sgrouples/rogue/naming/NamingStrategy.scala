@@ -1,26 +1,27 @@
 package me.sgrouples.rogue.naming
 
+import scala.reflect.ClassTag
+
 /**
-  * Created by mwielocha on 09/08/16.
-  */
+ * Created by mwielocha on 09/08/16.
+ */
 sealed trait NamingStrategy {
 
-  def apply[T : Manifest]: String
+  def apply[T: ClassTag]: String
 
 }
 
-class ClassManifestNamingStrategy(format: String => String) extends NamingStrategy {
-  override def apply[T: Manifest]: String =
-    format(implicitly[Manifest[T]].runtimeClass.getSimpleName)
+class ClassNamingStrategy(format: Class[_] => String) extends NamingStrategy {
+  override def apply[T: ClassTag]: String =
+    format(implicitly[ClassTag[T]].runtimeClass)
 }
 
-object LowerCaseNamingStrategy extends ClassManifestNamingStrategy(_.toLowerCase())
-object UpperCaseNamingStrategy extends ClassManifestNamingStrategy(_.toUpperCase())
-object SnakeCaseNamingStrategy extends ClassManifestNamingStrategy(
-  _.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2")
-    .replaceAll("([a-z\\d])([A-Z])", "$1_$2")
-    .toLowerCase
+object LowerCase extends ClassNamingStrategy(_.getSimpleName.toLowerCase())
+object PluralLowerCase extends ClassNamingStrategy(_.getSimpleName.toLowerCase() + "s")
+object UpperCase extends ClassNamingStrategy(_.getSimpleName.toUpperCase())
+object SnakeCase extends ClassNamingStrategy(
+  _.getSimpleName.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2")
+  .replaceAll("([a-z\\d])([A-Z])", "$1_$2")
+  .toLowerCase
 )
-
-
 

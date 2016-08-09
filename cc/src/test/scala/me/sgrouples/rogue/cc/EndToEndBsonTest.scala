@@ -50,6 +50,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   def setupMongoConnection: Unit = {
     val m = MongoTestConn.connectToMongoSync
     CcMongo.defineDbSync("default", m, "rogue-test-")
+    CcMongo.defineDbSync("lift", m, "rogue-test-")
   }
 
   @After

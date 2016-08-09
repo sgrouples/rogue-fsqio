@@ -2,8 +2,10 @@ package me.sgrouples.rogue.cc
 
 import io.fsq.field.Field
 import me.sgrouples.rogue.BsonFormat
-import me.sgrouples.rogue.naming.{LowerCaseNamingStrategy, NamingStrategy}
-import org.bson.{BsonDocument, BsonValue}
+import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
+import org.bson.{ BsonDocument, BsonValue }
+
+import scala.reflect.ClassTag
 
 trait CcMetaLike[-T] {
   type R
@@ -28,10 +30,13 @@ trait CcMeta[T] extends CcMetaLike[T] {
 
 class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] {
 
+  def this(namingStrategy: NamingStrategy = LowerCase)(implicit f: BsonFormat[T], classTag: ClassTag[T]) {
+    this(namingStrategy[T])
+  }
+
   def connId = "lift" //default connection identifier is "lift" for backwards compat with lift-rogue
 
   override def collectionName: String = collName
-  //I want : classOf[R].getSimpleName.toLowerCase() + "s", but don't know how
 
   override def dba(): com.mongodb.async.client.MongoDatabase = CcMongo.getDb(connId).get
 
@@ -61,11 +66,4 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
 
   override def writeAnyRef(t: AnyRef): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
 
-}
-
-object RCcMeta {
-
-  def apply[T : BsonFormat : Manifest](implicit namingStrategy: NamingStrategy = LowerCaseNamingStrategy) = {
-    new RCcMeta[T](namingStrategy[T])
-  }
 }
