@@ -5,6 +5,7 @@ import io.fsq.rogue.EnumerationListModifyField
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 import BsonFormats._
+import me.sgrouples.rogue.naming.PluralLowerCase
 
 object VenueStatus extends Enumeration {
   val open = Value("Open")
@@ -73,7 +74,7 @@ object Metas {
 
   implicit val evVenueStatus = VenueStatus
 
-  object VenueR extends RCcMeta[Venue]("venues") {
+  object VenueR extends RCcMeta[Venue](PluralLowerCase) {
     val id = new ObjectIdField("_id", this)
     val mayor = new LongField("mayor", this)
     val venuename = new StringField("venuename", this)
