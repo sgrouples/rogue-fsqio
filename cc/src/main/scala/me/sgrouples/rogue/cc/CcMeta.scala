@@ -1,9 +1,10 @@
 package me.sgrouples.rogue.cc
 
+import com.mongodb.client.model.IndexOptions
 import io.fsq.field.Field
 import me.sgrouples.rogue.BsonFormat
 import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
-import org.bson.{ BsonDocument, BsonValue }
+import org.bson.{ BsonDocument, BsonInt32, BsonValue }
 
 import scala.reflect.ClassTag
 
@@ -65,5 +66,28 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   override def write(t: T): BsonValue = f.write(t)
 
   override def writeAnyRef(t: AnyRef): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
+
+  /**
+   * @param indexTuples  sequence of (name, int)
+   * @param opts IndexOptions- from mongo
+   * @return  - index name
+   */
+  def createIndex(indexTuples: Seq[(String, Int)], opts: IndexOptions): String = {
+    val keys = new BsonDocument()
+    indexTuples.foreach { case (k, v) => keys.append(k, new BsonInt32(v)) }
+    dbs().getCollection(collectionName).createIndex(keys, opts)
+  }
+
+  /**
+    * @param indexTuple - field, order tuple
+    * @param opts - IndexOptions
+    * @return index name (string)
+    */
+  def createIndex(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions()): String =
+    createIndex(Seq(indexTuple), opts)
+
+
+  def createIndex(indexTuples: Seq[(String, Int)]): String = createIndex(indexTuples, new IndexOptions())
+
 
 }

@@ -56,6 +56,8 @@ object ConsumerPrivilege extends Enumeration {
 
 case class OAuthConsumer(privileges: List[ConsumerPrivilege.Value])
 
+case class OptValCC(_id: ObjectId = new ObjectId(), maybes: Option[String] = None, maybeid: Option[ObjectId] = None, realString: String)
+
 object Metas {
 
   object SourceBsonR extends RCcMeta[SourceBson]("_") {
@@ -114,6 +116,13 @@ object Metas {
 
   object CommentR extends RCcMeta[Comment]("comments") {
     val comments = new ListField[OneComment.type, CommentR.type]("comments", this)
+  }
+
+  object OptValCCR extends RCcMeta[OptValCC]("optvalcc") {
+    val id = new ObjectIdField("_id", this)
+    val ms = new OptStringField("maybes", this)
+    val mi = new OptObjectIdField("maybeid", this)
+    val rs = new StringField("realString", this)
   }
 
 }

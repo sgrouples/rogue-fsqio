@@ -649,7 +649,12 @@ final class OptionalSelectField[V, M](
   override val slc: Option[(Int, Option[Int])] = None
 )
     extends SelectField[Option[V], M](field, slc) {
-  override def valueOrDefault(v: Option[_]): Any = v
+  override def valueOrDefault(v: Option[_]): Any = {
+    v.map { innV =>
+      if (innV.isInstanceOf[Some[_]]) innV.asInstanceOf[Some[_]].get
+      else innV
+    }
+  }
   override def slice(s: Int): OptionalSelectField[V, M] = {
     new OptionalSelectField(field, Some((s, None)))
   }
