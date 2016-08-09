@@ -50,6 +50,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   def setupMongoConnection: Unit = {
     val m = MongoTestConn.connectToMongoSync
     CcMongo.defineDbSync("default", m, "rogue-test-")
+    CcMongo.defineDbSync("lift", m, "rogue-test-")
   }
 
   @After
@@ -61,6 +62,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     VenueClaimR.bulkDelete_!!!()
     VenueClaimR.count() must_== 0
 
+    OptValCCR.bulkDelete_!!!()
     //Like.allShards.bulkDelete_!!!()
 
     MongoTestConn.disconnectFromMongoSync
@@ -124,7 +126,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     base.select(_.legacyid).fetch() must_== List(v.legId)
 
-    base.select(_.legacyid, _.userid).fetch() must_== List((v.legId, v.userId))
+    val x = base.select(_.legacyid, _.userid).fetch() must_== List((v.legId, v.userId))
     base.select(_.legacyid, _.userid, _.mayor).fetch() must_== List((v.legId, v.userId, v.mayor))
     base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count))
     base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
@@ -321,6 +323,21 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     VenueR.select(_.tags.slice(2)).get() must_== Some(List("1", "2"))
     VenueR.select(_.tags.slice(-2)).get() must_== Some(List("3", "4"))
     VenueR.select(_.tags.slice(1, 2)).get() must_== Some(List("2", "3"))
+  }
+
+  @Test
+  def testOptFields(): Unit = {
+    val v1 = OptValCC(maybes = Option("first"), realString = "Real one")
+    val id = new ObjectId()
+    val v2 = OptValCC(maybes = Option("second"), maybeid = Option(id), realString = "real two")
+    OptValCCR.insertMany(Seq(v1, v2))
+    OptValCCR.createIndex((OptValCCR.ms.name, 1))
+    val strings = OptValCCR.select(_.ms).fetch()
+    val ids = OptValCCR.select(_.mi).fetch()
+    val rs = OptValCCR.select(_.rs).fetch()
+    strings must_=== List(Some("first"), Some("second"))
+    ids must_=== List(None, Some(id))
+    rs must_=== List("Real one", "real two")
   }
 
 }
