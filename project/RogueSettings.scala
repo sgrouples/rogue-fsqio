@@ -14,7 +14,7 @@ object RogueSettings {
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
-    publishTo <<= (version) { v =>
+    publishTo <<= version { v =>
       if (v.endsWith("-SNAPSHOT"))
         Some(nexusSnapshots)
       else
@@ -65,7 +65,7 @@ object RogueDependencies {
     "org.specs2"              %% "specs2-core"              % specsVer % "test",
     "org.specs2"              %% "specs2-matcher"              % specsVer % "test",
     "org.specs2"              %% "specs2-junit"              % specsVer % "test",
-    "org.scalatest" %% "scalatest" % "3.0.0-RC4" % "test",
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
   )
