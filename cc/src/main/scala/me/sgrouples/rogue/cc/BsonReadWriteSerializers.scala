@@ -31,7 +31,7 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
             */
               val reader = meta.reader(fld.field)
               //TODO - does not in case reader is for non-array, and subselect returns array
-              //if fld is optional, we might read null, that's why we need try-catch .. or readOption?
+              //if fld is optional, readOpt will read Option[Option[T]] this is handled (poorly) inside fld.valueOrDefault
               fld.valueOrDefault(
                 if (readArray) {
                   readOptArr(reader.readArray, bsonV.asArray())
@@ -61,12 +61,12 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
     }
   }
   private[this] def readOpt[T](reader: BsonValue => T, v: BsonValue): Option[T] = {
-    if (v.isNull) None
+    if (v == null || v.isNull) None
     else Option(reader(v))
   }
 
   private[this] def readOptArr[T](reader: BsonArray => Seq[T], v: BsonArray): Option[Seq[T]] = {
-    if (v.isNull) None
+    if (v == null || v.isNull) None
     else Option(reader(v))
   }
 
