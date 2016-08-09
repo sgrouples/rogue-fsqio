@@ -9,13 +9,13 @@ import me.sgrouples.rogue.BsonFormats._
  */
 class NamingStrategySpec extends FlatSpec with MustMatchers {
 
-  case class CaseClassWithWierdName(id: Long)
+  case class CaseClassWithVeryLongAwkwardName(id: Long)
 
   "Naming Startegies" should "produce proper names for case classes" in {
 
-    new RCcMeta[CaseClassWithWierdName].collectionName mustBe "caseclasswithwierdname"
-    new RCcMeta[CaseClassWithWierdName](LowerCase).collectionName mustBe "caseclasswithwierdname"
-    new RCcMeta[CaseClassWithWierdName](UpperCase).collectionName mustBe "CASECLASSWITHWIERDNAME"
-    new RCcMeta[CaseClassWithWierdName](SnakeCase).collectionName mustBe "case_class_with_wierd_name"
+    new RCcMeta[CaseClassWithVeryLongAwkwardName].collectionName mustBe "caseclasswithverylongawkwardname"
+    new RCcMeta[CaseClassWithVeryLongAwkwardName](LowerCase).collectionName mustBe "caseclasswithverylongawkwardname"
+    new RCcMeta[CaseClassWithVeryLongAwkwardName](UpperCase).collectionName mustBe "CASECLASSWITHVERYLONGAWKWARDNAME"
+    new RCcMeta[CaseClassWithVeryLongAwkwardName](SnakeCase).collectionName mustBe "case_class_with_very_long_awkward_name"
   }
 }

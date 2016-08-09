@@ -52,10 +52,10 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   override protected def afterEach(): Unit = {
     super.afterEach()
 
-    VenueR.bulkDeleteAsync_!!!()
+    VenueR.bulkDeleteAsync_!!!().futureValue
     VenueR.countAsync().futureValue mustBe 0L
 
-    VenueClaimR.bulkDeleteAsync_!!!()
+    VenueClaimR.bulkDeleteAsync_!!!().futureValue
     VenueClaimR.countAsync().futureValue mustBe 0L
 
     //Like.allShards.bulkDeleteAsync_!!!())
