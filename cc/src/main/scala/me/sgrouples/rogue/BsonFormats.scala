@@ -13,6 +13,7 @@ import scala.annotation.implicitNotFound
 import scala.collection.mutable.ArrayBuffer
 import scala.language.{ higherKinds, implicitConversions }
 import scala.reflect.ClassTag
+import shapeless.tag.@@
 
 @implicitNotFound("implicit BsonFormat not found for ${T}")
 trait BsonFormat[T] {
@@ -72,6 +73,13 @@ trait BaseBsonFormats {
   implicit object DoubleBsonFormat extends BasicBsonFormat[Double] {
     override def read(b: BsonValue): Double = b.asDouble().doubleValue()
     override def write(t: Double): BsonValue = new BsonDouble(t)
+  }
+
+  implicit def `@@ObjectIdBsonFormat`[Tag]: BasicBsonFormat[ObjectId @@ Tag] = {
+    new BasicBsonFormat[ObjectId @@ Tag] {
+      override def read(b: BsonValue): ObjectId @@ Tag = tag[Tag][ObjectId](ObjectIdBsonFormat.read(b))
+      override def write(t: ObjectId @@ Tag): BsonValue = ObjectIdBsonFormat.write(t)
+    }
   }
 
   /**
