@@ -12,7 +12,7 @@ import io.fsq.field.{ RequiredField, Field => RField, OptionalField => ROptional
 import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
-import java.util.Date
+import java.util.{ Date, UUID }
 
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
@@ -97,10 +97,8 @@ trait CcRogue {
                                                      )(implicit ev: ShardingOk[M, State]) {
 
    */
-  /*
-  implicit def fieldToQueryField[M <: BsonRecord[M], F: BSONType](f: Field[F, M]): QueryField[F, M] = new QueryField(f)
 
-  implicit def bsonRecordFieldToBsonRecordQueryField[
+  /*implicit def bsonRecordFieldToBsonRecordQueryField[
   M <: BsonRecord[M],
   B <: BsonRecord[B]
   ](
@@ -208,6 +206,11 @@ trait CcRogue {
 
   implicit def optCcFieldToCcModifyField[C, M <: CcMeta[C], O](f: OptCClassField[C, M, O]): OptCClassModifyField[C, M, O] =
     new OptCClassModifyField[C, M, O](f)
+
+  //implicit def localDateTimeFieldToLocalDateTimeQueryField[O <: CcMeta[_]](f: RField[LocalDateTime, O]): LocalDateTimeQueryField[O] =
+  //  new LocalDateTimeQueryField(f)
+
+  implicit def uuidFieldToQueryField[O <: CcMeta[_]](f: RField[UUID, O]): QueryField[UUID, O] = new QueryField(f)
 
   /*
 

@@ -293,3 +293,13 @@ class CalendarInner private () extends BsonRecord[CalendarInner] {
 
 object CalendarInner extends CalendarInner with BsonMetaRecord[CalendarInner]
 
+class UuidRec private () extends MongoRecord[UuidRec] with UUIDPk[UuidRec] {
+  def meta = UuidRec
+
+  object s extends StringField(this, "")
+
+}
+
+object UuidRec extends UuidRec with MongoMetaRecord[UuidRec] {
+  override def connectionIdentifier = RogueTestMongo
+}

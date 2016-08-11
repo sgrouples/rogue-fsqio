@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc
 // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
 
 import java.time.{ LocalDateTime, ZoneOffset }
+import java.util.UUID
 
 import com.mongodb.ReadPreference
 import io.fsq.rogue._
@@ -637,4 +638,10 @@ class QueryTest extends JUnitMustMatchers {
 
     */
 
+  @Test
+  def uuidTest(): Unit = {
+    val u = UUID.randomUUID()
+    //it is ok it just compiles
+    UuidCcR.where(_.id eqs u)
+  }
 }

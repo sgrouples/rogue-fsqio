@@ -5,7 +5,7 @@ package io.fsq.rogue
 import java.time.{ LocalDateTime, ZoneOffset }
 
 import com.mongodb.DBObject
-import java.util.Date
+import java.util.{ Date, UUID }
 import java.util.regex.Pattern
 
 import org.bson.types.ObjectId
@@ -73,6 +73,10 @@ object BSONType {
 
   implicit def StringSubtypesAreBSONTypes[T <: String]: BSONType[T] =
     StringIsBSONType.asInstanceOf[BSONType[T]]
+
+  implicit object UUIDIsBSONType extends BSONType[UUID] {
+    override def asBSONObject(v: UUID): AnyRef = v
+  }
 
   class ListsOfBSONTypesAreBSONTypes[T: BSONType] extends BSONType[List[T]] {
     override def asBSONObject(v: List[T]): AnyRef = {

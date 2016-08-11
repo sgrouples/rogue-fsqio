@@ -1,5 +1,6 @@
 package me.sgrouples.rogue.cc
 import java.time.LocalDateTime
+import java.util.UUID
 
 import io.fsq.rogue.EnumerationListModifyField
 import me.sgrouples.rogue._
@@ -123,6 +124,12 @@ object Metas {
     val ms = new OptStringField("maybes", this)
     val mi = new OptObjectIdField("maybeid", this)
     val rs = new StringField("realString", this)
+  }
+
+  case class UuidCc(_id: UUID, s: String)
+  object UuidCcR extends RCcMeta[UuidCc]("uuidcc") {
+    val id = new UUIDIdField("_id", this)
+    val s = new StringField("s", this)
   }
 
 }

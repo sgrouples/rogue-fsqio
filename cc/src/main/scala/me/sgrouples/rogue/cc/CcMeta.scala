@@ -79,15 +79,13 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   }
 
   /**
-    * @param indexTuple - field, order tuple
-    * @param opts - IndexOptions
-    * @return index name (string)
-    */
+   * @param indexTuple - field, order tuple
+   * @param opts - IndexOptions
+   * @return index name (string)
+   */
   def createIndex(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions()): String =
     createIndex(Seq(indexTuple), opts)
 
-
   def createIndex(indexTuples: Seq[(String, Int)]): String = createIndex(indexTuples, new IndexOptions())
-
 
 }

@@ -2,6 +2,8 @@
 
 package io.fsq.rogue.lift.test
 
+import java.util.UUID
+
 import com.mongodb.ReadPreference
 import io.fsq.rogue._
 import io.fsq.rogue.lift.LiftRogue._
@@ -637,6 +639,13 @@ class QueryTest extends JUnitMustMatchers {
     optimizer.isEmptyQuery(Venue.where(_.mayor in Nil).scan(_.mayor_count eqs 5)) must_== true
     optimizer.isEmptyQuery(Venue.where(_.mayor eqs 1).modify(_.venuename setTo "fshq")) must_== false
     optimizer.isEmptyQuery(Venue.where(_.mayor in Nil).modify(_.venuename setTo "fshq")) must_== true
+  }
+
+  @Test
+  def uuidTest: Unit = {
+    val u = UUID.randomUUID()
+    //it is ok that is just compiles
+    UuidRec.where(_.id eqs u).select(_.id)
   }
 
 }
