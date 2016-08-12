@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc
 
 // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
 
-import java.time.{ LocalDateTime, ZoneOffset }
+import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.UUID
 
 import com.mongodb.ReadPreference
@@ -643,5 +643,6 @@ class QueryTest extends JUnitMustMatchers {
     val u = UUID.randomUUID()
     //it is ok it just compiles
     UuidCcR.where(_.id eqs u)
+    UuidCcR.where(_.dt gte Instant.now())
   }
 }

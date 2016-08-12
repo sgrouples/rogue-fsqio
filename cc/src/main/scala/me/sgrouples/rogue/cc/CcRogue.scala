@@ -6,7 +6,7 @@ package me.sgrouples.rogue.cc
 
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 
-import java.time.LocalDateTime
+import java.time.{ Instant, LocalDateTime }
 
 import io.fsq.field.{ RequiredField, Field => RField, OptionalField => ROptionalField }
 import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
@@ -143,6 +143,9 @@ trait CcRogue {
   implicit def localDateTimeFieldToLocalDateTimeQueryField[O <: CcMeta[_]](f: RField[LocalDateTime, O]): LocalDateTimeQueryField[O] =
     new LocalDateTimeQueryField(f)
 
+  implicit def instantFieldToInstantQueryField[O <: CcMeta[_]](f: RField[Instant, O]): InstantQueryField[O] =
+    new InstantQueryField(f)
+
   implicit def caseClassFieldToQueryField[C, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
     new CClassQueryField[C, M, O](f, f.owner)
 
@@ -235,6 +238,10 @@ B <: BsonRecord[B]
 
   implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: RField[LocalDateTime, O]): LocalDateTimeModifyField[O] =
     new LocalDateTimeModifyField(f)
+
+  implicit def instantFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: RField[Instant, O]): InstantModifyField[O] =
+    new InstantModifyField(f)
+
   //implicit def datetimeRFieldToDateModifyField[M](f: RField[DateTime, M]): DateTimeModifyField[M] = new DateTimeModifyField(f)
 
   /*
@@ -304,6 +311,8 @@ B <: BsonRecord[B]
   implicit def BsonRecordIsBSONType[T <: BsonRecord[T]]: BSONType[T] = _BsonRecordIsBSONType.asInstanceOf[BSONType[T]]
 }*/
   implicit val localDateIsFlattened = new Rogue.Flattened[LocalDateTime, LocalDateTime]
+
+  implicit val instantIsFlattend = new Rogue.Flattened[Instant, Instant]
 }
 
 object CcRogue extends Rogue with CcRogue

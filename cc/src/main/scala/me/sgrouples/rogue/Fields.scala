@@ -1,5 +1,5 @@
 package me.sgrouples.rogue
-import java.time.LocalDateTime
+import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.UUID
 
 import io.fsq.field.{ Field, OptionalField, RequiredField }
@@ -44,7 +44,11 @@ class UUIDIdField[O](name: String, o: O) extends MCField[UUID, O](name, o) {
 }
 
 class LocalDateTimeField[O](name: String, o: O) extends MCField[LocalDateTime, O](name, o) {
-  override def defaultValue = LocalDateTime.now()
+  override def defaultValue = LocalDateTime.now(ZoneOffset.UTC)
+}
+
+class InstantField[O](name: String, o: O) extends MCField[Instant, O](name, o) {
+  override def defaultValue = Instant.now()
 }
 
 class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
@@ -83,6 +87,7 @@ class OptStringField[O](name: String, o: O) extends OCField[String, O](name, o)
 class OptObjectIdField[O](name: String, o: O) extends OCField[ObjectId, O](name, o)
 class OptUUIDIdField[O](name: String, o: O) extends OCField[UUID, O](name, o)
 class OptLocalDateTimeField[O](name: String, o: O) extends OCField[LocalDateTime, O](name, o)
+class OptInstantField[O](name: String, o: O) extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O) extends OCField[Boolean, O](name, o)
 class OptEnumField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends OCField[T#Value, O](name, o)
 class OptListField[V, O](name: String, o: O) extends OCField[List[V], O](name, o)

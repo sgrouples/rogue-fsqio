@@ -1,6 +1,6 @@
 package me.sgrouples.rogue
 
-import java.time.{ LocalDateTime, ZoneOffset }
+import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.Date
 
 import io.fsq.field.Field
@@ -102,6 +102,18 @@ class LocalDateTimeQueryField[M](field: Field[LocalDateTime, M])
 
 }
 
+class InstantQueryField[M](field: Field[Instant, M])
+    extends AbstractQueryField[Instant, Instant, Date, M](field) {
+  import LocalDateTimeToMongo._
+  override def valueToDB(d: Instant) = instantToDate(d)
+
+  def before(d: Instant) = new LtQueryClause(field.name, instantToDate(d))
+  def after(d: Instant) = new GtQueryClause(field.name, instantToDate(d))
+  def onOrBefore(d: Instant) = new LtEqQueryClause(field.name, instantToDate(d))
+  def onOrAfter(d: Instant) = new GtEqQueryClause(field.name, instantToDate(d))
+
+}
+
 class CClassModifyField[C, M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 }
@@ -133,6 +145,13 @@ class LocalDateTimeModifyField[O](field: Field[LocalDateTime, O]) extends Abstra
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
 
+class InstantModifyField[O](field: Field[Instant, O]) extends AbstractModifyField[Instant, Date, O](field) {
+  import LocalDateTimeToMongo._
+  override def valueToDB(d: Instant) = instantToDate(d)
+  def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
+}
+
 object LocalDateTimeToMongo {
   final def ldtToDate(d: LocalDateTime): Date = Date.from(d.toInstant(ZoneOffset.UTC))
+  final def instantToDate(d: Instant): Date = Date.from(d)
 }

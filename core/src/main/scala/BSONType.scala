@@ -2,7 +2,7 @@
 
 package io.fsq.rogue
 
-import java.time.{ LocalDateTime, ZoneOffset }
+import java.time.{ Instant, LocalDateTime, ZoneOffset }
 
 import com.mongodb.DBObject
 import java.util.{ Date, UUID }
@@ -49,6 +49,11 @@ object BSONType {
   implicit object LocalDateTimeIsBSONType extends BSONType[LocalDateTime] {
     override def asBSONObject(v: LocalDateTime): AnyRef = Date.from(v.toInstant(ZoneOffset.UTC))
   }
+  //Ugly hack - until mongo learns proper JDK8 types
+  implicit object InstantIsBSONType extends BSONType[Instant] {
+    override def asBSONObject(v: Instant): AnyRef = Date.from(v)
+  }
+
   implicit object PatternIsBSONType extends BSONType[Pattern] {
     override def asBSONObject(v: Pattern): AnyRef = v
   }
