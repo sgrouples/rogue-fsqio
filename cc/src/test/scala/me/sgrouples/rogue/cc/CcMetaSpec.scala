@@ -12,7 +12,7 @@ class CcMetaSpec extends FlatSpec with MustMatchers {
     //reguired implicits for implicit call of BsonFormat[IdOneEnum] inside constructor of RCcMeta[IdOneEnum]
     implicit val ev = VenueStatus
     import me.sgrouples.rogue.BsonFormats._
-
+    import me.sgrouples.rogue.EnumNameFormats._
     object IdOneEnumR extends RCcMeta[IdOneEnum]("idoneenum")
     val elem = IdOneEnum(new ObjectId(), "One", VenueStatus.closed)
     val bson = IdOneEnumR.write(elem)
@@ -36,4 +36,5 @@ class CcMetaSpec extends FlatSpec with MustMatchers {
 
     succeed
   }
+
 }
