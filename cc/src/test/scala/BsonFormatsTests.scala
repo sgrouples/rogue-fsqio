@@ -21,6 +21,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
 
   @Test
   def basicSerializeTest(): Unit = {
+    import EnumNameFormats._
     val o = new ObjectId()
     val cc = OidTypedCC(o, "Ala", 10)
     val f = BsonFormat[OidTypedCC]
@@ -33,6 +34,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
 
   @Test
   def optionalSerializeTest(): Unit = {
+    import EnumNameFormats._
     val opt = OptCC(1L, Some("opt"), List("one1", "two", "three"), Map("four" -> 4, "five" -> 5))
     val f = BsonFormat[OptCC]
     val bson = f.write(opt)
@@ -43,6 +45,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
 
   @Test
   def nestedCCTest(): Unit = {
+    import EnumNameFormats._
     val r = RootC(1, Nest("nest"))
     val f = BsonFormat[RootC]
     val bson = f.write(r)
@@ -51,7 +54,8 @@ class BsonFormatsTests extends JUnitMustMatchers {
   }
 
   @Test
-  def enumerationTest: Unit = {
+  def enumerationValueTest(): Unit = {
+    import EnumValueFormats.enumValueFormat
     implicit val ev = VenueStatus
     val r = OneEnum("a", VenueStatus.open)
     val f = BsonFormat[OneEnum]
@@ -62,6 +66,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
 
   @Test
   def twoEnumTest: Unit = {
+    import EnumNameFormats._
     implicit val ev = VenueStatus
     implicit val ev2 = ClaimStatus
     val r = TwoEnums("a", VenueStatus.open, ClaimStatus.approved)
@@ -72,3 +77,4 @@ class BsonFormatsTests extends JUnitMustMatchers {
   }
 
 }
+

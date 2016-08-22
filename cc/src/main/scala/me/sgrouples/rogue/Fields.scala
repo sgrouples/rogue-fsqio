@@ -58,6 +58,10 @@ class EnumField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends 
   override def defaultValue: T#Value = e(0)
 }
 
+class EnumIdField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends MCField[T#Value, O](name, o) {
+  override def defaultValue: T#Value = e(0)
+}
+
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
   override def defaultValue = Nil
 }
@@ -90,6 +94,7 @@ class OptLocalDateTimeField[O](name: String, o: O) extends OCField[LocalDateTime
 class OptInstantField[O](name: String, o: O) extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O) extends OCField[Boolean, O](name, o)
 class OptEnumField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends OCField[T#Value, O](name, o)
+class OptEnumIdField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends OCField[T#Value, O](name, o)
 class OptListField[V, O](name: String, o: O) extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O) extends OCField[Array[V], O](name, o)
 class OptCClassField[C, MC <: CcMeta[C], O](val name: String, val childMeta: MC, val owner: O) extends Field[C, O]

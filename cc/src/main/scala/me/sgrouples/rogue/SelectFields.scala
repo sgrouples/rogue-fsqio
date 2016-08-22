@@ -55,11 +55,8 @@ class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O], o
 }
 
 class CClassQueryField[C, M <: CcMeta[C], O](fld: CClassField[C, M, O], owner: O) extends AbstractQueryField[C, C, BsonValue, O](fld) {
-  override def valueToDB(v: C): BsonValue = {
-    val x = fld.childMeta.write(v)
-    //println(s"writing value ${v} to db as ${x}")
-    x
-  }
+  override def valueToDB(v: C): BsonValue = fld.childMeta.write(v)
+
   def subfield[V](f: M => Field[V, M]): SelectableDummyField[V, O] = {
     new SelectableDummyField[V, O](fld.name + "." + f(fld.childMeta).name, owner)
   }
@@ -83,11 +80,8 @@ class OptCClassQueryField[C, M <: CcMeta[C], O](fld: OptCClassField[C, M, O], ow
   def subfield[V](f: M => Field[V, M]): SelectableDummyField[V, O] = {
     new SelectableDummyField[V, O](fld.name + "." + f(fld.childMeta).name, owner)
   }
-  def subselect[V](f: M => Field[V, M]): SelectableDummyField[V, O] = {
-    val r = subfield(f)
-    //println(s"R ${r}")
-    r
-  }
+  def subselect[V](f: M => Field[V, M]): SelectableDummyField[V, O] = subfield(f)
+
 }
 
 class LocalDateTimeQueryField[M](field: Field[LocalDateTime, M])
@@ -151,7 +145,13 @@ class InstantModifyField[O](field: Field[Instant, O]) extends AbstractModifyFiel
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
 
+class EnumIdModifyField[M, E <: Enumeration#Value](field: Field[E, M])
+    extends AbstractModifyField[E, Int, M](field) {
+  override def valueToDB(e: E) = e.id
+}
+
 object LocalDateTimeToMongo {
   final def ldtToDate(d: LocalDateTime): Date = Date.from(d.toInstant(ZoneOffset.UTC))
   final def instantToDate(d: Instant): Date = Date.from(d)
 }
+
