@@ -6,6 +6,7 @@ import io.fsq.rogue.EnumerationListModifyField
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 import BsonFormats._
+import EnumNameFormats._
 import me.sgrouples.rogue.naming.PluralLowerCase
 
 object VenueStatus extends Enumeration {

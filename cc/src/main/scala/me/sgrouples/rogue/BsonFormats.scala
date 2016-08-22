@@ -41,6 +41,29 @@ trait BasicBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T] {
 }
 
 /**
+ * serialize enums as names
+ */
+trait EnumNameFormats {
+  //WARN to make it work, all enums must be in implicit scope for BsonFormat to work
+  implicit def enumFormat[T <: Enumeration](implicit enumeration: T) = new BasicBsonFormat[T#Value] {
+    override def read(b: BsonValue): T#Value = enumeration.withName(b.asString().getValue())
+    override def write(t: T#Value): BsonValue = new BsonString(t.toString)
+  }
+}
+
+object EnumNameFormats extends EnumNameFormats
+/**
+ * serialize enums as integers
+ */
+trait EnumValueFormats {
+  implicit def enumValueFormat[T <: Enumeration](implicit enumeration: T) = new BasicBsonFormat[T#Value] {
+    override def read(b: BsonValue): T#Value = enumeration.apply(b.asNumber().intValue())
+    override def write(t: T#Value): BsonValue = new BsonInt32(t.id)
+  }
+}
+object EnumValueFormats extends EnumValueFormats
+
+/**
  * Basic bson serializers
  */
 trait BaseBsonFormats {
@@ -124,12 +147,6 @@ trait BaseBsonFormats {
   implicit object InstantBsonFormat extends BasicBsonFormat[Instant] {
     override def read(b: BsonValue): Instant = Instant.ofEpochMilli(b.asDateTime().getValue)
     override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
-  }
-
-  //WARN to make it work, all enums must be in implicit scope for BsonFormat to work
-  implicit def enumFormat[T <: Enumeration](implicit enumeration: T) = new BasicBsonFormat[T#Value] {
-    override def read(b: BsonValue): T#Value = enumeration.withName(b.asString().getValue())
-    override def write(t: T#Value): BsonValue = new BsonString(t.toString)
   }
 
 }
