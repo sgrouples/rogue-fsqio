@@ -252,37 +252,50 @@ object FamilyFormats extends DefaultJsonProtocol with FamilyFormats
 trait LowPrioBsonFormats {
   this: BaseBsonFormats with BsonFormats =>
 
-  abstract class WrappedBsonFromat[Wrapped, SubRepr](implicit tpe: Typeable[Wrapped]) {
+  private final val id = "id"
+  private final val _id = "_id"
+
+  abstract class WrappedBsonFormat[Wrapped, SubRepr](implicit tpe: Typeable[Wrapped]) {
     def write(v: SubRepr): BsonValue
     def read(b: BsonValue): SubRepr
     def flds: Map[String, BsonFormat[_]]
   }
 
-  implicit def hHilBsonFormat[Wrapped](implicit tpe: Typeable[Wrapped]): WrappedBsonFromat[Wrapped, HNil] = new WrappedBsonFromat[Wrapped, HNil] {
+  implicit def hNilBsonFormat[Wrapped](implicit tpe: Typeable[Wrapped]): WrappedBsonFormat[Wrapped, HNil] = new WrappedBsonFormat[Wrapped, HNil] {
     override def write(t: HNil): BsonValue = BsonNull.VALUE
     override def read(b: BsonValue) = HNil
     def flds = Map.empty
   }
 
-  implicit def hListFormat[Wrapped, Key <: Symbol, Value, Remaining <: HList](
+  implicit def hListFormat[Wrapped, Key <: Symbol, Value: ClassTag, Remaining <: HList](
     implicit
     t: Typeable[Wrapped],
     key: Witness.Aux[Key],
     headSer: Lazy[BsonFormat[Value]],
-    remFormat: WrappedBsonFromat[Wrapped, Remaining]
-  ): WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] =
-    new WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] {
-      private[this] val fieldName = key.value.name
+    remFormat: WrappedBsonFormat[Wrapped, Remaining]
+  ): WrappedBsonFormat[Wrapped, FieldType[Key, Value] :: Remaining] =
+
+    new WrappedBsonFormat[Wrapped, FieldType[Key, Value] :: Remaining] {
+
+      private val isObjectId = {
+        implicitly[ClassTag[Value]]
+          .runtimeClass.isAssignableFrom(
+            classOf[ObjectId]
+          ) && key.value.name == id
+      }
+
+      private[this] val fieldName = if (isObjectId) _id else key.value.name
+
       private[this] val hs = headSer.value
+
       override def write(ft: FieldType[Key, Value] :: Remaining): BsonValue = {
         val rest = remFormat.write(ft.tail)
         val serializedVal = hs.write(ft.head)
         if (!serializedVal.isNull) {
-          val fName = key.value.name
           if (rest.isNull) {
-            new BsonDocument(fName, serializedVal)
+            new BsonDocument(fieldName, serializedVal)
           } else {
-            rest.asDocument().append(fName, serializedVal)
+            rest.asDocument().append(fieldName, serializedVal)
           }
         } else {
           rest
@@ -298,13 +311,19 @@ trait LowPrioBsonFormats {
             hs.read(v)
           }
         }
+
         val remaining = remFormat.read(b)
         field[Key](resolved) :: remaining
 
       }
 
       def flds = {
-        val subfieldFlds = hs.flds.map { case (subfieldName, s) => (fieldName + "." + subfieldName -> s) }
+
+        val subfieldFlds = hs.flds.map {
+          case (subfieldName, s) =>
+            fieldName + "." + subfieldName -> s
+        }
+
         remFormat.flds ++ subfieldFlds + (fieldName -> hs)
       }
     }
@@ -345,7 +364,7 @@ trait LowPrioBsonFormats {
 
   implicit def bsonEncoder[T, Repr](implicit
     gen: LabelledGeneric.Aux[T, Repr],
-    sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
+    sg: Cached[Strict[WrappedBsonFormat[T, Repr]]],
     tpe: Typeable[T]): BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T] {
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
     override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
