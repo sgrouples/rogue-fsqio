@@ -35,7 +35,7 @@ object RogueSettings {
 }
 
 object RogueDependencies {
-  val liftVersion = "2.6.2-MongoAsync-8"
+  val liftVersion = "2.6.2-MongoAsync-9"
   val specsVer = "3.8.4"
   val liftDeps = Seq(
     "net.liftweb"              %% "lift-mongodb"    % liftVersion  % "compile" intransitive(),
