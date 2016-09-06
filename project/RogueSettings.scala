@@ -8,7 +8,7 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 	
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "2.5.1-MongoAsync-shapeless-18",
+    version := "2.5.1-MongoAsync-shapeless-19",
     organization := "io.fsq",
     scalaVersion := "2.11.8",
     publishMavenStyle := true,
@@ -35,7 +35,7 @@ object RogueSettings {
 }
 
 object RogueDependencies {
-  val liftVersion = "2.6.2-MongoAsync-8"
+  val liftVersion = "2.6.2-MongoAsync-9"
   val specsVer = "3.8.4"
   val liftDeps = Seq(
     "net.liftweb"              %% "lift-mongodb"    % liftVersion  % "compile" intransitive(),

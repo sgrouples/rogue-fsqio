@@ -95,6 +95,9 @@ class Venue extends MongoRecord[Venue] with ObjectIdKey[Venue] with IndexedRecor
 
   object lastClaim extends BsonRecordField(this, VenueClaimBson)
 
+  // emoji counts ;P
+  object emojiCounts extends MongoMapField[Venue, Long](this)
+
 }
 
 object Venue extends Venue with MongoMetaRecord[Venue] {
