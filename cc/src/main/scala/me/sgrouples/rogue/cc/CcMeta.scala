@@ -1,5 +1,6 @@
 package me.sgrouples.rogue.cc
 
+import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.IndexOptions
 import io.fsq.field.Field
 import me.sgrouples.rogue.BsonFormat
@@ -17,9 +18,6 @@ trait CcMeta[T] extends CcMetaLike[T] {
   //capture T to be able to cast to it
   //type R >: T
   def collectionName: String
-  def dba(): com.mongodb.async.client.MongoDatabase
-
-  def dbs(): com.mongodb.client.MongoDatabase
 
   def read(b: BsonValue): T
   def write(t: T): BsonValue
@@ -35,13 +33,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
     this(namingStrategy[T])
   }
 
-  def connId = "lift" //default connection identifier is "lift" for backwards compat with lift-rogue
-
   override def collectionName: String = collName
-
-  override def dba(): com.mongodb.async.client.MongoDatabase = CcMongo.getDb(connId).get
-
-  override def dbs(): com.mongodb.client.MongoDatabase = CcMongo.getDbSync(connId).get
 
   override def reader(field: Field[_, _]): BsonFormat[_] = {
     val fieldName = field.name.replaceAll("\\.\\$", "")
@@ -72,10 +64,10 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
    * @param opts IndexOptions- from mongo
    * @return  - index name
    */
-  def createIndex(indexTuples: Seq[(String, Int)], opts: IndexOptions): String = {
+  def createIndex(indexTuples: Seq[(String, Int)], opts: IndexOptions)(implicit dbs: MongoDatabase): String = {
     val keys = new BsonDocument()
     indexTuples.foreach { case (k, v) => keys.append(k, new BsonInt32(v)) }
-    dbs().getCollection(collectionName).createIndex(keys, opts)
+    dbs.getCollection(collectionName).createIndex(keys, opts)
   }
 
   /**
@@ -83,9 +75,9 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
    * @param opts - IndexOptions
    * @return index name (string)
    */
-  def createIndex(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions()): String =
+  def createIndex(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions())(implicit dbs: MongoDatabase): String =
     createIndex(Seq(indexTuple), opts)
 
-  def createIndex(indexTuples: Seq[(String, Int)]): String = createIndex(indexTuples, new IndexOptions())
+  def createIndex(indexTuples: Seq[(String, Int)])(implicit dbs: MongoDatabase): String = createIndex(indexTuples, new IndexOptions())
 
 }

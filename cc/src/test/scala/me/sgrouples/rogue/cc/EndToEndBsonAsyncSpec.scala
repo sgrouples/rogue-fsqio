@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc
 import java.time.LocalDateTime
 import java.util.regex.Pattern
 
+import com.mongodb.async.client.MongoDatabase
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
 import org.scalatest.concurrent.ScalaFutures
@@ -43,10 +44,14 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     Tip(new ObjectId(), legid = 234L, counts = Map("foo" -> 1L, "bar" -> 2L))
   }
 
+  private var dbOpt: Option[MongoDatabase] = None
+  implicit def db = dbOpt.getOrElse(throw new UninitializedError)
+
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     val m = MongoTestConn.connectToMongo
     CcMongo.defineDb("lift", m, "rogue-test-async")
+    dbOpt = CcMongo.getDb("lift")
   }
 
   override protected def afterEach(): Unit = {
