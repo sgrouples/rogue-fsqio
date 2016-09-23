@@ -3,7 +3,7 @@ package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.DBObject
-import com.mongodb.async.client.MongoCollection
+import com.mongodb.async.client.{ MongoCollection, MongoDatabase }
 import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
 import io.fsq.rogue._
 import org.bson.codecs.configuration.CodecRegistries
@@ -15,24 +15,24 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   val bsonDocClass = classOf[BsonDocument]
   //temorary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
   //[M <: MongoRecord[_] with MongoMetaRecord[_]
-  override def getDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
-    query.meta.dba().getCollection(query.collectionName, bsonDocClass)
+  override def getDBCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument] = {
+    dba.getCollection(query.collectionName, bsonDocClass)
   }
 
-  override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _]): MongoCollection[BsonDocument] = {
+  override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument] = {
     getDBCollection(query)
   }
 
-  protected def getPrimaryDBCollection(meta: CcMeta[_], collectionName: String): MongoCollection[BsonDocument] = {
-    meta.dba().getCollection(collectionName, bsonDocClass)
+  protected def getPrimaryDBCollection(meta: CcMeta[_], collectionName: String)(implicit dba: MongoDatabase): MongoCollection[BsonDocument] = {
+    dba.getCollection(collectionName, bsonDocClass)
   }
 
   /*override def getPrimaryDBCollection(record: MongoRecord[_]): MongoCollection[BsonDocument] = {
     getPrimaryDBCollection(record.meta, record.meta.collectionName)
   }*/
 
-  override def getInstanceName[M <: TCM](query: Query[M, _, _]): String = {
-    query.meta.dba().getName
+  override def getInstanceName[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): String = {
+    dba.getName
   }
 
   /*override def getInstanceName(record: MongoRecord[_]): String =
@@ -45,7 +45,7 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
    * @param query the query
    * @return the list of indexes, or an empty list.
    */
-  override def getIndexes[M <: TCM](query: Query[M, _, _]): Option[Seq[UntypedMongoIndex]] = {
+  override def getIndexes[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): Option[Seq[UntypedMongoIndex]] = {
     val queryMetaRecord = query.meta
     if (queryMetaRecord.isInstanceOf[IndexedRecord[_]]) {
       Some(queryMetaRecord.asInstanceOf[IndexedRecord[_]].mongoIndexList)
