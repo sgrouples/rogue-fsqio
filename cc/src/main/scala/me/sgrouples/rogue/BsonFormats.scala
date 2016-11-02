@@ -106,13 +106,21 @@ trait BaseBsonFormats {
     override def defaultValue: Double = 0.0d
   }
 
-  implicit def `@@ObjectIdBsonFormat`[Tag]: BasicBsonFormat[ObjectId @@ Tag] = {
-    new BasicBsonFormat[ObjectId @@ Tag] {
-      override def read(b: BsonValue): ObjectId @@ Tag = tag[Tag][ObjectId](ObjectIdBsonFormat.read(b))
-      override def write(t: ObjectId @@ Tag): BsonValue = ObjectIdBsonFormat.write(t)
-      override def defaultValue: ObjectId @@ Tag = tag[Tag][ObjectId](new ObjectId(0, 0, 0.toShort, 0))
+  private def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
+    new BasicBsonFormat[T @@ Tag] {
+      override def read(b: BsonValue): T @@ Tag = tag[Tag][T](tb.read(b))
+      override def write(t: T @@ Tag): BsonValue = tb.write(t)
+      override def defaultValue: T @@ Tag = tag[Tag][T](tb.defaultValue)
     }
   }
+
+  // TODO: this should be split to BsonReader[+T] and BsonWriter[-T] so that we wouldn't have to code all that by hand
+
+  implicit def `@@StringBsonFormat`[Tag] = `@@AnyBsonFormat`[String, Tag]
+  implicit def `@@LongBsonFormat`[Tag] = `@@AnyBsonFormat`[Long, Tag]
+  implicit def `@@IntBsonFormat`[Tag] = `@@AnyBsonFormat`[Int, Tag]
+  implicit def `@@DoubleBsonFormat`[Tag] = `@@AnyBsonFormat`[Double, Tag]
+  implicit def `@@ObjectIdBsonFormat`[Tag] = `@@AnyBsonFormat`[ObjectId, Tag]
 
   /**
    * care must be taken - because of different UUID formats.

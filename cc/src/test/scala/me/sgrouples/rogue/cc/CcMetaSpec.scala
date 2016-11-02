@@ -30,7 +30,11 @@ class CcMetaSpec extends FlatSpec with MustMatchers {
 
     type TaggedObjectId = ObjectId @@ Tag
 
-    case class A(id: TaggedObjectId)
+    case class A(
+      id: TaggedObjectId,
+      name: String @@ Tag,
+      age: Long @@ Tag
+    )
 
     val _ = new RCcMeta[A]
 
