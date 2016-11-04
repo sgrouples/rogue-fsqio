@@ -72,7 +72,45 @@ class ArrayField[V: ClassTag, O](name: String, o: O) extends MCField[Array[V], O
 
 class CClassField[C, MC <: CcMeta[C], O](val name: String, val childMeta: MC, val owner: O) extends Field[C, O]
 
-class CClassListField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O) extends MCField[Seq[C], O](name, owner) {
+/**
+ * Same as CClassField but because defaultValue is required, it can be selected.
+ * If you don't want to provide defaultValue use CClassField but you will not be able to select that cc.
+ * To create a field like that you must overrife defaultValue, or just use CClassRequiredField.
+ * @param name
+ * @param childMeta
+ * @param owner
+ * @tparam C
+ * @tparam MC
+ * @tparam O
+ */
+
+abstract class CClassAbstractRequiredField[C, MC <: CcMeta[C], O](
+  name: String,
+  val childMeta: MC,
+  owner: O
+) extends MCField[C, O](name, owner)
+
+/**
+ * Same as CClassField but because defaultValue is required, it can be selected.
+ * If you don't want to provide defaultValue use CClassField but you will not be able to select that cc.
+ * @param name
+ * @param childMeta
+ * @param owner
+ * @param defaultValue
+ * @tparam C
+ * @tparam MC
+ * @tparam O
+ */
+
+class CClassRequiredField[C, MC <: CcMeta[C], O](
+  name: String,
+  childMeta: MC,
+  override val defaultValue: C,
+  owner: O
+) extends CClassAbstractRequiredField[C, MC, O](name, childMeta, owner)
+
+class CClassListField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
+    extends MCField[Seq[C], O](name, owner) {
   override def defaultValue: List[C] = Nil
 }
 
@@ -97,7 +135,8 @@ class OptEnumField[T <: Enumeration, O](name: String, o: O)(implicit e: T) exten
 class OptEnumIdField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends OCField[T#Value, O](name, o)
 class OptListField[V, O](name: String, o: O) extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O) extends OCField[Array[V], O](name, o)
-class OptCClassField[C, MC <: CcMeta[C], O](val name: String, val childMeta: MC, val owner: O) extends Field[C, O]
+class OptCClassField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
+  extends OCField[C, O](name, owner)
 class OptCClassListField[C, O](name: String, o: O) extends OCField[List[C], O](name, o)
 class OptCClassArrayField[C: ClassTag, O](name: String, o: O) extends OCField[Array[C], O](name, o)
 class OptMapField[V, O](name: String, o: O) extends OCField[Map[String, V], O](name, o)

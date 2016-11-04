@@ -38,13 +38,33 @@ case class V6(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, clos
 
 case class SourceBson(name: String, url: String)
 
+object VenueClaimBson {
+  val default = VenueClaimBson(
+    -1L, ClaimStatus.pending
+  )
+}
+
 case class VenueClaimBson(uid: Long, status: ClaimStatus.Value, source: Option[SourceBson] = None, date: LocalDateTime = LocalDateTime.now())
 
 case class VenueClaim(_id: ObjectId, vid: ObjectId, uid: Long, status: ClaimStatus.Value, reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now())
 
-case class Venue(_id: ObjectId, legId: Long, userId: Long, venuename: String, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String],
-  popularity: List[Long], categories: List[ObjectId], last_updated: LocalDateTime, status: VenueStatus.Value, claims: List[VenueClaimBson],
-  lastClaim: Option[VenueClaimBson])
+case class Venue(
+  _id: ObjectId,
+  legId: Long,
+  userId: Long,
+  venuename: String,
+  mayor: Long,
+  mayor_count: Long,
+  closed: Boolean,
+  tags: List[String],
+  popularity: List[Long],
+  categories: List[ObjectId],
+  last_updated: LocalDateTime,
+  status: VenueStatus.Value,
+  claims: List[VenueClaimBson],
+  lastClaim: Option[VenueClaimBson],
+  firstClaim: VenueClaimBson = VenueClaimBson.default
+)
 
 case class Tip(_id: ObjectId, legid: Long, counts: Map[String, Long], userId: Option[Long] = None)
 
@@ -90,6 +110,9 @@ object Metas {
     val tags = new ListField[String, VenueR.type]("tags", this)
     val claims = new CClassListField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("claims", VenueClaimBsonR, this)
     val lastClaim = new OptCClassField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("lastClaim", VenueClaimBsonR, this)
+    val firstClaim = new CClassRequiredField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type](
+      "firstClaim", VenueClaimBsonR, VenueClaimBson.default, this
+    )
     val last_updated = new LocalDateTimeField("last_updated", this)
     val popularity = new ListField[Long, VenueR.type]("popularity", this)
     val categories = new ListField[ObjectId, VenueR.type]("categories", this)
