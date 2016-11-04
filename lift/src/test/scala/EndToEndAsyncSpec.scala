@@ -303,4 +303,5 @@ class EndToEndAsyncSpec extends FlatSpec
     Venue.select(_.emojiCounts).getAsync.futureValue shouldBe Some(emojiCount)
     Venue.where(_.mayor eqs 789).getAsync.futureValue.map(_.emojiCounts.get) shouldBe Some(emojiCount)
   }
+
 }

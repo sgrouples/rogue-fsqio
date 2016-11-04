@@ -16,6 +16,8 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   implicit val atMost = PatienceConfig(15 seconds)
 
+  val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
+
   def baseTestVenue(): Venue = Venue(
     _id = new ObjectId(),
     legId = 123L,
@@ -32,7 +34,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
       VenueClaimBson(uid = 1234L, status = ClaimStatus.pending),
       VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
     ),
-    lastClaim = Option(VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
+    lastClaim = Option(lastClaim),
     tags = List("test tag1", "some tag")
   )
 
@@ -317,6 +319,22 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     VenueR.select(_.tags.slice(2)).getAsync().futureValue mustBe Some(List("1", "2"))
     VenueR.select(_.tags.slice(-2)).getAsync().futureValue mustBe Some(List("3", "4"))
     VenueR.select(_.tags.slice(1, 2)).getAsync().futureValue mustBe Some(List("2", "3"))
+  }
+
+  "Select cc" should "work as expected" in {
+
+    val v = baseTestVenue()
+    VenueR.insertOneAsync(v).futureValue
+
+    VenueR.select(_.lastClaim).fetchAsync()
+      .futureValue.flatten must contain(lastClaim)
+
+    VenueR.select(_.firstClaim).fetchAsync()
+      .futureValue must contain(VenueClaimBson.default)
+
+    VenueR.select(_.userid, _.firstClaim).fetchAsync()
+      .futureValue must contain(456L -> VenueClaimBson.default)
+
   }
 }
 

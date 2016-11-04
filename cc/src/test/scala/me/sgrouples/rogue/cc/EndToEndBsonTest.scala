@@ -19,6 +19,9 @@ import CcRogue._
 class EndToEndBsonTest extends JUnitMustMatchers {
   import Metas._
 
+  val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
+  val firstClaim = VenueClaimBson(uid = 5679L, status = ClaimStatus.approved)
+
   def baseTestVenue(): Venue = Venue(
     _id = new ObjectId(),
     legId = 123L,
@@ -35,7 +38,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
       VenueClaimBson(uid = 1234L, status = ClaimStatus.pending),
       VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
     ),
-    lastClaim = Option(VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
+    lastClaim = Option(lastClaim),
     tags = List("test tag1", "some tag")
   )
 
