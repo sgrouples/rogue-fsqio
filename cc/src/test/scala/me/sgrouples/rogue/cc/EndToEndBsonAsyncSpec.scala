@@ -335,6 +335,16 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     VenueR.select(_.userid, _.firstClaim).fetchAsync()
       .futureValue must contain(456L -> VenueClaimBson.default)
 
+    val yetAnotherClaim = VenueClaimBson.default.copy(uid = 1L)
+
+    VenueR.findAndModify(_.firstClaim setTo yetAnotherClaim)
+      .upsertOneAsync(returnNew = true)
+      .futureValue.map(_.firstClaim) mustBe Some(yetAnotherClaim)
+
+    VenueR.findAndModify(_.lastClaim setTo yetAnotherClaim)
+      .upsertOneAsync(returnNew = true)
+      .futureValue.flatMap(_.lastClaim) mustBe Some(yetAnotherClaim)
+
   }
 }
 

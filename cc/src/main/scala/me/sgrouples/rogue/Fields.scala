@@ -86,9 +86,9 @@ class CClassField[C, MC <: CcMeta[C], O](val name: String, val childMeta: MC, va
 
 abstract class CClassAbstractRequiredField[C, MC <: CcMeta[C], O](
   name: String,
-  val childMeta: MC,
+  childMeta: MC,
   owner: O
-) extends MCField[C, O](name, owner)
+) extends CClassField[C, MC, O](name, childMeta, owner) with RequiredField[C, O]
 
 /**
  * Same as CClassField but because defaultValue is required, it can be selected.
