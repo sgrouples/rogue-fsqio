@@ -76,6 +76,6 @@ object RogueDependencies {
   
   val rogueLiftDeps = mongoDeps ++ joda ++ liftDeps ++ liftRecordDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless) ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(shapeless)  ++ testDeps
 	
 }

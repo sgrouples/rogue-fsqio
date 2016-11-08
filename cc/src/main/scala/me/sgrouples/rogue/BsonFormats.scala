@@ -9,7 +9,7 @@ import org.bson.types.ObjectId
 import shapeless._
 import shapeless.labelled.{ FieldType, field }
 
-import scala.annotation.implicitNotFound
+import scala.annotation.{ StaticAnnotation, implicitNotFound }
 import scala.collection.mutable.ArrayBuffer
 import scala.language.{ higherKinds, implicitConversions }
 import scala.reflect.ClassTag
@@ -40,6 +40,7 @@ trait BasicBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T] {
   override def flds = Map.empty
 }
 
+class EnumSerializeValue extends StaticAnnotation
 /**
  * serialize enums as names
  */
@@ -64,6 +65,41 @@ trait EnumValueFormats {
   }
 }
 object EnumValueFormats extends EnumValueFormats
+
+/**
+ * Sometimes it is necessary to use Enumerations that are serialized to Ints and others that serialize to Strings
+ * within the same [[me.sgrouples.rogue.cc.RCcMeta]]. It can be obtained by using [[EnumSerializeValue]] annotation
+ * @see EnumAnnotationTest
+ * example:
+ * {{{
+ *   object EName extends Enumeration { val v1 = Value("V1"); val v2 = Value("V2") }
+ *   @EnumSerializeValue object EValue extends Enumeration { val v1 = Value("bla1"); val v2 = Value("bla2") }
+ *   case class C(e:EName.Value, v: EValue.Value)
+ *   import import BsonFormats._ ;import EnumAnnotatedFormats._
+ *   implicit val enE = EName
+ *   implicit val evE = EValue
+ *   val format = BsonFormat[C]
+ *   println(format.write(C(EName.v1, EValue.v2)))
+ * }}}
+ * will produce
+ * {{{
+ *  { "v" : 1, "e" : "V1" }
+ * }}}
+ *
+ */
+object EnumAnnotatedFormats {
+  import scala.reflect.runtime.universe._
+  implicit def enumFormat[T <: Enumeration: TypeTag](implicit enumeration: T): BsonFormat[T#Value] = {
+    import scala.reflect.runtime._
+    val rt = universe.typeOf[T].typeSymbol.asClass
+    val eto = universe.typeOf[EnumSerializeValue]
+    if (rt.annotations.exists(_.tree.tpe == eto)) {
+      EnumValueFormats.enumValueFormat(enumeration)
+    } else {
+      EnumNameFormats.enumFormat(enumeration)
+    }
+  }
+}
 
 /**
  * Basic bson serializers
