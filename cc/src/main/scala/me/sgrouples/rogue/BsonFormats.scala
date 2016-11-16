@@ -6,6 +6,7 @@ import java.util.UUID
 
 import org.bson._
 import org.bson.types.ObjectId
+import shapeless.Default.AsRecord
 import shapeless._
 import shapeless.labelled.{ FieldType, field }
 
@@ -349,20 +350,25 @@ trait LowPrioBsonFormats {
     t: Typeable[Wrapped],
     key: Witness.Aux[Key],
     headSer: Lazy[BsonFormat[Value]],
-    remFormat: WrappedBsonFromat[Wrapped, Remaining]
+    remFormat: WrappedBsonFromat[Wrapped, Remaining] //,
+  //defaults: Default.AsOptions[Wrapped]
   ): WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] =
     new WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] {
+
       private[this] val fieldName = key.value.name
       private[this] val hs = headSer.value
+
+      //println(s"Defaults for ${fieldName} is ${defaults()}")
+      //print(s"My argument position is ${}")
       override def write(ft: FieldType[Key, Value] :: Remaining): BsonValue = {
+
         val rest = remFormat.write(ft.tail)
         val serializedVal = hs.write(ft.head)
         if (!serializedVal.isNull) {
-          val fName = key.value.name
           if (rest.isNull) {
-            new BsonDocument(fName, serializedVal)
+            new BsonDocument(fieldName, serializedVal)
           } else {
-            rest.asDocument().append(fName, serializedVal)
+            rest.asDocument().append(fieldName, serializedVal)
           }
         } else {
           rest
@@ -373,12 +379,21 @@ trait LowPrioBsonFormats {
         val resolved: Value = try {
           val v = b.asDocument().get(fieldName)
           if (v == null || v.isNull) {
-            hs.read(BsonNull.VALUE)
+            //println(s"Read null value of ${fieldName}\n rem is ${remFormat}, ")
+            try {
+              //really - I want to read defaults() here, but don't know how yet
+
+              hs.defaultValue
+            } catch {
+              case _: Exception =>
+                hs.read(BsonNull.VALUE)
+            }
           } else {
             hs.read(v)
           }
         } catch {
           case e: BsonInvalidOperationException =>
+            //println("BsonInvalid op exception - resort to default")
             hs.defaultValue
         }
         val remaining = remFormat.read(b)
@@ -390,6 +405,7 @@ trait LowPrioBsonFormats {
         val subfieldFlds = hs.flds.map { case (subfieldName, s) => (fieldName + "." + subfieldName -> s) }
         remFormat.flds ++ subfieldFlds + (fieldName -> hs)
       }
+
     }
 
   /* For future support of coproducts
@@ -429,13 +445,38 @@ trait LowPrioBsonFormats {
   implicit def bsonEncoder[T, Repr](implicit
     gen: LabelledGeneric.Aux[T, Repr],
     sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
+    d: Default.AsRecord[T],
     tpe: Typeable[T]): BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T] {
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
     override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
 
     override val flds = sg.value.value.flds
 
-    override def defaultValue: T = throw new NoDefaultFormatForDerivedException
+    /** for nested case classes, with default constructors provides a default value
+      * consider
+      * {{{
+      *   case class In(j:Int = 1)
+      *   case class Out(i:In = In(), x: Int = 5)
+      *   val f = BsonFormat[Out]
+      * }}}
+      * in such case default can be provided if 'i' is missing from parameter
+      * as in example
+      * {{{
+      *   f.parse(new BsonDocument) == Out(In(1), 0 )
+      * }}}
+      * value for 'i' will be `In(1)` because In has default non-parameter constructor, but value for x will be 0
+      * this is because currently only full missing values will be constructed - missing partial values will be
+      * filled with type-default values 0 for Int in this example
+      * @return default T
+      */
+    override def defaultValue: T = {
+      try {
+        gen.from(d().asInstanceOf[Repr])
+      } catch {
+        case _: Exception =>
+          throw new NoDefaultFormatForDerivedException(s"Requested default value for but case class ${tpe.describe} has no default, non-parameter constructor")
+      }
+    }
   }
 
 }
@@ -446,4 +487,4 @@ object BsonFormat {
 }
 
 //thrown for derived encoders - which can't have
-class NoDefaultFormatForDerivedException extends RuntimeException
+class NoDefaultFormatForDerivedException(m: String) extends RuntimeException(m)

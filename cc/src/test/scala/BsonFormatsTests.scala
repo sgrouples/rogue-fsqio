@@ -3,6 +3,7 @@ import org.bson.types.ObjectId
 import org.junit.Test
 import BsonFormats._
 import me.sgrouples.rogue.cc.{ ClaimStatus, VenueStatus }
+import org.bson.BsonDocument
 import org.specs2.matcher.JUnitMustMatchers
 
 import scala.language.implicitConversions
@@ -16,6 +17,9 @@ case class RootC(id: Int, nest: Nest)
 case class Nest(name: String)
 case class OneEnum(one: String, en: VenueStatus.Value)
 case class TwoEnums(one: String, en: VenueStatus.Value, x: ClaimStatus.Value)
+
+case class W(a: Int = 1)
+case class B(w: W = W(1), x: String = "a")
 
 class BsonFormatsTests extends JUnitMustMatchers {
 
@@ -74,6 +78,18 @@ class BsonFormatsTests extends JUnitMustMatchers {
     val bson = f.write(r)
     //println(s"Bson root ${bson}")
     f.read(bson) must_== r
+  }
+
+  @Test
+  def defaultCaseClass: Unit = {
+    val f = BsonFormat[B]
+    val b = f.read(new BsonDocument)
+    //println(s"B ${b}")
+    //really want that
+    //b must_== B()
+    //but don't know how to provide default values in case class field parameters
+    b must_== B(W(1), "")
+    assert(true)
   }
 
 }
