@@ -452,23 +452,24 @@ trait LowPrioBsonFormats {
 
     override val flds = sg.value.value.flds
 
-    /** for nested case classes, with default constructors provides a default value
-      * consider
-      * {{{
-      *   case class In(j:Int = 1)
-      *   case class Out(i:In = In(), x: Int = 5)
-      *   val f = BsonFormat[Out]
-      * }}}
-      * in such case default can be provided if 'i' is missing from parameter
-      * as in example
-      * {{{
-      *   f.parse(new BsonDocument) == Out(In(1), 0 )
-      * }}}
-      * value for 'i' will be `In(1)` because In has default non-parameter constructor, but value for x will be 0
-      * this is because currently only full missing values will be constructed - missing partial values will be
-      * filled with type-default values 0 for Int in this example
-      * @return default T
-      */
+    /**
+     * for nested case classes, with default constructors provides a default value
+     * consider
+     * {{{
+     *   case class In(j:Int = 1)
+     *   case class Out(i:In = In(), x: Int = 5)
+     *   val f = BsonFormat[Out]
+     * }}}
+     * in such case default can be provided if 'i' is missing from parameter
+     * as in example
+     * {{{
+     *   f.parse(new BsonDocument) == Out(In(1), 0 )
+     * }}}
+     * value for 'i' will be `In(1)` because In has default non-parameter constructor, but value for x will be 0
+     * this is because currently only full missing values will be constructed - missing partial values will be
+     * filled with type-default values 0 for Int in this example
+     * @return default T
+     */
     override def defaultValue: T = {
       try {
         gen.from(d().asInstanceOf[Repr])
