@@ -283,4 +283,10 @@ class MongoBsonJavaDriverAdapter[MB](
     iter(cursor, initialState)
   }
 
+  def replaceOne[M <: MB, R](query: Query[M, R, _], doc: BsonDocument, upsert: Boolean, writeConcern: WriteConcern)(implicit db: MongoDatabase): Unit = {
+    val collection = dbCollectionFactory.getPrimaryDBCollection(query)
+    val filter = new BsonDocument("_id", doc.get("_id"))
+    collection.replaceOne(filter, doc, new UpdateOptions().upsert(upsert))
+  }
+
 }

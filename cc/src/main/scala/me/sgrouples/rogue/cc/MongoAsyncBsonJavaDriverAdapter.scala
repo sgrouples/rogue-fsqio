@@ -379,4 +379,12 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     callback.future
   }
 
+  def replaceOne[M <: MB, R](query: Query[M, R, _], doc: BsonDocument, upsert: Boolean, writeConcern: WriteConcern)(implicit dba: MongoDatabase): Future[Unit] = {
+    val collection = dbCollectionFactory.getPrimaryDBCollection(query)
+    val callback = new UpdateResultCallback
+    val filter = new BsonDocument("_id", doc.get("_id"))
+    collection.replaceOne(filter, doc, new UpdateOptions().upsert(upsert), callback)
+    callback.future
+  }
+
 }

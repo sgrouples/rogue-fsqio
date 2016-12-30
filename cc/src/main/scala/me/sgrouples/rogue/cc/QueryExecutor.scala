@@ -175,6 +175,10 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     adapter.insertMany(query, docs, defaultWriteConcern)
   }
 
+  def replaceOne[M <: MB, R](query: Query[M, R, _], r: R, upsert: Boolean)(implicit dba: MongoAsyncDatabase): Future[Unit] = {
+    val s = writeSerializer[M, R](query.meta)
+    adapter.replaceOne(query, s.toDocument(r), upsert, defaultWriteConcern)
+  }
 }
 
 trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
@@ -433,6 +437,11 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     val s = writeSerializer[M, R](query.meta)
     val docs = r.map { d => s.toDocument(d) }
     adapter.insertMany(query, docs, defaultWriteConcern)
+  }
+
+  def replaceOne[M <: MB, R](query: Query[M, R, _], r: R, upsert: Boolean)(implicit db: MongoDatabase): Unit = {
+    val s = writeSerializer[M, R](query.meta)
+    adapter.replaceOne(query, s.toDocument(r), upsert, defaultWriteConcern)
   }
 
 }

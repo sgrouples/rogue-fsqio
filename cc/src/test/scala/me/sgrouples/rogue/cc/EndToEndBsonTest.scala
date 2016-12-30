@@ -348,5 +348,16 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     rs must_=== List("Real one", "real two")
   }
 
+  @Test
+  def replaceOneTest(): Unit = {
+    val v1 = OptValCC(maybes = Some("bef"), realString = "ore")
+    val v2 = v1.copy(maybes = None)
+    OptValCCR.insertOne(v1)
+    OptValCCR.replaceOne(v2)
+    val vr = OptValCCR.where(_.id eqs v1._id).get().get
+    vr.maybes must_=== None
+    vr.realString must_== "ore"
+  }
+
 }
 

@@ -346,5 +346,16 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
       .futureValue.flatMap(_.lastClaim) mustBe Some(yetAnotherClaim)
 
   }
+
+  "ReplaceOne" should "work" in {
+    val v1 = OptValCC(maybes = Some("bef"), realString = "ore")
+    val v2 = v1.copy(maybes = None)
+    OptValCCR.insertOneAsync(v1).futureValue
+    OptValCCR.replaceOneAsync(v2).futureValue
+    val vr = OptValCCR.where(_.id eqs v1._id).getAsync().futureValue.get
+    vr.maybes mustBe None
+    vr.realString must ===("ore")
+  }
+
 }
 
