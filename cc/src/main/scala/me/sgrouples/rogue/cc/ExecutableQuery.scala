@@ -234,24 +234,26 @@ case class InsertableQuery[MB, M <: MB, R, State](
     ex.async.insertMany(query, ts)
   }
 
-  /***
-    * replaces document with new one, matching by `_id` field. if such document does not exists and `upsert` == `true` new document is inserted
-    * @param t: a document
-    * @param upsert boolean parameter
-    * @param dba Database connection
-    */
+  /**
+   * *
+   * replaces document with new one, matching by `_id` field. if such document does not exists and `upsert` == `true` new document is inserted
+   * @param t: a document
+   * @param upsert boolean parameter
+   * @param dba Database connection
+   */
   def replaceOneAsync(t: R, upsert: Boolean = true)(implicit dba: MongoAsyncDatabase): Future[Unit] = ex.async.replaceOne(query, t, upsert)
 
   def insertOne(t: R)(implicit db: MongoDatabase): Unit = ex.sync.insertOne(query, t)
 
   def insertMany(ts: Seq[R])(implicit db: MongoDatabase): Unit = ex.sync.insertMany(query, ts)
 
-  /***
-    * replaces document with new one, matching by `_id` field. if such document does not exists and `upsert` == `true` new document is inserted
-    * @param t: a document
-    * @param upsert boolean parameter
-    * @param db Database connection
-    */
+  /**
+   * *
+   * replaces document with new one, matching by `_id` field. if such document does not exists and `upsert` == `true` new document is inserted
+   * @param t: a document
+   * @param upsert boolean parameter
+   * @param db Database connection
+   */
   def replaceOne(t: R, upsert: Boolean = true)(implicit db: MongoDatabase): Unit = ex.sync.replaceOne(query, t, upsert)
 
 }
