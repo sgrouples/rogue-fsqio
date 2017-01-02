@@ -347,7 +347,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "ReplaceOne" should "work" in {
+  "ReplaceOne" should "replace value" in {
     val v1 = OptValCC(maybes = Some("bef"), realString = "ore")
     val v2 = v1.copy(maybes = None)
     OptValCCR.insertOneAsync(v1).futureValue
