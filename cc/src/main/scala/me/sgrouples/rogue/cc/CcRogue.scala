@@ -102,6 +102,8 @@ trait CcRogue {
 
   implicit def ccListFieldToListQueryField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqQueryField[C, M, O] = new CClassSeqQueryField[C, M, O](f, f.owner)
 
+  implicit def ccArrayFieldToListQueryField[C, M <: CcMeta[C], O](f: CClassArrayField[C, M, O]): CClassArrayQueryField[C, M, O] = new CClassArrayQueryField[C, M, O](f, f.owner)
+
   implicit def ccFieldToCcModifyField[C, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassModifyField[C, M, O] =
     new CClassModifyField[C, M, O](f)
 
@@ -111,6 +113,8 @@ trait CcRogue {
   implicit def uuidFieldToQueryField[O <: CcMeta[_]](f: RField[UUID, O]): QueryField[UUID, O] = new QueryField(f)
 
   implicit def ccListFieldToCCSeqModifyField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqModifyField[C, M, O] = new CClassSeqModifyField[C, M, O](f)
+
+  implicit def ccArrayFieldToCCArrayModifyField[C, M <: CcMeta[C], O](f: CClassArrayField[C, M, O]): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
 
   implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: RField[LocalDateTime, O]): LocalDateTimeModifyField[O] =
     new LocalDateTimeModifyField(f)

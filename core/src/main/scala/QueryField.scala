@@ -334,6 +334,33 @@ abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field
   def idx(i: Int): DummyField[V, M] = at(i)
 }
 
+abstract class AbstractArrayQueryField[F, V, DB, M, X](field: Field[Array[X], M])
+    extends AbstractQueryField[Array[X], V, DB, M](field) {
+
+  def all(vs: Traversable[V]) =
+    QueryHelpers.allListClause(field.name, valuesToDB(vs))
+
+  def eqs(vs: Traversable[V]) =
+    EqClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
+
+  def neqs(vs: Traversable[V]) =
+    new NeQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
+
+  def size(s: Int) =
+    new SizeQueryClause(field.name, s)
+
+  def contains(v: V) =
+    EqClause(field.name, valueToDB(v))
+
+  def notcontains(v: V) =
+    new NeQueryClause(field.name, valueToDB(v))
+
+  def at(i: Int): DummyField[V, M] =
+    new DummyField[V, M](field.name + "." + i.toString, field.owner)
+
+  def idx(i: Int): DummyField[V, M] = at(i)
+}
+
 class ListQueryField[V: BSONType, M](field: Field[List[V], M])
     extends AbstractListQueryField[V, V, AnyRef, M, List](field) {
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
@@ -578,11 +605,85 @@ class ListModifyField[V: BSONType, M](field: Field[List[V], M])
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
 }
 
+class ArrayModifyField[V: BSONType, M](field: Field[Array[V], M])
+    extends AbstractArrayModifyField[V, AnyRef, M](field) {
+  override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
+}
+
 //?manifets ?
 class CaseClassListModifyField[V, M](field: Field[List[V], M], asDBObject: V => DBObject)
     extends AbstractListModifyField[V, DBObject, M, List](field) {
   override def valueToDB(v: V) = asDBObject(v)
   //QueryHelpers.asDBObject(v)
+}
+
+abstract class AbstractArrayModifyField[V, DB, M](val field: Field[Array[V], M]) {
+  def valueToDB(v: V): DB
+
+  def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB _)
+
+  def setTo(vs: Traversable[V]) =
+    new ModifyClause(
+      ModOps.Set,
+      field.name -> QueryHelpers.list(valuesToDB(vs))
+    )
+  def push(v: V) =
+    new ModifyClause(
+      ModOps.Push,
+      field.name -> valueToDB(v)
+    )
+
+  def push(vs: Traversable[V]) =
+    new ModifyPushEachClause(field.name, valuesToDB(vs))
+
+  def push(vs: Traversable[V], slice: Int) =
+    new ModifyPushEachSliceClause(field.name, slice, valuesToDB(vs))
+
+  def push(vs: Traversable[V], slice: Int, position: Int) =
+    new ModifyPushEachSlicePositionClause(field.name, slice, position, valuesToDB(vs))
+
+  def pushAll(vs: Traversable[V]) =
+    new ModifyClause(
+      ModOps.PushAll,
+      field.name -> QueryHelpers.list(valuesToDB(vs))
+    )
+
+  def addToSet(v: V) =
+    new ModifyClause(
+      ModOps.AddToSet,
+      field.name -> valueToDB(v)
+    )
+
+  def addToSet(vs: Traversable[V]) =
+    new ModifyAddEachClause(field.name, valuesToDB(vs))
+
+  def popFirst =
+    new ModifyClause(ModOps.Pop, field.name -> -1)
+
+  def popLast =
+    new ModifyClause(ModOps.Pop, field.name -> 1)
+
+  def pull(v: V) =
+    new ModifyClause(
+      ModOps.Pull,
+      field.name -> valueToDB(v)
+    )
+
+  def pullAll(vs: Traversable[V]) =
+    new ModifyClause(
+      ModOps.PullAll,
+      field.name -> QueryHelpers.list(valuesToDB(vs))
+    )
+
+  def pullWhere(clauseFuncs: (Field[V, M] => QueryClause[_])*) =
+    new ModifyPullWithPredicateClause(
+      field.name,
+      clauseFuncs.map(cf => cf(new DummyField[V, M](field.name, field.owner)))
+    )
+
+  def $: Field[V, M] = {
+    new SelectableDummyField[V, M](field.name + ".$", field.owner)
+  }
 }
 
 class EnumerationListModifyField[V <: Enumeration#Value, M](field: Field[List[V], M])

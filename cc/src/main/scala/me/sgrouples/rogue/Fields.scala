@@ -114,7 +114,7 @@ class CClassListField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, ow
   override def defaultValue: List[C] = Nil
 }
 
-class CClassArrayField[C: ClassTag, O](name: String, o: O) extends MCField[Array[C], O](name, o) {
+class CClassArrayField[C: ClassTag, MC <: CcMeta[C], O](name: String, val childMeta: MC, o: O) extends MCField[Array[C], O](name, o) {
   override def defaultValue = Array.empty[C]
 }
 

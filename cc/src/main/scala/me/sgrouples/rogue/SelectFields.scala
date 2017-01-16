@@ -54,6 +54,30 @@ class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O], o
   }
 }
 
+class CClassArrayQueryField[C, M <: CcMeta[C], O](fld: CClassArrayField[C, M, O], owner: O) //, toBson: B => BsonValue)
+    extends AbstractArrayQueryField[C, C, BsonValue, O, C](fld) {
+  override def valueToDB(c: C) = fld.childMeta.write(c)
+
+  def subfield[V, V1](f: M => Field[V, M])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], O] = {
+    new SelectableDummyField[List[V1], O](fld.name + "." + f(fld.childMeta).name, owner)
+  }
+
+  def subselect[V, V1](f: M => Field[V, M])(implicit ev: Rogue.Flattened[V, V1]): SelectField[Option[List[V1]], O] = {
+    Rogue.roptionalFieldToSelectField[O, List[V1]](subfield(f))
+  }
+
+  def unsafeField[V](name: String): DummyField[V, O] = {
+    new DummyField[V, O](field.name + "." + name, fld.owner)
+  }
+
+  def elemMatch[V](clauseFuncs: (M => QueryClause[_])*) = {
+    new ElemMatchWithPredicateClause(
+      field.name,
+      clauseFuncs.map(cf => cf(fld.childMeta))
+    )
+  }
+}
+
 class CClassQueryField[C, M <: CcMeta[C], O](fld: CClassField[C, M, O], owner: O) extends AbstractQueryField[C, C, BsonValue, O](fld) {
   override def valueToDB(v: C): BsonValue = fld.childMeta.write(v)
 
@@ -118,6 +142,21 @@ class OptCClassModifyField[C, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) e
 
 class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O])
     extends AbstractListModifyField[C, BsonDocument, O, Seq](fld) {
+  override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
+
+  def pullObjectWhere(clauseFuncs: (M => QueryClause[_])*) = {
+    new ModifyPullObjWithPredicateClause(
+      field.name,
+      clauseFuncs.map(cf => cf(fld.childMeta))
+    )
+  }
+
+  override def $ = new SelectableDummyCCField[C, M, O](fld.name + ".$", fld.childMeta, fld.owner)
+
+}
+
+class CClassArrayModifyField[C, M <: CcMeta[C], O](fld: CClassArrayField[C, M, O])
+    extends AbstractArrayModifyField[C, BsonDocument, O](fld) {
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 
   def pullObjectWhere(clauseFuncs: (M => QueryClause[_])*) = {

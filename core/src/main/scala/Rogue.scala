@@ -79,6 +79,9 @@ trait Rogue {
   implicit def rSeqFieldToSeqModifyField[M, F: BSONType](f: RField[Seq[F], M]): SeqModifyField[F, M] =
     new SeqModifyField[F, M](f)
 
+  implicit def rArrayFieldToArrayModifyField[M, F: BSONType](f: RField[Array[F], M]): ArrayModifyField[F, M] =
+    new ArrayModifyField[F, M](f)
+
   implicit def rmapFieldToMapModifyField[M, F](f: RField[Map[String, F], M]): MapModifyField[F, M] =
     new MapModifyField[F, M](f)
 
@@ -99,6 +102,7 @@ trait Rogue {
   implicit val dateIsFlattened = new Flattened[java.util.Date, java.util.Date]
   implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]) = new Flattened[List[A], B]
   implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]) = new Flattened[Seq[A], B]
+  implicit def recursiveFlattenArray[A, B](implicit ev: Flattened[A, B]) = new Flattened[Array[A], B]
 }
 
 object Rogue extends Rogue
