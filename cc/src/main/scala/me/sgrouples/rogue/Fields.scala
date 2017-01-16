@@ -137,8 +137,8 @@ class OptListField[V, O](name: String, o: O) extends OCField[List[V], O](name, o
 class OptArrayField[V: ClassTag, O](name: String, o: O) extends OCField[Array[V], O](name, o)
 class OptCClassField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
   extends OCField[C, O](name, owner)
-class OptCClassListField[C, O](name: String, o: O) extends OCField[List[C], O](name, o)
-class OptCClassArrayField[C: ClassTag, O](name: String, o: O) extends OCField[Array[C], O](name, o)
+class OptCClassListField[C, MC <: CcMeta[C], O](name: String, childMeta: MC, o: O) extends OCField[List[C], O](name, o)
+class OptCClassArrayField[C: ClassTag, MC <: CcMeta[C], O](name: String, childMeta: MC, o: O) extends OCField[Array[C], O](name, o)
 class OptMapField[V, O](name: String, o: O) extends OCField[Map[String, V], O](name, o)
 
 trait CcFields[T] {

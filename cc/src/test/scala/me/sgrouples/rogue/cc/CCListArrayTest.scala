@@ -21,7 +21,8 @@ object InnerR extends RCcMeta[Inner]("") {
 }
 
 object OuterR extends RCcMeta[Outer] {
-  val id = new ObjectIdField("_id", this)
+  val id: ObjectIdField[OuterR.type] = new ObjectIdField("_id", this)
+  val id2 = objectIdField("_id")
   val innerList = new CClassListField[Inner, InnerR.type, OuterR.type]("innerList", InnerR, this)
   val innerArray = new CClassArrayField[Inner, InnerR.type, OuterR.type]("innerArray", InnerR, this)
 }

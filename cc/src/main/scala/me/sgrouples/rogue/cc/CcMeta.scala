@@ -29,7 +29,7 @@ trait CcMeta[T] extends CcMetaLike[T] {
 }
 
 class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] {
-
+  type OwnerType = this.type
   def this(namingStrategy: NamingStrategy = LowerCase)(implicit f: BsonFormat[T], classTag: ClassTag[T]) {
     this(namingStrategy[T])
   }
@@ -101,19 +101,25 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   def optLocalDateTimeField(name: String) = new OptLocalDateTimeField(name, this)
   def booleanField(name: String) = new BooleanField(name, this)
   def optBooleanField(name: String) = new OptBooleanField(name, this)
-  def enumField[T <: Enumeration](name: String)(implicit e: T) = new EnumField(name, this)(e)
-  def optEnumField[T <: Enumeration](name: String)(implicit e: T) = new OptEnumField(name, this)(e)
-  def enumIdField[T <: Enumeration](name: String)(implicit e: T) = new EnumIdField(name, this)(e)
-  def optEnumIdField[T <: Enumeration](name: String)(implicit e: T) = new OptEnumIdField(name, this)(e)
+  def enumField[T <: Enumeration](name: String, e: T) = new EnumField[T, this.type](name, this)(e)
+  def optEnumField[T <: Enumeration](name: String, e: T) = new OptEnumField[T, this.type](name, this)(e)
+  def enumIdField[T <: Enumeration](name: String, e: T) = new EnumIdField[T, this.type](name, this)(e)
+  def optEnumIdField[T <: Enumeration](name: String, e: T) = new OptEnumIdField[T, this.type](name, this)(e)
   def listField[V](name: String) = new ListField[List[V], this.type](name, this)
   def optListField[V](name: String) = new OptListField[List[V], this.type](name, this)
   def arrayField[V: ClassTag](name: String) = new ArrayField[Array[V], this.type](name, this)
   def optArrayField[V: ClassTag](name: String) = new OptArrayField[Array[V], this.type](name, this)
-  def cclassField[C, MC <: CcMeta[C]](name: String, childMeta: MC) = new CClassField[C, MC, this.type](name, childMeta, this)
-  def optCclassField[C, MC <: CcMeta[C]](name: String, childMeta: MC) = new OptCClassField[C, MC, this.type](name, childMeta, this)
-  def cclassRequiredField[C, MC <: CcMeta[C]](name: String, childMeta: MC, default: C) = new CClassRequiredField[C, MC, this.type](name, childMeta, default, this)
-  def cclassListField[C, MC <: CcMeta[C]](name: String, childMeta: MC) = new CClassListField[C, MC, this.type](name, childMeta, this)
-  def cclassArrayField[C: ClassTag, MC <: CcMeta[C]](name: String, childMeta: MC) = new CClassArrayField[C, MC, this.type](name, childMeta, this)
+  def cClassField[C, MC <: CcMeta[C]](name: String, childMeta: MC) = new CClassField[C, MC, this.type](name, childMeta, this)
+  def optCclassField[C, MC <: CcMeta[C]](name: String, childMeta: MC) = {
+    type X = childMeta.R
+    new OptCClassField[X, MC, this.type](name, childMeta, this)
+  }
+  def cClassRequiredField[C, MC <: CcMeta[C]](name: String, childMeta: MC, default: C) = new CClassRequiredField[C, MC, this.type](name, childMeta, default, this)
+  /*def cClassListField[MC <: CcMeta[_]](name: String, childMeta: MC) = {
+    new CClassListField[childMeta.R, MC, this.type](name, childMeta, this)
+  }*/
+  def optCclassListField[C, MC <: CcMeta[C]](name: String, childMeta: MC) = new OptCClassListField[C, MC, this.type](name, childMeta, this)
+  def cClassArrayField[C: ClassTag, MC <: CcMeta[C]](name: String, childMeta: MC) = new CClassArrayField[C, MC, this.type](name, childMeta, this)
   def mapField[V](name: String) = new MapField(name, this)
   def optMapField[V](name: String) = new OptMapField(name, this)
 

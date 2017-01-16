@@ -99,7 +99,7 @@ object Metas {
   implicit val evVenueStatus = VenueStatus
 
   object VenueR extends RCcMeta[Venue](PluralLowerCase) {
-    val id = new ObjectIdField("_id", this)
+    val id = objectIdField("_id")
     val mayor = new LongField("mayor", this)
     val venuename = new StringField("venuename", this)
     val closed = new BooleanField("closed", this)
