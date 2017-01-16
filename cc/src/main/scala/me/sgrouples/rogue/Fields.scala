@@ -199,3 +199,11 @@ object CcFields extends LowPrioFields {
   def apply[T](implicit f: CcFields[T]): Aux[T, f.RecRepr] = f
 }
 
+class ObjectIdSubtypeField[KeyType <: ObjectId, OwnerType](name: String, owner: OwnerType) extends MCField[KeyType, OwnerType](name, owner) {
+  private def key(x: ObjectId) = x.asInstanceOf[KeyType]
+  def defaultValue: KeyType = key(ObjectId.get)
+}
+
+class OptObjectIdSubtypeField[KeyType <: ObjectId, OwnerType](name: String, owner: OwnerType) extends OCField[KeyType, OwnerType](name, owner) {
+  private def key(x: ObjectId) = x.asInstanceOf[KeyType]
+}
