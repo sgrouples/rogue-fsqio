@@ -8,7 +8,7 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 	
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "2.5.1-MongoAsync-shapeless-29-SNAPSHOT",
+    version := "2.5.1-MongoAsync-shapeless-29",
     organization := "io.fsq",
     scalaVersion := "2.11.8",
     publishMavenStyle := true,
@@ -52,7 +52,7 @@ object RogueDependencies {
   
   
   val joda = Seq(
-    "joda-time"                % "joda-time"           % "2.9.4"        % "compile",
+    "joda-time"                % "joda-time"           % "2.9.7"        % "compile",
     "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
   val mongoDeps = Seq(
@@ -70,7 +70,7 @@ object RogueDependencies {
     "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
   )
 
-  val shapeless = "com.chuusai" %% "shapeless" % "2.3.1"
+  val shapeless = "com.chuusai" %% "shapeless" % "2.3.2"
 
   val coreDeps = mongoDeps ++ joda
   
