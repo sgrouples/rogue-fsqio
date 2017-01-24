@@ -68,7 +68,7 @@ class EndToEndTest extends JUnitMustMatchers {
 
     Like.allShards.bulkDelete_!!!
 
-    RogueTestMongo.disconnectFromMongo
+    //RogueTestMongo.disconnectFromMongo
   }
 
   @Test

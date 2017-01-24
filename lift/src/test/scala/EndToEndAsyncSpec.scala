@@ -1,4 +1,4 @@
-// Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
+// Copyright 2017 Sgrouples Inc. All Rights Reserved.
 package io.fsq.rogue.lift.test
 
 import java.util.regex.Pattern
@@ -67,8 +67,8 @@ class EndToEndAsyncSpec extends FlatSpec
 
     Like.allShards.bulkDeleteAsync_!!!().futureValue
 
-    RogueTestMongo.disconnectFromMongoAsync
-    RogueTestMongo.disconnectFromMongo
+    //RogueTestMongo.disconnectFromMongoAsync
+    //RogueTestMongo.disconnectFromMongo
   }
 
   "eqs" should "work as expected" in {
