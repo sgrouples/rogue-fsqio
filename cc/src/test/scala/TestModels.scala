@@ -89,43 +89,50 @@ object Metas {
 
   implicit val evClaimStatus = ClaimStatus
 
-  object VenueClaimBsonR extends RCcMeta[VenueClaimBson]("_") {
-    val uid = new LongField("uid", this)
-    val status = new EnumField[ClaimStatus.type, VenueClaimBsonR.type]("status", this)
-    val source = new OptCClassField[SourceBson, SourceBsonR.type, VenueClaimBsonR.type]("source", SourceBsonR, this)
-    val date = new LocalDateTimeField("date", this)
+  class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta] {
+    val uid = LongField("uid")
+    val status = EnumField[ClaimStatus.type]("status")
+    val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
+    val date = LocalDateTimeField("date")
   }
+
+  val VenueClaimBsonR = new VenueClaimBsonRMeta
 
   implicit val evVenueStatus = VenueStatus
 
-  object VenueR extends RCcMeta[Venue](PluralLowerCase) {
-    val id = new ObjectIdField("_id", this)
-    val mayor = new LongField("mayor", this)
-    val venuename = new StringField("venuename", this)
-    val closed = new BooleanField("closed", this)
-    val status = new EnumField[VenueStatus.type, VenueR.type]("status", this)
-    val mayor_count = new LongField("mayor_count", this)
-    val legacyid = new LongField("legId", this)
-    val userid = new LongField("userId", this)
-    val tags = new ListField[String, VenueR.type]("tags", this)
-    val claims = new CClassListField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("claims", VenueClaimBsonR, this)
-    val lastClaim = new OptCClassField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type]("lastClaim", VenueClaimBsonR, this)
-    val firstClaim = new CClassRequiredField[VenueClaimBson, VenueClaimBsonR.type, VenueR.type](
-      "firstClaim", VenueClaimBsonR, VenueClaimBson.default, this
-    )
-    val last_updated = new LocalDateTimeField("last_updated", this)
-    val popularity = new ListField[Long, VenueR.type]("popularity", this)
-    val categories = new ListField[ObjectId, VenueR.type]("categories", this)
+  class VenueRMeta extends RCcMeta[Venue](PluralLowerCase) with QueryFieldHelpers[VenueRMeta] {
+
+    val id = ObjectIdField("_id")
+    val mayor = LongField
+    val venuename = StringField
+    val closed = BooleanField
+    val status = EnumField[VenueStatus.type]
+    val mayor_count = LongField
+    val legacyid = LongField("legId")
+    val userid = LongField("userId")
+    val tags = ListField[String]
+
+    val claims = ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
+    val lastClaim = OptClassField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
+    val firstClaim = ClassRequiredField(VenueClaimBsonR, VenueClaimBson.default)
+
+    val last_updated = LocalDateTimeField
+    val popularity = ListField[Long]
+    val categories = ListField[ObjectId]
   }
+
+  val VenueR = new VenueRMeta
 
   implicit val evRejReason = RejectReason
 
-  object VenueClaimR extends RCcMeta[VenueClaim]("venueclaims") {
-    val venueid = new ObjectIdField("vid", this)
-    val status = new EnumField[ClaimStatus.type, VenueClaimR.type]("status", this)
-    val reason = new OptEnumField[RejectReason.type, VenueClaimR.type]("reason", this)
-    val userId = new LongField("uid", this)
+  class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims") with QueryFieldHelpers[VenueClaimRMeta] {
+    val venueid = ObjectIdField("vid")
+    val status = EnumField[ClaimStatus.type]
+    val reason = OptEnumField[RejectReason.type]
+    val userId = LongField("uid")
   }
+
+  val VenueClaimR = new VenueClaimRMeta
 
   object TipR extends RCcMeta[Tip]("tips") {
     val id = new ObjectIdField("_id", this)

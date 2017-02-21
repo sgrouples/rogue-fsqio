@@ -1,16 +1,21 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 import sbt._
-import Keys._
+import Keys.{scalaVersion, _}
+
+object Version {
+  val scala = "2.11.8"
+}
 
 object RogueSettings {
+
   val nexus = "https://nexus.groupl.es/"
   val nexusReleases = "releases" at nexus+"repository/maven-releases/"
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
-	
+
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "2.5.1-MongoAsync-shapeless-29",
     organization := "io.fsq",
-    scalaVersion := "2.11.8",
+    scalaVersion := Version.scala,
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
@@ -30,7 +35,7 @@ object RogueSettings {
         }
     },
     credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials") ,
-    testOptions in Test ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=>MongoEmbedded.stop))
+    testOptions in Test ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=> MongoEmbedded.stop))
 	)
 }
 
@@ -77,5 +82,4 @@ object RogueDependencies {
   val rogueLiftDeps = mongoDeps ++ joda ++ liftDeps ++ liftRecordDeps
 
   val ccDeps = mongoDeps ++ Seq(shapeless)  ++ testDeps
-	
 }
