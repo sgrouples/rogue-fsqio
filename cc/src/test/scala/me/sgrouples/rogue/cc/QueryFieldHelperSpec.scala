@@ -27,7 +27,9 @@ trait TestQueryTraitB[OwnerType] {
 }
 
 class TestDomainObjectMeta extends RCcMeta[TestDomainObject]
-    with QueryFieldHelpers[TestDomainObjectMeta] {
+    with QueryFieldHelpers[TestDomainObjectMeta]
+    with TestQueryTraitA[TestDomainObjectMeta]
+    with TestQueryTraitB[TestDomainObjectMeta] {
 
   val claims = ListField[String]
 
@@ -92,11 +94,11 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
 
   "QueryFieldHelper" should "auto-resolve field names" in {
 
-    //    TestDomainObjects.int.name mustBe "int"
-    //    TestDomainObjects.int_name.name mustBe "int_name"
-    //
-    //    TestDomainObjects.OptInt.name mustBe "OptInt"
-    //    TestDomainObjects.OptInt_name.name mustBe "OptInt_name"
+    TestDomainObjects.int.name mustBe "int"
+    TestDomainObjects.int_name.name mustBe "int_name"
+
+    TestDomainObjects.OptInt.name mustBe "OptInt"
+    TestDomainObjects.OptInt_name.name mustBe "OptInt_name"
 
     TestDomainObjects.string.name mustBe "string"
     TestDomainObjects.string_name.name mustBe "string_name"
