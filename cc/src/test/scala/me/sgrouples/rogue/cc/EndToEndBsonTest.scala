@@ -23,7 +23,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   val firstClaim = VenueClaimBson(uid = 5679L, status = ClaimStatus.approved)
 
   def baseTestVenue(): Venue = Venue(
-    _id = new ObjectId(),
+    _id = Venue.newId,
     legId = 123L,
     userId = 456L,
     venuename = "test venue",
@@ -43,7 +43,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   )
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
-    VenueClaim(new ObjectId(), vid, 123L, ClaimStatus.approved)
+    VenueClaim(VenueClaim.newId, vid, 123L, ClaimStatus.approved)
   }
 
   def baseTestTip(): Tip = {

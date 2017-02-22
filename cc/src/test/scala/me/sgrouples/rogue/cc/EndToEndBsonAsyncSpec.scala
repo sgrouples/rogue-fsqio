@@ -10,6 +10,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 
 import scala.concurrent.duration._
+import shapeless.tag
 
 class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
   import Metas._
@@ -19,7 +20,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
   def baseTestVenue(): Venue = Venue(
-    _id = new ObjectId(),
+    _id = tag[Venue][ObjectId](new ObjectId()),
     legId = 123L,
     userId = 456L,
     venuename = "test venue",
@@ -39,7 +40,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   )
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
-    VenueClaim(new ObjectId(), vid, 123L, ClaimStatus.approved)
+    VenueClaim(tag[VenueClaim][ObjectId](new ObjectId()), vid, 123L, ClaimStatus.approved)
   }
 
   def baseTestTip(): Tip = {

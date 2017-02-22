@@ -8,6 +8,8 @@ import org.bson.types.ObjectId
 import BsonFormats._
 import EnumNameFormats._
 import me.sgrouples.rogue.naming.PluralLowerCase
+import shapeless.tag.@@
+import shapeless.tag
 
 object VenueStatus extends Enumeration {
   val open = Value("Open")
@@ -46,10 +48,18 @@ object VenueClaimBson {
 
 case class VenueClaimBson(uid: Long, status: ClaimStatus.Value, source: Option[SourceBson] = None, date: LocalDateTime = LocalDateTime.now())
 
-case class VenueClaim(_id: ObjectId, vid: ObjectId, uid: Long, status: ClaimStatus.Value, reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now())
+object VenueClaim {
+  def newId = tag[VenueClaim](new ObjectId())
+}
+
+case class VenueClaim(_id: ObjectId @@ VenueClaim, vid: ObjectId, uid: Long, status: ClaimStatus.Value, reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now())
+
+object Venue {
+  def newId = tag[Venue](new ObjectId())
+}
 
 case class Venue(
-  _id: ObjectId,
+  _id: ObjectId @@ Venue,
   legId: Long,
   userId: Long,
   venuename: String,
@@ -102,7 +112,7 @@ object Metas {
 
   class VenueRMeta extends RCcMeta[Venue](PluralLowerCase) with QueryFieldHelpers[VenueRMeta] {
 
-    val id = ObjectIdField("_id")
+    val id = ObjectIdTaggedField[Venue]("_id")
     val mayor = LongField
     val venuename = StringField
     val closed = BooleanField
@@ -126,7 +136,7 @@ object Metas {
   implicit val evRejReason = RejectReason
 
   class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims") with QueryFieldHelpers[VenueClaimRMeta] {
-    val venueid = ObjectIdField("vid")
+    val venueid = ObjectIdTaggedField[Venue]("vid")
     val status = EnumField[ClaimStatus.type]
     val reason = OptEnumField[RejectReason.type]
     val userId = LongField("uid")

@@ -19,6 +19,8 @@ import org.bson.{ BSON, BsonDateTime, BsonDocument, Transformer }
 import org.bson.types._
 import org.junit._
 import org.specs2.matcher.JUnitMustMatchers
+import shapeless.tag
+import shapeless.tag.@@
 
 class QueryTest extends JUnitMustMatchers {
   // to make queries printable
@@ -38,18 +40,18 @@ class QueryTest extends JUnitMustMatchers {
     val oid1 = ObjectId.createFromLegacyFormat(d1.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
     val oid2 = ObjectId.createFromLegacyFormat(d2.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
     val oid = new ObjectId
-    case class Ven1(id: ObjectId)
-    val ven1 = Ven1(oid1)
+    case class Ven1(id: ObjectId @@ Venue)
+    val ven1 = Ven1(tag[Venue](oid1))
 
     // eqs
     VenueR.where(_.mayor eqs 1).toString() must_== """db.venues.find({ "mayor" : 1})"""
     VenueR.where(_.venuename eqs "Starbucks").toString() must_== """db.venues.find({ "venuename" : "Starbucks"})"""
     VenueR.where(_.closed eqs true).toString() must_== """db.venues.find({ "closed" : true})"""
-    VenueR.where(_.id eqs oid).toString() must_== ("""db.venues.find({ "_id" : ObjectId("%s")})""" format oid.toString)
+    VenueR.where(_.id eqs tag[Venue](oid)).toString() must_== ("""db.venues.find({ "_id" : ObjectId("%s")})""" format oid.toString)
     VenueClaimR.where(_.status eqs ClaimStatus.approved).toString() must_== """db.venueclaims.find({ "status" : "Approved"})"""
 
-    VenueClaimR.where(_.venueid eqs oid).toString() must_== ("""db.venueclaims.find({ "vid" : ObjectId("%s")})""" format oid.toString)
-    VenueClaimR.where(_.venueid eqs ven1.id).toString() must_== ("""db.venueclaims.find({ "vid" : ObjectId("%s")})""" format oid1.toString)
+    VenueClaimR.where(_.venueid eqs tag[Venue](oid)).toString() must_== ("""db.venueclaims.find({ "vid" : ObjectId("%s")})""" format oid.toString)
+    VenueClaimR.where(_.venueid eqs tag[Venue](ven1.id)).toString() must_== ("""db.venueclaims.find({ "vid" : ObjectId("%s")})""" format oid1.toString)
 
     // neq,lt,gt
     VenueR.where(_.mayor_count neqs 5).toString() must_== """db.venues.find({ "mayor_count" : { "$ne" : 5}})"""
@@ -361,7 +363,7 @@ class QueryTest extends JUnitMustMatchers {
   def testProduceACorrectSignatureString {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
-    val oid = new ObjectId
+    val oid = tag[Venue](new ObjectId)
 
     // basic ops
     VenueR.where(_.mayor eqs 1).signature() must_== """db.venues.find({ "mayor" : 0})"""

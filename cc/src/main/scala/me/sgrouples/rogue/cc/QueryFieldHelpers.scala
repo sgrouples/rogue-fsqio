@@ -110,17 +110,35 @@ trait QueryFieldHelpers[Meta] extends {
   protected def OptIntField: OptIntField[Meta] @@ Marker = named(new OptIntField[Meta](_, this))
   protected def OptIntField(name: String): OptIntField[Meta] @@ Marker = named(name)(new OptIntField[Meta](_, this))
 
+  protected def IntTaggedField[Tag]: IntTaggedField[Tag, Meta] @@ Marker = named(new IntTaggedField[Tag, Meta](_, this))
+  protected def IntTaggedField[Tag](name: String): IntTaggedField[Tag, Meta] @@ Marker = named(name)(new IntTaggedField[Tag, Meta](_, this))
+
+  protected def OptIntTaggedField[Tag]: OptIntTaggedField[Tag, Meta] @@ Marker = named(new OptIntTaggedField[Tag, Meta](_, this))
+  protected def OptIntTaggedField[Tag](name: String): OptIntTaggedField[Tag, Meta] @@ Marker = named(name)(new OptIntTaggedField[Tag, Meta](_, this))
+
   protected def StringField: StringField[Meta] @@ Marker = named(new StringField[Meta](_, this))
   protected def StringField(name: String): StringField[Meta] @@ Marker = named(name)(new StringField[Meta](_, this))
 
   protected def OptStringField: OptStringField[Meta] @@ Marker = named(new OptStringField[Meta](_, this))
   protected def OptStringField(name: String): OptStringField[Meta] @@ Marker = named(name)(new OptStringField[Meta](_, this))
 
+  protected def StringTaggedField[Tag]: StringTaggedField[Tag, Meta] @@ Marker = named(new StringTaggedField[Tag, Meta](_, this))
+  protected def StringTaggedField[Tag](name: String): StringTaggedField[Tag, Meta] @@ Marker = named(name)(new StringTaggedField[Tag, Meta](_, this))
+
+  protected def OptStringTaggedField[Tag]: OptStringTaggedField[Tag, Meta] @@ Marker = named(new OptStringTaggedField[Tag, Meta](_, this))
+  protected def OptStringTaggedField[Tag](name: String): OptStringTaggedField[Tag, Meta] @@ Marker = named(name)(new OptStringTaggedField[Tag, Meta](_, this))
+
   protected def LongField: LongField[Meta] @@ Marker = named(new LongField[Meta](_, this))
   protected def LongField(name: String): LongField[Meta] @@ Marker = named(name)(new LongField[Meta](_, this))
 
   protected def OptLongField: OptLongField[Meta] @@ Marker = named(new OptLongField[Meta](_, this))
   protected def OptLongField(name: String): OptLongField[Meta] @@ Marker = named(name)(new OptLongField[Meta](_, this))
+
+  protected def LongTaggedField[Tag]: LongTaggedField[Tag, Meta] @@ Marker = named(new LongTaggedField[Tag, Meta](_, this))
+  protected def LongTaggedField[Tag](name: String): LongTaggedField[Tag, Meta] @@ Marker = named(name)(new LongTaggedField[Tag, Meta](_, this))
+
+  protected def OptLongTaggedField[Tag]: OptLongTaggedField[Tag, Meta] @@ Marker = named(new OptLongTaggedField[Tag, Meta](_, this))
+  protected def OptLongTaggedField[Tag](name: String): OptLongTaggedField[Tag, Meta] @@ Marker = named(name)(new OptLongTaggedField[Tag, Meta](_, this))
 
   protected def DoubleField: DoubleField[Meta] @@ Marker = named(new DoubleField[Meta](_, this))
   protected def DoubleField(name: String): DoubleField[Meta] @@ Marker = named(name)(new DoubleField[Meta](_, this))
@@ -134,11 +152,23 @@ trait QueryFieldHelpers[Meta] extends {
   protected def OptObjectIdField: OptObjectIdField[Meta] @@ Marker = named(new OptObjectIdField[Meta](_, this))
   protected def OptObjectIdField(name: String): OptObjectIdField[Meta] @@ Marker = named(name)(new OptObjectIdField[Meta](_, this))
 
-  protected def UUIDField: UUIDIdField[Meta] @@ Marker = named(new UUIDIdField[Meta](_, this))
-  protected def UUIDField(name: String): UUIDIdField[Meta] @@ Marker = named(name)(new UUIDIdField[Meta](_, this))
+  protected def ObjectIdTaggedField[Tag]: ObjectIdTaggedField[Tag, Meta] @@ Marker = named(new ObjectIdTaggedField[Tag, Meta](_, this))
+  protected def ObjectIdTaggedField[Tag](name: String): ObjectIdTaggedField[Tag, Meta] @@ Marker = named(name)(new ObjectIdTaggedField[Tag, Meta](_, this))
 
-  protected def OptUUIDField: OptUUIDIdField[Meta] @@ Marker = named(new OptUUIDIdField[Meta](_, this))
-  protected def OptUUIDField(name: String): OptUUIDIdField[Meta] @@ Marker = named(name)(new OptUUIDIdField[Meta](_, this))
+  protected def OptObjectIdTaggedField[Tag]: OptObjectIdTaggedField[Tag, Meta] @@ Marker = named(new OptObjectIdTaggedField[Tag, Meta](_, this))
+  protected def OptObjectIdTaggedField[Tag](name: String): OptObjectIdTaggedField[Tag, Meta] @@ Marker = named(name)(new OptObjectIdTaggedField[Tag, Meta](_, this))
+
+  protected def UUIdField: UUIDIdField[Meta] @@ Marker = named(new UUIDIdField[Meta](_, this))
+  protected def UUIdField(name: String): UUIDIdField[Meta] @@ Marker = named(name)(new UUIDIdField[Meta](_, this))
+
+  protected def OptUUIdField: OptUUIDIdField[Meta] @@ Marker = named(new OptUUIDIdField[Meta](_, this))
+  protected def OptUUIdField(name: String): OptUUIDIdField[Meta] @@ Marker = named(name)(new OptUUIDIdField[Meta](_, this))
+
+  protected def UUIdTaggedField[Tag]: UUIDIdTaggedField[Tag, Meta] @@ Marker = named(new UUIDIdTaggedField[Tag, Meta](_, this))
+  protected def UUIdTaggedField[Tag](name: String): UUIDIdTaggedField[Tag, Meta] @@ Marker = named(name)(new UUIDIdTaggedField[Tag, Meta](_, this))
+
+  protected def OptUUIdTaggedField[Tag]: OptUUIDIdTaggedField[Tag, Meta] @@ Marker = named(new OptUUIDIdTaggedField[Tag, Meta](_, this))
+  protected def OptUUIdTaggedField[Tag](name: String): OptUUIDIdTaggedField[Tag, Meta] @@ Marker = named(name)(new OptUUIDIdTaggedField[Tag, Meta](_, this))
 
   protected def LocalDateTimeField: LocalDateTimeField[Meta] @@ Marker = named(new LocalDateTimeField[Meta](_, this))
   protected def LocalDateTimeField(name: String): LocalDateTimeField[Meta] @@ Marker = named(name)(new LocalDateTimeField[Meta](_, this))

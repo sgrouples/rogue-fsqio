@@ -59,11 +59,11 @@ class TestDomainObjectMeta extends RCcMeta[TestDomainObject]
 
   val backwardCompatibilityCheck = new StringField("foo", this)
 
-  val uuid = UUIDField
-  val uuid_name = UUIDField("uuid_name")
+  val uuid = UUIdField
+  val uuid_name = UUIdField("uuid_name")
 
-  val OptUUID = OptUUIDField
-  val OptUUID_name = OptUUIDField("OptUUID_name")
+  val OptUUID = OptUUIdField
+  val OptUUID_name = OptUUIdField("OptUUID_name")
 
   val localDateTime = LocalDateTimeField
   val localDateTime_name = LocalDateTimeField("localDateTime_name")
