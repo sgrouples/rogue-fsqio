@@ -6,6 +6,7 @@ import org.scalatest.{ FlatSpec, MustMatchers }
 import me.sgrouples.rogue._
 import BsonFormats._
 import EnumNameFormats._
+import me.sgrouples.rogue.cc.Metas.VenueRMeta
 
 case class TestDomainObject(id: ObjectId)
 
@@ -26,9 +27,9 @@ trait TestQueryTraitB[OwnerType] {
 }
 
 class TestDomainObjectMeta extends RCcMeta[TestDomainObject]
-    with QueryFieldHelpers[TestDomainObjectMeta]
-    with TestQueryTraitA[TestDomainObjectMeta]
-    with TestQueryTraitB[TestDomainObjectMeta] {
+    with QueryFieldHelpers[TestDomainObjectMeta] {
+
+  val claims = ListField[String]
 
   val string = StringField
   val string_name = StringField("string_name")
@@ -55,6 +56,8 @@ class TestDomainObjectMeta extends RCcMeta[TestDomainObject]
   val OptObjectId_name = OptObjectIdField("OptObjectId_name")
 
   val randomSomething = 42
+
+  val backwardCompatibilityCheck = new StringField("foo", this)
 
   val uuid = UUIDField
   val uuid_name = UUIDField("uuid_name")
@@ -85,14 +88,15 @@ class TestDomainObjectMeta extends RCcMeta[TestDomainObject]
 class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
 
   val TestDomainObjects = new TestDomainObjectMeta
+  val V = new VenueRMeta
 
   "QueryFieldHelper" should "auto-resolve field names" in {
 
-    TestDomainObjects.int.name mustBe "int"
-    TestDomainObjects.int_name.name mustBe "int_name"
-
-    TestDomainObjects.OptInt.name mustBe "OptInt"
-    TestDomainObjects.OptInt_name.name mustBe "OptInt_name"
+    //    TestDomainObjects.int.name mustBe "int"
+    //    TestDomainObjects.int_name.name mustBe "int_name"
+    //
+    //    TestDomainObjects.OptInt.name mustBe "OptInt"
+    //    TestDomainObjects.OptInt_name.name mustBe "OptInt_name"
 
     TestDomainObjects.string.name mustBe "string"
     TestDomainObjects.string_name.name mustBe "string_name"
