@@ -8,8 +8,6 @@ import scala.reflect.{ ClassTag, api }
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
 
-object Foo extends Enumeration
-
 trait QueryFieldHelpers[Meta] extends {
   requires: Meta =>
 
