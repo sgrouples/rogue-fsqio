@@ -92,6 +92,14 @@ trait QueryFieldHelpers[Meta] extends {
 
   }
 
+  /*
+    This weird tagging by Marker trait is here because we need to filter out fields declared
+    directly by calling constructors (like before we had this helper): `val name = new StringField("name", this)`
+    They are both vals and do return a type assignable from `io.fsq.field.Field[_, _]`, so to know that those
+    are not to be counted for name resolution, we must tag the right ones with a marking trait.
+    Its complicated, I know, meta programming usually is... But Miles Sabin's @@ is awesome, don't you think?
+   */
+
   private def named[T](func: String => T): T @@ Marker = {
     if (names.isEmpty) resolve()
     val name = names(nextNameId)
