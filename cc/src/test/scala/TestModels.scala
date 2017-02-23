@@ -110,7 +110,7 @@ object Metas {
 
   implicit val evVenueStatus = VenueStatus
 
-  class VenueRMeta extends RCcMeta[Venue](PluralLowerCase) with QueryFieldHelpers[VenueRMeta] {
+  class VenueRMeta extends RCcMetaExt[Venue, VenueRMeta](PluralLowerCase) {
 
     val id = ObjectIdTaggedField[Venue]("_id")
     val mayor = LongField
@@ -119,7 +119,7 @@ object Metas {
     val status = EnumField[VenueStatus.type]
     val mayor_count = LongField
     val legacyid = LongField("legId")
-    val userid = LongField("userId")
+    val userId = LongField
     val tags = ListField[String]
 
     val claims = ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)

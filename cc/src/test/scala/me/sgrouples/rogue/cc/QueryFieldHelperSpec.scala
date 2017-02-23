@@ -14,139 +14,137 @@ trait TestQueryTraitA[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
 
   val int = IntField
-  val int_name = IntField("int_name")
+  val int_named = IntField("int_custom_name")
 
 }
 
 trait TestQueryTraitB[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
 
-  val OptInt = OptIntField
-  val OptInt_name = OptIntField("OptInt_name")
+  val optInt = OptIntField
+  val optInt_named = OptIntField("optInt_custom_name")
 
 }
 
-class TestDomainObjectMeta extends RCcMeta[TestDomainObject]
-    with QueryFieldHelpers[TestDomainObjectMeta]
+class TestDomainObjectMeta extends RCcMetaExt[TestDomainObject, TestDomainObjectMeta]
     with TestQueryTraitA[TestDomainObjectMeta]
     with TestQueryTraitB[TestDomainObjectMeta] {
 
   val claims = ListField[String]
 
   val string = StringField
-  val string_name = StringField("string_name")
+  val string_named = StringField("string_custom_name")
 
-  val OptString = OptStringField
-  val OptString_name = OptStringField("OptString_name")
+  val optString = OptStringField
+  val optString_named = OptStringField("optString_custom_name")
 
   val long = LongField
-  val long_name = LongField("long_name")
+  val long_named = LongField("long_custom_name")
 
-  val OptLong = OptLongField
-  val OptLong_name = OptLongField("OptLong_name")
+  val optLong = OptLongField
+  val optLong_named = OptLongField("optLong_custom_name")
 
   val double = DoubleField
-  val double_name = DoubleField("double_name")
+  val double_named = DoubleField("double_custom_name")
 
-  val OptDouble = OptDoubleField
-  val OptDouble_name = OptDoubleField("OptDouble_name")
+  val optDouble = OptDoubleField
+  val optDouble_named = OptDoubleField("optDouble_custom_name")
 
   val objectId = ObjectIdField
-  val objectId_name = ObjectIdField("objectId_name")
+  val objectId_named = ObjectIdField("objectId_custom_name")
 
-  val OptObjectId = OptObjectIdField
-  val OptObjectId_name = OptObjectIdField("OptObjectId_name")
+  val optObjectId = OptObjectIdField
+  val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
 
   val randomSomething = 42
 
   val backwardCompatibilityCheck = new StringField("foo", this)
 
   val uuid = UUIdField
-  val uuid_name = UUIdField("uuid_name")
+  val uuid_named = UUIdField("uuid_custom_name")
 
-  val OptUUID = OptUUIdField
-  val OptUUID_name = OptUUIdField("OptUUID_name")
+  val optUUID = OptUUIdField
+  val optUUID_named = OptUUIdField("optUUID_custom_name")
 
   val localDateTime = LocalDateTimeField
-  val localDateTime_name = LocalDateTimeField("localDateTime_name")
+  val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
 
-  val OptLocalDateTime = OptLocalDateTimeField
-  val OptLocalDateTime_name = OptLocalDateTimeField("OptLocalDateTime_name")
+  val optLocalDateTime = OptLocalDateTimeField
+  val optLocalDateTime_named = OptLocalDateTimeField("optLocalDateTime_custom_name")
 
   val instant = InstantField
-  val instant_name = InstantField("instant_name")
+  val instant_named = InstantField("instant_custom_name")
 
-  val OptInstant = OptInstantField
-  val OptInstant_name = OptInstantField("OptInstant_name")
+  val optInstant = OptInstantField
+  val optInstant_named = OptInstantField("optInstant_custom_name")
 
   val boolean = BooleanField
-  val boolean_name = BooleanField("boolean_name")
+  val boolean_named = BooleanField("boolean_custom_name")
 
-  val OptBoolean = OptBooleanField
-  val OptBoolean_name = OptBooleanField("OptBoolean_name")
+  val optBoolean = OptBooleanField
+  val optBoolean_named = OptBooleanField("optBoolean_custom_name")
 
 }
 
 class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
 
   val TestDomainObjects = new TestDomainObjectMeta
-  val V = new VenueRMeta
 
   "QueryFieldHelper" should "auto-resolve field names" in {
 
     TestDomainObjects.int.name mustBe "int"
-    TestDomainObjects.int_name.name mustBe "int_name"
+    TestDomainObjects.int_named.name mustBe "int_custom_name"
 
-    TestDomainObjects.OptInt.name mustBe "OptInt"
-    TestDomainObjects.OptInt_name.name mustBe "OptInt_name"
+    TestDomainObjects.optInt.name mustBe "optInt"
+    TestDomainObjects.optInt_named.name mustBe "optInt_custom_name"
 
     TestDomainObjects.string.name mustBe "string"
-    TestDomainObjects.string_name.name mustBe "string_name"
+    TestDomainObjects.string_named.name mustBe "string_custom_name"
 
-    TestDomainObjects.OptString.name mustBe "OptString"
-    TestDomainObjects.OptString_name.name mustBe "OptString_name"
+    TestDomainObjects.optString.name mustBe "optString"
+    TestDomainObjects.optString_named.name mustBe "optString_custom_name"
 
     TestDomainObjects.long.name mustBe "long"
-    TestDomainObjects.long_name.name mustBe "long_name"
+    TestDomainObjects.long_named.name mustBe "long_custom_name"
 
-    TestDomainObjects.OptLong.name mustBe "OptLong"
-    TestDomainObjects.OptLong_name.name mustBe "OptLong_name"
+    TestDomainObjects.optLong.name mustBe "optLong"
+    TestDomainObjects.optLong_named.name mustBe "optLong_custom_name"
 
     TestDomainObjects.double.name mustBe "double"
-    TestDomainObjects.double_name.name mustBe "double_name"
+    TestDomainObjects.double_named.name mustBe "double_custom_name"
 
-    TestDomainObjects.OptDouble.name mustBe "OptDouble"
-    TestDomainObjects.OptDouble_name.name mustBe "OptDouble_name"
+    TestDomainObjects.optDouble.name mustBe "optDouble"
+    TestDomainObjects.optDouble_named.name mustBe "optDouble_custom_name"
 
     TestDomainObjects.objectId.name mustBe "objectId"
-    TestDomainObjects.objectId_name.name mustBe "objectId_name"
+    TestDomainObjects.objectId_named.name mustBe "objectId_custom_name"
 
-    TestDomainObjects.OptObjectId.name mustBe "OptObjectId"
-    TestDomainObjects.OptObjectId_name.name mustBe "OptObjectId_name"
+    TestDomainObjects.optObjectId.name mustBe "optObjectId"
+    TestDomainObjects.optObjectId_named.name mustBe "optObjectId_custom_name"
 
     TestDomainObjects.uuid.name mustBe "uuid"
-    TestDomainObjects.uuid_name.name mustBe "uuid_name"
+    TestDomainObjects.uuid_named.name mustBe "uuid_custom_name"
 
-    TestDomainObjects.OptUUID.name mustBe "OptUUID"
-    TestDomainObjects.OptUUID_name.name mustBe "OptUUID_name"
+    TestDomainObjects.optUUID.name mustBe "optUUID"
+    TestDomainObjects.optUUID_named.name mustBe "optUUID_custom_name"
 
     TestDomainObjects.localDateTime.name mustBe "localDateTime"
-    TestDomainObjects.localDateTime_name.name mustBe "localDateTime_name"
+    TestDomainObjects.localDateTime_named.name mustBe "localDateTime_custom_name"
 
-    TestDomainObjects.OptLocalDateTime.name mustBe "OptLocalDateTime"
-    TestDomainObjects.OptLocalDateTime_name.name mustBe "OptLocalDateTime_name"
+    TestDomainObjects.optLocalDateTime.name mustBe "optLocalDateTime"
+    TestDomainObjects.optLocalDateTime_named.name mustBe "optLocalDateTime_custom_name"
 
     TestDomainObjects.instant.name mustBe "instant"
-    TestDomainObjects.instant_name.name mustBe "instant_name"
+    TestDomainObjects.instant_named.name mustBe "instant_custom_name"
 
-    TestDomainObjects.OptInstant.name mustBe "OptInstant"
-    TestDomainObjects.OptInstant_name.name mustBe "OptInstant_name"
+    TestDomainObjects.optInstant.name mustBe "optInstant"
+    TestDomainObjects.optInstant_named.name mustBe "optInstant_custom_name"
 
     TestDomainObjects.boolean.name mustBe "boolean"
-    TestDomainObjects.boolean_name.name mustBe "boolean_name"
+    TestDomainObjects.boolean_named.name mustBe "boolean_custom_name"
 
-    TestDomainObjects.OptBoolean.name mustBe "OptBoolean"
-    TestDomainObjects.OptBoolean_name.name mustBe "OptBoolean_name"
+    TestDomainObjects.optBoolean.name mustBe "optBoolean"
+    TestDomainObjects.optBoolean_named.name mustBe "optBoolean_custom_name"
 
   }
 }
