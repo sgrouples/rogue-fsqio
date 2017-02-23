@@ -100,13 +100,13 @@ trait QueryFieldHelpers[Meta] extends {
     Its complicated, I know, meta programming usually is... But Miles Sabin's @@ is awesome, don't you think?
    */
 
-  private def named[T](func: String => T): T @@ Marker = {
+  protected def named[T](func: String => T): T @@ Marker = {
     if (names.isEmpty) resolve()
     val name = names(nextNameId)
     tag[Marker][T](func(name))
   }
 
-  private def named[T](name: String)(func: String => T): T @@ Marker = {
+  protected def named[T](name: String)(func: String => T): T @@ Marker = {
     if (names.isEmpty) resolve()
     names += nextNameId -> name
     tag[Marker][T](func(name))
