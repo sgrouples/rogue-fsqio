@@ -8,6 +8,8 @@ import BsonFormats._
 import EnumNameFormats._
 import me.sgrouples.rogue.cc.Metas.VenueRMeta
 
+import scala.util.Try
+
 case class TestDomainObject(id: ObjectId)
 
 trait TestQueryTraitA[OwnerType] {
@@ -145,6 +147,29 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
 
     TestDomainObjects.optBoolean.name mustBe "optBoolean"
     TestDomainObjects.optBoolean_named.name mustBe "optBoolean_custom_name"
+
+  }
+
+  case class AnotherValue(a: String)
+
+  class AnotherTestMeta extends RCcMetaExt[AnotherValue, AnotherTestMeta] {
+    val a = StringField
+    val b = StringField("a")
+  }
+
+  it should "fail when name is duplicated" in {
+    Try(new AnotherTestMeta).toString mustBe "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)"
+  }
+
+  it should "fail when resolving an inner meta class" in {
+
+    case class AnotherValue(a: String)
+
+    class AnotherTestMeta extends RCcMetaExt[AnotherValue, AnotherTestMeta] {
+      val a = StringField
+    }
+
+    Try(new AnotherTestMeta).toString mustBe "Failure(java.lang.IllegalStateException: Couldn't auto-resolve field names, make sure that meta class is not an inner class...)"
 
   }
 }

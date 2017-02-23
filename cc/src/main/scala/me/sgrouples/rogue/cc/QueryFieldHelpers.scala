@@ -17,6 +17,8 @@ trait QueryFieldHelpers[Meta] extends {
 
   private val names: mutable.Map[Int, String] = mutable.Map.empty
 
+  private val fields: mutable.Map[String, io.fsq.field.Field[_, _]] = mutable.Map.empty
+
   private val nameId = new AtomicInteger(-1)
 
   // This one is hacky, we need to find the type tag from Java's getClass method...
@@ -100,17 +102,28 @@ trait QueryFieldHelpers[Meta] extends {
     Its complicated, I know, meta programming usually is... But Miles Sabin's @@ is awesome, don't you think?
    */
 
-  protected def named[T](func: String => T): T @@ Marker = {
+  protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = {
     if (names.isEmpty) resolve()
-    val name = names(nextNameId)
-    tag[Marker][T](func(name))
+    // so yeah, this version doesn't support auto name resolution for inner meta classes...
+    val name = names.getOrElse(nextNameId, throw new IllegalStateException("Couldn't auto-resolve field names, make sure that meta class is not an inner class..."))
+    val field = func(name)
+    if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
+    fields += (name -> field)
+    tag[Marker][T](field)
   }
 
-  protected def named[T](name: String)(func: String => T): T @@ Marker = {
+  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = {
     if (names.isEmpty) resolve()
     names += nextNameId -> name
-    tag[Marker][T](func(name))
+    val field = func(name)
+    if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
+    fields += (name -> field)
+    tag[Marker][T](field)
   }
+
+  // utility methods, not sure if they are usefull...
+  def fieldByName[T <: io.fsq.field.Field[_, _]](name: String): T = fields(name).asInstanceOf[T]
+  def fieldNames: Iterable[String] = names.values
 
   protected def IntField: IntField[Meta] @@ Marker = named(new IntField[Meta](_, this))
   protected def IntField(name: String): IntField[Meta] @@ Marker = named(name)(new IntField[Meta](_, this))

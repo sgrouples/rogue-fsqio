@@ -83,13 +83,13 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
 }
 
 /**
-  * Rogue Case Class Meta Extended, awesome name!
-  *
-  * @param collName
-  * @param formats
-  * @tparam RecordType
-  * @tparam OwnerType
-  */
+ * Rogue Case Class Meta Extended, awesome name!
+ *
+ * @param collName
+ * @param formats
+ * @tparam RecordType
+ * @tparam OwnerType
+ */
 
 class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType])
     extends RCcMeta[RecordType](collName)(formats)
