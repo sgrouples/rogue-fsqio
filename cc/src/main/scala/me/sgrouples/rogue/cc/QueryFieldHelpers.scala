@@ -105,7 +105,9 @@ trait QueryFieldHelpers[Meta] extends {
   protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = {
     if (names.isEmpty) resolve()
     // so yeah, this version doesn't support auto name resolution for inner meta classes...
-    val name = names.getOrElse(nextNameId, throw new IllegalStateException("Couldn't auto-resolve field names, make sure that meta class is not an inner class..."))
+    val name = names.getOrElse(nextNameId, throw new IllegalStateException(
+      "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com"
+    ))
     val field = func(name)
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
     fields += (name -> field)

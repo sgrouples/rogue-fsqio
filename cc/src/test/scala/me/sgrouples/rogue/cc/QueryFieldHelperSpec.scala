@@ -161,15 +161,13 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
     Try(new AnotherTestMeta).toString mustBe "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)"
   }
 
+  case class DifferentValue(a: String)
+
+  class DifferentTestMeta extends RCcMetaExt[DifferentValue, DifferentTestMeta] {
+    val a = StringField
+  }
+
   it should "fail when resolving an inner meta class" in {
-
-    case class AnotherValue(a: String)
-
-    class AnotherTestMeta extends RCcMetaExt[AnotherValue, AnotherTestMeta] {
-      val a = StringField
-    }
-
-    Try(new AnotherTestMeta).toString mustBe "Failure(java.lang.IllegalStateException: Couldn't auto-resolve field names, make sure that meta class is not an inner class...)"
-
+    (new DifferentTestMeta).a.name mustBe "a"
   }
 }
