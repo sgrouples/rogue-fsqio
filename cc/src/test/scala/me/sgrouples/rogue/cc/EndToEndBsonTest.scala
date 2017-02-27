@@ -23,7 +23,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   val firstClaim = VenueClaimBson(uid = 5679L, status = ClaimStatus.approved)
 
   def baseTestVenue(): Venue = Venue(
-    _id = new ObjectId(),
+    _id = Venue.newId,
     legId = 123L,
     userId = 456L,
     venuename = "test venue",
@@ -43,7 +43,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   )
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
-    VenueClaim(new ObjectId(), vid, 123L, ClaimStatus.approved)
+    VenueClaim(VenueClaim.newId, vid, 123L, ClaimStatus.approved)
   }
 
   def baseTestTip(): Tip = {
@@ -134,11 +134,11 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     base.select(_.legacyid).fetch() must_== List(v.legId)
 
-    val x = base.select(_.legacyid, _.userid).fetch() must_== List((v.legId, v.userId))
-    base.select(_.legacyid, _.userid, _.mayor).fetch() must_== List((v.legId, v.userId, v.mayor))
-    base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count))
-    base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
-    base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
+    val x = base.select(_.legacyid, _.userId).fetch() must_== List((v.legId, v.userId))
+    base.select(_.legacyid, _.userId, _.mayor).fetch() must_== List((v.legId, v.userId, v.mayor))
+    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count))
+    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
+    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags).fetch() must_== List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
   }
 
   @Test
@@ -155,11 +155,11 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     val base = VenueR.where(_.id eqs v._id)
     base.selectCase(_.legacyid, V1).fetch() must_== List(V1(v.legId))
-    base.selectCase(_.legacyid, _.userid, V2).fetch() must_== List(V2(v.legId, v.userId))
-    base.selectCase(_.legacyid, _.userid, _.mayor, V3).fetch() must_== List(V3(v.legId, v.userId, v.mayor))
-    base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4).fetch() must_== List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
-    base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5).fetch() must_== List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
-    base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetch() must_== List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
+    base.selectCase(_.legacyid, _.userId, V2).fetch() must_== List(V2(v.legId, v.userId))
+    base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetch() must_== List(V3(v.legId, v.userId, v.mayor))
+    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4).fetch() must_== List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
+    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5).fetch() must_== List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
+    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetch() must_== List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
   }
 
   @Test
@@ -254,7 +254,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   @Test
   def testFindAndModify {
     val v1 = VenueR.where(_.venuename eqs "v1")
-      .findAndModify(_.userid setTo 5) //all required fields have to be set, because they are required in CC
+      .findAndModify(_.userId setTo 5) //all required fields have to be set, because they are required in CC
       .and(_.legacyid setTo 0L).and(_.venuename setTo "").and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
       .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L)
@@ -262,21 +262,21 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     v1 must_== None
     val v2 = VenueR.where(_.venuename eqs "v2")
-      .findAndModify(_.userid setTo 5)
+      .findAndModify(_.userId setTo 5)
       .and(_.legacyid setTo 0L).and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
-      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userid setTo 0L)
+      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userId setTo 0L)
       .upsertOne(returnNew = true)
 
     v2.map(_.userId) must_== Some(5)
 
     val v3 = VenueR.where(_.venuename eqs "v2")
-      .findAndModify(_.userid setTo 6)
+      .findAndModify(_.userId setTo 6)
       .upsertOne(returnNew = false)
     v3.map(_.userId) must_== Some(5)
 
     val v4 = VenueR.where(_.venuename eqs "v2")
-      .findAndModify(_.userid setTo 7)
+      .findAndModify(_.userId setTo 7)
       .upsertOne(returnNew = true)
     v4.map(_.userId) must_== Some(7)
 
@@ -320,8 +320,8 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     (1 to 5).foreach(_ => VenueR.insertOne(baseTestVenue().copy(userId = 1L)))
     (1 to 5).foreach(_ => VenueR.insertOne(baseTestVenue().copy(userId = 2L)))
     (1 to 5).foreach(_ => VenueR.insertOne(baseTestVenue().copy(userId = 3L)))
-    VenueR.where(_.mayor eqs 789L).distinct(_.userid).length must_== 3
-    VenueR.where(_.mayor eqs 789L).countDistinct(_.userid) must_== 3
+    VenueR.where(_.mayor eqs 789L).distinct(_.userId).length must_== 3
+    VenueR.where(_.mayor eqs 789L).countDistinct(_.userId) must_== 3
   }
 
   @Test

@@ -81,3 +81,23 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   def createIndex(indexTuples: Seq[(String, Int)])(implicit dbs: MongoDatabase): String = createIndex(indexTuples, new IndexOptions())
 
 }
+
+/**
+ * Rogue Case Class Meta Extended, awesome name!
+ *
+ * @param collName
+ * @param formats
+ * @tparam RecordType
+ * @tparam OwnerType
+ */
+
+class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType])
+    extends RCcMeta[RecordType](collName)(formats)
+    with QueryFieldHelpers[OwnerType] { requires: OwnerType =>
+
+  def this(
+    namingStrategy: NamingStrategy = LowerCase
+  )(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType]) {
+    this(namingStrategy[RecordType])(formats)
+  }
+}

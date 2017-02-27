@@ -8,6 +8,7 @@ lazy val core = (project in file("core")).settings(defaultSettings).dependsOn(fi
 lazy val indexchecker = (project in file("indexchecker")).settings(defaultSettings).dependsOn(core)
 lazy val lift = (project in file("lift")).settings(defaultSettings).dependsOn(field, indexchecker, core % "compile;test->test;runtime->runtime")
 //lazy val spindle = (project in file("spindle")).settings(defaultSettings).dependsOn(core)
+
 lazy val cc = (project in file("cc")).dependsOn(field, core).settings(defaultSettings)
 lazy val root = (project in file(".")).settings(defaultSettings).aggregate(field,core,index,indexchecker,lift,cc)
 

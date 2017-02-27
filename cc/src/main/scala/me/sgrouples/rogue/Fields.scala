@@ -14,6 +14,7 @@ import org.bson.types.ObjectId
 import org.bson.{ BsonDocument, BsonNull, BsonValue }
 import shapeless.ops.hlist.LiftAll
 import shapeless.syntax.SingletonOps
+import shapeless.tag.@@
 
 import scala.reflect.ClassTag
 
@@ -26,21 +27,44 @@ abstract class OCField[V, O](name: String, owner: O) extends CField[V, O](name, 
 class IntField[O](name: String, o: O) extends MCField[Int, O](name, o) {
   override def defaultValue = 0
 }
+
+class IntTaggedField[Tag, O](name: String, o: O) extends MCField[Int @@ Tag, O](name, o) {
+  override def defaultValue = tag[Tag][Int](0)
+}
+
 class LongField[O](name: String, o: O) extends MCField[Long, O](name, o) {
   override def defaultValue = 0L
 }
+
+class LongTaggedField[Tag, O](name: String, o: O) extends MCField[Long @@ Tag, O](name, o) {
+  override def defaultValue = tag[Tag][Long](0L)
+}
+
 class DoubleField[O](name: String, o: O) extends MCField[Double, O](name, o) {
   override def defaultValue = 0d
 }
 class StringField[O](name: String, o: O) extends MCField[String, O](name, o) {
   override def defaultValue = ""
 }
+
+class StringTaggedField[Tag, O](name: String, o: O) extends MCField[String @@ Tag, O](name, o) {
+  override def defaultValue = tag[Tag][String]("")
+}
+
 class ObjectIdField[O](name: String, o: O) extends MCField[ObjectId, O](name, o) {
   override def defaultValue = ObjectId.get()
 }
 
+class ObjectIdTaggedField[Tag, O](name: String, o: O) extends MCField[ObjectId @@ Tag, O](name, o) {
+  override def defaultValue = tag[Tag][ObjectId](ObjectId.get())
+}
+
 class UUIDIdField[O](name: String, o: O) extends MCField[UUID, O](name, o) {
   override def defaultValue = UUID.randomUUID()
+}
+
+class UUIDIdTaggedField[Tag, O](name: String, o: O) extends MCField[UUID @@ Tag, O](name, o) {
+  override def defaultValue = tag[Tag][UUID](UUID.randomUUID())
 }
 
 class LocalDateTimeField[O](name: String, o: O) extends MCField[LocalDateTime, O](name, o) {
@@ -123,11 +147,21 @@ class MapField[V, O](name: String, o: O) extends MCField[Map[String, V], O](name
 }
 
 class OptIntField[O](name: String, o: O) extends OCField[Int, O](name, o)
+class OptIntTaggedField[Tag, O](name: String, o: O) extends OCField[Int @@ Tag, O](name, o)
+
 class OptLongField[O](name: String, o: O) extends OCField[Long, O](name, o)
-class OptDoubleField[O](name: String, o: O) extends OCField[Double, O](name, o)
+class OptLongTaggedField[Tag, O](name: String, o: O) extends OCField[Long @@ Tag, O](name, o)
+
 class OptStringField[O](name: String, o: O) extends OCField[String, O](name, o)
+class OptStringTaggedField[Tag, O](name: String, o: O) extends OCField[String @@ Tag, O](name, o)
+
 class OptObjectIdField[O](name: String, o: O) extends OCField[ObjectId, O](name, o)
+class OptObjectIdTaggedField[Tag, O](name: String, o: O) extends OCField[ObjectId @@ Tag, O](name, o)
+
 class OptUUIDIdField[O](name: String, o: O) extends OCField[UUID, O](name, o)
+class OptUUIDIdTaggedField[Tag, O](name: String, o: O) extends OCField[UUID @@ Tag, O](name, o)
+
+class OptDoubleField[O](name: String, o: O) extends OCField[Double, O](name, o)
 class OptLocalDateTimeField[O](name: String, o: O) extends OCField[LocalDateTime, O](name, o)
 class OptInstantField[O](name: String, o: O) extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O) extends OCField[Boolean, O](name, o)

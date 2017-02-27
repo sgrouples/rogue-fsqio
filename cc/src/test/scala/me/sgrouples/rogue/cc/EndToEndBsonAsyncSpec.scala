@@ -10,6 +10,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 
 import scala.concurrent.duration._
+import shapeless.tag
 
 class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
   import Metas._
@@ -19,7 +20,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
   def baseTestVenue(): Venue = Venue(
-    _id = new ObjectId(),
+    _id = tag[Venue][ObjectId](new ObjectId()),
     legId = 123L,
     userId = 456L,
     venuename = "test venue",
@@ -39,7 +40,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   )
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
-    VenueClaim(new ObjectId(), vid, 123L, ClaimStatus.approved)
+    VenueClaim(tag[VenueClaim][ObjectId](new ObjectId()), vid, 123L, ClaimStatus.approved)
   }
 
   def baseTestTip(): Tip = {
@@ -121,11 +122,11 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     base.select(_.legacyid).fetchAsync().futureValue mustBe List(v.legId)
 
-    base.select(_.legacyid, _.userid).fetchAsync().futureValue mustBe List((v.legId, v.userId))
-    base.select(_.legacyid, _.userid, _.mayor).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor))
-    base.select(_.legacyid, _.userid, _.mayor, _.mayor_count).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count))
-    base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
-    base.select(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
+    base.select(_.legacyid, _.userId).fetchAsync().futureValue mustBe List((v.legId, v.userId))
+    base.select(_.legacyid, _.userId, _.mayor).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor))
+    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count))
+    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
+    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
 
   }
 
@@ -141,11 +142,11 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     val base = VenueR.where(_.id eqs v._id)
     base.selectCase(_.legacyid, V1).fetchAsync().futureValue mustBe List(V1(v.legId))
-    base.selectCase(_.legacyid, _.userid, V2).fetchAsync().futureValue mustBe List(V2(v.legId, v.userId))
-    base.selectCase(_.legacyid, _.userid, _.mayor, V3).fetchAsync().futureValue mustBe List(V3(v.legId, v.userId, v.mayor))
-    base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, V4).fetchAsync().futureValue mustBe List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
-    base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, V5).fetchAsync().futureValue mustBe List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
-    base.selectCase(_.legacyid, _.userid, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync().futureValue mustBe List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
+    base.selectCase(_.legacyid, _.userId, V2).fetchAsync().futureValue mustBe List(V2(v.legId, v.userId))
+    base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetchAsync().futureValue mustBe List(V3(v.legId, v.userId, v.mayor))
+    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4).fetchAsync().futureValue mustBe List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
+    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5).fetchAsync().futureValue mustBe List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
+    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync().futureValue mustBe List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
 
   }
 
@@ -244,7 +245,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   "Find and modify" should "work as expected" in {
 
     val v1 = VenueR.where(_.venuename eqs "v1")
-      .findAndModify(_.userid setTo 5) //all required fields have to be set, because they are required in CC
+      .findAndModify(_.userId setTo 5) //all required fields have to be set, because they are required in CC
       .and(_.legacyid setTo 0L).and(_.venuename setTo "").and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
       .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L)
@@ -252,21 +253,21 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     v1 mustBe None
     val v2 = VenueR.where(_.venuename eqs "v2")
-      .findAndModify(_.userid setTo 5)
+      .findAndModify(_.userId setTo 5)
       .and(_.legacyid setTo 0L).and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
-      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userid setTo 0L)
+      .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userId setTo 0L)
       .upsertOneAsync(returnNew = true).futureValue
 
     v2.map(_.userId) mustBe Some(5)
 
     val v3 = VenueR.where(_.venuename eqs "v2")
-      .findAndModify(_.userid setTo 6)
+      .findAndModify(_.userId setTo 6)
       .upsertOneAsync(returnNew = false).futureValue
     v3.map(_.userId) mustBe Some(5)
 
     val v4 = VenueR.where(_.venuename eqs "v2")
-      .findAndModify(_.userid setTo 7)
+      .findAndModify(_.userId setTo 7)
       .upsertOneAsync(returnNew = true).futureValue
     v4.map(_.userId) mustBe Some(7)
   }
@@ -309,8 +310,8 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 1L)).futureValue)
     (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 2L)).futureValue)
     (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 3L)).futureValue)
-    VenueR.where(_.mayor eqs 789L).distinctAsync(_.userid).futureValue.length mustBe 3
-    VenueR.where(_.mayor eqs 789L).countDistinctAsync(_.userid).futureValue mustBe 3
+    VenueR.where(_.mayor eqs 789L).distinctAsync(_.userId).futureValue.length mustBe 3
+    VenueR.where(_.mayor eqs 789L).countDistinctAsync(_.userId).futureValue mustBe 3
   }
 
   "Slice" should "work as expected" in {
@@ -332,7 +333,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     VenueR.select(_.firstClaim).fetchAsync()
       .futureValue must contain(VenueClaimBson.default)
 
-    VenueR.select(_.userid, _.firstClaim).fetchAsync()
+    VenueR.select(_.userId, _.firstClaim).fetchAsync()
       .futureValue must contain(456L -> VenueClaimBson.default)
 
     val yetAnotherClaim = VenueClaimBson.default.copy(uid = 1L)
