@@ -167,7 +167,7 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
     val a = StringField
   }
 
-  it should "fail when resolving an inner meta class" in {
+  it should "not fail when resolving an inner meta class" in {
     (new DifferentTestMeta).a.name mustBe "a"
   }
 }

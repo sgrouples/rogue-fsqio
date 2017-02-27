@@ -15,15 +15,15 @@ private[cc] sealed trait Marker
 trait QueryFieldHelpers[Meta] extends {
   requires: Meta =>
 
-  private val names: mutable.Map[Int, String] = mutable.Map.empty
+  private[this] val names: mutable.Map[Int, String] = mutable.Map.empty
 
-  private val fields: mutable.Map[String, io.fsq.field.Field[_, _]] = mutable.Map.empty
+  private[this] val fields: mutable.Map[String, io.fsq.field.Field[_, _]] = mutable.Map.empty
 
-  private val nameId = new AtomicInteger(-1)
+  private[this] val nameId = new AtomicInteger(-1)
 
   // This one is hacky, we need to find the type tag from Java's getClass method...
 
-  private implicit val typeTag: TypeTag[Meta] = {
+  private[this] implicit val typeTag: TypeTag[Meta] = {
 
     val mirror = runtimeMirror(getClass.getClassLoader)
     val sym = mirror.classSymbol(getClass)
@@ -36,9 +36,9 @@ trait QueryFieldHelpers[Meta] extends {
     })
   }
 
-  private def nextNameId = nameId.incrementAndGet()
+  private[this] def nextNameId = nameId.incrementAndGet()
 
-  private def resolve(): Unit = {
+  private[this] def resolve(): Unit = {
 
     /*
       The idea of automatic name resolution is taken from Scala's Enumeration,
@@ -104,10 +104,11 @@ trait QueryFieldHelpers[Meta] extends {
 
   protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = {
     if (names.isEmpty) resolve()
-    // so yeah, this version doesn't support auto name resolution for inner meta classes...
+
     val name = names.getOrElse(nextNameId, throw new IllegalStateException(
       "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com"
     ))
+
     val field = func(name)
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
     fields += (name -> field)
