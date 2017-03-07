@@ -2,10 +2,6 @@
 import sbt._
 import Keys.{scalaVersion, _}
 
-object Version {
-  val scala = "2.11.8"
-}
-
 object RogueSettings {
 
   val nexus = "https://nexus.groupl.es/"
@@ -15,7 +11,7 @@ object RogueSettings {
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "2.5.1-MongoAsync-shapeless-32",
     organization := "io.fsq",
-    scalaVersion := Version.scala,
+    scalaVersion := "2.11.8",
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
