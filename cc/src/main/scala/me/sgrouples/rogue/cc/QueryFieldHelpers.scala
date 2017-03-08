@@ -215,14 +215,26 @@ trait QueryFieldHelpers[Meta] extends {
   protected def EnumField[E <: Enumeration](implicit e: E): EnumField[E, Meta] @@ Marker = named(new EnumField[E, Meta](_, this)(e))
   protected def EnumField[E <: Enumeration](name: String)(implicit e: E): EnumField[E, Meta] = named(name)(new EnumField[E, Meta](_, this)(e))
 
+  protected def EnumListField[E <: Enumeration](implicit e: E): EnumListField[E, Meta] @@ Marker = named(new EnumListField[E, Meta](_, this)(e))
+  protected def EnumListField[E <: Enumeration](name: String)(implicit e: E): EnumListField[E, Meta] = named(name)(new EnumListField[E, Meta](_, this)(e))
+
   protected def OptEnumField[E <: Enumeration](implicit e: E): OptEnumField[E, Meta] @@ Marker = named(new OptEnumField[E, Meta](_, this)(e))
   protected def OptEnumField[E <: Enumeration](name: String)(implicit e: E): OptEnumField[E, Meta] = named(name)(new OptEnumField[E, Meta](_, this)(e))
+
+  protected def OptEnumListField[E <: Enumeration](implicit e: E): OptEnumListField[E, Meta] @@ Marker = named(new OptEnumListField[E, Meta](_, this)(e))
+  protected def OptEnumListField[E <: Enumeration](name: String)(implicit e: E): OptEnumListField[E, Meta] = named(name)(new OptEnumListField[E, Meta](_, this)(e))
 
   protected def EnumIdField[E <: Enumeration](implicit e: E): EnumIdField[E, Meta] @@ Marker = named(new EnumIdField[E, Meta](_, this)(e))
   protected def EnumIdField[E <: Enumeration](name: String)(implicit e: E): EnumIdField[E, Meta] = named(name)(new EnumIdField[E, Meta](_, this)(e))
 
+  protected def EnumIdListField[E <: Enumeration](implicit e: E): EnumIdListField[E, Meta] @@ Marker = named(new EnumIdListField[E, Meta](_, this)(e))
+  protected def EnumIdListField[E <: Enumeration](name: String)(implicit e: E): EnumIdListField[E, Meta] = named(name)(new EnumIdListField[E, Meta](_, this)(e))
+
   protected def OptEnumIdField[E <: Enumeration](implicit e: E): OptEnumIdField[E, Meta] @@ Marker = named(new OptEnumIdField[E, Meta](_, this)(e))
   protected def OptEnumIdField[E <: Enumeration](name: String)(implicit e: E): OptEnumIdField[E, Meta] = named(name)(new OptEnumIdField[E, Meta](_, this)(e))
+
+  protected def OptEnumIdListField[E <: Enumeration](implicit e: E): OptEnumIdListField[E, Meta] @@ Marker = named(new OptEnumIdListField[E, Meta](_, this)(e))
+  protected def OptEnumIdListField[E <: Enumeration](name: String)(implicit e: E): OptEnumIdListField[E, Meta] = named(name)(new OptEnumIdListField[E, Meta](_, this)(e))
 
   protected def ListField[V]: ListField[V, Meta] @@ Marker = named(new ListField[V, Meta](_, this))
   protected def ListField[V](name: String): ListField[V, Meta] @@ Marker = named(name)(new ListField[V, Meta](_, this))

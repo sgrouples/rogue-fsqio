@@ -358,6 +358,5 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     vr.maybes must_=== None
     vr.realString must_== "ore"
   }
-
 }
 

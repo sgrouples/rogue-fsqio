@@ -46,13 +46,27 @@ object VenueClaimBson {
   )
 }
 
-case class VenueClaimBson(uid: Long, status: ClaimStatus.Value, source: Option[SourceBson] = None, date: LocalDateTime = LocalDateTime.now())
+case class VenueClaimBson(
+  uid: Long,
+  status: ClaimStatus.Value,
+  source: Option[SourceBson] = None,
+  date: LocalDateTime = LocalDateTime.now(),
+  otherReasons: Option[List[RejectReason.Value]] = None
+)
 
 object VenueClaim {
   def newId = tag[VenueClaim](new ObjectId())
 }
 
-case class VenueClaim(_id: ObjectId @@ VenueClaim, vid: ObjectId, uid: Long, status: ClaimStatus.Value, reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now())
+case class VenueClaim(
+  _id: ObjectId @@ VenueClaim,
+  vid: ObjectId,
+  uid: Long,
+  status: ClaimStatus.Value,
+  reason: Option[RejectReason.Value] = None,
+  date: LocalDateTime = LocalDateTime.now(),
+  otherReasons: Option[List[RejectReason.Value]] = None
+)
 
 object Venue {
   def newId = tag[Venue](new ObjectId())
@@ -98,12 +112,14 @@ object Metas {
   }
 
   implicit val evClaimStatus = ClaimStatus
+  implicit val evRejectReason = RejectReason
 
   class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
     val status = EnumField[ClaimStatus.type]("status")
     val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
     val date = LocalDateTimeField("date")
+    val otherReasons = OptEnumListField[RejectReason.type]("otherReasons")(evRejectReason)
   }
 
   val VenueClaimBsonR = new VenueClaimBsonRMeta
@@ -132,8 +148,6 @@ object Metas {
   }
 
   val VenueR = new VenueRMeta
-
-  implicit val evRejReason = RejectReason
 
   class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims") with QueryFieldHelpers[VenueClaimRMeta] {
     val venueid = ObjectIdTaggedField[Venue]("vid")
