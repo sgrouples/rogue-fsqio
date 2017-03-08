@@ -51,7 +51,8 @@ case class VenueClaimBson(
   status: ClaimStatus.Value,
   source: Option[SourceBson] = None,
   date: LocalDateTime = LocalDateTime.now(),
-  otherReasons: Option[List[RejectReason.Value]] = None
+  otherReasons: List[RejectReason.Value] = Nil,
+  optOtherReasons: Option[List[RejectReason.Value]] = None
 )
 
 object VenueClaim {
@@ -119,7 +120,8 @@ object Metas {
     val status = EnumField[ClaimStatus.type]("status")
     val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
     val date = LocalDateTimeField("date")
-    val otherReasons = OptEnumListField[RejectReason.type]("otherReasons")(evRejectReason)
+    val otherReasons = EnumListField[RejectReason.type]("otherReasons")(evRejectReason)
+    val optOtherReasons = OptEnumListField[RejectReason.type]("optOtherReasons")(evRejectReason)
   }
 
   val VenueClaimBsonR = new VenueClaimBsonRMeta

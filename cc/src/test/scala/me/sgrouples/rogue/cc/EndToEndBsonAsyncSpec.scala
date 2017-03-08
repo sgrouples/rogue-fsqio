@@ -358,12 +358,20 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     vr.realString must ===("ore")
   }
 
-  "OptEnumNameListField" should "work as expected" in {
+  "EnumNameListField" should "work as expected" in {
     val base = baseTestVenue()
-    val v = base.copy(claims = base.claims.map(_.copy(otherReasons = Some(List(RejectReason.cheater)))))
+    val v = base.copy(claims = base.claims.map(_.copy(otherReasons = List(RejectReason.tooManyClaims))))
     VenueR.insertOneAsync(v).futureValue
     VenueR.select(_.claims).getAsync().futureValue.getOrElse(Nil)
-      .flatMap(_.otherReasons.getOrElse(Nil)) must contain(RejectReason.cheater)
+      .flatMap(_.otherReasons) must contain(RejectReason.tooManyClaims)
+  }
+
+  "OptEnumNameListField" should "work as expected" in {
+    val base = baseTestVenue()
+    val v = base.copy(claims = base.claims.map(_.copy(optOtherReasons = Some(List(RejectReason.cheater)))))
+    VenueR.insertOneAsync(v).futureValue
+    VenueR.select(_.claims).getAsync().futureValue.getOrElse(Nil)
+      .flatMap(_.optOtherReasons.getOrElse(Nil)) must contain(RejectReason.cheater)
   }
 }
 
