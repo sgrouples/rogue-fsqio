@@ -504,16 +504,7 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
     if (optimizer.isEmptyQuery(query)) {
       Future.successful(())
     } else {
-      try {
-        adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
-      } catch {
-        case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[DuplicateKeyException] => {
-          /* NOTE: have to retry upserts that fail with duplicate key,
-           * see https://jira.mongodb.org/browse/SERVER-14322
-           */
-          adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
-        }
-      }
+      adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
     }
   }
 

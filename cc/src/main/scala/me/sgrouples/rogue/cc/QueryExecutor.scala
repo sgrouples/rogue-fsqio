@@ -121,16 +121,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     query: ModifyQuery[M, State],
     writeConcern: WriteConcern = defaultWriteConcern
   )(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[Unit] = {
-    try {
-      adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
-    } catch {
-      case r: RogueException if r.getCause() != null && r.getCause().isInstanceOf[DuplicateKeyException] => {
-        /* NOTE: have to retry upserts that fail with duplicate key,
-           * see https://jira.mongodb.org/browse/SERVER-14322
-           */
-        adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
-      }
-    }
+    adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
   }
 
   def updateMulti[M <: MB, State](

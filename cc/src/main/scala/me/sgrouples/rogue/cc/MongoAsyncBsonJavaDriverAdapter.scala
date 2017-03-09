@@ -18,6 +18,7 @@ import scala.collection.JavaConversions._
 import scala.concurrent.{ Future, Promise }
 import scala.reflect.ClassTag
 import scala.util.Try
+import com.mongodb.ErrorCategory._
 
 trait AsyncBsonDBCollectionFactory[MB] {
 
@@ -116,11 +117,13 @@ class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] =>
   @volatile private[this] var retried = false
 
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
-    if (t == null) p.success(())
-    else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
-      retried = true
-      retry(this)
-    } else p.failure(t)
+    t match {
+      case null => p.success(())
+      case e: MongoException if fromErrorCode(e.getCode) == DUPLICATE_KEY && !retried =>
+        retried = true
+        retry(this)
+      case _ => p.failure(t)
+    }
   }
 
   def future = p.future
@@ -145,15 +148,14 @@ class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument => Option[R])(retry:
   val p = Promise[Option[R]]
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
-    if (t == null) {
-      if (result != null) {
-        //        println(s"read on result from ${result}")
-        p.complete(Try(f(result)))
-      } else p.success(None)
-    } else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
-      retried = true
-      retry(this)
-    } else p.failure(t)
+    t match {
+      case null if result != null => p.complete(Try(f(result)))
+      case null => p.success(None)
+      case e: MongoException if fromErrorCode(e.getCode) == DUPLICATE_KEY && !retried =>
+        retried = true
+        retry(this)
+      case _ => p.failure(t)
+    }
   }
 
   def future = p.future

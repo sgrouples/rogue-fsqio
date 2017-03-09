@@ -12,10 +12,10 @@ import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.Document
 import org.bson.conversions.Bson
-
 import scala.collection.JavaConversions._
 import scala.concurrent.{ Future, Promise }
 import scala.reflect.ClassTag
+import com.mongodb.ErrorCategory._
 
 trait AsyncDBCollectionFactory[MB, RB] {
   def getDBCollection[M <: MB](query: Query[M, _, _]): MongoCollection[Document]
@@ -113,11 +113,13 @@ class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] =>
   @volatile private[this] var retried = false
 
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
-    if (t == null) p.success(())
-    else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
-      retried = true
-      retry(this)
-    } else p.failure(t)
+    t match {
+      case null => p.success(())
+      case e: MongoException if fromErrorCode(e.getCode) == DUPLICATE_KEY && !retried =>
+        retried = true
+        retry(this)
+      case _ => p.failure(t)
+    }
   }
 
   def future = p.future
@@ -142,13 +144,14 @@ class SingleDocumentOptCallbackWithRetry[R](f: Document => R)(retry: SingleDocum
   val p = Promise[Option[R]]
 
   override def onResult(result: Document, t: Throwable): Unit = {
-    if (t == null) {
-      if (result != null) p.success(Option(f(result)))
-      else p.success(None)
-    } else if (t != null && t.isInstanceOf[MongoException] && t.getCause.isInstanceOf[DuplicateKeyException] && !retried) {
-      retried = true
-      retry(this)
-    } else p.failure(t)
+    t match {
+      case null if result != null => p.success(Option(f(result)))
+      case null => p.success(None)
+      case e: MongoException if fromErrorCode(e.getCode) == DUPLICATE_KEY && !retried =>
+        retried = true
+        retry(this)
+      case _ => p.failure(t)
+    }
   }
 
   def future = p.future
