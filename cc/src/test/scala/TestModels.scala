@@ -97,8 +97,6 @@ object Metas {
     val url = new StringField("url", this)
   }
 
-  implicit val evClaimStatus = ClaimStatus
-
   class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
     val status = EnumField[ClaimStatus.type]("status")
@@ -107,8 +105,6 @@ object Metas {
   }
 
   val VenueClaimBsonR = new VenueClaimBsonRMeta
-
-  implicit val evVenueStatus = VenueStatus
 
   class VenueRMeta extends RCcMetaExt[Venue, VenueRMeta](PluralLowerCase) {
 
@@ -133,8 +129,6 @@ object Metas {
 
   val VenueR = new VenueRMeta
 
-  implicit val evRejReason = RejectReason
-
   class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims") with QueryFieldHelpers[VenueClaimRMeta] {
     val venueid = ObjectIdTaggedField[Venue]("vid")
     val status = EnumField[ClaimStatus.type]
@@ -151,7 +145,6 @@ object Metas {
     val counts = new MapField[Long, TipR.type]("counts", this)
   }
 
-  implicit val consumerPrivilegeV = ConsumerPrivilege
   object OAuthConsumerR extends RCcMeta[OAuthConsumer]("oauthconsumers") {
     val privileges = new ListField[ConsumerPrivilege.Value, OAuthConsumerR.type]("privileges", this)
   }
