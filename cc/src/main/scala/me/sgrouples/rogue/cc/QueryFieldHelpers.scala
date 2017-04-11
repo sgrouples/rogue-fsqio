@@ -215,14 +215,54 @@ trait QueryFieldHelpers[Meta] extends {
   protected def EnumField[E <: Enumeration: TypeTag]: EnumField[E, Meta] @@ Marker = named(new EnumField[E, Meta](_, this))
   protected def EnumField[E <: Enumeration: TypeTag](name: String): EnumField[E, Meta] = named(name)(new EnumField[E, Meta](_, this))
 
+  /**
+   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
+   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
+   * @param e
+   * @tparam E
+   * @return
+   */
+  protected def EnumField[E <: Enumeration: TypeTag](e: E): EnumField[E, Meta] @@ Marker = named(new EnumField[E, Meta](_, this))
+  protected def EnumField[E <: Enumeration: TypeTag](name: String, e: E): EnumField[E, Meta] = named(name)(new EnumField[E, Meta](_, this))
+
   protected def OptEnumField[E <: Enumeration]: OptEnumField[E, Meta] @@ Marker = named(new OptEnumField[E, Meta](_, this))
   protected def OptEnumField[E <: Enumeration](name: String): OptEnumField[E, Meta] = named(name)(new OptEnumField[E, Meta](_, this))
+
+  /**
+   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
+   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
+   * @param e
+   * @tparam E
+   * @return
+   */
+  protected def OptEnumField[E <: Enumeration](e: E): OptEnumField[E, Meta] @@ Marker = named(new OptEnumField[E, Meta](_, this))
+  protected def OptEnumField[E <: Enumeration](name: String, e: E): OptEnumField[E, Meta] = named(name)(new OptEnumField[E, Meta](_, this))
 
   protected def EnumIdField[E <: Enumeration: TypeTag]: EnumIdField[E, Meta] @@ Marker = named(new EnumIdField[E, Meta](_, this))
   protected def EnumIdField[E <: Enumeration: TypeTag](name: String): EnumIdField[E, Meta] = named(name)(new EnumIdField[E, Meta](_, this))
 
+  /**
+   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
+   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
+   * @param e
+   * @tparam E
+   * @return
+   */
+  protected def EnumIdField[E <: Enumeration: TypeTag](e: E): EnumIdField[E, Meta] @@ Marker = named(new EnumIdField[E, Meta](_, this))
+  protected def EnumIdField[E <: Enumeration: TypeTag](name: String, e: E): EnumIdField[E, Meta] = named(name)(new EnumIdField[E, Meta](_, this))
+
   protected def OptEnumIdField[E <: Enumeration]: OptEnumIdField[E, Meta] @@ Marker = named(new OptEnumIdField[E, Meta](_, this))
   protected def OptEnumIdField[E <: Enumeration](name: String): OptEnumIdField[E, Meta] = named(name)(new OptEnumIdField[E, Meta](_, this))
+
+  /**
+   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
+   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
+   * @param e
+   * @tparam E
+   * @return
+   */
+  protected def OptEnumIdField[E <: Enumeration](e: E): OptEnumIdField[E, Meta] @@ Marker = named(new OptEnumIdField[E, Meta](_, this))
+  protected def OptEnumIdField[E <: Enumeration](name: String)(e: E): OptEnumIdField[E, Meta] = named(name)(new OptEnumIdField[E, Meta](_, this))
 
   protected def ListField[V]: ListField[V, Meta] @@ Marker = named(new ListField[V, Meta](_, this))
   protected def ListField[V](name: String): ListField[V, Meta] @@ Marker = named(name)(new ListField[V, Meta](_, this))

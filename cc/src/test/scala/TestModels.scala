@@ -99,7 +99,7 @@ object Metas {
 
   class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
-    val status = EnumField[ClaimStatus.type]("status")
+    val status = EnumField("status", ClaimStatus)
     val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
     val date = LocalDateTimeField("date")
   }
@@ -112,7 +112,7 @@ object Metas {
     val mayor = LongField
     val venuename = StringField
     val closed = BooleanField
-    val status = EnumField[VenueStatus.type]
+    val status = EnumField(VenueStatus)
     val mayor_count = LongField
     val legacyid = LongField("legId")
     val userId = LongField
