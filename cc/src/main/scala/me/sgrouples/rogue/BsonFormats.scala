@@ -4,6 +4,7 @@ import java.nio.{ ByteBuffer, ByteOrder }
 import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.UUID
 
+import me.sgrouples.rogue.enums.ReflectEnumInstance
 import org.bson._
 import org.bson.types.ObjectId
 import shapeless.Default.AsRecord
@@ -45,12 +46,23 @@ class EnumSerializeValue extends StaticAnnotation
 /**
  * serialize enums as names
  */
+
 trait EnumNameFormats {
-  //WARN to make it work, all enums must be in implicit scope for BsonFormat to work
-  implicit def enumFormat[T <: Enumeration](implicit enumeration: T) = new BasicBsonFormat[T#Value] {
-    override def read(b: BsonValue): T#Value = enumeration.withName(b.asString().getValue())
-    override def write(t: T#Value): BsonValue = new BsonString(t.toString)
-    override def defaultValue: T#Value = enumeration(0)
+
+  import scala.reflect.runtime.universe
+  import universe._
+
+  implicit def enumFormat[T <: Enumeration: TypeTag]: BasicBsonFormat[T#Value] = {
+
+    new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
+
+      override def read(b: BsonValue): T#Value =
+        enumeration.withName(b.asString().getValue)
+
+      override def write(t: T#Value): BsonValue = new BsonString(t.toString)
+
+      override def defaultValue: T#Value = enumeration.apply(0)
+    }
   }
 }
 
@@ -59,10 +71,20 @@ object EnumNameFormats extends EnumNameFormats
  * serialize enums as integers
  */
 trait EnumValueFormats {
-  implicit def enumValueFormat[T <: Enumeration](implicit enumeration: T) = new BasicBsonFormat[T#Value] {
-    override def read(b: BsonValue): T#Value = enumeration.apply(b.asNumber().intValue())
-    override def write(t: T#Value): BsonValue = new BsonInt32(t.id)
-    override def defaultValue: T#Value = enumeration(0)
+
+  import scala.reflect.runtime.universe
+  import universe._
+
+  implicit def enumValueFormat[T <: Enumeration: TypeTag]: BasicBsonFormat[T#Value] = {
+
+    new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
+
+      override def read(b: BsonValue): T#Value = enumeration.apply(b.asNumber().intValue())
+
+      override def write(t: T#Value): BsonValue = new BsonInt32(t.id)
+
+      override def defaultValue: T#Value = enumeration.apply(0)
+    }
   }
 }
 object EnumValueFormats extends EnumValueFormats
@@ -90,15 +112,13 @@ object EnumValueFormats extends EnumValueFormats
  */
 object EnumAnnotatedFormats {
   import scala.reflect.runtime.universe._
-  implicit def enumFormat[T <: Enumeration: TypeTag](implicit enumeration: T): BsonFormat[T#Value] = {
+  implicit def enumFormat[T <: Enumeration: TypeTag]: BsonFormat[T#Value] = {
     import scala.reflect.runtime._
     val rt = universe.typeOf[T].typeSymbol.asClass
     val eto = universe.typeOf[EnumSerializeValue]
     if (rt.annotations.exists(_.tree.tpe == eto)) {
-      EnumValueFormats.enumValueFormat(enumeration)
-    } else {
-      EnumNameFormats.enumFormat(enumeration)
-    }
+      EnumValueFormats.enumValueFormat[T]
+    } else EnumNameFormats.enumFormat[T]
   }
 }
 

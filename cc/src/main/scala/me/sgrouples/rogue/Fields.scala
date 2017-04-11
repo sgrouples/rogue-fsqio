@@ -7,6 +7,7 @@ import io.fsq.rogue.LatLong
 import shapeless._
 import labelled.{ FieldType, field }
 import me.sgrouples.rogue.cc.CcMeta
+import me.sgrouples.rogue.enums.ReflectEnumInstance
 import syntax.singleton._
 import record._
 import ops.record._
@@ -14,6 +15,7 @@ import org.bson.types.ObjectId
 import org.bson.{ BsonDocument, BsonNull, BsonValue }
 import shapeless.ops.hlist.LiftAll
 import shapeless.syntax.SingletonOps
+import scala.reflect.runtime.universe.TypeTag
 import shapeless.tag.@@
 
 import scala.reflect.ClassTag
@@ -78,12 +80,14 @@ class InstantField[O](name: String, o: O) extends MCField[Instant, O](name, o) {
 class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
   override def defaultValue = false
 }
-class EnumField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends MCField[T#Value, O](name, o) {
-  override def defaultValue: T#Value = e(0)
+class EnumField[T <: Enumeration: TypeTag, O](name: String, o: O)
+    extends MCField[T#Value, O](name, o) with ReflectEnumInstance[T] {
+  override def defaultValue: T#Value = enumeration.apply(0)
 }
 
-class EnumIdField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends MCField[T#Value, O](name, o) {
-  override def defaultValue: T#Value = e(0)
+class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O)
+    extends MCField[T#Value, O](name, o) with ReflectEnumInstance[T] {
+  override def defaultValue: T#Value = enumeration.apply(0)
 }
 
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
@@ -165,8 +169,8 @@ class OptDoubleField[O](name: String, o: O) extends OCField[Double, O](name, o)
 class OptLocalDateTimeField[O](name: String, o: O) extends OCField[LocalDateTime, O](name, o)
 class OptInstantField[O](name: String, o: O) extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O) extends OCField[Boolean, O](name, o)
-class OptEnumField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends OCField[T#Value, O](name, o)
-class OptEnumIdField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends OCField[T#Value, O](name, o)
+class OptEnumField[T <: Enumeration, O](name: String, o: O) extends OCField[T#Value, O](name, o)
+class OptEnumIdField[T <: Enumeration, O](name: String, o: O) extends OCField[T#Value, O](name, o)
 class OptListField[V, O](name: String, o: O) extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O) extends OCField[Array[V], O](name, o)
 class OptCClassField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
