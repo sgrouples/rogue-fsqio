@@ -7,7 +7,6 @@ import java.util.UUID
 import me.sgrouples.rogue.enums.ReflectEnumInstance
 import org.bson._
 import org.bson.types.ObjectId
-import shapeless.Default.AsRecord
 import shapeless._
 import shapeless.labelled.{ FieldType, field }
 
@@ -17,7 +16,7 @@ import scala.language.{ higherKinds, implicitConversions }
 import scala.reflect.ClassTag
 import shapeless.tag.@@
 
-import scala.collection.{ SetLike, TraversableLike }
+import scala.collection.TraversableLike
 import scala.collection.generic.CanBuildFrom
 
 @implicitNotFound("implicit BsonFormat not found for ${T}")
@@ -232,7 +231,7 @@ trait BaseBsonFormats {
 }
 
 trait BsonCollectionFormats {
-  import scala.collection.JavaConversions._
+  import scala.collection.JavaConverters._
 
   private[rogue]type BF[T] = BsonFormat[T]
 
@@ -247,13 +246,21 @@ trait BsonCollectionFormats {
       private[this] implicit val f = implicitly[BsonFormat[T]]
 
       def write(in: L[T]): BsonArray = {
-        new BsonArray(in.toList.map(f.write))
+        val b = ArrayBuffer[BsonValue]()
+        in.foreach(el => b.append(f.write(el)))
+        new BsonArray(b.result().asJava)
       }
 
       def read(value: BsonValue): L[T] = {
-        val list = if (value.isNull) List.empty[BsonValue]
-        else value.asArray().toList
-        list.map(f.read)(cb)
+        val b = cb(List.empty[BsonValue])
+        if (!value.isNull) {
+          val arr = value.asArray()
+          val i = arr.iterator()
+          while (i.hasNext) {
+            b.+=(f.read(i.next()))
+          }
+        }
+        b.result()
       }
 
       override def flds: Map[String, BsonFormat[_]] = f.flds
@@ -267,13 +274,13 @@ trait BsonCollectionFormats {
     private[this] implicit val f = implicitly[BsonFormat[T]]
 
     def write(in: Set[T]): BsonArray = {
-      new BsonArray(in.toList.map(f.write))
+      new BsonArray(in.toSeq.map(f.write).asJava)
     }
 
     def read(value: BsonValue): Set[T] = {
       val list = if (value.isNull) Set.empty[BsonValue]
-      else value.asArray().toSet
-      list.map(f.read)
+      else value.asArray().asScala
+      list.map(f.read).toSet
     }
 
     override def flds: Map[String, BsonFormat[_]] = f.flds
@@ -286,12 +293,23 @@ trait BsonCollectionFormats {
     def write(array: Array[T]) = {
       val buff = new ArrayBuffer[BsonValue](array.length)
       array.foreach(e => buff += f.write(e))
-      new BsonArray(buff)
+      new BsonArray(buff.asJava)
     }
     def read(value: BsonValue) = {
       if (value.isNull) new Array[T](0)
-      else value.asArray().map(f.read).toArray
+      else {
+        val arr = value.asArray()
+        val b = new Array[T](arr.size())
+        val it = arr.iterator()
+        var idx = 0
+        while (it.hasNext) {
+          b(idx) = f.read(it.next())
+          idx = idx + 1
+        }
+        b
+      }
     }
+
     override def flds: Map[String, BF[_]] = f.flds
 
     override def defaultValue: Array[T] = Array.empty[T]
@@ -338,7 +356,7 @@ trait BsonCollectionFormats {
       doc
     }
     def read(value: BsonValue) = {
-      value.asDocument().map {
+      value.asDocument().asScala.map {
         case (ks, v) =>
           (fk.read(new BsonString(ks)), fv.read(v))
       }(collection.breakOut)

@@ -11,7 +11,7 @@ object RogueSettings {
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "2.5.1-MongoAsync-shapeless-38",
     organization := "io.fsq",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.11.11",
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
@@ -53,12 +53,12 @@ object RogueDependencies {
   
   
   val joda = Seq(
-    "joda-time"                % "joda-time"           % "2.9.7"        % "compile",
+    "joda-time"                % "joda-time"           % "2.9.9"        % "compile",
     "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
   val mongoDeps = Seq(
-    "org.mongodb"              % "mongodb-driver"      % "3.4.1"     % "compile",
-    "org.mongodb"              % "mongodb-driver-async"% "3.4.1"     % "compile"
+    "org.mongodb"              % "mongodb-driver"      % "3.4.2"     % "compile",
+    "org.mongodb"              % "mongodb-driver-async"% "3.4.2"     % "compile"
   )
 
   val testDeps = Seq(
@@ -66,7 +66,7 @@ object RogueDependencies {
     "org.specs2"              %% "specs2-core"              % specsVer % "test",
     "org.specs2"              %% "specs2-matcher"              % specsVer % "test",
     "org.specs2"              %% "specs2-junit"              % specsVer % "test",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
+    "org.scalatest" %% "scalatest" % "3.0.3" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
   )
