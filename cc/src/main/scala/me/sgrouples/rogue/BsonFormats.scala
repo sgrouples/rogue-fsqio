@@ -17,6 +17,9 @@ import scala.language.{ higherKinds, implicitConversions }
 import scala.reflect.ClassTag
 import shapeless.tag.@@
 
+import scala.collection.{ SetLike, TraversableLike }
+import scala.collection.generic.CanBuildFrom
+
 @implicitNotFound("implicit BsonFormat not found for ${T}")
 trait BsonFormat[T] {
   def read(b: BsonValue): T
@@ -233,19 +236,49 @@ trait BsonCollectionFormats {
 
   private[rogue]type BF[T] = BsonFormat[T]
 
-  implicit def listFormat[T: BsonFormat] = new BsonFormat[List[T]] with BsonArrayReader[List[T]] {
-    implicit val f = implicitly[BsonFormat[T]]
-    def write(list: List[T]) = {
-      new BsonArray(list.map(f.write(_)))
+  implicit def traversableLikeFormat[L[_], T: BsonFormat](
+    implicit
+    ev: L[T] <:< TraversableLike[T, L[T]],
+    cb: CanBuildFrom[List[BsonValue], T, L[T]]
+  ): BsonFormat[L[T]] = {
+
+    new BsonFormat[L[T]] with BsonArrayReader[L[T]] {
+
+      private[this] implicit val f = implicitly[BsonFormat[T]]
+
+      def write(in: L[T]): BsonArray = {
+        new BsonArray(in.toList.map(f.write))
+      }
+
+      def read(value: BsonValue): L[T] = {
+        val list = if (value.isNull) List.empty[BsonValue]
+        else value.asArray().toList
+        list.map(f.read)(cb)
+      }
+
+      override def flds: Map[String, BsonFormat[_]] = f.flds
+
+      override def defaultValue: L[T] = List.empty[BsonValue].map(f.read)(cb)
     }
-    def read(value: BsonValue): List[T] = {
-      if (value.isNull) Nil
-      else value.asArray().map(f.read(_)).toList
+  }
+
+  implicit def setFormat[T: BsonFormat]: BsonFormat[Set[T]] = new BsonFormat[Set[T]] with BsonArrayReader[Set[T]] {
+
+    private[this] implicit val f = implicitly[BsonFormat[T]]
+
+    def write(in: Set[T]): BsonArray = {
+      new BsonArray(in.toList.map(f.write))
     }
 
-    override def flds: Map[String, BF[_]] = f.flds
+    def read(value: BsonValue): Set[T] = {
+      val list = if (value.isNull) Set.empty[BsonValue]
+      else value.asArray().toSet
+      list.map(f.read)
+    }
 
-    override def defaultValue: List[T] = Nil
+    override def flds: Map[String, BsonFormat[_]] = f.flds
+
+    override def defaultValue: Set[T] = Set.empty[T]
   }
 
   implicit def arrayFormat[T: BsonFormat: ClassTag] = new BsonFormat[Array[T]] with BsonArrayReader[Array[T]] {
@@ -257,7 +290,7 @@ trait BsonCollectionFormats {
     }
     def read(value: BsonValue) = {
       if (value.isNull) new Array[T](0)
-      else value.asArray().map(f.read(_)).toArray
+      else value.asArray().map(f.read).toArray
     }
     override def flds: Map[String, BF[_]] = f.flds
 
