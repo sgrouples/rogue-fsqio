@@ -8,6 +8,10 @@ case class CaseClass1(id: Long)
 
 case class CaseClass2(id: Long)
 
+case class SubtypedClass(id: SubtypedClass.Id)
+
+object SubtypedClass extends TypedObjectId[SubtypedClass, SubtypedClass]
+
 trait Tag
 
 object ExampleEnum extends Enumeration {
@@ -266,4 +270,12 @@ class RCcMetaExtSpec extends FlatSpec with Matchers {
     "optMapField",
     "optMapField_with_custom_name"
   )
+
+  private class SubtypedMeta extends RCcMetaExt[SubtypedClass, SubtypedMeta]() {
+    val id = ObjectIdSubtypeField[SubtypedClass.Id]
+    val idField_named = IntField(s"idField$suffix")
+  }
+  private val subtypedMeta = new SubtypedMeta
+  subtypedMeta.fieldNamesSorted shouldBe Seq("id", "idField_with_custom_name")
+
 }
