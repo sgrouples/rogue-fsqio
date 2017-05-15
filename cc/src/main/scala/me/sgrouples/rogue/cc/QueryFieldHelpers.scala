@@ -187,11 +187,11 @@ trait QueryFieldHelpers[Meta] extends {
   protected def OptObjectIdTaggedField[Tag]: OptObjectIdTaggedField[Tag, Meta] @@ Marker = named(new OptObjectIdTaggedField[Tag, Meta](_, this))
   protected def OptObjectIdTaggedField[Tag](name: String): OptObjectIdTaggedField[Tag, Meta] @@ Marker = named(name)(new OptObjectIdTaggedField[Tag, Meta](_, this))
 
-  protected def ObjectIdSubtypeField[Subtype <: ObjectId]: ObjectIdSubtypeField[Subtype, Meta] = named(new ObjectIdSubtypeField[Subtype, Meta](_, this))
-  protected def ObjectIdSubtypeField[Subtype <: ObjectId](name: String): ObjectIdSubtypeField[Subtype, Meta] = named(name)(new ObjectIdSubtypeField[Subtype, Meta](_, this))
+  protected def ObjectIdSubtypeField[Subtype <: ObjectId]: ObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(new ObjectIdSubtypeField[Subtype, Meta](_, this))
+  protected def ObjectIdSubtypeField[Subtype <: ObjectId](name: String): ObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(name)(new ObjectIdSubtypeField[Subtype, Meta](_, this))
 
-  protected def OptObjectIdSubtypeField[Subtype <: ObjectId]: OptObjectIdSubtypeField[Subtype, Meta] = named(new OptObjectIdSubtypeField[Subtype, Meta](_, this))
-  protected def OptObjectIdSubtypeField[Subtype <: ObjectId](name: String): OptObjectIdSubtypeField[Subtype, Meta] = named(name)(new OptObjectIdSubtypeField[Subtype, Meta](_, this))
+  protected def OptObjectIdSubtypeField[Subtype <: ObjectId]: OptObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(new OptObjectIdSubtypeField[Subtype, Meta](_, this))
+  protected def OptObjectIdSubtypeField[Subtype <: ObjectId](name: String): OptObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(name)(new OptObjectIdSubtypeField[Subtype, Meta](_, this))
 
   protected def UUIdField: UUIDIdField[Meta] @@ Marker = named(new UUIDIdField[Meta](_, this))
   protected def UUIdField(name: String): UUIDIdField[Meta] @@ Marker = named(name)(new UUIDIdField[Meta](_, this))
