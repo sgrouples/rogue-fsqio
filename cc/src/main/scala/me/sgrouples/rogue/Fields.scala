@@ -61,6 +61,13 @@ class ObjectIdTaggedField[Tag, O](name: String, o: O) extends MCField[ObjectId @
   override def defaultValue = tag[Tag][ObjectId](ObjectId.get())
 }
 
+/*
+ * explicit version where Subtype has to be given
+ */
+class ObjectIdSubtypeField[Subtype <: ObjectId, O](name: String, o: O) extends MCField[Subtype, O](name, o) {
+  override def defaultValue: Subtype = new ObjectId().asInstanceOf[Subtype]
+}
+
 class UUIDIdField[O](name: String, o: O) extends MCField[UUID, O](name, o) {
   override def defaultValue = UUID.randomUUID()
 }
@@ -161,6 +168,7 @@ class OptStringTaggedField[Tag, O](name: String, o: O) extends OCField[String @@
 
 class OptObjectIdField[O](name: String, o: O) extends OCField[ObjectId, O](name, o)
 class OptObjectIdTaggedField[Tag, O](name: String, o: O) extends OCField[ObjectId @@ Tag, O](name, o)
+class OptObjectIdSubtypeField[Subtype <: ObjectId, O](name: String, o: O) extends OCField[Subtype, O](name, o)
 
 class OptUUIDIdField[O](name: String, o: O) extends OCField[UUID, O](name, o)
 class OptUUIDIdTaggedField[Tag, O](name: String, o: O) extends OCField[UUID @@ Tag, O](name, o)

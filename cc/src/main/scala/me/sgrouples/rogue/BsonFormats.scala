@@ -228,6 +228,13 @@ trait BaseBsonFormats {
     override def defaultValue: Instant = Instant.ofEpochMilli(0)
   }
 
+  implicit def objectIdSubtypeFormat[Subtype <: ObjectId]: BasicBsonFormat[Subtype] = {
+    new BasicBsonFormat[Subtype] {
+      override def read(b: BsonValue): Subtype = ObjectIdBsonFormat.read(b).asInstanceOf[Subtype]
+      override def defaultValue: Subtype = new ObjectId().asInstanceOf[Subtype]
+      override def write(t: Subtype): BsonValue = ObjectIdBsonFormat.write(t)
+    }
+  }
 }
 
 trait BsonCollectionFormats {
