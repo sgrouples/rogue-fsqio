@@ -174,7 +174,7 @@ trait BaseBsonFormats {
   implicit object CurrencyBsonFormat extends BasicBsonFormat[Currency] {
     override def read(b: BsonValue): Currency = Currency.getInstance(b.asString().getValue)
     override def write(t: Currency): BsonValue = new BsonString(t.getCurrencyCode)
-    override def defaultValue: Currency = Currency.getInstance(Locale.getDefault)
+    override def defaultValue: Currency = Currency.getInstance("USD")
   }
 
   private def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {

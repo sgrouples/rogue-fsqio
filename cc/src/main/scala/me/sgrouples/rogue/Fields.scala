@@ -90,7 +90,7 @@ class InstantField[O](name: String, o: O) extends MCField[Instant, O](name, o) {
 }
 
 class CurrencyField[O](name: String, o: O) extends MCField[Currency, O](name, o) {
-  override def defaultValue = Currency.getInstance(Locale.getDefault)
+  override def defaultValue = Currency.getInstance("USD")
 }
 
 class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
