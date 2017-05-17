@@ -1,12 +1,13 @@
 package me.sgrouples.rogue
 
 import java.time.{ Instant, LocalDateTime, ZoneOffset }
-import java.util.Date
+import java.util.{ Currency, Date }
 
 import io.fsq.field.Field
 import io.fsq.rogue._
 import me.sgrouples.rogue.cc.CcMeta
-import org.bson.{ BsonDateTime, BsonDocument, BsonValue }
+import org.bson.types.Decimal128
+import org.bson._
 
 /**
  * Trait representing a field and all the operations on it.
@@ -130,6 +131,22 @@ class InstantQueryField[M](field: Field[Instant, M])
   def onOrBefore(d: Instant) = new LtEqQueryClause(field.name, instantToDate(d))
   def onOrAfter(d: Instant) = new GtEqQueryClause(field.name, instantToDate(d))
 
+}
+
+class BigDecimalQueryField[M](field: Field[BigDecimal, M]) extends AbstractQueryField[BigDecimal, BigDecimal, BsonDecimal128, M](field) {
+  override def valueToDB(v: BigDecimal): BsonDecimal128 = new BsonDecimal128(new Decimal128(v.bigDecimal))
+}
+
+class BigDecimalModifyField[M](field: Field[BigDecimal, M]) extends AbstractModifyField[BigDecimal, BsonDecimal128, M](field) {
+  override def valueToDB(v: BigDecimal): BsonDecimal128 = new BsonDecimal128(new Decimal128(v.bigDecimal))
+}
+
+class CurrencyQueryField[M](field: Field[Currency, M]) extends AbstractQueryField[Currency, Currency, BsonString, M](field) {
+  override def valueToDB(v: Currency): BsonString = new BsonString(v.getCurrencyCode)
+}
+
+class CurrencyModifyField[M](field: Field[Currency, M]) extends AbstractModifyField[Currency, BsonString, M](field) {
+  override def valueToDB(v: Currency): BsonString = new BsonString(v.getCurrencyCode)
 }
 
 class CClassModifyField[C, M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {

@@ -2,11 +2,11 @@ package me.sgrouples.rogue
 
 import java.nio.{ ByteBuffer, ByteOrder }
 import java.time.{ Instant, LocalDateTime, ZoneOffset }
-import java.util.UUID
+import java.util.{ Currency, Locale, UUID }
 
 import me.sgrouples.rogue.enums.ReflectEnumInstance
 import org.bson._
-import org.bson.types.ObjectId
+import org.bson.types.{ Decimal128, ObjectId }
 import shapeless._
 import shapeless.labelled.{ FieldType, field }
 
@@ -163,6 +163,18 @@ trait BaseBsonFormats {
     override def read(b: BsonValue): Double = b.asDouble().doubleValue()
     override def write(t: Double): BsonValue = new BsonDouble(t)
     override def defaultValue: Double = 0.0d
+  }
+
+  implicit object BigDecimalBsonFormat extends BasicBsonFormat[BigDecimal] {
+    override def read(b: BsonValue): BigDecimal = b.asDecimal128().decimal128Value().bigDecimalValue()
+    override def write(t: BigDecimal): BsonValue = new BsonDecimal128(new Decimal128(t.bigDecimal))
+    override def defaultValue: BigDecimal = BigDecimal(0)
+  }
+
+  implicit object CurrencyBsonFormat extends BasicBsonFormat[Currency] {
+    override def read(b: BsonValue): Currency = Currency.getInstance(b.asString().getValue)
+    override def write(t: Currency): BsonValue = new BsonString(t.getCurrencyCode)
+    override def defaultValue: Currency = Currency.getInstance(Locale.getDefault)
   }
 
   private def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {

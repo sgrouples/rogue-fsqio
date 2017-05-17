@@ -13,7 +13,7 @@ import io.fsq.field.{ RequiredField, Field => RField, OptionalField => ROptional
 import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
-import java.util.{ Date, UUID }
+import java.util.{ Currency, Date, UUID }
 
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
@@ -90,6 +90,12 @@ trait CcRogue {
   implicit def instantFieldToInstantQueryField[O <: CcMeta[_]](f: RField[Instant, O]): InstantQueryField[O] =
     new InstantQueryField(f)
 
+  implicit def currencyFieldToCurrencyQueryField[O <: CcMeta[_]](f: RField[Currency, O]): CurrencyQueryField[O] =
+    new CurrencyQueryField[O](f)
+
+  implicit def bigDecimalFieldToCurrencyQueryField[O <: CcMeta[_]](f: RField[BigDecimal, O]): BigDecimalQueryField[O] =
+    new BigDecimalQueryField[O](f)
+
   implicit def caseClassFieldToQueryField[C, M <: CcMeta[C], O](f: CClassField[C, M, O]): CClassQueryField[C, M, O] =
     new CClassQueryField[C, M, O](f, f.owner)
 
@@ -121,6 +127,12 @@ trait CcRogue {
 
   implicit def instantFieldToLocalDateTimeModifyField[O <: CcMeta[_]](f: RField[Instant, O]): InstantModifyField[O] =
     new InstantModifyField(f)
+
+  implicit def currencyFieldToCurrencyModifyField[O <: CcMeta[_]](f: RField[Currency, O]): CurrencyModifyField[O] =
+    new CurrencyModifyField[O](f)
+
+  implicit def bigDecimalFieldToCurrencyModifyField[O <: CcMeta[_]](f: RField[BigDecimal, O]): BigDecimalModifyField[O] =
+    new BigDecimalModifyField[O](f)
 
   implicit def mandatoryFieldToSelectField[M, V](f: MCField[V, M]): SelectField[V, M] =
     new MandatorySelectField(f)
