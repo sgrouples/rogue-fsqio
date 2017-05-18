@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.cc
 
 import java.time.LocalDateTime
+import java.util.Currency
 import java.util.regex.Pattern
 
 import com.mongodb.async.client.MongoDatabase
@@ -358,5 +359,42 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     vr.realString must ===("ore")
   }
 
+  "Currency and BigDecimal fields" should "just work" in {
+
+    val USD = Currency.getInstance("USD")
+    val EUR = Currency.getInstance("EUR")
+
+    val invoice1 = Invoice(1L, "Invoice no. 1", Money(12.34, USD))
+    val invoice2 = Invoice(2L, "Invoice no. 2", Money(5.12, USD))
+    val invoice3 = Invoice(3L, "Invoice no. 3", Money(145.98, USD))
+    val invoice4 = Invoice(4L, "Invoice no. 4", Money(99.21, EUR))
+
+    val invoices = Seq(invoice1, invoice2, invoice3, invoice4)
+
+    for (invoice <- invoices) {
+      Invoices.insertOneAsync(invoice).futureValue
+    }
+
+    Invoices.where(_.total.subfield(_.amount) eqs BigDecimal(12.34)).fetchAsync().futureValue mustBe Seq(invoice1)
+
+    Invoices.where(_.id eqs 2L).modify(_.total setTo Money(59.12, USD)).updateOneAsync().futureValue
+
+    Invoices.where(_.id eqs 2L)
+      .fetchAsync().futureValue mustBe Seq(Invoice(2L, "Invoice no. 2", Money(59.12, USD)))
+
+    Invoices.where(_.total.subfield(_.currency) eqs EUR)
+      .fetchAsync().futureValue mustBe Seq(invoice4)
+
+    Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.currency) setTo EUR).updateOneAsync().futureValue
+
+    Invoices.where(_.id eqs 2L)
+      .fetchAsync().futureValue mustBe Seq(Invoice(2L, "Invoice no. 2", Money(59.12, EUR)))
+
+    Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.amount) setTo 1352.98).updateOneAsync().futureValue
+
+    Invoices.where(_.id eqs 2L)
+      .fetchAsync().futureValue mustBe Seq(Invoice(2L, "Invoice no. 2", Money(1352.98, EUR)))
+
+  }
 }
 

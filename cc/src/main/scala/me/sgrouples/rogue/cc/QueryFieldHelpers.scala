@@ -163,6 +163,12 @@ trait QueryFieldHelpers[Meta] extends {
   protected def OptLongField: OptLongField[Meta] @@ Marker = named(new OptLongField[Meta](_, this))
   protected def OptLongField(name: String): OptLongField[Meta] @@ Marker = named(name)(new OptLongField[Meta](_, this))
 
+  protected def BigDecimalField: BigDecimalField[Meta] @@ Marker = named(new BigDecimalField[Meta](_, this))
+  protected def BigDecimalField(name: String): BigDecimalField[Meta] @@ Marker = named(name)(new BigDecimalField[Meta](_, this))
+
+  protected def OptBigDecimalField: OptBigDecimalField[Meta] @@ Marker = named(new OptBigDecimalField[Meta](_, this))
+  protected def OptBigDecimalField(name: String): OptBigDecimalField[Meta] @@ Marker = named(name)(new OptBigDecimalField[Meta](_, this))
+
   protected def LongTaggedField[Tag]: LongTaggedField[Tag, Meta] @@ Marker = named(new LongTaggedField[Tag, Meta](_, this))
   protected def LongTaggedField[Tag](name: String): LongTaggedField[Tag, Meta] @@ Marker = named(name)(new LongTaggedField[Tag, Meta](_, this))
 
@@ -210,6 +216,12 @@ trait QueryFieldHelpers[Meta] extends {
 
   protected def OptLocalDateTimeField: OptLocalDateTimeField[Meta] @@ Marker = named(new OptLocalDateTimeField[Meta](_, this))
   protected def OptLocalDateTimeField(name: String): OptLocalDateTimeField[Meta] @@ Marker = named(name)(new OptLocalDateTimeField[Meta](_, this))
+
+  protected def CurrencyField: CurrencyField[Meta] @@ Marker = named(new CurrencyField[Meta](_, this))
+  protected def CurrencyField(name: String): CurrencyField[Meta] @@ Marker = named(name)(new CurrencyField[Meta](_, this))
+
+  protected def OptCurrencyField: OptCurrencyField[Meta] @@ Marker = named(new OptCurrencyField[Meta](_, this))
+  protected def OptCurrencyField(name: String): OptCurrencyField[Meta] @@ Marker = named(name)(new OptCurrencyField[Meta](_, this))
 
   protected def InstantField: InstantField[Meta] @@ Marker = named(new InstantField[Meta](_, this))
   protected def InstantField(name: String): InstantField[Meta] @@ Marker = named(name)(new InstantField[Meta](_, this))

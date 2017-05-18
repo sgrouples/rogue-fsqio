@@ -1,6 +1,6 @@
 package me.sgrouples.rogue
 import java.time.{ Instant, LocalDateTime, ZoneOffset }
-import java.util.UUID
+import java.util.{ Currency, Locale, UUID }
 
 import io.fsq.field.{ Field, OptionalField, RequiredField }
 import io.fsq.rogue.LatLong
@@ -15,6 +15,7 @@ import org.bson.types.ObjectId
 import org.bson.{ BsonDocument, BsonNull, BsonValue }
 import shapeless.ops.hlist.LiftAll
 import shapeless.syntax.SingletonOps
+
 import scala.reflect.runtime.universe.TypeTag
 import shapeless.tag.@@
 
@@ -36,6 +37,10 @@ class IntTaggedField[Tag, O](name: String, o: O) extends MCField[Int @@ Tag, O](
 
 class LongField[O](name: String, o: O) extends MCField[Long, O](name, o) {
   override def defaultValue = 0L
+}
+
+class BigDecimalField[O](name: String, o: O) extends MCField[BigDecimal, O](name, o) {
+  override def defaultValue = BigDecimal(0)
 }
 
 class LongTaggedField[Tag, O](name: String, o: O) extends MCField[Long @@ Tag, O](name, o) {
@@ -82,6 +87,10 @@ class LocalDateTimeField[O](name: String, o: O) extends MCField[LocalDateTime, O
 
 class InstantField[O](name: String, o: O) extends MCField[Instant, O](name, o) {
   override def defaultValue = Instant.now()
+}
+
+class CurrencyField[O](name: String, o: O) extends MCField[Currency, O](name, o) {
+  override def defaultValue = Currency.getInstance("USD")
 }
 
 class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
@@ -163,6 +172,8 @@ class OptIntTaggedField[Tag, O](name: String, o: O) extends OCField[Int @@ Tag, 
 class OptLongField[O](name: String, o: O) extends OCField[Long, O](name, o)
 class OptLongTaggedField[Tag, O](name: String, o: O) extends OCField[Long @@ Tag, O](name, o)
 
+class OptBigDecimalField[O](name: String, o: O) extends OCField[BigDecimal, O](name, o)
+
 class OptStringField[O](name: String, o: O) extends OCField[String, O](name, o)
 class OptStringTaggedField[Tag, O](name: String, o: O) extends OCField[String @@ Tag, O](name, o)
 
@@ -175,6 +186,9 @@ class OptUUIDIdTaggedField[Tag, O](name: String, o: O) extends OCField[UUID @@ T
 
 class OptDoubleField[O](name: String, o: O) extends OCField[Double, O](name, o)
 class OptLocalDateTimeField[O](name: String, o: O) extends OCField[LocalDateTime, O](name, o)
+
+class OptCurrencyField[O](name: String, o: O) extends OCField[Currency, O](name, o)
+
 class OptInstantField[O](name: String, o: O) extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O) extends OCField[Boolean, O](name, o)
 class OptEnumField[T <: Enumeration, O](name: String, o: O) extends OCField[T#Value, O](name, o)

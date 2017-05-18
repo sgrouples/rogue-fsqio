@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc
 import java.time.{ Instant, LocalDateTime }
-import java.util.UUID
+import java.util.{ Currency, UUID }
 
 import io.fsq.rogue.EnumerationListModifyField
 import me.sgrouples.rogue._
@@ -167,5 +167,21 @@ object Metas {
     val dt = new InstantField("i", this)
   }
 
+  case class Money(amount: BigDecimal, currency: Currency)
+
+  case class Invoice(id: Long, name: String, total: Money)
+
+  class MoneyMeta extends RCcMetaExt[Money, MoneyMeta] {
+    val amount = BigDecimalField
+    val currency = CurrencyField
+  }
+
+  class InvoiceMeta extends RCcMetaExt[Invoice, InvoiceMeta] {
+    val id = LongField
+    val name = StringField
+    val total = ClassField[Money, MoneyMeta](new MoneyMeta)
+  }
+
+  val Invoices = new InvoiceMeta
 }
 
