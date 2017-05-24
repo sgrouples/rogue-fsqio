@@ -19,6 +19,9 @@ import org.bson.types.ObjectId
 // Sample records for testing
 /////////////////////////////////////////////////
 
+object AsyncConnId extends ConnectionIdentifier {
+  override def jndiName: String = "rogue_mongo"
+}
 object RogueTestMongo extends ConnectionIdentifier {
 
   override def jndiName = "rogue_mongo"
@@ -35,7 +38,7 @@ object RogueTestMongo extends ConnectionIdentifier {
   def connectToMongoAsync = {
     val mongoAsync = TrivialAsyncORMTests.connectToMongo
     mongoAs = Option(mongoAsync)
-    MongoAsync.defineDb(RogueTestMongo, mongoAsync, "rogue-test-async")
+    MongoAsync.defineDb(AsyncConnId, mongoAsync.getDatabase("rogue-test-async"))
   }
 
   def disconnectFromMongo = {

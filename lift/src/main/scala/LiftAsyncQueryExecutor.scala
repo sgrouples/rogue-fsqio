@@ -11,19 +11,19 @@ import io.fsq.rogue._
 
 object LiftAsyncDBCollectionFactory extends AsyncDBCollectionFactory[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def getDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): MongoCollection[Document] = {
-    MongoAsync.useSession(query.meta.connectionIdentifier) { db =>
+    MongoAsync.use(query.meta.connectionIdentifier) { db =>
       db.getCollection(query.collectionName)
     }
   }
 
   override def getPrimaryDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): MongoCollection[Document] = {
-    MongoAsync.useSession(query.meta /* TODO: .master*/ .connectionIdentifier) { db =>
+    MongoAsync.use(query.meta /* TODO: .master*/ .connectionIdentifier) { db =>
       db.getCollection(query.collectionName)
     }
   }
 
   protected def getPrimaryDBCollection(meta: MongoMetaRecord[_], collectionName: String): MongoCollection[Document] = {
-    MongoAsync.useSession(meta /* TODO: .master*/ .connectionIdentifier) { db =>
+    MongoAsync.use(meta /* TODO: .master*/ .connectionIdentifier) { db =>
       db.getCollection(collectionName)
     }
   }
