@@ -38,7 +38,7 @@ object RogueTestMongo extends ConnectionIdentifier {
   def connectToMongoAsync = {
     val mongoAsync = TrivialAsyncORMTests.connectToMongo
     mongoAs = Option(mongoAsync)
-    MongoAsync.defineDb(AsyncConnId, mongoAsync.getDatabase("rogue-test-async"))
+    MongoAsync.defineDb(AsyncConnId, mongoAsync.getDatabase("rogue-test-async").withCodecRegistry(TrivialSyncORM.codecRegistry))
   }
 
   def disconnectFromMongo = {

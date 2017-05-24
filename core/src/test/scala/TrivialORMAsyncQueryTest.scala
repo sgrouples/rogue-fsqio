@@ -1,6 +1,7 @@
 package io.fsq.rogue.test
 
 import com.mongodb._
+import com.mongodb.async.client
 import com.mongodb.async.client.{ MongoClients, MongoCollection, MongoDatabase }
 import io.fsq.rogue.MongoHelpers.{ AndCondition, MongoSelect }
 import io.fsq.rogue.index.UntypedMongoIndex
@@ -16,11 +17,12 @@ import scala.concurrent.duration._
 
 object TrivialAsyncORMTests {
 
-  def connectToMongo = {
+  def connectToMongo: client.MongoClient = {
     val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
       val arr = str.split(':')
       (arr(0), arr(1).toInt)
     }).getOrElse(("localhost", 51101))
+    //val opts = MongoClientOptions.builder().codecRegistry(TrivialSyncORM.codecRegistry).build()
     MongoClients.create(s"mongodb://${host}:${port}")
 
   }

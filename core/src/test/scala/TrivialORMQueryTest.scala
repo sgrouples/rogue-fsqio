@@ -5,20 +5,28 @@ package io.fsq.rogue.test
 import com.mongodb._
 import io.fsq.rogue.MongoHelpers.{ AndCondition, MongoSelect }
 import io.fsq.rogue._
+import io.fsq.rogue.codecs.{ IntegerPrimitiveCodec, LongPrimitiveCodec }
 import io.fsq.rogue.index.UntypedMongoIndex
 import io.fsq.rogue.test.TrivialORM.{ Meta, Record }
 import org.bson.Document
+import org.bson.codecs.configuration.CodecRegistries
 import org.junit.{ Before, Test }
 import org.specs2.matcher.JUnitMustMatchers
 
 object TrivialSyncORM extends {
+  val codecRegistry = CodecRegistries.fromRegistries(
+    com.mongodb.MongoClient.getDefaultCodecRegistry(),
+    CodecRegistries.fromCodecs(new LongPrimitiveCodec, new IntegerPrimitiveCodec)
+  )
+
+  val mongoClientOptions = MongoClientOptions.builder().codecRegistry(codecRegistry).build()
 
   def connectToMongo = {
     val (host, port) = Option(System.getProperty("default.mongodb.server")).map({ str =>
       val arr = str.split(':')
       (arr(0), arr(1).toInt)
     }).getOrElse(("localhost", 51101))
-    new MongoClient(new ServerAddress(host, port))
+    new MongoClient(new ServerAddress(host, port), mongoClientOptions)
   }
 
   lazy val mongo = {
