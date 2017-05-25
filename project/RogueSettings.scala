@@ -13,6 +13,7 @@ object RogueSettings {
     organization := "me.sgrouples",
     crossScalaVersions := Seq("2.11.11","2.12.1"),
     scalaVersion := "2.11.11",
+    isSnapshot := true,
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
