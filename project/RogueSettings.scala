@@ -9,8 +9,8 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "3.0.0-SNAPSHOT",
-    organization := "me.sgrouples.fsq",
+    version := "3.0.0",
+    organization := "me.sgrouples",
     crossScalaVersions := Seq("2.11.11","2.12.1"),
     scalaVersion := "2.11.11",
     publishMavenStyle := true,
