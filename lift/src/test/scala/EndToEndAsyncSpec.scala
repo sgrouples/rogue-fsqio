@@ -55,7 +55,6 @@ class EndToEndAsyncSpec extends FlatSpec
 
   override protected def beforeEach(): Unit = {
     RogueTestMongo.connectToMongoAsync
-    RogueTestMongo.connectToMongo
   }
 
   override protected def afterEach(): Unit = {
@@ -68,12 +67,11 @@ class EndToEndAsyncSpec extends FlatSpec
     Like.allShards.bulkDeleteAsync_!!!().futureValue
 
     RogueTestMongo.disconnectFromMongoAsync
-    RogueTestMongo.disconnectFromMongo
   }
 
   "eqs" should "work as expected" in {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
     val vc = baseTestVenueClaim(v.id)
     vc.insertAsync().futureValue
 
@@ -94,9 +92,9 @@ class EndToEndAsyncSpec extends FlatSpec
 
   "inequality queries" should "work as expected" in {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
     val vc = baseTestVenueClaim(v.id)
-    vc.insertAsync()
+    vc.insertAsync().futureValue
 
     // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
     // VenueClaim has status approved.
@@ -116,7 +114,7 @@ class EndToEndAsyncSpec extends FlatSpec
 
   "select queries" should "work as expected" in {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
 
     val base = Venue.where(_._id eqs v.id)
     base.select(_.legacyid).fetchAsync().futureValue shouldBe List(v.legacyid.value)
@@ -129,13 +127,13 @@ class EndToEndAsyncSpec extends FlatSpec
 
   "selecting enum" should "work as expected" in {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
     Venue.where(_._id eqs v.id).select(_.status).fetchAsync().futureValue shouldBe List(VenueStatus.open)
   }
 
   "selecting case class" should "work as expected" in {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
 
     val base = Venue.where(_._id eqs v.id)
     base.selectCase(_.legacyid, V1).fetchAsync().futureValue shouldBe List(V1(v.legacyid.value))
@@ -148,9 +146,9 @@ class EndToEndAsyncSpec extends FlatSpec
 
   "sub-field queries" should "work as expected" in {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
     val t = baseTestTip()
-    t.insertAsync()
+    t.insertAsync().futureValue
 
     // select subfields
     Tip.where(_._id eqs t.id).select(_.counts at "foo").fetchAsync().futureValue shouldBe Seq(Some(1L))
@@ -187,7 +185,7 @@ class EndToEndAsyncSpec extends FlatSpec
   // "These tests are broken because DummyField doesn't know how to convert a String to an Enum"
   "selecting enum sub-field" should "work as expected" ignore {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
 
     // This behavior is broken because we get a String back from mongo, and at
     // that point we only have a DummyField for the subfield, and that doesn't
@@ -252,7 +250,7 @@ class EndToEndAsyncSpec extends FlatSpec
 
   "Regex query" should "work as expected" in {
     val v = baseTestVenue()
-    v.insertAsync()
+    v.insertAsync().futureValue
     Venue.where(_._id eqs v.id).and(_.venuename startsWith "test v").countAsync().futureValue shouldBe 1
     Venue.where(_._id eqs v.id).and(_.venuename matches ".es. v".r).countAsync().futureValue shouldBe 1
     Venue.where(_._id eqs v.id).and(_.venuename matches "Tes. v".r).countAsync().futureValue shouldBe 0

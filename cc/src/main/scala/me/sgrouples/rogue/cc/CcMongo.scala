@@ -4,8 +4,8 @@ import com.mongodb.MongoException
 import com.mongodb.async.client.{ MongoClient, MongoCollection, MongoDatabase }
 import com.mongodb.{ MongoClient => SyncMongoClient }
 import com.mongodb.client.{ MongoCollection => SyncMongoCollection, MongoDatabase => SyncMongoDatabase }
+import io.fsq.rogue.codecs.{ IntegerPrimitiveCodec, LongPrimitiveCodec }
 import org.bson.BsonDocument
-import org.bson.codecs.{ IntegerCodec, LongCodec }
 import org.bson.codecs.configuration.CodecRegistries
 
 /**
@@ -104,12 +104,3 @@ object CcMongo {
   }
 
 }
-
-class LongPrimitiveCodec extends LongCodec {
-  override def getEncoderClass() = java.lang.Long.TYPE
-}
-
-class IntegerPrimitiveCodec extends IntegerCodec {
-  override def getEncoderClass() = java.lang.Integer.TYPE
-}
-

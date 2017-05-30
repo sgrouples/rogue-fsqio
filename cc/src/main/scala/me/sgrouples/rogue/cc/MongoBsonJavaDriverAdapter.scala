@@ -2,14 +2,12 @@ package me.sgrouples.rogue.cc
 
 import com.mongodb._
 import io.fsq.rogue.Iter._
-import io.fsq.rogue.Rogue._
 import io.fsq.rogue.index.UntypedMongoIndex
-import java.util.concurrent.TimeUnit
 
 import com.mongodb.client._
 import com.mongodb.client.model._
 import io.fsq.rogue.{ FindAndModifyQuery, ModifyQuery, Query, RogueException }
-import org.bson.{ BSONObject, BsonDocument }
+import org.bson.BsonDocument
 import org.bson.conversions.Bson
 
 import scala.collection.mutable.ListBuffer

@@ -16,12 +16,12 @@ import java.util
 
 object LiftDBCollectionFactory extends DBCollectionFactory[MongoRecord[_] with MongoMetaRecord[_], MongoRecord[_]] {
   override def getDBCollection[M <: MongoRecord[_] with MongoMetaRecord[_]](query: Query[M, _, _]): DBCollection = {
-    MongoDB.useSession(query.meta.connectionIdentifier) { db =>
+    MongoDB.use(query.meta.connectionIdentifier) { db =>
       db.getCollection(query.collectionName)
     }
   }
   protected def getPrimaryDBCollection(meta: MongoMetaRecord[_], collectionName: String): DBCollection = {
-    MongoDB.useSession(meta /* TODO: .master*/ .connectionIdentifier) { db =>
+    MongoDB.use(meta /* TODO: .master*/ .connectionIdentifier) { db =>
       db.getCollection(collectionName)
     }
   }

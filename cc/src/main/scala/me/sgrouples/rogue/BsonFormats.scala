@@ -297,7 +297,7 @@ trait BsonCollectionFormats {
     }
 
     def read(value: BsonValue): Set[T] = {
-      val list = if (value.isNull) Set.empty[BsonValue]
+      val list: Seq[BsonValue] = if (value.isNull) Seq.empty[BsonValue]
       else value.asArray().asScala
       list.map(f.read).toSet
     }
