@@ -83,7 +83,7 @@ trait QueryFieldHelpers[Meta] extends {
     }
 
     /*
-      This reverse here is because traits are initialized in oposite order than declared...
+      This reverse here is because traits are initialized in opposite order than declared...
      */
 
     val values = typeOf[Meta].baseClasses.reverse.flatMap {
@@ -108,7 +108,8 @@ trait QueryFieldHelpers[Meta] extends {
     if (names.isEmpty) resolve()
 
     val name = names.getOrElse(nextNameId, throw new IllegalStateException(
-      "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com"
+      "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com\n" +
+        s"was looking for ${nextNameId} fields: ${names.keys.mkString(",")} class ${getClass}"
     ))
 
     val field = func(name)
