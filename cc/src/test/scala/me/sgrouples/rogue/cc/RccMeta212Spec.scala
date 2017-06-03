@@ -9,7 +9,7 @@ import org.scalatest.{ FlatSpec, Matchers }
 trait QueryById[M] {
   requires: QueryFieldHelpers[M] =>
 
-  val id = ObjectIdField("_id")
+  val thisIsWhatFails = ObjectIdField("_id")
 
 }
 
@@ -27,7 +27,7 @@ case class UserBlock(
 class UserBlockMeta(name: String = "userblocks") extends RCcMetaExt[UserBlock, UserBlockMeta](name)
     with QueryById[UserBlockMeta] {
 
-  val blocked = ObjectIdTaggedField[User]
+  val thisIsWhatWorks = ObjectIdTaggedField[User]
   val createdAt = InstantField
 }
 /**

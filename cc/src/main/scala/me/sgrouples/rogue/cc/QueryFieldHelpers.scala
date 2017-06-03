@@ -4,13 +4,12 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
-
-import scala.reflect.{ ClassTag, api }
-import scala.collection.mutable
 import shapeless.tag
 import shapeless.tag._
 
+import scala.collection.mutable
 import scala.reflect.runtime.universe._
+import scala.reflect.{ ClassTag, api }
 
 private[cc] sealed trait Marker
 
@@ -51,7 +50,7 @@ trait QueryFieldHelpers[Meta] extends {
 
     // we are looking for vals accessible from io.fsq.field.Field[_, _] and tagged with Marker
 
-    val returnsMarkedRogueField: Symbol => Boolean = { symbol =>
+    def returnsMarkedField(symbol: Symbol): Boolean = {
 
       val typeArgs = symbol.asMethod.returnType.typeArgs
 
@@ -59,27 +58,24 @@ trait QueryFieldHelpers[Meta] extends {
         typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]])
     }
 
-    val valueGettersOnly: Symbol => Boolean = {
-      x => x.isMethod && !x.isSynthetic && returnsMarkedRogueField(x)
-    }
-
-    val valueGetters: Map[String, MethodSymbol] = {
-      typeOf[Meta].baseClasses.foldLeft(Map.empty[String, MethodSymbol]) {
-        case (acc, baseClass) =>
-          acc ++ appliedType(baseClass).decls.filter(valueGettersOnly).map {
-            getter => decode(getter) -> getter.asMethod
-          }(scala.collection.breakOut): Map[String, MethodSymbol]
-      }
-    }
-
     /*
-      We need to have those values in the order of trait linearization,
-      but the api doesn't guarantee order for synthetic members, so we just need
-      to iterate over declared vals but match them with synthetic getters, easy!
+      So it seems rewrite of traits encoding in Scala 2.12
+      was a good reason to simplify this little piece of code.
+      I think this time its self-explanatory.
     */
 
-    val valuesOnly: Symbol => Boolean = {
-      x => !x.isMethod && valueGetters.contains(decode(x))
+    val valuesOfMarkedFieldTypeOnly: Symbol => Boolean = {
+      case symbol if symbol.isTerm =>
+        symbol.asTerm match {
+          case term if term.isVal =>
+            term.getter match {
+              case getterSymbol if getterSymbol.isMethod =>
+                returnsMarkedField(getterSymbol.asMethod)
+              case _ => false
+            }
+          case _ => false
+        }
+      case _ => false
     }
 
     /*
@@ -87,7 +83,9 @@ trait QueryFieldHelpers[Meta] extends {
      */
 
     val values = typeOf[Meta].baseClasses.reverse.flatMap {
-      baseClass => appliedType(baseClass).decls.sorted.filter(valuesOnly)
+      baseClass =>
+        appliedType(baseClass).decls
+          .sorted.filter(valuesOfMarkedFieldTypeOnly)
     }.map(decode)
 
     // name map in order of trait linearization
@@ -105,11 +103,11 @@ trait QueryFieldHelpers[Meta] extends {
    */
 
   protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = {
-    if (names.isEmpty) resolve()
+    if (names.isEmpty) resolve() // lets try one more time to find those names
 
     val name = names.getOrElse(nextNameId, throw new IllegalStateException(
       "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com\n" +
-        s"was looking for ${nextNameId} fields: ${names.keys.mkString(",")} class ${getClass}"
+        s"was looking for $nextNameId fields: ${names.keys.mkString(",")} class $getClass"
     ))
 
     val field = func(name)
