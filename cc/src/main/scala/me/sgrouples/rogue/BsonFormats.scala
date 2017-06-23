@@ -185,7 +185,7 @@ trait BaseBsonFormats {
       Locale.getAvailableLocales.filter(_.toString == value).headOption.getOrElse(defaultValue)
     }
     override def write(l: Locale): BsonValue = new BsonString(l.toString)
-    override def defaultValue: Locale = Locale.ENGLISH
+    override def defaultValue: Locale = Locale.US
   }
 
   private def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
