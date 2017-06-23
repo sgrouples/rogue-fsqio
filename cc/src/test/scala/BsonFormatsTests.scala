@@ -1,4 +1,6 @@
 package me.sgrouples.rogue
+import java.util.{ Locale, TimeZone }
+
 import org.bson.types.ObjectId
 import org.junit.Test
 import BsonFormats._
@@ -90,6 +92,34 @@ class BsonFormatsTests extends JUnitMustMatchers {
     //but don't know how to provide default values in case class field parameters
     b must_== B(W(1), "")
     assert(true)
+  }
+
+  @Test
+  def localeTest(): Unit = {
+    val f = BsonFormat[Locale]
+
+    val locales = Locale.getAvailableLocales
+
+    locales.foreach { locale =>
+      val serialized = f.write(locale)
+      val deserialized = f.read(serialized)
+
+      deserialized mustEqual locale
+    }
+  }
+
+  @Test
+  def timeZoneTest(): Unit = {
+    val f = BsonFormat[TimeZone]
+    val timezones = TimeZone.getAvailableIDs
+
+    timezones.foreach { tzId =>
+      val timeZone = TimeZone.getTimeZone(tzId)
+      val serialized = f.write(timeZone)
+      val deserialized = f.read(serialized)
+
+      deserialized mustEqual timeZone
+    }
   }
 
 }

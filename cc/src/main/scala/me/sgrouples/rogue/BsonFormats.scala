@@ -2,7 +2,7 @@ package me.sgrouples.rogue
 
 import java.nio.{ ByteBuffer, ByteOrder }
 import java.time.{ Instant, LocalDateTime, ZoneOffset }
-import java.util.{ Currency, Locale, UUID }
+import java.util.{ Currency, Locale, TimeZone, UUID }
 
 import me.sgrouples.rogue.enums.ReflectEnumInstance
 import org.bson._
@@ -177,6 +177,17 @@ trait BaseBsonFormats {
     override def defaultValue: Currency = Currency.getInstance("USD")
   }
 
+  implicit object LocaleBsonFormat extends BasicBsonFormat[Locale] {
+    override def read(b: BsonValue): Locale = {
+      //taken from lift's LocaleField as the simpliest solution, albeit not optimal.
+      //commons-lang LocaleUtils were not able to parse all Locale.getAvailableLocales either.
+      val value = b.asString().getValue
+      Locale.getAvailableLocales.filter(_.toString == value).headOption.getOrElse(defaultValue)
+    }
+    override def write(l: Locale): BsonValue = new BsonString(l.toString)
+    override def defaultValue: Locale = Locale.ENGLISH
+  }
+
   private def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
     new BasicBsonFormat[T @@ Tag] {
       override def read(b: BsonValue): T @@ Tag = tag[Tag][T](tb.read(b))
@@ -238,6 +249,12 @@ trait BaseBsonFormats {
     override def read(b: BsonValue): Instant = Instant.ofEpochMilli(b.asDateTime().getValue)
     override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
     override def defaultValue: Instant = Instant.ofEpochMilli(0)
+  }
+
+  implicit object TimeZoneFormat extends BasicBsonFormat[TimeZone] {
+    override def read(b: BsonValue): TimeZone = TimeZone.getTimeZone(b.asString().getValue)
+    override def write(tz: TimeZone): BsonValue = new BsonString(tz.getID)
+    override def defaultValue: TimeZone = TimeZone.getTimeZone("UTC")
   }
 
   implicit def objectIdSubtypeFormat[Subtype <: ObjectId]: BasicBsonFormat[Subtype] = {
