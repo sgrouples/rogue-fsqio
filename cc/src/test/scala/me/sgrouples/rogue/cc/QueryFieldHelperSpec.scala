@@ -7,7 +7,10 @@ import me.sgrouples.rogue._
 import BsonFormats._
 import EnumNameFormats._
 import me.sgrouples.rogue.cc.Metas.VenueRMeta
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{ Seconds, Span }
 
+import scala.concurrent.Future
 import scala.util.Try
 
 case class TestDomainObject(id: ObjectId)
@@ -88,7 +91,11 @@ class TestDomainObjectMeta extends RCcMetaExt[TestDomainObject, TestDomainObject
 
 }
 
-class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
+class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  implicit val patience = PatienceConfig(scaled(Span(13, Seconds)))
 
   val TestDomainObjects = new TestDomainObjectMeta
 
@@ -157,6 +164,15 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
     val b = StringField("a")
   }
 
+  class MultiThreadedTestMeta extends RCcMetaExt[AnotherValue, MultiThreadedTestMeta] {
+    val a = StringField
+    val b = StringField
+    val c = StringField
+    val d = StringField
+    val e = StringField
+    val f = StringField
+  }
+
   it should "fail when name is duplicated" in {
     Try(new AnotherTestMeta).toString mustBe "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)"
   }
@@ -169,5 +185,12 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers {
 
   it should "not fail when resolving an inner meta class" in {
     (new DifferentTestMeta).a.name mustBe "a"
+  }
+
+  it should "not fail in multi threaded env" in {
+
+    Future.sequence {
+      for (_ <- 1 to 1000) yield Future(new MultiThreadedTestMeta)
+    }.futureValue
   }
 }

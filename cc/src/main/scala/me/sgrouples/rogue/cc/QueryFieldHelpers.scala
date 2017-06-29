@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc
 
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{ AtomicBoolean, AtomicInteger }
 
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
@@ -16,9 +16,13 @@ private[cc] sealed trait Marker
 trait QueryFieldHelpers[Meta] extends {
   requires: Meta =>
 
+  private[this] val lock = new Object
+
   private[this] val names: mutable.Map[Int, String] = mutable.Map.empty
 
   private[this] val fields: mutable.Map[String, io.fsq.field.Field[_, _]] = mutable.Map.empty
+
+  private[this] val resolved = new AtomicBoolean(false)
 
   private[this] val nameId = new AtomicInteger(-1)
 
@@ -39,7 +43,7 @@ trait QueryFieldHelpers[Meta] extends {
 
   private[this] def nextNameId = nameId.incrementAndGet()
 
-  private[this] def resolve(): Unit = {
+  private[this] def resolve(): Unit = synchronized {
 
     /*
       The idea of automatic name resolution is taken from Scala's Enumeration,
@@ -92,6 +96,7 @@ trait QueryFieldHelpers[Meta] extends {
 
     names ++= values.zipWithIndex.map(_.swap)
 
+    resolved.set(true)
   }
 
   /*
@@ -102,8 +107,8 @@ trait QueryFieldHelpers[Meta] extends {
     Its complicated, I know, meta programming usually is... But Miles Sabin's @@ is awesome, don't you think?
    */
 
-  protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = {
-    if (names.isEmpty) resolve() // lets try one more time to find those names
+  protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = lock.synchronized {
+    if (!resolved.get()) resolve() // lets try one more time to find those names
 
     val name = names.getOrElse(nextNameId, throw new IllegalStateException(
       "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com\n" +
@@ -116,8 +121,8 @@ trait QueryFieldHelpers[Meta] extends {
     tag[Marker][T](field)
   }
 
-  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = {
-    if (names.isEmpty) resolve()
+  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = lock.synchronized {
+    if (!resolved.get()) resolve()
     names += nextNameId -> name
     val field = func(name)
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
