@@ -18,7 +18,9 @@ private[cc] sealed trait Marker
 
 private[cc] case class Visited(clazz: Type, fields: Seq[Symbol])
 
-private[cc] object Visited {
+private[cc] case class Ignored(field: Symbol, reason: String)
+
+private[cc] object DebugImplicits {
 
   implicit class IndentHelper(u: String) {
     def mkIndent: String = u.replaceAll("(?m)^", "  ")
@@ -42,6 +44,13 @@ private[cc] object Visited {
            |  ${Debug.debug(fields).mkIndent}"""
     }
   }
+
+  implicit object DebugIgnored extends Debug[Ignored] {
+    override def show(t: Ignored): String = t match {
+      case Ignored(field, cause) =>
+        s"""${Debug.debug(field)} ($cause)"""
+    }
+  }
 }
 
 trait QueryFieldHelpers[Meta] extends {
@@ -58,6 +67,8 @@ trait QueryFieldHelpers[Meta] extends {
   private[this] val nameId = new AtomicInteger(-1)
 
   private[this] val visitedClasses: mutable.ArrayBuffer[Visited] = mutable.ArrayBuffer.empty
+
+  private[this] val ignoredFields: mutable.ArrayBuffer[Ignored] = mutable.ArrayBuffer.empty
 
   // This one is hacky, we need to find the type tag from Java's getClass method...
 
@@ -91,6 +102,20 @@ trait QueryFieldHelpers[Meta] extends {
 
       val typeArgs = symbol.asMethod.returnType.typeArgs
 
+      if (!typeArgs.exists(_ =:= typeOf[Marker]))
+        ignoredFields += Ignored(
+          symbol,
+          s"!typeArgs.exists(_ =:= typeOf[Marker]), " +
+            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}"
+        )
+
+      if (!typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]]))
+        ignoredFields += Ignored(
+          symbol,
+          s"!typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]]), " +
+            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}"
+        )
+
       typeArgs.exists(_ =:= typeOf[Marker]) &&
         typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]])
     }
@@ -108,11 +133,11 @@ trait QueryFieldHelpers[Meta] extends {
             term.getter match {
               case getterSymbol if getterSymbol.isMethod =>
                 returnsMarkedField(getterSymbol.asMethod)
-              case _ => false
+              case s => ignoredFields += Ignored(s, "getter is not a method"); false
             }
-          case _ => false
+          case s => ignoredFields += Ignored(s, "term is not a val"); false
         }
-      case _ => false
+      case s => ignoredFields += Ignored(s, "symbol is not a term"); false
     }
 
     /*
@@ -171,14 +196,16 @@ trait QueryFieldHelpers[Meta] extends {
 
   private[cc] def debugInfo(id: Int): String = {
 
-    import Visited._
+    import DebugImplicits._
 
     s"""Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com
        | Class is ${this.getClass}, implicit type tag is: ${typeTag.tpe}
        | Was looking for index $id in
        |${Debug.debug(names.toSeq.sortBy(_._1).map(_._2)).mkIndent}
        | Classes visited during field resolution:
-       |${Debug.debug(visitedClasses).mkIndent}""".stripMargin
+       |${Debug.debug(visitedClasses).mkIndent}
+       | Fields not matching predicates:
+       |${Debug.debug(ignoredFields.distinct).mkIndent}""".stripMargin
   }
 
   private[this] def resolveError(id: Int): Nothing = throw new IllegalStateException(debugInfo(id))
