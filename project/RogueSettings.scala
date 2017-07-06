@@ -38,8 +38,10 @@ object RogueSettings {
 }
 
 object RogueDependencies {
+
   val liftVersion = "3.1.0-M3"
   val specsVer = "3.8.6"
+
   val liftDeps = Seq(
     "net.liftweb"              %% "lift-mongodb"    % liftVersion  % "compile" intransitive(),
     "net.liftweb"              %% "lift-common"     % liftVersion  % "compile",

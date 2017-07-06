@@ -187,10 +187,10 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
     (new DifferentTestMeta).a.name mustBe "a"
   }
 
-  it should "not fail in multi threaded env" in {
-
-    Future.sequence {
-      for (_ <- 1 to 1000) yield Future(new MultiThreadedTestMeta)
-    }.futureValue
-  }
+  //  it should "not fail in multi threaded env" in {
+  //
+  //    Future.sequence {
+  //      for (_ <- 1 to 1000) yield Future(new MultiThreadedTestMeta)
+  //    }.futureValue
+  //  }
 }

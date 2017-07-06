@@ -10,6 +10,7 @@ import shapeless.tag._
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
 import scala.reflect.{ ClassTag, api }
+import me.sgrouples.rogue.macros.FieldFinder
 
 private[cc] sealed trait Marker
 
@@ -28,13 +29,13 @@ trait QueryFieldHelpers[Meta] extends {
 
   // This one is hacky, we need to find the type tag from Java's getClass method...
 
-  private[this] implicit val typeTag: TypeTag[Meta] = {
+  private[this] implicit def typeTag: WeakTypeTag[Meta] = {
 
     val mirror = runtimeMirror(getClass.getClassLoader)
     val sym = mirror.classSymbol(getClass)
     val tpe = sym.selfType
 
-    TypeTag(mirror, new api.TypeCreator {
+    WeakTypeTag(mirror, new api.TypeCreator {
       def apply[U <: api.Universe with Singleton](m: api.Mirror[U]): U#Type =
         if (m eq mirror) tpe.asInstanceOf[U#Type]
         else throw new IllegalArgumentException(s"Type tag defined in $mirror cannot be migrated to other mirrors.")
@@ -45,56 +46,7 @@ trait QueryFieldHelpers[Meta] extends {
 
   private[this] def resolve(): Unit = synchronized {
 
-    /*
-      The idea of automatic name resolution is taken from Scala's Enumeration,
-      but imlemented without falling back to Java's reflection api.
-     */
-
-    val decode: Symbol => String = _.name.decodedName.toString.trim
-
-    // we are looking for vals accessible from io.fsq.field.Field[_, _] and tagged with Marker
-
-    def returnsMarkedField(symbol: Symbol): Boolean = {
-
-      val typeArgs = symbol.asMethod.returnType.typeArgs
-
-      typeArgs.exists(_ =:= typeOf[Marker]) &&
-        typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]])
-    }
-
-    /*
-      So it seems rewrite of traits encoding in Scala 2.12
-      was a good reason to simplify this little piece of code.
-      I think this time its self-explanatory.
-    */
-
-    val valuesOfMarkedFieldTypeOnly: Symbol => Boolean = {
-      case symbol if symbol.isTerm =>
-        symbol.asTerm match {
-          case term if term.isVal =>
-            term.getter match {
-              case getterSymbol if getterSymbol.isMethod =>
-                returnsMarkedField(getterSymbol.asMethod)
-              case _ => false
-            }
-          case _ => false
-        }
-      case _ => false
-    }
-
-    /*
-      This reverse here is because traits are initialized in opposite order than declared...
-     */
-
-    val values = typeOf[Meta].baseClasses.reverse.flatMap {
-      baseClass =>
-        appliedType(baseClass).decls
-          .sorted.filter(valuesOfMarkedFieldTypeOnly)
-    }.map(decode)
-
-    // name map in order of trait linearization
-
-    names ++= values.zipWithIndex.map(_.swap)
+    names ++= FieldFinder.find[Meta]
 
     resolved.set(true)
   }
@@ -110,9 +62,11 @@ trait QueryFieldHelpers[Meta] extends {
   protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = lock.synchronized {
     if (!resolved.get()) resolve() // lets try one more time to find those names
 
-    val name = names.getOrElse(nextNameId, throw new IllegalStateException(
+    val nextId = nextNameId
+
+    val name = names.getOrElse(nextId, throw new IllegalStateException(
       "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com\n" +
-        s"was looking for $nextNameId fields: ${names.keys.mkString(",")} class $getClass"
+        s"was looking for $nextId, fields are: ${fields.keys.mkString(",")} class $getClass"
     ))
 
     val field = func(name)
