@@ -3,15 +3,46 @@ package me.sgrouples.rogue.cc
 import java.util.concurrent.atomic.{ AtomicBoolean, AtomicInteger }
 
 import me.sgrouples.rogue._
+import me.sgrouples.rogue.cc.debug.Debug
 import org.bson.types.ObjectId
 import shapeless.tag
 import shapeless.tag._
 
 import scala.collection.mutable
+import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
 import scala.reflect.{ ClassTag, api }
+import Debug.DefaultImplicits._
 
 private[cc] sealed trait Marker
+
+private[cc] case class Visited(clazz: Type, fields: Seq[Symbol])
+
+private[cc] object Visited {
+
+  implicit class IndentHelper(u: String) {
+    def mkIndent: String = u.replaceAll("(?m)^", "  ")
+  }
+
+  implicit object DebugType extends Debug[Type] {
+    override def show(t: universe.Type): String =
+      t.typeSymbol.fullName
+  }
+
+  implicit object DebugSymbol extends Debug[Symbol] {
+    override def show(t: universe.Symbol): String =
+      t.name.toString
+  }
+
+  implicit object DebugVisited extends Debug[Visited] {
+    override def show(t: Visited): String = t match {
+      case Visited(clazz, Nil) => Debug.debug(clazz)
+      case Visited(clazz, fields) =>
+        s"""${Debug.debug(clazz)}
+           |  ${Debug.debug(fields).mkIndent}"""
+    }
+  }
+}
 
 trait QueryFieldHelpers[Meta] extends {
   requires: Meta =>
@@ -26,9 +57,11 @@ trait QueryFieldHelpers[Meta] extends {
 
   private[this] val nameId = new AtomicInteger(-1)
 
+  private[this] val visitedClasses: mutable.ArrayBuffer[Visited] = mutable.ArrayBuffer.empty
+
   // This one is hacky, we need to find the type tag from Java's getClass method...
 
-  private[this] implicit val typeTag: TypeTag[Meta] = {
+  private[this] implicit def typeTag: TypeTag[Meta] = {
 
     val mirror = runtimeMirror(getClass.getClassLoader)
     val sym = mirror.classSymbol(getClass)
@@ -88,8 +121,15 @@ trait QueryFieldHelpers[Meta] extends {
 
     val values = typeOf[Meta].baseClasses.reverse.flatMap {
       baseClass =>
-        appliedType(baseClass).decls
+
+        val appType = appliedType(baseClass)
+
+        val fields = appType.decls
           .sorted.filter(valuesOfMarkedFieldTypeOnly)
+
+        visitedClasses += Visited(appType, fields)
+
+        fields
     }.map(decode)
 
     // name map in order of trait linearization
@@ -110,10 +150,9 @@ trait QueryFieldHelpers[Meta] extends {
   protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = lock.synchronized {
     if (!resolved.get()) resolve() // lets try one more time to find those names
 
-    val name = names.getOrElse(nextNameId, throw new IllegalStateException(
-      "Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com\n" +
-        s"was looking for $nextNameId fields: ${names.keys.mkString(",")} class $getClass"
-    ))
+    val nextId = nextNameId
+
+    val name = names.getOrElse(nextId, resolveError(nextId))
 
     val field = func(name)
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
@@ -129,6 +168,20 @@ trait QueryFieldHelpers[Meta] extends {
     fields += (name -> field)
     tag[Marker][T](field)
   }
+
+  private[cc] def debugInfo(id: Int): String = {
+
+    import Visited._
+
+    s"""Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com
+       | Class is ${this.getClass}, implicit type tag is: ${typeTag.tpe}
+       | Was looking for index $id in
+       |${Debug.debug(names.toSeq.sortBy(_._1).map(_._2)).mkIndent}
+       | Classes visited during field resolution:
+       |${Debug.debug(visitedClasses).mkIndent}""".stripMargin
+  }
+
+  private[this] def resolveError(id: Int): Nothing = throw new IllegalStateException(debugInfo(id))
 
   // utility methods, not sure if they are usefull...
   def fieldByName[T <: io.fsq.field.Field[_, _]](name: String): T = fields(name).asInstanceOf[T]

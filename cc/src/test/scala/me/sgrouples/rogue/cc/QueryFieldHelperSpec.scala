@@ -193,4 +193,8 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
       for (_ <- 1 to 1000) yield Future(new MultiThreadedTestMeta)
     }.futureValue
   }
+
+  it should "print out debug info for given field" in {
+    println((new TestDomainObjectMeta).debugInfo(0))
+  }
 }
