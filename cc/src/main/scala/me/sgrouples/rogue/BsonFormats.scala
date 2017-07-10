@@ -58,8 +58,14 @@ trait EnumNameFormats {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
-      override def read(b: BsonValue): T#Value =
-        enumeration.withName(b.asString().getValue)
+      override def read(b: BsonValue): T#Value = {
+        try {
+          enumeration.withName(b.asString().getValue)
+        } catch {
+          case e: IllegalArgumentException =>
+            throw new IllegalArgumentException(s"cannot read enum name ${b.asString()} for enum ${enumeration.toString()}", e)
+        }
+      }
 
       override def write(t: T#Value): BsonValue = new BsonString(t.toString)
 
@@ -81,7 +87,12 @@ trait EnumValueFormats {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
-      override def read(b: BsonValue): T#Value = enumeration.apply(b.asNumber().intValue())
+      override def read(b: BsonValue): T#Value = try {
+        enumeration.apply(b.asNumber().intValue())
+      } catch {
+        case e: IllegalArgumentException =>
+          throw new IllegalArgumentException(s"cannot read enum value ${b.asNumber()}, for enum ${enumeration.toString()} ", e)
+      }
 
       override def write(t: T#Value): BsonValue = new BsonInt32(t.id)
 
