@@ -158,6 +158,8 @@ trait CcRogue {
   implicit val localDateIsFlattened = new Rogue.Flattened[LocalDateTime, LocalDateTime]
 
   implicit val instantIsFlattend = new Rogue.Flattened[Instant, Instant]
+
+  implicit def objIdSubtypeIsFlattened[T <: ObjectId] = new Rogue.Flattened[T, ObjectId]
 }
 
 object CcRogue extends Rogue with CcRogue

@@ -103,6 +103,7 @@ trait Rogue {
   implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]) = new Flattened[List[A], B]
   implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]) = new Flattened[Seq[A], B]
   implicit def recursiveFlattenArray[A, B](implicit ev: Flattened[A, B]) = new Flattened[Array[A], B]
+
 }
 
 object Rogue extends Rogue
