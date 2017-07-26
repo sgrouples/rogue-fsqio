@@ -153,12 +153,16 @@ class CClassRequiredField[C, MC <: CcMeta[C], O](
   owner: O
 ) extends CClassAbstractRequiredField[C, MC, O](name, childMeta, owner)
 
+trait HasChildMeta[C, MC <: CcMeta[C]] {
+  def childMeta: MC
+}
+
 class CClassListField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
-    extends MCField[Seq[C], O](name, owner) {
+    extends MCField[Seq[C], O](name, owner) with HasChildMeta[C, MC] {
   override def defaultValue: List[C] = Nil
 }
 
-class CClassArrayField[C: ClassTag, MC <: CcMeta[C], O](name: String, val childMeta: MC, o: O) extends MCField[Array[C], O](name, o) {
+class CClassArrayField[C: ClassTag, MC <: CcMeta[C], O](name: String, val childMeta: MC, o: O) extends MCField[Array[C], O](name, o) with HasChildMeta[C, MC] {
   override def defaultValue = Array.empty[C]
 }
 
@@ -196,9 +200,9 @@ class OptEnumIdField[T <: Enumeration, O](name: String, o: O) extends OCField[T#
 class OptListField[V, O](name: String, o: O) extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O) extends OCField[Array[V], O](name, o)
 class OptCClassField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
-  extends OCField[C, O](name, owner)
-class OptCClassListField[C, O](name: String, o: O) extends OCField[List[C], O](name, o)
-class OptCClassArrayField[C: ClassTag, O](name: String, o: O) extends OCField[Array[C], O](name, o)
+  extends OCField[C, O](name, owner) with HasChildMeta[C, MC]
+class OptCClassListField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, o: O) extends OCField[Seq[C], O](name, o) with HasChildMeta[C, MC]
+class OptCClassArrayField[C: ClassTag, MC <: CcMeta[C], O](name: String, val childMeta: MC, o: O) extends OCField[Array[C], O](name, o) with HasChildMeta[C, MC]
 class OptMapField[V, O](name: String, o: O) extends OCField[Map[String, V], O](name, o)
 
 trait CcFields[T] {

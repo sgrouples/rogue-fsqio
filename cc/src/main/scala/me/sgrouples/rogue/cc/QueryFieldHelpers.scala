@@ -394,11 +394,15 @@ trait QueryFieldHelpers[Meta] extends {
 
   protected def ClassListField[C: ClassTag, MC <: CcMeta[C]](mc: MC): CClassListField[C, MC, Meta] @@ Marker = named(new CClassListField[C, MC, Meta](_, mc, this))
   protected def ClassListField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): CClassListField[C, MC, Meta] @@ Marker = named(name)(new CClassListField[C, MC, Meta](_, mc, this))
-  // TODO: OptClassListField?
+
+  protected def OptClassListField[C: ClassTag, MC <: CcMeta[C]](mc: MC): OptCClassListField[C, MC, Meta] @@ Marker = named(new OptCClassListField[C, MC, Meta](_, mc, this))
+  protected def OptClassListField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): OptCClassListField[C, MC, Meta] @@ Marker = named(name)(new OptCClassListField[C, MC, Meta](_, mc, this))
 
   protected def ClassArrayField[C: ClassTag, MC <: CcMeta[C]](mc: MC): CClassArrayField[C, MC, Meta] @@ Marker = named(new CClassArrayField[C, MC, Meta](_, mc, this))
   protected def ClassArrayField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): CClassArrayField[C, MC, Meta] @@ Marker = named(name)(new CClassArrayField[C, MC, Meta](_, mc, this))
-  // TODO: OptClassArrayField?
+
+  protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](mc: MC): OptCClassArrayField[C, MC, Meta] @@ Marker = named(new OptCClassArrayField[C, MC, Meta](_, mc, this))
+  protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): OptCClassArrayField[C, MC, Meta] @@ Marker = named(name)(new OptCClassArrayField[C, MC, Meta](_, mc, this))
 
   protected def MapField[V]: MapField[V, Meta] @@ Marker = named(new MapField[V, Meta](_, this))
   protected def MapField[V](name: String): MapField[V, Meta] @@ Marker = named(name)(new MapField[V, Meta](_, this))

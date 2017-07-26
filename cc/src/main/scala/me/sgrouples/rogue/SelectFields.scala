@@ -31,7 +31,7 @@ abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field
 // - B -
 //abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field[CC[F], M])
 
-class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O], owner: O) //, toBson: B => BsonValue)
+class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasChildMeta[C, M], owner: O) //, toBson: B => BsonValue)
     extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {
   override def valueToDB(c: C) = fld.childMeta.write(c)
 
@@ -55,7 +55,7 @@ class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O], o
   }
 }
 
-class CClassArrayQueryField[C, M <: CcMeta[C], O](fld: CClassArrayField[C, M, O], owner: O) //, toBson: B => BsonValue)
+class CClassArrayQueryField[C, M <: CcMeta[C], O](fld: HasChildMeta[C, M] with Field[Array[C], O], owner: O) //, toBson: B => BsonValue)
     extends AbstractArrayQueryField[C, C, BsonValue, O, C](fld) {
   override def valueToDB(c: C) = fld.childMeta.write(c)
 
@@ -157,7 +157,7 @@ class OptCClassModifyField[C, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) e
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 }
 
-class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O])
+class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasChildMeta[C, M])
     extends AbstractListModifyField[C, BsonDocument, O, Seq](fld) {
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 
@@ -172,7 +172,7 @@ class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CClassListField[C, M, O])
 
 }
 
-class CClassArrayModifyField[C, M <: CcMeta[C], O](fld: CClassArrayField[C, M, O])
+class CClassArrayModifyField[C, M <: CcMeta[C], O](fld: CField[Array[C], O] with HasChildMeta[C, M])
     extends AbstractArrayModifyField[C, BsonDocument, O](fld) {
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 
