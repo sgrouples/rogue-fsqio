@@ -129,13 +129,13 @@ trait QueryFieldHelpers[Meta] extends {
     val valuesOfMarkedFieldTypeOnly: Symbol => Boolean = {
       case symbol if symbol.isTerm =>
         symbol.asTerm match {
-          case term if term.isVal =>
+          case term if term.isAccessor =>
             term.getter match {
               case getterSymbol if getterSymbol.isMethod =>
                 returnsMarkedField(getterSymbol.asMethod)
               case s => ignoredFields += Ignored(s, "getter is not a method"); false
             }
-          case s => ignoredFields += Ignored(s, "term is not a val"); false
+          case s => ignoredFields += Ignored(s, "term is not an accessor"); false
         }
       case s => ignoredFields += Ignored(s, "symbol is not a term"); false
     }
@@ -144,7 +144,7 @@ trait QueryFieldHelpers[Meta] extends {
       This reverse here is because traits are initialized in opposite order than declared...
      */
 
-    val values = typeOf[Meta].baseClasses.reverse.flatMap {
+    val values = typeOf[Meta](typeTag).baseClasses.reverse.flatMap {
       baseClass =>
 
         val appType = appliedType(baseClass)
