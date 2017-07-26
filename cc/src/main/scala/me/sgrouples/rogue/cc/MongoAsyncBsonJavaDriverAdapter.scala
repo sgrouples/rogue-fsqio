@@ -101,6 +101,15 @@ class PromiseSingleResultAdapter[R] extends SingleResultCallback[java.util.Colle
   def future = p.future
 }
 
+class PromiseSingleValueAdapter[V] extends SingleResultCallback[V] {
+  private[this] val p = Promise[V]
+  override def onResult(result: V, t: Throwable): Unit = {
+    if (t == null) p.success(result)
+    else p.failure(t)
+  }
+  def future = p.future
+}
+
 class UpdateResultCallback extends SingleResultCallback[UpdateResult] with HasFuture[Unit] {
   private[this] val p = Promise[Unit]
 

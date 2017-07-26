@@ -12,7 +12,7 @@ import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.Document
 import org.bson.conversions.Bson
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.{ Future, Promise }
 import scala.reflect.ClassTag
 import com.mongodb.ErrorCategory._
@@ -77,7 +77,7 @@ class PromiseArrayListAdapter[R] extends SingleResultCallback[java.util.Collecti
 
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
-    if (t == null) p.success(coll)
+    if (t == null) p.success(coll.asScala)
     else p.failure(t)
   }
 
@@ -90,7 +90,7 @@ class PromiseSingleResultAdapter[R] extends SingleResultCallback[java.util.Colle
 
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
-    if (t == null) p.success(coll.headOption)
+    if (t == null) p.success(coll.asScala.headOption)
     else p.failure(t)
   }
 
@@ -373,7 +373,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
   def insertAll(record: RB, dbos: Seq[Document], writeConcern: WriteConcern): Future[Unit] = {
     val collection = dbCollectionFactory.getPrimaryDBCollection(record)
     val callback = new UnitCallback[Void]
-    collection.insertMany(dbos, callback)
+    collection.insertMany(dbos.asJava, callback)
     callback.future
   }
 

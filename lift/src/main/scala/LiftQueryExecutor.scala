@@ -231,11 +231,11 @@ object LiftQueryExecutorHelpers {
   }
 
   def fallbackValueFromDoc(dbo: Document, fieldNames: List[String]): Option[_] = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     Box.!!(fieldNames.foldLeft(dbo: Object)((obj: Object, fieldName: String) => {
       obj match {
         case dbl: util.ArrayList[_] =>
-          dbl.map(_.asInstanceOf[Document]).map(_.get(fieldName)).toList
+          dbl.asScala.map(_.asInstanceOf[Document]).map(_.get(fieldName)).toList
         case dbo: Document =>
           dbo.get(fieldName)
         case null => null
