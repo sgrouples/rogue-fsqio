@@ -21,7 +21,7 @@ class LegacyQueryExecutorTest extends JUnitMustMatchers {
   @Test @Ignore("TODO(mateo): The public version of lift 2.6.2 causes an infinite recursion. FIXME") // Test ignored because it is broken when using OSS version of lift.
   def testExceptionInRunCommandIsDecorated {
     val query = Query[Dummy.type, Dummy, InitialState](
-      Dummy, "Dummy", None, None, None, None, None, AndCondition(Nil, None), None, None, None
+      Dummy, "Dummy", None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
     )
     (LiftAdapter.runCommand(() => "hello", query) {
       throw new RuntimeException("bang")

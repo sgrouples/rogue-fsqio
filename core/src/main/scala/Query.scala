@@ -3,7 +3,17 @@
 package io.fsq.rogue
 
 import com.mongodb.{ BasicDBObjectBuilder, DBObject, ReadPreference }
-import io.fsq.rogue.MongoHelpers.{ AndCondition, MongoBuilder, MongoModify, MongoOrder, MongoSelect }
+import io.fsq.rogue.MongoHelpers.{
+  AndCondition,
+  MongoBuilder,
+  MongoModify,
+  MongoOrder,
+  MongoSelect,
+  SearchCondition,
+  FieldOrderTerm,
+  NaturalOrderTerm,
+  ScoreOrderTerm
+}
 import io.fsq.rogue.index.MongoIndex
 import scala.collection.immutable.ListMap
 
@@ -87,6 +97,12 @@ case class Query[M, R, +State](
     addClause(clause, expectedIndexBehavior = DocumentScan)
 
   /**
+   * Adds text search to the query.
+   */
+  def search(s: String, lang: Option[String] = None): Query[M, R, State] =
+    this.copy(condition = condition.copy(searchCondition = Some(SearchCondition(s, lang))))
+
+  /**
    * Adds an eqs clause specifying the shard key.
    */
   def withShardKey[F, S2](clause: M => QueryClause[F] with ShardKeyClause)(implicit ev: AddShardAware[State, S2, _]): Query[M, R, S2] = {
@@ -119,6 +135,13 @@ case class Query[M, R, +State](
   def scanOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]) =
     addClauseOpt(opt)(clause, expectedIndexBehavior = DocumentScan)
 
+  def searchOpt(opt: Option[String], lang: Option[String] = None): Query[M, R, State] = {
+    opt match {
+      case Some(s) => this.copy(condition = condition.copy(searchCondition = Some(SearchCondition(s, lang))))
+      case None => this
+    }
+  }
+
   def raw(f: BasicDBObjectBuilder => Unit): Query[M, R, State] = {
     val newClause = new RawQueryClause(f)
     newClause.expectedIndexBehavior = DocumentScan
@@ -143,7 +166,7 @@ case class Query[M, R, +State](
         maxScan = None,
         comment = None,
         hint = None,
-        condition = AndCondition(Nil, None),
+        condition = AndCondition(Nil, None, None),
         order = None,
         select = None,
         readPreference = None
@@ -161,26 +184,47 @@ case class Query[M, R, +State](
    * now Ordered.
    */
   def orderAsc[S2](field: M => AbstractQueryField[_, _, _, M])(implicit ev: AddOrder[State, S2]): Query[M, R, S2] =
-    this.copy(order = Some(MongoOrder(List((field(meta).field.name, true)))))
+    this.copy(order = Some(MongoOrder(List(FieldOrderTerm(field(meta).field.name, true)))))
 
   def orderDesc[S2](field: M => AbstractQueryField[_, _, _, M])(implicit ev: AddOrder[State, S2]): Query[M, R, S2] =
-    this.copy(order = Some(MongoOrder(List((field(meta).field.name, false)))))
+    this.copy(order = Some(MongoOrder(List(FieldOrderTerm(field(meta).field.name, false)))))
 
   def andAsc(field: M => AbstractQueryField[_, _, _, M])(implicit ev: State <:< Ordered): Query[M, R, State] =
-    this.copy(order = Some(MongoOrder((field(meta).field.name, true) :: order.get.terms)))
+    this.copy(order = Some(MongoOrder(FieldOrderTerm(field(meta).field.name, true) :: order.get.terms)))
 
   def andDesc(field: M => AbstractQueryField[_, _, _, M])(implicit ev: State <:< Ordered): Query[M, R, State] =
-    this.copy(order = Some(MongoOrder((field(meta).field.name, false) :: order.get.terms)))
+    this.copy(order = Some(MongoOrder(FieldOrderTerm(field(meta).field.name, false) :: order.get.terms)))
 
   /**
    * Natural ordering.
    * TODO: doesn't make sense in conjunction with ordering on any other fields. enforce w/ phantom types?
    */
-  def orderNaturalAsc[V, S2](implicit ev: AddOrder[State, S2]): Query[M, R, S2] =
-    this.copy(order = Some(MongoOrder(List(("$natural", true)))))
+  def orderNaturalAsc[V, S2](implicit ev: AddNaturalOrder[State, S2]): Query[M, R, S2] =
+    this.copy(order = Some(MongoOrder(List(NaturalOrderTerm(true)))))
 
-  def orderNaturalDesc[V, S2](implicit ev: AddOrder[State, S2]): Query[M, R, S2] =
-    this.copy(order = Some(MongoOrder(List(("$natural", false)))))
+  def orderNaturalDesc[V, S2](implicit ev: AddNaturalOrder[State, S2]): Query[M, R, S2] =
+    this.copy(order = Some(MongoOrder(List(NaturalOrderTerm(false)))))
+
+  /**
+   * Search score ordering
+   */
+  def orderScore(scoreName: String = "score"): Query[M, R, State] =
+    this.copy(
+      order = Some(MongoOrder(List(ScoreOrderTerm(scoreName)))),
+      select = select match {
+        case Some(sel) => Some(sel.copy(scoreName = Some(scoreName)))
+        case None => Some(MongoSelect[M, R](IndexedSeq.empty, _ => null.asInstanceOf[R], false, Some(scoreName)))
+      }
+    )
+
+  def andScore(scoreName: String = "score"): Query[M, R, State] =
+    this.copy(
+      order = Some(MongoOrder(ScoreOrderTerm(scoreName) :: order.get.terms)),
+      select = select match {
+        case Some(sel) => Some(sel.copy(scoreName = Some(scoreName)))
+        case None => Some(MongoSelect[M, R](IndexedSeq.empty, _ => null.asInstanceOf[R], false, Some(scoreName)))
+      }
+    )
 
   /**
    * Places a limit on the size of the returned result.
@@ -422,7 +466,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M],
@@ -430,7 +474,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M],
@@ -438,7 +482,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M],
@@ -446,7 +490,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M],
@@ -454,7 +498,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M],
@@ -462,7 +506,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M],
@@ -470,7 +514,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M],
@@ -478,7 +522,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M],
@@ -486,7 +530,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M],
@@ -494,7 +538,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M],
@@ -502,7 +546,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M],
@@ -510,7 +554,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M],
@@ -518,7 +562,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M],
@@ -526,7 +570,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M],
@@ -534,7 +578,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M], f16: M => SelectField[F16, M],
@@ -542,7 +586,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst), f16(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15], xs(15).asInstanceOf[F16])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M], f16: M => SelectField[F16, M], f17: M => SelectField[F17, M],
@@ -550,7 +594,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst), f16(inst), f17(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15], xs(15).asInstanceOf[F16], xs(16).asInstanceOf[F17])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M], f16: M => SelectField[F16, M], f17: M => SelectField[F17, M], f18: M => SelectField[F18, M],
@@ -558,7 +602,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst), f16(inst), f17(inst), f18(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15], xs(15).asInstanceOf[F16], xs(16).asInstanceOf[F17], xs(17).asInstanceOf[F18])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M], f16: M => SelectField[F16, M], f17: M => SelectField[F17, M], f18: M => SelectField[F18, M], f19: M => SelectField[F19, M],
@@ -566,7 +610,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst), f16(inst), f17(inst), f18(inst), f19(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15], xs(15).asInstanceOf[F16], xs(16).asInstanceOf[F17], xs(17).asInstanceOf[F18], xs(18).asInstanceOf[F19])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M], f16: M => SelectField[F16, M], f17: M => SelectField[F17, M], f18: M => SelectField[F18, M], f19: M => SelectField[F19, M], f20: M => SelectField[F20, M],
@@ -574,7 +618,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst), f16(inst), f17(inst), f18(inst), f19(inst), f20(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15], xs(15).asInstanceOf[F16], xs(16).asInstanceOf[F17], xs(17).asInstanceOf[F18], xs(18).asInstanceOf[F19], xs(19).asInstanceOf[F20])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F21, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M], f16: M => SelectField[F16, M], f17: M => SelectField[F17, M], f18: M => SelectField[F18, M], f19: M => SelectField[F19, M], f20: M => SelectField[F20, M], f21: M => SelectField[F21, M],
@@ -582,7 +626,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst), f16(inst), f17(inst), f18(inst), f19(inst), f20(inst), f21(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15], xs(15).asInstanceOf[F16], xs(16).asInstanceOf[F17], xs(17).asInstanceOf[F18], xs(18).asInstanceOf[F19], xs(19).asInstanceOf[F20], xs(20).asInstanceOf[F21])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 
   def selectCase[F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, CC, S2](f1: M => SelectField[F1, M], f2: M => SelectField[F2, M], f3: M => SelectField[F3, M], f4: M => SelectField[F4, M], f5: M => SelectField[F5, M], f6: M => SelectField[F6, M], f7: M => SelectField[F7, M], f8: M => SelectField[F8, M], f9: M => SelectField[F9, M], f10: M => SelectField[F10, M], f11: M => SelectField[F11, M], f12: M => SelectField[F12, M], f13: M => SelectField[F13, M], f14: M => SelectField[F14, M], f15: M => SelectField[F15, M], f16: M => SelectField[F16, M], f17: M => SelectField[F17, M], f18: M => SelectField[F18, M], f19: M => SelectField[F19, M], f20: M => SelectField[F20, M], f21: M => SelectField[F21, M], f22: M => SelectField[F22, M],
@@ -590,7 +634,7 @@ case class Query[M, R, +State](
     val inst = meta
     val fields = IndexedSeq(f1(inst), f2(inst), f3(inst), f4(inst), f5(inst), f6(inst), f7(inst), f8(inst), f9(inst), f10(inst), f11(inst), f12(inst), f13(inst), f14(inst), f15(inst), f16(inst), f17(inst), f18(inst), f19(inst), f20(inst), f21(inst), f22(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1], xs(1).asInstanceOf[F2], xs(2).asInstanceOf[F3], xs(3).asInstanceOf[F4], xs(4).asInstanceOf[F5], xs(5).asInstanceOf[F6], xs(6).asInstanceOf[F7], xs(7).asInstanceOf[F8], xs(8).asInstanceOf[F9], xs(9).asInstanceOf[F10], xs(10).asInstanceOf[F11], xs(11).asInstanceOf[F12], xs(12).asInstanceOf[F13], xs(13).asInstanceOf[F14], xs(14).asInstanceOf[F15], xs(15).asInstanceOf[F16], xs(16).asInstanceOf[F17], xs(17).asInstanceOf[F18], xs(18).asInstanceOf[F19], xs(19).asInstanceOf[F20], xs(20).asInstanceOf[F21], xs(21).asInstanceOf[F22])
-    this.copy(select = Some(MongoSelect(fields, transformer)))
+    this.copy(select = Some(MongoSelect(fields, transformer, select.map(_.isExists).getOrElse(false), select.flatMap(_.scoreName))))
   }
 }
 

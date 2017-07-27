@@ -52,7 +52,7 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
    * Checks if there are any records that match this query.
    */
   def exists()(implicit ev: State <:< Unlimited with Unskipped): Boolean = {
-    val q = query.copy(select = Some(MongoSelect[M, Null](IndexedSeq.empty, _ => null)))
+    val q = query.copy(select = Some(MongoSelect[M, Null](IndexedSeq.empty, _ => null, true, query.select.flatMap(_.scoreName))))
     db.fetch(q.limit(1)).size > 0
   }
 
@@ -160,7 +160,7 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
   }
 
   def existsAsync(implicit ev: State <:< Unlimited with Unskipped): Future[Boolean] = {
-    val q = query.copy(select = Some(MongoSelect[M, Null](IndexedSeq.empty, _ => null)))
+    val q = query.copy(select = Some(MongoSelect[M, Null](IndexedSeq.empty, _ => null, true, query.select.flatMap(_.scoreName))))
     dba.exists(q.limit(1))
   }
 

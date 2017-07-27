@@ -63,20 +63,20 @@ object TrivialSyncORM extends {
   class MyQueryExecutor extends QueryExecutor[Meta[_], Record] {
     override val adapter = new MongoJavaDriverAdapter[Meta[_], Record](new MyDBCollectionFactory(mongo.getDB("testSync")))
     override val optimizer = new QueryOptimizer
-    override val defaultWriteConcern: WriteConcern = WriteConcern.SAFE
+    override val defaultWriteConcern: WriteConcern = WriteConcern.ACKNOWLEDGED
 
     protected def readSerializer[M <: Meta[_], R](
       meta: M,
       select: Option[MongoSelect[M, R]]
     ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
+        case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
           transformer(null)
 
-        case Some(MongoSelect(fields, transformer)) =>
+        case Some(MongoSelect(fields, transformer, _, _)) =>
           transformer(fields.map(f => f.valueOrDefault(Option(dbo.get(f.field.name)))))
 
         case None =>
@@ -84,13 +84,13 @@ object TrivialSyncORM extends {
       }
 
       override def fromDocument(doc: Document): R = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
+        case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
           transformer(null)
 
-        case Some(MongoSelect(fields, transformer)) =>
+        case Some(MongoSelect(fields, transformer, _, _)) =>
           transformer(fields.map(f => f.valueOrDefault(Option(doc.get(f.field.name)))))
 
         case None =>
@@ -112,7 +112,7 @@ object TrivialSyncORM extends {
   object Implicits extends Rogue {
     implicit def meta2Query[M <: Meta[R], R](meta: M with Meta[R]): Query[M, R, InitialState] = {
       Query[M, R, InitialState](
-        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
       )
     }
   }

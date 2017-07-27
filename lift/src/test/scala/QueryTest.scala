@@ -239,6 +239,21 @@ class QueryTest extends JUnitMustMatchers {
     Venue.scan(_.tags not (_ in List("a", "b"))).toString() must_== """db.venues.find({ "tags" : { "$not" : { "$in" : [ "a" , "b"]}}})"""
     Venue.scan(_.tags not (_ size 0)).toString() must_== """db.venues.find({ "tags" : { "$not" : { "$size" : 0}}})"""
     Venue.scan(_.popularity at 0 not (_ lt 0)).toString() must_== """db.venues.find({ "popularity.0" : { "$not" : { "$lt" : 0}}})"""
+
+    // text search
+    Venue.search("Starbucks").toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}})"""
+    Venue.where(_.mayor eqs 1).search("Starbucks").toString() must_== """db.venues.find({ "mayor" : 1 , "$text" : { "$search" : "Starbucks"}})"""
+    Venue.search("Starbucks", None).toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}})"""
+    Venue.search("Starbucks", Some("es")).toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks" , "$language" : "es"}})"""
+
+    // ordered text search
+    Venue.search("Starbucks").orderScore().toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}}, { "score" : { "$meta" : "textScore"}}).sort({ "score" : { "$meta" : "textScore"}})"""
+    Venue.search("Starbucks").orderScore().select(_.mayor).toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}}, { "mayor" : 1 , "score" : { "$meta" : "textScore"}}).sort({ "score" : { "$meta" : "textScore"}})"""
+    Venue.search("Starbucks").select(_.mayor).orderScore().toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}}, { "mayor" : 1 , "score" : { "$meta" : "textScore"}}).sort({ "score" : { "$meta" : "textScore"}})"""
+    Venue.search("Starbucks").orderScore("searchScore").toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}}, { "searchScore" : { "$meta" : "textScore"}}).sort({ "searchScore" : { "$meta" : "textScore"}})"""
+
+    Venue.search("Starbucks").orderAsc(_.venuename).andScore().toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}}, { "score" : { "$meta" : "textScore"}}).sort({ "venuename" : 1 , "score" : { "$meta" : "textScore"}})"""
+    Venue.search("Starbucks").orderAsc(_.venuename).andScore("searchScore").toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}}, { "searchScore" : { "$meta" : "textScore"}}).sort({ "venuename" : 1 , "searchScore" : { "$meta" : "textScore"}})"""
   }
 
   @Test
@@ -422,6 +437,13 @@ class QueryTest extends JUnitMustMatchers {
 
     // or queries
     Venue.where(_.mayor eqs 1).or(_.where(_._id eqs oid)).signature() must_== """db.venues.find({ "mayor" : 0 , "$or" : [ { "_id" : 0}]})"""
+
+    // text search
+    Venue.search("Starbucks").signature() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}})"""
+    Venue.where(_.mayor eqs 1).search("Starbucks").signature() must_== """db.venues.find({ "mayor" : 0 , "$text" : { "$search" : "Starbucks"}})"""
+    Venue.search("Starbucks", None).signature() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}})"""
+    Venue.search("Starbucks", Some("es")).signature() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks" , "$language" : "es"}})"""
+    Venue.where(_.mayor eqs 1).or(_.where(_._id eqs oid), _.search("Starbucks")).signature() must_== """db.venues.find({ "mayor" : 0 , "$or" : [ { "_id" : 0} , { "$text" : { "$search" : "Starbucks"}}]})"""
   }
 
   @Test
@@ -588,6 +610,13 @@ class QueryTest extends JUnitMustMatchers {
     q.modifyOpt(noId)(_.legacyid setTo _).toString() must_== prefix + """{ }""" + suffix
     q.modifyOpt(someEnum)(_.status setTo _).toString() must_== prefix + """{ "$set" : { "status" : "Open"}}""" + suffix
     q.modifyOpt(noEnum)(_.status setTo _).toString() must_== prefix + """{ }""" + suffix
+
+    // searchOpt
+    Venue.searchOpt(Some("Starbucks")).toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}})"""
+    Venue.searchOpt(Some("Starbucks"), None).toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks"}})"""
+    Venue.searchOpt(Some("Starbucks"), Some("es")).toString() must_== """db.venues.find({ "$text" : { "$search" : "Starbucks" , "$language" : "es"}})"""
+    Venue.searchOpt(None, None).toString() must_== """db.venues.find({ })"""
+    Venue.searchOpt(None, Some("es")).toString() must_== """db.venues.find({ })"""
   }
 
   @Test

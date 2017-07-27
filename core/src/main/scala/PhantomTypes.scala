@@ -40,6 +40,12 @@ sealed trait AllShardsOk extends ShardAware
 sealed trait Sh extends ShardKeyNotSpecified with ShardKeySpecified with AllShardsOk
 
 @implicitNotFound(msg = "Query must be Unordered, but it's actually ${In}")
+trait AddNaturalOrder[-In, +Out] extends Required[In, Unordered]
+object AddNaturalOrder {
+  implicit def addOrder[Rest >: Sel with Lim with Sk with Or with Sh]: AddNaturalOrder[Rest with Unordered, Rest with Ordered] = null
+}
+
+@implicitNotFound(msg = "Query must be Unordered, but it's actually ${In}")
 trait AddOrder[-In, +Out] extends Required[In, Unordered]
 object AddOrder {
   implicit def addOrder[Rest >: Sel with Lim with Sk with Or with Hn with Sh]: AddOrder[Rest with Unordered, Rest with Ordered] = null
@@ -120,12 +126,14 @@ sealed trait Index extends Indexable with IndexScannable
 sealed trait PartialIndexScan extends IndexScannable
 sealed trait IndexScan extends IndexScannable
 sealed trait DocumentScan extends MaybeIndexed
+sealed trait TextIndex extends Indexable
 
 case object NoIndexInfo extends NoIndexInfo
 case object Index extends Index
 case object PartialIndexScan extends PartialIndexScan
 case object IndexScan extends IndexScan
 case object DocumentScan extends DocumentScan
+case object TextIndex extends TextIndex
 
 sealed trait MaybeUsedIndex
 sealed trait UsedIndex extends MaybeUsedIndex

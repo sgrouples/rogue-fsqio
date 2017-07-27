@@ -11,12 +11,12 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
   override protected def readSerializer[M <: CcMeta[_], R](meta: M, select: Option[MongoSelect[M, R]]): RogueBsonRead[R] = {
     new RogueBsonRead[R] {
       override def fromDocument(dbo: BsonDocument): R = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
+        case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
           transformer(null)
-        case Some(MongoSelect(fields, transformer)) =>
+        case Some(MongoSelect(fields, transformer, _, _)) =>
           //TODO - optimze - extract readers for fields up, before using read serializer. this is super -ineffective
           //LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, "_id")
           //println(s"Whole DBO ${dbo} ${dbo.getClass}")
@@ -49,9 +49,9 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
 
       //same thing, but opt
       override def fromDocumentOpt(dbo: BsonDocument): Option[R] = select match {
-        case Some(MongoSelect(fields, transformer)) if fields.isEmpty =>
+        case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
           throw new RuntimeException("empty transformer for fromDocumentOpt not implemented, fields subset return in findAndModify not yet implemented")
-        case Some(MongoSelect(fields, transformer)) =>
+        case Some(MongoSelect(fields, transformer, _, _)) =>
           throw new RuntimeException("fromDocumentOpt with fields subset return in findAndModify not yet implemented")
         case None => {
           //println(s"fromDocumentOpt: ${dbo} ")
