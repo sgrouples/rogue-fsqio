@@ -8,6 +8,7 @@ import shapeless._
 import labelled.{ FieldType, field }
 import me.sgrouples.rogue.cc.CcMeta
 import me.sgrouples.rogue.enums.ReflectEnumInstance
+import me.sgrouples.rogue.map.MapKeyFormat
 import syntax.singleton._
 import record._
 import ops.record._
@@ -166,7 +167,7 @@ class CClassArrayField[C: ClassTag, MC <: CcMeta[C], O](name: String, val childM
   override def defaultValue = Array.empty[C]
 }
 
-class MapField[V, O](name: String, o: O) extends MCField[Map[String, V], O](name, o) {
+class MapField[K: MapKeyFormat, V, O](name: String, o: O) extends MCField[Map[K, V], O](name, o) {
   override def defaultValue = Map.empty
 }
 

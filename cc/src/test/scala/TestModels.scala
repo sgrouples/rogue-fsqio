@@ -142,7 +142,7 @@ object Metas {
     val id = new ObjectIdField("_id", this)
     val legacyid = new LongField("legid", this)
     val userId = new OptLongField("userId", this)
-    val counts = new MapField[Long, TipR.type]("counts", this)
+    val counts = new MapField[String, Long, TipR.type]("counts", this)
   }
 
   object OAuthConsumerR extends RCcMeta[OAuthConsumer]("oauthconsumers") {
@@ -183,5 +183,25 @@ object Metas {
   }
 
   val Invoices = new InvoiceMeta
+
+  case class Counter(_id: ObjectId = ObjectId.get(), counts: Map[ObjectId, Long])
+
+  class CounterMeta extends RCcMetaExt[Counter, CounterMeta] {
+    val id = ObjectIdField("_id")
+    val counts = MapField[ObjectId, Long]
+  }
+
+  val Counters = new CounterMeta
+
+  type CounterId = ObjectId @@ Counter
+
+  case class TypedCounter(_id: ObjectId = ObjectId.get(), counts: Map[CounterId, Long])
+
+  class TypedCounterMeta extends RCcMetaExt[TypedCounter, TypedCounterMeta] {
+    val id = ObjectIdField("_id")
+    val counts = MapField[CounterId, Long]
+  }
+
+  val TypedCounters = new TypedCounterMeta
 }
 

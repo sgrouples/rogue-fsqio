@@ -396,5 +396,43 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
       .fetchAsync().futureValue mustBe Seq(Invoice(2L, "Invoice no. 2", Money(1352.98, EUR)))
 
   }
+
+  "Map[K, V] field" should "just work" in {
+
+    val counts = Map(ObjectId.get -> 100L)
+
+    val counter = Counter(counts = counts)
+
+    Counters.insertOneAsync(counter).futureValue
+
+    val countsOpt = Counters
+      .where(_.id eqs counter._id)
+      .select(_.counts)
+      .getAsync()
+      .futureValue
+
+    val result: Map[ObjectId, Long] = countsOpt.get
+
+    result mustBe counts
+  }
+
+  "Map[K <: ObjectId, V] field" should "just work" in {
+
+    val counts: Map[CounterId, Long] = Map(tag[Counter](ObjectId.get) -> 100L)
+
+    val counter = TypedCounter(counts = counts)
+
+    TypedCounters.insertOneAsync(counter).futureValue
+
+    val countsOpt = TypedCounters
+      .where(_.id eqs counter._id)
+      .select(_.counts)
+      .getAsync()
+      .futureValue
+
+    val result: Map[CounterId, Long] = countsOpt.get
+
+    result mustBe counts
+  }
 }
 

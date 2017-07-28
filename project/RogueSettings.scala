@@ -11,8 +11,8 @@ object RogueSettings {
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "3.1.12",
     organization := "me.sgrouples",
-    crossScalaVersions := Seq("2.11.11","2.12.2"),
-    scalaVersion := "2.12.2",
+    crossScalaVersions := Seq("2.11.11","2.12.3"),
+    scalaVersion := "2.12.3",
     isSnapshot := true,
     publishMavenStyle := true,
     publishArtifact in Test := false,

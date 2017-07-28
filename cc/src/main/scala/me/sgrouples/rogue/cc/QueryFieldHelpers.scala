@@ -13,6 +13,7 @@ import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
 import scala.reflect.{ ClassTag, api }
 import Debug.DefaultImplicits._
+import me.sgrouples.rogue.map.MapKeyFormat
 
 private[cc] sealed trait Marker
 
@@ -404,8 +405,8 @@ trait QueryFieldHelpers[Meta] extends {
   protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](mc: MC): OptCClassArrayField[C, MC, Meta] @@ Marker = named(new OptCClassArrayField[C, MC, Meta](_, mc, this))
   protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): OptCClassArrayField[C, MC, Meta] @@ Marker = named(name)(new OptCClassArrayField[C, MC, Meta](_, mc, this))
 
-  protected def MapField[V]: MapField[V, Meta] @@ Marker = named(new MapField[V, Meta](_, this))
-  protected def MapField[V](name: String): MapField[V, Meta] @@ Marker = named(name)(new MapField[V, Meta](_, this))
+  protected def MapField[K: MapKeyFormat, V]: MapField[K, V, Meta] @@ Marker = named(new MapField[K, V, Meta](_, this))
+  protected def MapField[K: MapKeyFormat, V](name: String): MapField[K, V, Meta] @@ Marker = named(name)(new MapField[K, V, Meta](_, this))
 
   protected def OptMapField[V]: OptMapField[V, Meta] @@ Marker = named(new OptMapField[V, Meta](_, this))
   protected def OptMapField[V](name: String): OptMapField[V, Meta] @@ Marker = named(name)(new OptMapField[V, Meta](_, this))

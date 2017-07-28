@@ -5,6 +5,7 @@ import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.{ Currency, Locale, TimeZone, UUID }
 
 import me.sgrouples.rogue.enums.ReflectEnumInstance
+import me.sgrouples.rogue.map.{ MapKeyFormat, MapKeyFormats }
 import org.bson._
 import org.bson.types.{ Decimal128, ObjectId }
 import shapeless._
@@ -278,6 +279,7 @@ trait BaseBsonFormats {
 }
 
 trait BsonCollectionFormats {
+  requires: MapKeyFormats =>
   import scala.collection.JavaConverters._
 
   private[rogue]type BF[T] = BsonFormat[T]
@@ -389,29 +391,36 @@ trait BsonCollectionFormats {
     override def defaultValue: Option[T] = None
   }
 
-  implicit def mapFormat[K: BsonFormat, V: BsonFormat] = new BsonFormat[Map[K, V]] with BsonArrayReader[Map[K, V]] {
-    implicit val fk = implicitly[BsonFormat[K]]
-    implicit val fv = implicitly[BsonFormat[V]]
-    def write(m: Map[K, V]) = {
-      val doc = new BsonDocument()
-      m.foreach {
-        case (k, v) =>
-          val kv = fk.write(k)
-          val vv = fv.write(v)
-          if (kv.isString && !vv.isNull) doc.append(kv.asString().getValue, vv)
-      }
-      doc
-    }
-    def read(value: BsonValue) = {
-      value.asDocument().asScala.map {
-        case (ks, v) =>
-          (fk.read(new BsonString(ks)), fv.read(v))
-      }(collection.breakOut)
-    }
-    //in general terms, yes, as we don't know keys, but we need 'star' format for values
-    override def flds = Map("*" -> fv)
+  implicit def mapFormat[K: MapKeyFormat, V: BsonFormat]: BsonFormat[Map[K, V]] = {
 
-    override def defaultValue: Map[K, V] = Map.empty
+    new BsonFormat[Map[K, V]] with BsonArrayReader[Map[K, V]] {
+
+      implicit private val kf = implicitly[MapKeyFormat[K]]
+      implicit private val fv = implicitly[BsonFormat[V]]
+
+      def write(m: Map[K, V]): BsonDocument = {
+        val doc = new BsonDocument()
+        m.foreach {
+          case (k, v) =>
+            val kv = kf.write(k)
+            val vv = fv.write(v)
+            if (!vv.isNull) doc.append(kv, vv)
+        }
+        doc
+      }
+
+      def read(value: BsonValue): Map[K, V] = {
+        value.asDocument().asScala.map {
+          case (ks, v) =>
+            (kf.read(ks), fv.read(v))
+        }(collection.breakOut)
+      }
+
+      //in general terms, yes, as we don't know keys, but we need 'star' format for values
+      override def flds = Map("*" -> fv)
+
+      override def defaultValue: Map[K, V] = Map.empty
+    }
   }
 
   //TODO - other collections - see SprayJson viaSeq
@@ -431,7 +440,7 @@ trait BsonCollectionFormats {
 
 }
 
-trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats
+trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats with MapKeyFormats
 
 object BsonFormats extends StandardBsonFormats with BsonFormats
 

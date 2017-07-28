@@ -164,8 +164,8 @@ class RCcMetaExtSpec extends FlatSpec with Matchers {
     val classArrayField = ClassArrayField[CaseClass2, CaseClass2Meta](CaseClasses2)
     val classArrayField_named = ClassArrayField[CaseClass2, CaseClass2Meta](s"classArrayField$suffix", CaseClasses2)
 
-    val mapField = MapField[String]
-    val mapField_named = MapField[String](s"mapField$suffix")
+    val mapField = MapField[String, String]
+    val mapField_named = MapField[String, String](s"mapField$suffix")
 
     val optMapField = OptMapField[Long]
     val optMapField_named = OptMapField[Long](s"optMapField$suffix")
