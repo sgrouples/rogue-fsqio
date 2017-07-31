@@ -8,4 +8,5 @@ package io.fsq.rogue.index
  */
 trait IndexedRecord[M] {
   val mongoIndexList: Seq[MongoIndex[_]] = Vector.empty
+  val mongoTextIndex: Option[MongoTextIndex[_]] = None
 }

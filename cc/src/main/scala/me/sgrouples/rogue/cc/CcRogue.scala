@@ -26,7 +26,7 @@ trait CcRogue {
         val orCondition = QueryHelpers.orConditionFromQueries(q :: qs)
         Query[M, R, Unordered with Unselected with Unlimited with Unskipped with HasOrClause](
           q.meta, q.collectionName, None, None, None, None, None,
-          AndCondition(Nil, Some(orCondition)), None, None, None
+          AndCondition(Nil, Some(orCondition), None), None, None, None
         )
       }
     }
@@ -37,7 +37,7 @@ trait CcRogue {
    */
   implicit def ccMetaToQueryBuilder[M <: CcMeta[_], R](meta: M with CcMeta[R]): Query[M, R, InitialState] =
     Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
     )
 
   implicit def metaRecordToIndexBuilder[M <: CcMeta[_]](meta: M): IndexBuilder[M] =
@@ -45,7 +45,7 @@ trait CcRogue {
 
   implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, R, InitialState] = {
     val query = Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
     )
     InsertableQuery(query, CcBsonExecutors).asInstanceOf[InsertableQuery[MB, M, R, InitialState]]
   }
@@ -77,7 +77,7 @@ trait CcRogue {
 
   implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](meta: M): ExecutableQuery[MB, M, R, InitialState] = {
     val queryBuilder = Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None), None, None, None
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
     )
 
     val ccQuery = queryToCcQuery(queryBuilder)
