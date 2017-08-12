@@ -1,5 +1,7 @@
 package me.sgrouples.rogue.cc
 
+import java.util.UUID
+
 import io.fsq.rogue._
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.cc
@@ -54,5 +56,52 @@ class ObjectIdSubtypeSpec extends FlatSpec with Matchers {
   val t: Query[MetaA, cc.A.Id, Unordered with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified with SelectedOne] = X.select(_.id)
 
   "val t: Query[_, me.sgrouples.rogue.cc.A.Id, _] = X.select(_.id)" should compile
+
+}
+
+trait TypedStringId[RecordType, TagType] {
+
+  private type IdType = String @@ TagType
+
+  type Id = IdType
+
+  object Id {
+
+    def get(): Id =
+      apply(UUID.randomUUID().toString())
+
+    def apply(text: String): Id =
+      tag[TagType][String](text)
+
+    object Extract {
+      def unapply(in: String): Option[Id] = try { Some(apply(in)) } catch { case e: IllegalArgumentException => None }
+      def unapply(inOpt: Option[String]): Option[Option[Id]] = try { Some(inOpt.map(apply)) } catch { case e: IllegalArgumentException => None }
+    }
+  }
+
+  implicit object hasId extends HasId[RecordType] {
+    type Id = IdType
+  }
+
+  implicit object idOrdering extends Ordering[Id] {
+    override def compare(x: Id, y: Id): Int = x.compareTo(y)
+  }
+}
+
+object B extends TypedStringId[B, B]
+
+case class B(id: B.Id)
+
+class StringTaggedSpec extends FlatSpec with Matchers {
+
+  class MetaB extends RCcMetaExt[B, MetaB]() {
+    val id = StringTaggedField[B]("id")
+  }
+
+  val X = new MetaB
+  val id: cc.B.Id = cc.B.Id.get()
+  val t: Query[MetaB, cc.B.Id, _] = X.select(_.id).where(_.id eqs id)
+
+  "val t: Query[_, me.sgrouples.rogue.cc.B.Id, _] = X.select(_.id).where(_.id eqs id)" should compile
 
 }

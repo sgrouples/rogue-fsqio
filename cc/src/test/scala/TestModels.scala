@@ -203,5 +203,11 @@ object Metas {
   }
 
   val TypedCounters = new TypedCounterMeta
+
+  case class BinaryData(data: Array[Byte])
+
+  class BinaryDataMeta extends RCcMetaExt[BinaryData, BinaryDataMeta] {}
+
+  val BinaryDatas = new BinaryDataMeta
 }
 

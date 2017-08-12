@@ -434,5 +434,16 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     result mustBe counts
   }
+
+  "BinaryBsonFormat" should "just work" in {
+
+    val sample = BinaryData("War, war never changes".getBytes)
+
+    BinaryDatas.insertOneAsync(sample).futureValue
+
+    val seq: Seq[BinaryData] = BinaryDatas.fetchAsync().futureValue
+    seq.map(d => new String(d.data)) must contain("War, war never changes")
+
+  }
 }
 

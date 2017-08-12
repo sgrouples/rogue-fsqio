@@ -276,6 +276,15 @@ trait BaseBsonFormats {
       override def write(t: Subtype): BsonValue = ObjectIdBsonFormat.write(t)
     }
   }
+
+  implicit object BinaryBsonFormat extends BasicBsonFormat[Array[Byte]] {
+
+    override def read(b: BsonValue): Array[Byte] = b.asBinary().getData
+
+    override def write(t: Array[Byte]): BsonValue = new BsonBinary(t)
+
+    override def defaultValue: Array[Byte] = Array.empty[Byte]
+  }
 }
 
 trait BsonCollectionFormats {
