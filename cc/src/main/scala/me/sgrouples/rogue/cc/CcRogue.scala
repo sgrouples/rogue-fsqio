@@ -151,16 +151,20 @@ trait CcRogue {
       override def owner = f.owner
     })
 
-  /*
-  class EnumIdField[T <: Enumeration, O](name: String, o: O)(implicit e: T) extends MCField[T#Value, O](name, o) {
-  override def defaultValue: T#Value = e(0)
-}
-
-   */
   implicit def enumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](f: EnumIdField[E, O]): EnumIdQueryField[O, E#Value] =
     new EnumIdQueryField(f)
 
+  // this is here to force proper implicit resolution
+
+  implicit def optRnumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](f: OptEnumIdField[E, O]): EnumIdQueryField[O, E#Value] =
+    new EnumIdQueryField(f)
+
   implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[_], E <: Enumeration](f: EnumIdField[E, O]): EnumIdModifyField[O, E#Value] =
+    new EnumIdModifyField(f)
+
+  // this is here to force proper implicit resolution
+
+  implicit def optEnumIdFieldToEnumIdModifyField[O <: CcMeta[_], E <: Enumeration](f: OptEnumIdField[E, O]): EnumIdModifyField[O, E#Value] =
     new EnumIdModifyField(f)
 
   implicit val localDateIsFlattened = new Rogue.Flattened[LocalDateTime, LocalDateTime]
@@ -168,6 +172,11 @@ trait CcRogue {
   implicit val instantIsFlattend = new Rogue.Flattened[Instant, Instant]
 
   implicit def objIdSubtypeIsFlattened[T <: ObjectId] = new Rogue.Flattened[T, ObjectId]
+
+  implicit def binaryFieldToQueryField[M](f: RField[Array[Byte], M]): BinaryQueryField[M] = new BinaryQueryField(f)
+
+  implicit def binaryFieldToModifyField[M](f: RField[Array[Byte], M]): BinaryModifyField[M] = new BinaryModifyField(f)
+
 }
 
 object CcRogue extends Rogue with CcRogue

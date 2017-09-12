@@ -211,3 +211,13 @@ object LocalDateTimeToMongo {
   final def instantToDate(d: Instant): Date = Date.from(d)
 }
 
+class BinaryQueryField[M](field: Field[Array[Byte], M]) extends AbstractQueryField[Array[Byte], Array[Byte], Array[Byte], M](field) {
+  override def valueToDB(d: Array[Byte]) = d
+  override def eqs(b: Array[Byte]) = EqClause(field.name, b)
+}
+
+class BinaryModifyField[M](field: Field[Array[Byte], M]) extends AbstractModifyField[Array[Byte], Array[Byte], M](field) {
+  override def valueToDB(d: Array[Byte]) = d
+  override def setTo(b: Array[Byte]) = new ModifyClause(ModOps.Set, field.name -> b)
+}
+
