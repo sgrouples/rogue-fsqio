@@ -1,7 +1,7 @@
 package me.sgrouples.rogue
 
 import java.time.{ Instant, LocalDateTime, ZoneOffset }
-import java.util.{ Currency, Date }
+import java.util.{ Currency, Date, Locale }
 
 import io.fsq.field.Field
 import io.fsq.rogue._
@@ -147,6 +147,14 @@ class CurrencyQueryField[M](field: Field[Currency, M]) extends AbstractQueryFiel
 
 class CurrencyModifyField[M](field: Field[Currency, M]) extends AbstractModifyField[Currency, BsonString, M](field) {
   override def valueToDB(v: Currency): BsonString = new BsonString(v.getCurrencyCode)
+}
+
+class LocaleQueryField[M](field: Field[Locale, M]) extends AbstractQueryField[Locale, Locale, BsonString, M](field) {
+  override def valueToDB(v: Locale): BsonString = new BsonString(v.toString)
+}
+
+class LocaleModifyField[M](field: Field[Locale, M]) extends AbstractModifyField[Locale, BsonString, M](field) {
+  override def valueToDB(v: Locale): BsonString = new BsonString(v.toString)
 }
 
 class CClassModifyField[C, M <: CcMeta[C], O](fld: CClassField[C, M, O]) extends AbstractModifyField[C, BsonDocument, O](fld) {

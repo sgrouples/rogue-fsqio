@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc
 import java.time.{ Instant, LocalDateTime }
-import java.util.{ Currency, UUID }
+import java.util.{ Currency, Locale, UUID }
 
 import io.fsq.rogue.EnumerationListModifyField
 import me.sgrouples.rogue._
@@ -208,6 +208,14 @@ object Metas {
 
   class BinaryDataMeta extends RCcMetaExt[BinaryData, BinaryDataMeta] {}
 
-  val BinaryDatas = new BinaryDataMeta
+  val Binaries = new BinaryDataMeta
+
+  case class LocaleData(locale: Locale)
+
+  class LocaleDataMeta extends RCcMetaExt[LocaleData, LocaleDataMeta] {
+    val locale = LocaleField
+  }
+
+  val Locales = new LocaleDataMeta
 }
 

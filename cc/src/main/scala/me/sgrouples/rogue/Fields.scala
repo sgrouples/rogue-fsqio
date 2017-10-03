@@ -94,6 +94,10 @@ class CurrencyField[O](name: String, o: O) extends MCField[Currency, O](name, o)
   override def defaultValue = Currency.getInstance("USD")
 }
 
+class LocaleField[O](name: String, o: O) extends MCField[Locale, O](name, o) {
+  override def defaultValue = Locale.US
+}
+
 class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
   override def defaultValue = false
 }
@@ -193,6 +197,7 @@ class OptDoubleField[O](name: String, o: O) extends OCField[Double, O](name, o)
 class OptLocalDateTimeField[O](name: String, o: O) extends OCField[LocalDateTime, O](name, o)
 
 class OptCurrencyField[O](name: String, o: O) extends OCField[Currency, O](name, o)
+class OptLocaleField[O](name: String, o: O) extends OCField[Locale, O](name, o)
 
 class OptInstantField[O](name: String, o: O) extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O) extends OCField[Boolean, O](name, o)

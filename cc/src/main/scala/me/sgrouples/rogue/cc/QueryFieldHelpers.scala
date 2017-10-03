@@ -410,4 +410,11 @@ trait QueryFieldHelpers[Meta] extends {
 
   protected def OptMapField[V]: OptMapField[V, Meta] @@ Marker = named(new OptMapField[V, Meta](_, this))
   protected def OptMapField[V](name: String): OptMapField[V, Meta] @@ Marker = named(name)(new OptMapField[V, Meta](_, this))
+
+  protected def LocaleField: LocaleField[Meta] @@ Marker = named(new LocaleField[Meta](_, this))
+  protected def LocaleField(name: String): LocaleField[Meta] @@ Marker = named(name)(new LocaleField[Meta](_, this))
+
+  protected def OptLocaleField: OptLocaleField[Meta] @@ Marker = named(new OptLocaleField[Meta](_, this))
+  protected def OptLocaleField(name: String): OptLocaleField[Meta] @@ Marker = named(name)(new OptLocaleField[Meta](_, this))
+
 }

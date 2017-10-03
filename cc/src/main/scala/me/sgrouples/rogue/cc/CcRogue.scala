@@ -13,7 +13,7 @@ import io.fsq.field.{ RequiredField, Field => RField, OptionalField => ROptional
 import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
-import java.util.{ Currency, Date, UUID }
+import java.util.{ Currency, Date, Locale, UUID }
 
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
@@ -93,6 +93,9 @@ trait CcRogue {
   implicit def currencyFieldToCurrencyQueryField[O <: CcMeta[_]](f: RField[Currency, O]): CurrencyQueryField[O] =
     new CurrencyQueryField[O](f)
 
+  implicit def localeFieldToLocaleQueryField[O <: CcMeta[_]](f: RField[Locale, O]): LocaleQueryField[O] =
+    new LocaleQueryField[O](f)
+
   implicit def bigDecimalFieldToCurrencyQueryField[O <: CcMeta[_]](f: RField[BigDecimal, O]): BigDecimalQueryField[O] =
     new BigDecimalQueryField[O](f)
 
@@ -141,6 +144,9 @@ trait CcRogue {
 
   implicit def bigDecimalFieldToCurrencyModifyField[O <: CcMeta[_]](f: RField[BigDecimal, O]): BigDecimalModifyField[O] =
     new BigDecimalModifyField[O](f)
+
+  implicit def localeFieldToLocaleModifyField[O <: CcMeta[_]](f: RField[Locale, O]): LocaleModifyField[O] =
+    new LocaleModifyField[O](f)
 
   implicit def mandatoryFieldToSelectField[M, V](f: MCField[V, M]): SelectField[V, M] =
     new MandatorySelectField(f)

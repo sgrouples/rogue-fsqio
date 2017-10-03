@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 
 import java.time.LocalDateTime
-import java.util.Currency
+import java.util.{ Currency, Locale }
 import java.util.regex.Pattern
 
 import com.mongodb.async.client.MongoDatabase
@@ -439,10 +439,26 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     val sample = BinaryData("War, war never changes".getBytes)
 
-    BinaryDatas.insertOneAsync(sample).futureValue
+    Binaries.insertOneAsync(sample).futureValue
 
-    val seq: Seq[BinaryData] = BinaryDatas.fetchAsync().futureValue
+    val seq: Seq[BinaryData] = Binaries.fetchAsync().futureValue
     seq.map(d => new String(d.data)) must contain("War, war never changes")
+
+  }
+
+  "LocaleBsonFormat & LocaleField" should "just work" in {
+
+    val sample = LocaleData(Locale.CANADA_FRENCH)
+
+    Locales.insertOneAsync(sample).futureValue
+
+    val seq: Seq[Locale] = Locales.where(_.locale eqs Locale.CANADA_FRENCH)
+      .select(_.locale).fetchAsync().futureValue
+    seq must contain(Locale.CANADA_FRENCH)
+
+    Locales.where(_.locale eqs Locale.CANADA_FRENCH).modify(_.locale setTo Locale.CHINESE).updateOneAsync()
+
+    Locales.where(_.locale eqs Locale.CHINESE).existsAsync.futureValue mustBe true
 
   }
 }
