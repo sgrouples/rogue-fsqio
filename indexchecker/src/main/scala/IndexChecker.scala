@@ -74,8 +74,7 @@ object MongoIndexChecker extends IndexChecker {
         // We just have to worry about expectations being more optimistic than actual.
         val badExpectations = List(
           Index -> List(PartialIndexScan, IndexScan, DocumentScan),
-          IndexScan -> List(DocumentScan)
-        )
+          IndexScan -> List(DocumentScan))
         badExpectations.forall {
           case (expectation, badActual) => {
             if (clause.expectedIndexBehavior == expectation &&
@@ -83,8 +82,7 @@ object MongoIndexChecker extends IndexChecker {
               signalError(
                 query,
                 "Query is expecting %s on %s but actual behavior is %s. query = %s" format
-                  (clause.expectedIndexBehavior, clause.fieldName, clause.actualIndexBehavior, query.toString)
-              )
+                  (clause.expectedIndexBehavior, clause.fieldName, clause.actualIndexBehavior, query.toString))
             } else true
           }
         }
@@ -106,8 +104,7 @@ object MongoIndexChecker extends IndexChecker {
       clauses.isEmpty || matchesUniqueIndex(clauses) ||
         indexes.exists(idx => matchesIndex(idx.asListMap.keys.toList, clauses) && logIndexHit(query, idx)) ||
         signalError(query, "Query does not match an index! query: %s, indexes: %s" format (
-          query.toString, indexString
-        ))
+          query.toString, indexString))
     })
   }
 
@@ -119,8 +116,7 @@ object MongoIndexChecker extends IndexChecker {
 
   private def matchesIndex(
     index: List[String],
-    clauses: List[QueryClause[_]]
-  ) = {
+    clauses: List[QueryClause[_]]) = {
     // Unless explicitly hinted, MongoDB will only use an index if the first
     // field in the index matches some query field.
     clauses.exists(_.fieldName == index.head) &&
@@ -139,8 +135,7 @@ object MongoIndexChecker extends IndexChecker {
   private def matchesCompoundIndex(
     index: List[String],
     clauses: List[QueryClause[_]],
-    scanning: Boolean
-  ): Boolean = {
+    scanning: Boolean): Boolean = {
     if (clauses.isEmpty) {
       // All of the clauses have been matched to an index field. We are done!
       true

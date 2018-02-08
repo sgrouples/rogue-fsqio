@@ -31,8 +31,7 @@ object Debug {
     implicit def debugTraversable[T, W[_]](
       implicit
       sh: Debug[T],
-      ev: W[T] <:< TraversableLike[T, W[T]]
-    ): Debug[W[T]] = {
+      ev: W[T] <:< TraversableLike[T, W[T]]): Debug[W[T]] = {
       new Debug[W[T]] {
         override def show(t: W[T]): String = {
           val buffer: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty

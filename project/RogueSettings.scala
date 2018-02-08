@@ -11,8 +11,8 @@ object RogueSettings {
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "3.1.16",
     organization := "me.sgrouples",
-    crossScalaVersions := Seq("2.11.11","2.12.3"),
-    scalaVersion := "2.12.3",
+    crossScalaVersions := Seq("2.11.11","2.12.4"),
+    scalaVersion := "2.12.4",
     isSnapshot := true,
     publishMavenStyle := true,
     publishArtifact in Test := false,
@@ -34,7 +34,7 @@ object RogueSettings {
 
 object RogueDependencies {
   val liftVersion = "3.1.0"
-  val specsVer = "3.8.6"
+  val specsVer = "3.8.9"
   val liftDeps = Seq(
     "net.liftweb"              %% "lift-mongodb"    % liftVersion  % "compile" intransitive(),
     "net.liftweb"              %% "lift-common"     % liftVersion  % "compile",
@@ -54,8 +54,8 @@ object RogueDependencies {
     "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
   val mongoDeps = Seq(
-    "org.mongodb"              % "mongodb-driver"      % "3.4.2"     % "compile",
-    "org.mongodb"              % "mongodb-driver-async"% "3.4.2"     % "compile"
+    "org.mongodb"              % "mongodb-driver"      % "3.6.2"     % "compile",
+    "org.mongodb"              % "mongodb-driver-async"% "3.6.2"     % "compile"
   )
 
   val testDeps = Seq(
@@ -68,7 +68,7 @@ object RogueDependencies {
     "org.slf4j" % "slf4j-simple" % "1.7.21" % "test"
   )
 
-  val shapeless = "com.chuusai" %% "shapeless" % "2.3.2"
+  val shapeless = "com.chuusai" %% "shapeless" % "2.3.3"
 
   val coreDeps = mongoDeps ++ joda
   

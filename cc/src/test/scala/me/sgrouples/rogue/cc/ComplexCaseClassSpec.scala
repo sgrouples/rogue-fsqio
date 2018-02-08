@@ -50,8 +50,7 @@ import Dependencies._
 case class Role(
   name: RoleName.Value,
   permissions: Set[Permission.Value],
-  origin: Option[RoleName.Value] = None
-)
+  origin: Option[RoleName.Value] = None)
 
 case class Group(
   id: ObjectId,
@@ -78,8 +77,7 @@ case class Group(
   searchId: Option[String],
   pdFeaturedPosition: Option[Int],
   createdAt: Instant,
-  teamId: Option[Team.Id]
-)
+  teamId: Option[Team.Id])
 
 class ComplexCaseClassSpec extends FlatSpec with Matchers {
 
@@ -104,22 +102,18 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
       tag[User][ObjectId](id),
       List(
         tag[User][ObjectId](id),
-      tag[User][ObjectId](id)
-      ),
+      tag[User][ObjectId](id)),
       None,
       "color", None,
       Seq(
         Role(
           RoleName.one,
           Set(Permission.one, Permission.two),
-          origin = None
-        ),
+          origin = None),
         Role(
           RoleName.two,
           Set(Permission.two),
-          origin = Some(RoleName.one)
-        )
-      ),
+          origin = Some(RoleName.one))),
       Seq(0L, 1L, 2L),
       None, None,
       false, None,
@@ -127,8 +121,7 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
       None, None,
       None, None,
       None, now,
-      None
-    )
+      None)
 
     val bson = Groups.write(group)
 

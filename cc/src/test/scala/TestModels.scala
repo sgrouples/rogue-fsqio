@@ -42,8 +42,7 @@ case class SourceBson(name: String, url: String)
 
 object VenueClaimBson {
   val default = VenueClaimBson(
-    -1L, ClaimStatus.pending
-  )
+    -1L, ClaimStatus.pending)
 }
 
 case class VenueClaimBson(uid: Long, status: ClaimStatus.Value, source: Option[SourceBson] = None, date: LocalDateTime = LocalDateTime.now())
@@ -73,8 +72,7 @@ case class Venue(
   status: VenueStatus.Value,
   claims: List[VenueClaimBson],
   lastClaim: Option[VenueClaimBson],
-  firstClaim: VenueClaimBson = VenueClaimBson.default
-)
+  firstClaim: VenueClaimBson = VenueClaimBson.default)
 
 case class Tip(_id: ObjectId, legid: Long, counts: Map[String, Long], userId: Option[Long] = None)
 

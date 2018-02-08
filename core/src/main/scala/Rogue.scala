@@ -87,12 +87,10 @@ trait Rogue {
 
   // SelectField implicits
   implicit def roptionalFieldToSelectField[M, V](
-    f: ROptionalField[V, M]
-  ): SelectField[Option[V], M] = new OptionalSelectField(f)
+    f: ROptionalField[V, M]): SelectField[Option[V], M] = new OptionalSelectField(f)
 
   implicit def rrequiredFieldToSelectField[M, V](
-    f: RRequiredField[V, M]
-  ): SelectField[V, M] = new MandatorySelectField(f)
+    f: RRequiredField[V, M]): SelectField[V, M] = new MandatorySelectField(f)
 
   class Flattened[A, B]
   implicit def anyValIsFlattened[A <: AnyVal]: Flattened[A, A] = new Flattened[A, A]

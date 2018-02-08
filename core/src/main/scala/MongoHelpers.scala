@@ -45,8 +45,7 @@ object MongoHelpers extends Rogue {
     def buildCondition(
       cond: AndCondition,
       builder: BasicDBObjectBuilder,
-      signature: Boolean
-    ): BasicDBObject = {
+      signature: Boolean): BasicDBObject = {
       val (rawClauses, safeClauses) = cond.clauses.partition(_.isInstanceOf[RawQueryClause])
 
       // Normal clauses
@@ -181,15 +180,13 @@ object MongoHelpers extends Rogue {
         stringFromDBObject(buildCondition(modify.query.condition, signature = false)),
         stringFromDBObject(buildModify(modify.mod)),
         upsert,
-        multi
-      )
+        multi)
     }
 
     def buildFindAndModifyString[R, M](collectionName: String, mod: FindAndModifyQuery[M, R], returnNew: Boolean, upsert: Boolean, remove: Boolean): String = {
       val query = mod.query
       val sb = new StringBuilder("db.%s.findAndModify({ query: %s".format(
-        collectionName, stringFromDBObject(buildCondition(query.condition))
-      ))
+        collectionName, stringFromDBObject(buildCondition(query.condition))))
       query.order.foreach(o => sb.append(", sort: " + buildOrder(o).toString))
       if (remove) sb.append(", remove: true")
       sb.append(", update: " + stringFromDBObject(buildModify(mod.mod)))

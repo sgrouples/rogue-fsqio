@@ -32,17 +32,15 @@ trait BsonDBCollectionFactory[MB] {
 }
 
 class MongoBsonJavaDriverAdapter[MB](
-    dbCollectionFactory: BsonDBCollectionFactory[MB],
-    decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY
-) {
+  dbCollectionFactory: BsonDBCollectionFactory[MB],
+  decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY) {
 
   import io.fsq.rogue.MongoHelpers.MongoBuilder._
   import io.fsq.rogue.QueryHelpers._
 
   private[rogue] def runCommand[M <: MB, T](
     descriptionFunc: () => String,
-    query: Query[M, _, _]
-  )(f: => T)(implicit db: MongoDatabase): T = {
+    query: Query[M, _, _])(f: => T)(implicit db: MongoDatabase): T = {
     // Use nanoTime instead of currentTimeMillis to time the query since
     // currentTimeMillis only has 10ms granularity on many systems.
     val start = System.nanoTime
@@ -80,8 +78,7 @@ class MongoBsonJavaDriverAdapter[MB](
     query: Query[M, _, _],
     key: String,
     ct: ClassTag[R],
-    readPreference: Option[ReadPreference]
-  )(implicit db: MongoDatabase): Long = {
+    readPreference: Option[ReadPreference])(implicit db: MongoDatabase): Long = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd: Bson = buildCondition(queryClause.condition)
@@ -94,8 +91,7 @@ class MongoBsonJavaDriverAdapter[MB](
     query: Query[M, _, _],
     key: String,
     ct: ClassTag[R],
-    readPreference: Option[ReadPreference]
-  )(implicit db: MongoDatabase): Iterable[R] = {
+    readPreference: Option[ReadPreference])(implicit db: MongoDatabase): Iterable[R] = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd: Bson = buildCondition(queryClause.condition)
@@ -106,8 +102,7 @@ class MongoBsonJavaDriverAdapter[MB](
 
   def delete[M <: MB](
     query: Query[M, _, _],
-    writeConcern: WriteConcern
-  )(implicit db: MongoDatabase): Unit = {
+    writeConcern: WriteConcern)(implicit db: MongoDatabase): Unit = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd: Bson = buildCondition(queryClause.condition)
@@ -129,8 +124,7 @@ class MongoBsonJavaDriverAdapter[MB](
     mod: ModifyQuery[M, _],
     upsert: Boolean,
     multi: Boolean,
-    writeConcern: WriteConcern
-  )(implicit db: MongoDatabase): Unit = {
+    writeConcern: WriteConcern)(implicit db: MongoDatabase): Unit = {
     val modClause = transformer.transformModify(mod)
     validator.validateModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty) {
@@ -150,8 +144,7 @@ class MongoBsonJavaDriverAdapter[MB](
     mod: FindAndModifyQuery[M, R],
     returnNew: Boolean,
     upsert: Boolean,
-    remove: Boolean
-  )(f: BsonDocument => R)(implicit db: MongoDatabase): Option[R] = {
+    remove: Boolean)(f: BsonDocument => R)(implicit db: MongoDatabase): Option[R] = {
     val modClause = transformer.transformFindAndModify(mod)
     validator.validateFindAndModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty || remove) {
@@ -217,8 +210,7 @@ class MongoBsonJavaDriverAdapter[MB](
     query: Query[M, R, _],
     initialState: S,
     f: BsonDocument => R,
-    readPreference: Option[ReadPreference] = None
-  )(handler: (S, Event[R]) => Command[S])(implicit db: MongoDatabase): S = {
+    readPreference: Option[ReadPreference] = None)(handler: (S, Event[R]) => Command[S])(implicit db: MongoDatabase): S = {
     def getObject(cursor: MongoCursor[BsonDocument]): Try[R] = {
       Try(f(cursor.next()))
     }
@@ -247,8 +239,7 @@ class MongoBsonJavaDriverAdapter[MB](
     batchSize: Int,
     initialState: S,
     f: BsonDocument => R,
-    readPreference: Option[ReadPreference] = None
-  )(handler: (S, Event[Seq[R]]) => Command[S])(implicit db: MongoDatabase): S = {
+    readPreference: Option[ReadPreference] = None)(handler: (S, Event[Seq[R]]) => Command[S])(implicit db: MongoDatabase): S = {
     val buf = new ListBuffer[R]
 
     def getBatch(cursor: MongoCursor[BsonDocument]): Try[Seq[R]] = {

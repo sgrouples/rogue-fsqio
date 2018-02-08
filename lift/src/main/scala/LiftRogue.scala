@@ -73,8 +73,7 @@ trait LiftRogue {
         val orCondition = QueryHelpers.orConditionFromQueries(q :: qs)
         Query[M, R, Unordered with Unselected with Unlimited with Unskipped with HasOrClause](
           q.meta, q.collectionName, None, None, None, None, None,
-          AndCondition(Nil, Some(orCondition), None), None, None, None
-        )
+          AndCondition(Nil, Some(orCondition), None), None, None, None)
       }
     }
   }
@@ -84,8 +83,7 @@ trait LiftRogue {
    */
   implicit def metaRecordToQueryBuilder[M <: MongoRecord[M]](rec: M with MongoMetaRecord[M]): Query[M, M, InitialState] =
     Query[M, M, InitialState](
-      rec, rec.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
-    )
+      rec, rec.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)
 
   implicit def metaRecordToIndexBuilder[M <: MongoRecord[M]](rec: M with MongoMetaRecord[M]): IndexBuilder[M] =
     IndexBuilder(rec)
@@ -97,33 +95,27 @@ trait LiftRogue {
     ExecutableQuery(
       query.asInstanceOf[Query[M with MongoMetaRecord[_], R, State]],
       LiftQueryExecutor,
-      LiftAsyncQueryExecutor
-    )
+      LiftAsyncQueryExecutor)
   }
 
   implicit def modifyQueryToLiftModifyQuery[M <: MongoRecord[_], State](
-    query: ModifyQuery[M, State]
-  ): ExecutableModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], State] = {
+    query: ModifyQuery[M, State]): ExecutableModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], State] = {
     ExecutableModifyQuery(
       query.asInstanceOf[ModifyQuery[M with MongoMetaRecord[_], State]],
       LiftQueryExecutor,
-      LiftAsyncQueryExecutor
-    )
+      LiftAsyncQueryExecutor)
   }
 
   implicit def findAndModifyQueryToLiftFindAndModifyQuery[M <: MongoRecord[_], R](
-    query: FindAndModifyQuery[M, R]
-  ): ExecutableFindAndModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R] = {
+    query: FindAndModifyQuery[M, R]): ExecutableFindAndModifyQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], R] = {
     ExecutableFindAndModifyQuery(
       query.asInstanceOf[FindAndModifyQuery[M with MongoMetaRecord[_], R]],
       LiftQueryExecutor,
-      LiftAsyncQueryExecutor
-    )
+      LiftAsyncQueryExecutor)
   }
 
   implicit def metaRecordToLiftQuery[M <: MongoRecord[M]](
-    rec: M with MongoMetaRecord[M]
-  ): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], M, InitialState] = {
+    rec: M with MongoMetaRecord[M]): ExecutableQuery[MongoRecord[_] with MongoMetaRecord[_], M with MongoMetaRecord[_], MongoRecord[_], M, InitialState] = {
     val queryBuilder = metaRecordToQueryBuilder(rec)
     val liftQuery = queryToLiftQuery(queryBuilder)
     liftQuery
@@ -132,15 +124,13 @@ trait LiftRogue {
   implicit def fieldToQueryField[M <: BsonRecord[M], F: BSONType](f: Field[F, M]): QueryField[F, M] = new QueryField(f)
 
   implicit def bsonRecordFieldToBsonRecordQueryField[M <: BsonRecord[M], B <: BsonRecord[B]](
-    f: BsonRecordField[M, B]
-  ): BsonRecordQueryField[M, B] = {
+    f: BsonRecordField[M, B]): BsonRecordQueryField[M, B] = {
     val rec = f.defaultValue // a hack to get at the embedded record
     new BsonRecordQueryField[M, B](f, _.asDBObject, rec)
   }
 
   implicit def rbsonRecordFieldToBsonRecordQueryField[M <: BsonRecord[M], B <: BsonRecord[B]](
-    f: RField[B, M]
-  ): BsonRecordQueryField[M, B] = {
+    f: RField[B, M]): BsonRecordQueryField[M, B] = {
     // a hack to get at the embedded record
     val owner = f.owner
     if (f.name.indexOf('.') >= 0) {
@@ -220,11 +210,9 @@ trait LiftRogue {
     new BsonRecordModifyField[M, B](f, _.asDBObject)
 
   implicit def bsonRecordListFieldToBsonRecordListModifyField[M <: BsonRecord[M], B <: BsonRecord[B]](
-    f: BsonRecordListField[M, B]
-  )(
+    f: BsonRecordListField[M, B])(
     implicit
-    mf: Manifest[B]
-  ): BsonRecordListModifyField[M, B] = {
+    mf: Manifest[B]): BsonRecordListModifyField[M, B] = {
     val rec = f.setFromJValue(JArray(JInt(0) :: Nil)).openOrThrowException("a gross hack to get at the embedded record").head
     new BsonRecordListModifyField[M, B](f, rec, _.asDBObject)(mf)
   }
@@ -270,8 +258,7 @@ trait LiftRogue {
     })
 
   implicit def mandatoryLiftField2RequiredRecordv2Field[M <: BsonRecord[M], V](
-    f: Field[V, M] with MandatoryTypedField[V]
-  ): io.fsq.field.RequiredField[V, M] = new io.fsq.field.RequiredField[V, M] {
+    f: Field[V, M] with MandatoryTypedField[V]): io.fsq.field.RequiredField[V, M] = new io.fsq.field.RequiredField[V, M] {
     override def name = f.name
     override def owner = f.owner
     override def defaultValue = f.defaultValue

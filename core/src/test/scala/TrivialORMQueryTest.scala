@@ -16,8 +16,7 @@ import org.specs2.matcher.JUnitMustMatchers
 object TrivialSyncORM extends {
   val codecRegistry = CodecRegistries.fromRegistries(
     com.mongodb.MongoClient.getDefaultCodecRegistry(),
-    CodecRegistries.fromCodecs(new LongPrimitiveCodec, new IntegerPrimitiveCodec)
-  )
+    CodecRegistries.fromCodecs(new LongPrimitiveCodec, new IntegerPrimitiveCodec))
 
   val mongoClientOptions = MongoClientOptions.builder().codecRegistry(codecRegistry).build()
 
@@ -67,8 +66,7 @@ object TrivialSyncORM extends {
 
     protected def readSerializer[M <: Meta[_], R](
       meta: M,
-      select: Option[MongoSelect[M, R]]
-    ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
+      select: Option[MongoSelect[M, R]]): RogueReadSerializer[R] = new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
         case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
@@ -112,8 +110,7 @@ object TrivialSyncORM extends {
   object Implicits extends Rogue {
     implicit def meta2Query[M <: Meta[R], R](meta: M with Meta[R]): Query[M, R, InitialState] = {
       Query[M, R, InitialState](
-        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
-      )
+        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)
     }
   }
 

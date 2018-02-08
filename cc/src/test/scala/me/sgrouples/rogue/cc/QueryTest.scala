@@ -444,14 +444,11 @@ class QueryTest extends JUnitMustMatchers {
   @Test
   def testFindAndModifyQueryShouldProduceACorrectJSONQueryString {
     VenueR.where(_.legacyid eqs 1).findAndModify(_.venuename setTo "fshq").toString().must_==(
-      """db.venues.findAndModify({ query: { "legId" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })"""
-    )
+      """db.venues.findAndModify({ query: { "legId" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })""")
     VenueR.where(_.legacyid eqs 1).orderAsc(_.popularity).findAndModify(_.venuename setTo "fshq").toString().must_==(
-      """db.venues.findAndModify({ query: { "legId" : 1}, sort: { "popularity" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })"""
-    )
+      """db.venues.findAndModify({ query: { "legId" : 1}, sort: { "popularity" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })""")
     VenueR.where(_.legacyid eqs 1).select(_.mayor, _.closed).findAndModify(_.venuename setTo "fshq").toString().must_==(
-      """db.venues.findAndModify({ query: { "legId" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, fields: { "mayor" : 1 , "closed" : 1}, upsert: false })"""
-    )
+      """db.venues.findAndModify({ query: { "legId" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, fields: { "mayor" : 1 , "closed" : 1}, upsert: false })""")
   }
 
   @Test
@@ -459,24 +456,21 @@ class QueryTest extends JUnitMustMatchers {
     // Simple $or
     VenueR.or(
       _.where(_.legacyid eqs 1),
-      _.where(_.mayor eqs 2)
-    )
+      _.where(_.mayor eqs 2))
       .toString() must_== """db.venues.find({ "$or" : [ { "legId" : 1} , { "mayor" : 2}]})"""
 
     // Compound $or
     VenueR.where(_.tags size 0)
       .or(
         _.where(_.legacyid eqs 1),
-        _.where(_.mayor eqs 2)
-      )
+        _.where(_.mayor eqs 2))
       .toString() must_== """db.venues.find({ "tags" : { "$size" : 0} , "$or" : [ { "legId" : 1} , { "mayor" : 2}]})"""
 
     // $or with additional "and" clauses
     VenueR.where(_.tags size 0)
       .or(
         _.where(_.legacyid eqs 1).and(_.closed eqs true),
-        _.where(_.mayor eqs 2)
-      )
+        _.where(_.mayor eqs 2))
       .toString() must_== """db.venues.find({ "tags" : { "$size" : 0} , "$or" : [ { "legId" : 1 , "closed" : true} , { "mayor" : 2}]})"""
 
     // Nested $or
@@ -484,30 +478,25 @@ class QueryTest extends JUnitMustMatchers {
       _.where(_.legacyid eqs 1)
         .or(
           _.where(_.closed eqs true),
-          _.where(_.closed exists false)
-        ),
-      _.where(_.mayor eqs 2)
-    )
+          _.where(_.closed exists false)),
+      _.where(_.mayor eqs 2))
       .toString() must_== """db.venues.find({ "$or" : [ { "legId" : 1 , "$or" : [ { "closed" : true} , { "closed" : { "$exists" : false}}]} , { "mayor" : 2}]})"""
 
     // $or with modify
     VenueR.or(
       _.where(_.legacyid eqs 1),
-      _.where(_.mayor eqs 2)
-    )
+      _.where(_.mayor eqs 2))
       .modify(_.userId setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legId" : 1} , { "mayor" : 2}]}, { "$set" : { "userId" : 1}}, false, false)"""
 
     // $or with optional where clause
     VenueR.or(
       _.where(_.legacyid eqs 1),
-      _.whereOpt(None)(_.mayor eqs _)
-    )
+      _.whereOpt(None)(_.mayor eqs _))
       .modify(_.userId setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legId" : 1}]}, { "$set" : { "userId" : 1}}, false, false)"""
 
     VenueR.or(
       _.where(_.legacyid eqs 1),
-      _.whereOpt(Some(2))(_.mayor eqs _)
-    )
+      _.whereOpt(Some(2))(_.mayor eqs _))
       .modify(_.userId setTo 1).toString() must_== """db.venues.update({ "$or" : [ { "legId" : 1} , { "mayor" : 2}]}, { "$set" : { "userId" : 1}}, false, false)"""
 
     // OrQuery syntax

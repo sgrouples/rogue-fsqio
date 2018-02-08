@@ -15,9 +15,8 @@ import scala.concurrent.Future
 import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, R, State](
-    query: Query[M, R, State],
-    ex: BsonExecutors[MB]
-)(implicit ev: ShardingOk[M, State]) {
+  query: Query[M, R, State],
+  ex: BsonExecutors[MB])(implicit ev: ShardingOk[M, State]) {
 
   /**
    * Gets the size of the query result. This should only be called on queries that do not
@@ -162,9 +161,8 @@ case class ExecutableQuery[MB, M <: MB, R, State](
 }
 
 case class ExecutableModifyQuery[MB, M <: MB, State](
-    query: ModifyQuery[M, State],
-    ex: BsonExecutors[MB]
-) {
+  query: ModifyQuery[M, State],
+  ex: BsonExecutors[MB]) {
   def updateMulti()(implicit db: MongoDatabase): Unit =
     ex.sync.updateMulti(query)
 
@@ -205,9 +203,8 @@ case class ExecutableModifyQuery[MB, M <: MB, State](
 }
 
 case class ExecutableFindAndModifyQuery[MB, M <: MB, R](
-    query: FindAndModifyQuery[M, R],
-    ex: BsonExecutors[MB]
-) {
+  query: FindAndModifyQuery[M, R],
+  ex: BsonExecutors[MB]) {
   def updateOne(returnNew: Boolean = false)(implicit db: MongoDatabase): Option[R] =
     ex.sync.findAndUpdateOne(query, returnNew)
 
@@ -223,9 +220,8 @@ case class ExecutableFindAndModifyQuery[MB, M <: MB, R](
 }
 
 case class InsertableQuery[MB, M <: MB, R, State](
-    query: Query[M, R, State],
-    ex: BsonExecutors[MB]
-) {
+  query: Query[M, R, State],
+  ex: BsonExecutors[MB]) {
 
   def insertOneAsync(t: R)(implicit dba: MongoAsyncDatabase): Future[Unit] = {
     ex.async.insertOne(query, t)

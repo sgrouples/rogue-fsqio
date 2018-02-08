@@ -270,8 +270,7 @@ class RCcMetaExtSpec extends FlatSpec with Matchers {
       "mapField",
       "mapField_with_custom_name",
       "optMapField",
-      "optMapField_with_custom_name"
-    )
+      "optMapField_with_custom_name")
   }
 
   private class SubtypedMeta extends RCcMetaExt[SubtypedClass, SubtypedMeta]() {

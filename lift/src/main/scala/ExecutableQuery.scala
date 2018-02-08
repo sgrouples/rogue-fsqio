@@ -11,10 +11,9 @@ import scala.concurrent.Future
 import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, RB, R, State](
-    query: Query[M, R, State],
-    db: QueryExecutor[MB, RB],
-    dba: AsyncQueryExecutor[MB, RB]
-)(implicit ev: ShardingOk[M, State]) {
+  query: Query[M, R, State],
+  db: QueryExecutor[MB, RB],
+  dba: AsyncQueryExecutor[MB, RB])(implicit ev: ShardingOk[M, State]) {
 
   /**
    * Gets the size of the query result. This should only be called on queries that do not
@@ -173,10 +172,9 @@ case class ExecutableQuery[MB, M <: MB, RB, R, State](
 }
 
 case class ExecutableModifyQuery[MB, M <: MB, RB, State](
-    query: ModifyQuery[M, State],
-    db: QueryExecutor[MB, RB],
-    dba: AsyncQueryExecutor[MB, RB]
-) {
+  query: ModifyQuery[M, State],
+  db: QueryExecutor[MB, RB],
+  dba: AsyncQueryExecutor[MB, RB]) {
   def updateMulti(): Unit =
     db.updateMulti(query)
 
@@ -217,10 +215,9 @@ case class ExecutableModifyQuery[MB, M <: MB, RB, State](
 }
 
 case class ExecutableFindAndModifyQuery[MB, M <: MB, RB, R](
-    query: FindAndModifyQuery[M, R],
-    db: QueryExecutor[MB, RB],
-    dba: AsyncQueryExecutor[MB, RB]
-) {
+  query: FindAndModifyQuery[M, R],
+  db: QueryExecutor[MB, RB],
+  dba: AsyncQueryExecutor[MB, RB]) {
   def updateOne(returnNew: Boolean = false): Option[R] =
     db.findAndUpdateOne(query, returnNew)
 
@@ -236,12 +233,11 @@ case class ExecutableFindAndModifyQuery[MB, M <: MB, RB, R](
 }
 
 class PaginatedQuery[MB, M <: MB, RB, R, +State <: Unlimited with Unskipped](
-    q: Query[M, R, State],
-    db: QueryExecutor[MB, RB],
-    dba: AsyncQueryExecutor[MB, RB],
-    val countPerPage: Int,
-    val pageNum: Int = 1
-)(implicit ev: ShardingOk[M, State]) {
+  q: Query[M, R, State],
+  db: QueryExecutor[MB, RB],
+  dba: AsyncQueryExecutor[MB, RB],
+  val countPerPage: Int,
+  val pageNum: Int = 1)(implicit ev: ShardingOk[M, State]) {
   def copy() = new PaginatedQuery(q, db, dba, countPerPage, pageNum)
 
   def setPage(p: Int) = if (p == pageNum) this else new PaginatedQuery(q, db, dba, countPerPage, p)

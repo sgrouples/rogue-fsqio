@@ -107,15 +107,13 @@ trait QueryFieldHelpers[Meta] extends {
         ignoredFields += Ignored(
           symbol,
           s"!typeArgs.exists(_ =:= typeOf[Marker]), " +
-            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}"
-        )
+            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}")
 
       if (!typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]]))
         ignoredFields += Ignored(
           symbol,
           s"!typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]]), " +
-            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}"
-        )
+            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}")
 
       typeArgs.exists(_ =:= typeOf[Marker]) &&
         typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]])

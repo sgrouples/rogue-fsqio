@@ -201,8 +201,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     query: Query[M, _, _],
     key: String,
     ct: ClassTag[R],
-    readPreference: Option[ReadPreference]
-  ): Future[Long] = {
+    readPreference: Option[ReadPreference]): Future[Long] = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)
@@ -225,8 +224,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     query: Query[M, _, _],
     key: String,
     ct: ClassTag[R],
-    readPreference: Option[ReadPreference]
-  ): Future[Seq[R]] = {
+    readPreference: Option[ReadPreference]): Future[Seq[R]] = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)
@@ -294,8 +292,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
 
   def delete[M <: MB](
     query: Query[M, _, _],
-    writeConcern: WriteConcern
-  ): Future[Unit] = {
+    writeConcern: WriteConcern): Future[Unit] = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)
@@ -309,8 +306,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     mod: ModifyQuery[M, _],
     upsert: Boolean,
     multi: Boolean,
-    writeConcern: WriteConcern
-  ): Future[Unit] = {
+    writeConcern: WriteConcern): Future[Unit] = {
     val modClause = transformer.transformModify(mod)
     validator.validateModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty) {
@@ -336,8 +332,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     mod: FindAndModifyQuery[M, R],
     returnNew: Boolean,
     upsert: Boolean,
-    remove: Boolean
-  )(f: Document => R): Future[Option[R]] = {
+    remove: Boolean)(f: Document => R): Future[Option[R]] = {
     val modClause = transformer.transformFindAndModify(mod)
     validator.validateFindAndModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty || remove) {

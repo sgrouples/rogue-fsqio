@@ -29,17 +29,15 @@ trait DBCollectionFactory[MB, RB] {
 }
 
 class MongoJavaDriverAdapter[MB, RB](
-    dbCollectionFactory: DBCollectionFactory[MB, RB],
-    decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY
-) {
+  dbCollectionFactory: DBCollectionFactory[MB, RB],
+  decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY) {
 
   import MongoHelpers.MongoBuilder._
   import QueryHelpers._
 
   private[rogue] def runCommand[M <: MB, T](
     descriptionFunc: () => String,
-    query: Query[M, _, _]
-  )(f: => T): T = {
+    query: Query[M, _, _])(f: => T): T = {
     // Use nanoTime instead of currentTimeMillis to time the query since
     // currentTimeMillis only has 10ms granularity on many systems.
     val start = System.nanoTime
@@ -71,16 +69,14 @@ class MongoJavaDriverAdapter[MB, RB](
         null, // fields
         queryClause.lim.getOrElse(0).toLong,
         queryClause.sk.getOrElse(0).toLong,
-        readPreference.getOrElse(coll.getReadPreference)
-      )
+        readPreference.getOrElse(coll.getReadPreference))
     }
   }
 
   def countDistinct[M <: MB](
     query: Query[M, _, _],
     key: String,
-    readPreference: Option[ReadPreference]
-  ): Long = {
+    readPreference: Option[ReadPreference]): Long = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)
@@ -97,8 +93,7 @@ class MongoJavaDriverAdapter[MB, RB](
   def distinct[M <: MB, R](
     query: Query[M, _, _],
     key: String,
-    readPreference: Option[ReadPreference]
-  )(f: R => Unit): Unit = {
+    readPreference: Option[ReadPreference])(f: R => Unit): Unit = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)
@@ -117,8 +112,7 @@ class MongoJavaDriverAdapter[MB, RB](
 
   def delete[M <: MB](
     query: Query[M, _, _],
-    writeConcern: WriteConcern
-  ): Unit = {
+    writeConcern: WriteConcern): Unit = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)
@@ -164,8 +158,7 @@ class MongoJavaDriverAdapter[MB, RB](
     mod: ModifyQuery[M, _],
     upsert: Boolean,
     multi: Boolean,
-    writeConcern: WriteConcern
-  ): Unit = {
+    writeConcern: WriteConcern): Unit = {
     val modClause = transformer.transformModify(mod)
     validator.validateModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty) {
@@ -186,8 +179,7 @@ class MongoJavaDriverAdapter[MB, RB](
     mod: FindAndModifyQuery[M, R],
     returnNew: Boolean,
     upsert: Boolean,
-    remove: Boolean
-  )(f: DBObject => R): Option[R] = {
+    remove: Boolean)(f: DBObject => R): Option[R] = {
     val modClause = transformer.transformFindAndModify(mod)
     validator.validateFindAndModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty || remove) {
@@ -212,8 +204,7 @@ class MongoJavaDriverAdapter[MB, RB](
   def query[M <: MB](
     query: Query[M, _, _],
     batchSize: Option[Int],
-    readPreference: Option[ReadPreference]
-  )(f: DBObject => Unit): Unit = {
+    readPreference: Option[ReadPreference])(f: DBObject => Unit): Unit = {
     doQuery("find", query, batchSize, readPreference, setMaxTimeMS = true) { cursor =>
       cursor.setDecoderFactory(decoderFactoryFunc(query.meta))
       while (cursor.hasNext)
@@ -225,8 +216,7 @@ class MongoJavaDriverAdapter[MB, RB](
     query: Query[M, R, _],
     initialState: S,
     f: DBObject => R,
-    readPreference: Option[ReadPreference] = None
-  )(handler: (S, Event[R]) => Command[S]): S = {
+    readPreference: Option[ReadPreference] = None)(handler: (S, Event[R]) => Command[S]): S = {
     def getObject(cursor: DBCursor): Either[Exception, R] = {
       try {
         Right(f(cursor.next))
@@ -261,8 +251,7 @@ class MongoJavaDriverAdapter[MB, RB](
     batchSize: Int,
     initialState: S,
     f: DBObject => R,
-    readPreference: Option[ReadPreference] = None
-  )(handler: (S, Event[List[R]]) => Command[S]): S = {
+    readPreference: Option[ReadPreference] = None)(handler: (S, Event[List[R]]) => Command[S]): S = {
     val buf = new ListBuffer[R]
 
     def getBatch(cursor: DBCursor): Either[Exception, List[R]] = {
@@ -311,10 +300,8 @@ class MongoJavaDriverAdapter[MB, RB](
     query: Query[M, _, _],
     batchSize: Option[Int],
     readPreference: Option[ReadPreference],
-    setMaxTimeMS: Boolean = false
-  )(
-    f: DBCursor => T
-  ): T = {
+    setMaxTimeMS: Boolean = false)(
+    f: DBCursor => T): T = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd = buildCondition(queryClause.condition)

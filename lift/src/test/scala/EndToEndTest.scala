@@ -31,8 +31,7 @@ class EndToEndTest extends JUnitMustMatchers {
       .status(VenueStatus.open)
       .claims(List(
         VenueClaimBson.createRecord.userid(1234).status(ClaimStatus.pending),
-        VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)
-      ))
+        VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)))
       .lastClaim(VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved))
       .tags(List("test tag1", "some tag"))
   }
@@ -49,8 +48,7 @@ class EndToEndTest extends JUnitMustMatchers {
       .legacyid(234)
       .counts(Map(
         "foo" -> 1L,
-        "bar" -> 2L
-      ))
+        "bar" -> 2L))
   }
 
   @Before

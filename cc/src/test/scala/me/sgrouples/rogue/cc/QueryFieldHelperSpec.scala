@@ -32,8 +32,8 @@ trait TestQueryTraitB[OwnerType] {
 }
 
 class TestDomainObjectMeta extends RCcMetaExt[TestDomainObject, TestDomainObjectMeta]
-    with TestQueryTraitA[TestDomainObjectMeta]
-    with TestQueryTraitB[TestDomainObjectMeta] {
+  with TestQueryTraitA[TestDomainObjectMeta]
+  with TestQueryTraitB[TestDomainObjectMeta] {
 
   val claims = ListField[String]
 

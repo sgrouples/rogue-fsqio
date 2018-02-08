@@ -36,8 +36,7 @@ object TestModel extends TestModel with MongoMetaRecord[TestModel] with IndexedR
     TestModel.index(_.a, Asc, _.b, Asc, _.c, Asc),
     TestModel.index(_.m, Asc, _.a, Asc),
     TestModel.index(_.l, Asc),
-    TestModel.index(_.ll, TwoD, _.b, Asc)
-  )
+    TestModel.index(_.ll, TwoD, _.b, Asc))
 }
 
 class MongoIndexCheckerTest extends JUnitMustMatchers {

@@ -291,13 +291,12 @@ trait BsonCollectionFormats {
   requires: MapKeyFormats =>
   import scala.collection.JavaConverters._
 
-  private[rogue]type BF[T] = BsonFormat[T]
+  private[rogue] type BF[T] = BsonFormat[T]
 
   implicit def traversableLikeFormat[L[_], T: BsonFormat](
     implicit
     ev: L[T] <:< TraversableLike[T, L[T]],
-    cb: CanBuildFrom[List[BsonValue], T, L[T]]
-  ): BsonFormat[L[T]] = {
+    cb: CanBuildFrom[List[BsonValue], T, L[T]]): BsonFormat[L[T]] = {
 
     new BsonFormat[L[T]] with BsonArrayReader[L[T]] {
 

@@ -13,8 +13,7 @@ case class Outer(
   innerList: List[Inner],
   innerArray: Array[Inner],
   innerOptArray: Option[Array[Inner]],
-  innerOptList: Option[List[Inner]]
-)
+  innerOptList: Option[List[Inner]])
 object InnerR extends RCcMeta[Inner]("") {
   val a = new IntField("a", this)
   val b = new StringField("b", this)

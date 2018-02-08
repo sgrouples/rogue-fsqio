@@ -32,7 +32,7 @@ abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field
 //abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field[CC[F], M])
 
 class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasChildMeta[C, M], owner: O) //, toBson: B => BsonValue)
-    extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {
+  extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {
   override def valueToDB(c: C) = fld.childMeta.write(c)
 
   def subfield[V, V1](f: M => Field[V, M])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], O] = {
@@ -50,13 +50,12 @@ class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasC
   def elemMatch[V](clauseFuncs: (M => QueryClause[_])*) = {
     new ElemMatchWithPredicateClause(
       field.name,
-      clauseFuncs.map(cf => cf(fld.childMeta))
-    )
+      clauseFuncs.map(cf => cf(fld.childMeta)))
   }
 }
 
 class CClassArrayQueryField[C, M <: CcMeta[C], O](fld: HasChildMeta[C, M] with Field[Array[C], O], owner: O) //, toBson: B => BsonValue)
-    extends AbstractArrayQueryField[C, C, BsonValue, O, C](fld) {
+  extends AbstractArrayQueryField[C, C, BsonValue, O, C](fld) {
   override def valueToDB(c: C) = fld.childMeta.write(c)
 
   def subfield[V, V1](f: M => Field[V, M])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], O] = {
@@ -74,8 +73,7 @@ class CClassArrayQueryField[C, M <: CcMeta[C], O](fld: HasChildMeta[C, M] with F
   def elemMatch[V](clauseFuncs: (M => QueryClause[_])*) = {
     new ElemMatchWithPredicateClause(
       field.name,
-      clauseFuncs.map(cf => cf(fld.childMeta))
-    )
+      clauseFuncs.map(cf => cf(fld.childMeta)))
   }
 }
 
@@ -110,7 +108,7 @@ class OptCClassQueryField[C, M <: CcMeta[C], O](fld: OptCClassField[C, M, O], ow
 }
 
 class LocalDateTimeQueryField[M](field: Field[LocalDateTime, M])
-    extends AbstractQueryField[LocalDateTime, LocalDateTime, Date, M](field) {
+  extends AbstractQueryField[LocalDateTime, LocalDateTime, Date, M](field) {
   import LocalDateTimeToMongo._
   override def valueToDB(d: LocalDateTime) = ldtToDate(d)
 
@@ -122,7 +120,7 @@ class LocalDateTimeQueryField[M](field: Field[LocalDateTime, M])
 }
 
 class InstantQueryField[M](field: Field[Instant, M])
-    extends AbstractQueryField[Instant, Instant, Date, M](field) {
+  extends AbstractQueryField[Instant, Instant, Date, M](field) {
   import LocalDateTimeToMongo._
   override def valueToDB(d: Instant) = instantToDate(d)
 
@@ -166,14 +164,13 @@ class OptCClassModifyField[C, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) e
 }
 
 class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasChildMeta[C, M])
-    extends AbstractListModifyField[C, BsonDocument, O, Seq](fld) {
+  extends AbstractListModifyField[C, BsonDocument, O, Seq](fld) {
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 
   def pullObjectWhere(clauseFuncs: (M => QueryClause[_])*) = {
     new ModifyPullObjWithPredicateClause(
       field.name,
-      clauseFuncs.map(cf => cf(fld.childMeta))
-    )
+      clauseFuncs.map(cf => cf(fld.childMeta)))
   }
 
   override def $ = new SelectableDummyCCField[C, M, O](fld.name + ".$", fld.childMeta, fld.owner)
@@ -181,14 +178,13 @@ class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with Has
 }
 
 class CClassArrayModifyField[C, M <: CcMeta[C], O](fld: CField[Array[C], O] with HasChildMeta[C, M])
-    extends AbstractArrayModifyField[C, BsonDocument, O](fld) {
+  extends AbstractArrayModifyField[C, BsonDocument, O](fld) {
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 
   def pullObjectWhere(clauseFuncs: (M => QueryClause[_])*) = {
     new ModifyPullObjWithPredicateClause(
       field.name,
-      clauseFuncs.map(cf => cf(fld.childMeta))
-    )
+      clauseFuncs.map(cf => cf(fld.childMeta)))
   }
 
   override def $ = new SelectableDummyCCField[C, M, O](fld.name + ".$", fld.childMeta, fld.owner)
@@ -210,7 +206,7 @@ class InstantModifyField[O](field: Field[Instant, O]) extends AbstractModifyFiel
 }
 
 class EnumIdModifyField[M, E <: Enumeration#Value](field: Field[E, M])
-    extends AbstractModifyField[E, Int, M](field) {
+  extends AbstractModifyField[E, Int, M](field) {
   override def valueToDB(e: E) = e.id
 }
 

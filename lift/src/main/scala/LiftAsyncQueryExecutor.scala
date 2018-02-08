@@ -68,8 +68,7 @@ class LiftAsyncQueryExecutor(override val adapter: MongoAsyncJavaDriverAdapter[M
 
   override protected def readSerializer[M <: MongoRecord[_] with MongoMetaRecord[_], R](
     meta: M,
-    select: Option[MongoSelect[M, R]]
-  ): RogueReadSerializer[R] = {
+    select: Option[MongoSelect[M, R]]): RogueReadSerializer[R] = {
     new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
         case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>

@@ -14,8 +14,8 @@ import org.scalatest._
  * Contains tests that test the interaction of Rogue with a real mongo.
  */
 class EndToEndAsyncSpec extends FlatSpec
-    with Matchers with ScalaFutures
-    with BeforeAndAfterEach {
+  with Matchers with ScalaFutures
+  with BeforeAndAfterEach {
 
   def baseTestVenue(): Venue = {
     Venue.createRecord
@@ -31,8 +31,7 @@ class EndToEndAsyncSpec extends FlatSpec
       .status(VenueStatus.open)
       .claims(List(
         VenueClaimBson.createRecord.userid(1234).status(ClaimStatus.pending),
-        VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)
-      ))
+        VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved)))
       .lastClaim(VenueClaimBson.createRecord.userid(5678).status(ClaimStatus.approved))
       .tags(List("test tag1", "some tag"))
   }
@@ -49,8 +48,7 @@ class EndToEndAsyncSpec extends FlatSpec
       .legacyid(234)
       .counts(Map(
         "foo" -> 1L,
-        "bar" -> 2L
-      ))
+        "bar" -> 2L))
   }
 
   override protected def beforeEach(): Unit = {

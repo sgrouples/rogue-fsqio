@@ -50,23 +50,21 @@ import scala.collection.immutable.ListMap
  * @tparam State a phantom type which defines the state of the builder.
  */
 case class Query[M, R, +State](
-    meta: M,
-    collectionName: String,
-    lim: Option[Int],
-    sk: Option[Int],
-    maxScan: Option[Int],
-    comment: Option[String],
-    hint: Option[ListMap[String, Any]],
-    condition: AndCondition,
-    order: Option[MongoOrder],
-    select: Option[MongoSelect[M, R]],
-    readPreference: Option[ReadPreference]
-) {
+  meta: M,
+  collectionName: String,
+  lim: Option[Int],
+  sk: Option[Int],
+  maxScan: Option[Int],
+  comment: Option[String],
+  hint: Option[ListMap[String, Any]],
+  condition: AndCondition,
+  order: Option[MongoOrder],
+  select: Option[MongoSelect[M, R]],
+  readPreference: Option[ReadPreference]) {
 
   private def addClause[F](
     clause: M => QueryClause[F],
-    expectedIndexBehavior: MaybeIndexed
-  ): Query[M, R, State] = {
+    expectedIndexBehavior: MaybeIndexed): Query[M, R, State] = {
     val newClause = clause(meta)
     newClause.expectedIndexBehavior = expectedIndexBehavior
     this.copy(condition = condition.copy(clauses = newClause :: condition.clauses))
@@ -115,8 +113,7 @@ case class Query[M, R, +State](
 
   private def addClauseOpt[V, F](opt: Option[V])(
     clause: (M, V) => QueryClause[F],
-    expectedIndexBehavior: MaybeIndexed
-  ) = {
+    expectedIndexBehavior: MaybeIndexed) = {
     opt match {
       case Some(v) => addClause(clause(_, v), expectedIndexBehavior)
       case None => this
@@ -169,8 +166,7 @@ case class Query[M, R, +State](
         condition = AndCondition(Nil, None, None),
         order = None,
         select = None,
-        readPreference = None
-      )
+        readPreference = None)
     val queries = subqueries.toList.map(q => q(queryBuilder))
     val orCondition = QueryHelpers.orConditionFromQueries(queries)
     this.copy(condition = condition.copy(orCondition = Some(orCondition)))
@@ -214,8 +210,7 @@ case class Query[M, R, +State](
       select = select match {
         case Some(sel) => Some(sel.copy(scoreName = Some(scoreName)))
         case None => Some(MongoSelect[M, R](IndexedSeq.empty, _ => null.asInstanceOf[R], false, Some(scoreName)))
-      }
-    )
+      })
 
   def andScore(scoreName: String = "score"): Query[M, R, State] =
     this.copy(
@@ -223,8 +218,7 @@ case class Query[M, R, +State](
       select = select match {
         case Some(sel) => Some(sel.copy(scoreName = Some(scoreName)))
         case None => Some(MongoSelect[M, R](IndexedSeq.empty, _ => null.asInstanceOf[R], false, Some(scoreName)))
-      }
-    )
+      })
 
   /**
    * Places a limit on the size of the returned result.
@@ -461,8 +455,7 @@ case class Query[M, R, +State](
 
   def selectCase[F1, CC, S2](
     f1: M => SelectField[F1, M],
-    create: F1 => CC
-  )(implicit ev: AddSelect[State, _, S2]): Query[M, CC, S2] = {
+    create: F1 => CC)(implicit ev: AddSelect[State, _, S2]): Query[M, CC, S2] = {
     val inst = meta
     val fields = IndexedSeq(f1(inst))
     val transformer = (xs: IndexedSeq[_]) => create(xs(0).asInstanceOf[F1])
@@ -643,9 +636,8 @@ case class Query[M, R, +State](
 // *******************************************************
 
 case class ModifyQuery[M, +State](
-    query: Query[M, _, State],
-    mod: MongoModify
-) {
+  query: Query[M, _, State],
+  mod: MongoModify) {
 
   private def addClause(clause: M => ModifyClause) = {
     this.copy(mod = MongoModify(clause(query.meta) :: mod.clauses))
@@ -677,9 +669,8 @@ case class ModifyQuery[M, +State](
 // *******************************************************
 
 case class FindAndModifyQuery[M, R](
-    query: Query[M, R, _],
-    mod: MongoModify
-) {
+  query: Query[M, R, _],
+  mod: MongoModify) {
 
   private def addClause(clause: M => ModifyClause) = {
     this.copy(mod = MongoModify(clause(query.meta) :: mod.clauses))

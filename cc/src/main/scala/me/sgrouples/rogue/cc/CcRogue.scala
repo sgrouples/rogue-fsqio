@@ -26,8 +26,7 @@ trait CcRogue {
         val orCondition = QueryHelpers.orConditionFromQueries(q :: qs)
         Query[M, R, Unordered with Unselected with Unlimited with Unskipped with HasOrClause](
           q.meta, q.collectionName, None, None, None, None, None,
-          AndCondition(Nil, Some(orCondition), None), None, None, None
-        )
+          AndCondition(Nil, Some(orCondition), None), None, None, None)
       }
     }
   }
@@ -37,48 +36,40 @@ trait CcRogue {
    */
   implicit def ccMetaToQueryBuilder[M <: CcMeta[_], R](meta: M with CcMeta[R]): Query[M, R, InitialState] =
     Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
-    )
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)
 
   implicit def metaRecordToIndexBuilder[M <: CcMeta[_]](meta: M): IndexBuilder[M] =
     IndexBuilder(meta)
 
   implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, R, InitialState] = {
     val query = Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
-    )
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)
     InsertableQuery(query, CcBsonExecutors).asInstanceOf[InsertableQuery[MB, M, R, InitialState]]
   }
 
   implicit def queryToCcQuery[MB <: CcMeta[_], M <: MB, R, State](query: Query[M, R, State])(implicit ev: ShardingOk[M, State]): ExecutableQuery[CcMeta[_], M, R, State] = {
     ExecutableQuery(
       query,
-      CcBsonExecutors
-    )
+      CcBsonExecutors)
   }
 
   implicit def modifyQueryToCCModifyQuery[MB <: CcMeta[_], M <: MB, R, State](
-    query: ModifyQuery[M, State]
-  ): ExecutableModifyQuery[CcMeta[_], M, State] = {
+    query: ModifyQuery[M, State]): ExecutableModifyQuery[CcMeta[_], M, State] = {
     ExecutableModifyQuery(
       query,
-      CcBsonExecutors
-    )
+      CcBsonExecutors)
   }
 
   implicit def findAndModifyQueryToCcAndModifyQuery[M <: CcMeta[_], R](
-    query: FindAndModifyQuery[M, R]
-  ): ExecutableFindAndModifyQuery[CcMeta[_], M, R] = {
+    query: FindAndModifyQuery[M, R]): ExecutableFindAndModifyQuery[CcMeta[_], M, R] = {
     ExecutableFindAndModifyQuery(
       query,
-      CcBsonExecutors
-    )
+      CcBsonExecutors)
   }
 
   implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](meta: M): ExecutableQuery[MB, M, R, InitialState] = {
     val queryBuilder = Query[M, R, InitialState](
-      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
-    )
+      meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)
 
     val ccQuery = queryToCcQuery(queryBuilder)
     ccQuery.asInstanceOf[ExecutableQuery[MB, M, R, InitialState]]

@@ -15,8 +15,7 @@ object CcMongo {
 
   val codecRegistry = CodecRegistries.fromRegistries(
     com.mongodb.MongoClient.getDefaultCodecRegistry(),
-    CodecRegistries.fromCodecs(new LongPrimitiveCodec, new IntegerPrimitiveCodec)
-  )
+    CodecRegistries.fromCodecs(new LongPrimitiveCodec, new IntegerPrimitiveCodec))
 
   private[this] val bsonDocument = classOf[BsonDocument]
   private[this] val dba = new scala.collection.concurrent.TrieMap[String, (MongoClient, String)]

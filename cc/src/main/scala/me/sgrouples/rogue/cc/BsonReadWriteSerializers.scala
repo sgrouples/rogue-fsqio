@@ -37,8 +37,7 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
                   readOptArr(reader.readArray, bsonV.asArray())
                 } else {
                   readOpt(reader.read, bsonV)
-                }
-              )
+                })
             })
           transformer(values)
 

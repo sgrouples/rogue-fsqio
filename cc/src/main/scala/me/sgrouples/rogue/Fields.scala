@@ -102,12 +102,12 @@ class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
   override def defaultValue = false
 }
 class EnumField[T <: Enumeration: TypeTag, O](name: String, o: O)
-    extends MCField[T#Value, O](name, o) with ReflectEnumInstance[T] {
+  extends MCField[T#Value, O](name, o) with ReflectEnumInstance[T] {
   override def defaultValue: T#Value = enumeration.apply(0)
 }
 
 class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O)
-    extends MCField[T#Value, O](name, o) with ReflectEnumInstance[T] {
+  extends MCField[T#Value, O](name, o) with ReflectEnumInstance[T] {
   override def defaultValue: T#Value = enumeration.apply(0)
 }
 
@@ -136,8 +136,7 @@ class CClassField[C, MC <: CcMeta[C], O](val name: String, val childMeta: MC, va
 abstract class CClassAbstractRequiredField[C, MC <: CcMeta[C], O](
   name: String,
   childMeta: MC,
-  owner: O
-) extends CClassField[C, MC, O](name, childMeta, owner) with RequiredField[C, O]
+  owner: O) extends CClassField[C, MC, O](name, childMeta, owner) with RequiredField[C, O]
 
 /**
  * Same as CClassField but because defaultValue is required, it can be selected.
@@ -155,15 +154,14 @@ class CClassRequiredField[C, MC <: CcMeta[C], O](
   name: String,
   childMeta: MC,
   override val defaultValue: C,
-  owner: O
-) extends CClassAbstractRequiredField[C, MC, O](name, childMeta, owner)
+  owner: O) extends CClassAbstractRequiredField[C, MC, O](name, childMeta, owner)
 
 trait HasChildMeta[C, MC <: CcMeta[C]] {
   def childMeta: MC
 }
 
 class CClassListField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
-    extends MCField[Seq[C], O](name, owner) with HasChildMeta[C, MC] {
+  extends MCField[Seq[C], O](name, owner) with HasChildMeta[C, MC] {
   override def defaultValue: List[C] = Nil
 }
 
@@ -236,8 +234,7 @@ trait LowPrioFields {
       implicit
       t: Typeable[Wrapped],
       key: Witness.Aux[Key],
-      remFormat: CcFieldFormat.Aux[Wrapped, Remaining, RecRemH]
-    ): CcFieldFormat.Aux[Wrapped, FieldType[Key, Value] :: Remaining, FieldType[Key, CField[Value, Owner.type]] :: RecRemH] =
+      remFormat: CcFieldFormat.Aux[Wrapped, Remaining, RecRemH]): CcFieldFormat.Aux[Wrapped, FieldType[Key, Value] :: Remaining, FieldType[Key, CField[Value, Owner.type]] :: RecRemH] =
       new CcFieldFormat[Wrapped, FieldType[Key, Value] :: Remaining] {
         type RecRepr = FieldType[Key, CField[Value, Owner.type]] :: RecRemH
 

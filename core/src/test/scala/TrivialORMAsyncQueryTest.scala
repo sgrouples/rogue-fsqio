@@ -77,8 +77,7 @@ object TrivialAsyncORMTests {
      */
     override protected def readSerializer[M <: Meta[_], R](
       meta: M,
-      select: Option[MongoSelect[M, R]]
-    ): RogueReadSerializer[R] = new RogueReadSerializer[R] {
+      select: Option[MongoSelect[M, R]]): RogueReadSerializer[R] = new RogueReadSerializer[R] {
       override def fromDBObject(dbo: DBObject): R = select match {
         case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
@@ -125,8 +124,7 @@ object TrivialAsyncORMTests {
   object Implicits extends Rogue {
     implicit def meta2Query[M <: Meta[R], R](meta: M with Meta[R]): Query[M, R, InitialState] = {
       Query[M, R, InitialState](
-        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None
-      )
+        meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)
     }
   }
 

@@ -21,7 +21,6 @@ object PluralLowerCase extends ClassNamingStrategy(_.getSimpleName.toLowerCase()
 object UpperCase extends ClassNamingStrategy(_.getSimpleName.toUpperCase())
 object SnakeCase extends ClassNamingStrategy(
   _.getSimpleName.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2")
-  .replaceAll("([a-z\\d])([A-Z])", "$1_$2")
-  .toLowerCase
-)
+    .replaceAll("([a-z\\d])([A-Z])", "$1_$2")
+    .toLowerCase)
 

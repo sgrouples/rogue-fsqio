@@ -36,11 +36,9 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     status = VenueStatus.open,
     claims = List(
       VenueClaimBson(uid = 1234L, status = ClaimStatus.pending),
-      VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
-    ),
+      VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)),
     lastClaim = Option(lastClaim),
-    tags = List("test tag1", "some tag")
-  )
+    tags = List("test tag1", "some tag"))
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
     VenueClaim(VenueClaim.newId, vid, 123L, ClaimStatus.approved)
