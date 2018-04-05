@@ -431,7 +431,7 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
     query: Query[M, R, State],
     readPreference: Option[ReadPreference] = None)(f: R => Unit)(implicit ev: ShardingOk[M, State]): Future[Unit] = {
     if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
+      Future.unit
     } else {
       val s = readSerializer[M, R](query.meta, query.select)
       val docBlock: Document => Unit = doc => f(s.fromDocument(doc))
@@ -446,7 +446,7 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
     ev1: Required[State, Unselected with Unlimited with Unskipped],
     ev2: ShardingOk[M, State]): Future[Unit] = {
     if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
+      Future.unit
     } else {
       adapter.delete(query, writeConcern)
     }
@@ -456,7 +456,7 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
     query: ModifyQuery[M, State],
     writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State]): Future[Unit] = {
     if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
+      Future.unit
     } else {
       adapter.modify(query, upsert = false, multi = false, writeConcern = writeConcern)
     }
@@ -466,7 +466,7 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
     query: ModifyQuery[M, State],
     writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State]): Future[Unit] = {
     if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
+      Future.unit
     } else {
       adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
     }
@@ -476,7 +476,7 @@ trait AsyncQueryExecutor[MB, RB] extends Rogue {
     query: ModifyQuery[M, State],
     writeConcern: WriteConcern = defaultWriteConcern): Future[Unit] = {
     if (optimizer.isEmptyQuery(query)) {
-      Future.successful(())
+      Future.unit
     } else {
       adapter.modify(query, upsert = false, multi = true, writeConcern = writeConcern)
     }

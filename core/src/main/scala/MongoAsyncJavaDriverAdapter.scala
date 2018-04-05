@@ -253,6 +253,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     queryClause.lim.foreach(cursor.limit _)
     queryClause.sk.foreach(cursor.skip _)
     ord.foreach(cursor.sort _)
+    query.maxTime.foreach(maxTime => cursor.maxTime(maxTime.length, maxTime.unit))
     cursor.map(adaptedSerializer).into(pa.coll, pa)
     pa.future
   }
@@ -273,7 +274,7 @@ class MongoAsyncJavaDriverAdapter[MB, RB](dbCollectionFactory: AsyncDBCollection
     queryClause.lim.foreach(cursor.limit _)
     queryClause.sk.foreach(cursor.skip _)
     ord.foreach(cursor.sort _)
-
+    query.maxTime.foreach(maxTime => cursor.maxTime(maxTime.length, maxTime.unit))
     cursor.map(adaptedSerializer).into(oneP.coll, oneP)
     oneP.future
   }

@@ -98,7 +98,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
     // VenueClaim has status approved.
     val h = VenueR.where(_.mayor_count neqs 5).fetchAsync()
-    VenueR.where(_.mayor_count neqs 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
+    VenueR.where(_.mayor_count neqs 5).maxTime(1 second).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
     VenueR.where(_.mayor_count < 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
     VenueR.where(_.mayor_count lt 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
     VenueR.where(_.mayor_count <= 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)

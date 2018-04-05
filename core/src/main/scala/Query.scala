@@ -3,19 +3,11 @@
 package io.fsq.rogue
 
 import com.mongodb.{ BasicDBObjectBuilder, DBObject, ReadPreference }
-import io.fsq.rogue.MongoHelpers.{
-  AndCondition,
-  MongoBuilder,
-  MongoModify,
-  MongoOrder,
-  MongoSelect,
-  SearchCondition,
-  FieldOrderTerm,
-  NaturalOrderTerm,
-  ScoreOrderTerm
-}
+import io.fsq.rogue.MongoHelpers.{ AndCondition, FieldOrderTerm, MongoBuilder, MongoModify, MongoOrder, MongoSelect, NaturalOrderTerm, ScoreOrderTerm, SearchCondition }
 import io.fsq.rogue.index.MongoIndex
+
 import scala.collection.immutable.ListMap
+import scala.concurrent.duration.FiniteDuration
 
 // ***************************************************************************
 // *** Builders
@@ -60,7 +52,8 @@ case class Query[M, R, +State](
   condition: AndCondition,
   order: Option[MongoOrder],
   select: Option[MongoSelect[M, R]],
-  readPreference: Option[ReadPreference]) {
+  readPreference: Option[ReadPreference],
+  maxTime: Option[FiniteDuration] = None) {
 
   private def addClause[F](
     clause: M => QueryClause[F],
@@ -291,6 +284,8 @@ case class Query[M, R, +State](
   def maxScan(max: Int): Query[M, R, State] = this.copy(maxScan = Some(max))
 
   def comment(c: String): Query[M, R, State] = this.copy(comment = Some(c))
+
+  def maxTime(d: FiniteDuration): Query[M, R, State] = this.copy(maxTime = Some(d))
 
   /**
    * Set a flag to indicate whether this query should hit primaries or secondaries.
