@@ -11,8 +11,7 @@ object RogueSettings {
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     version := "3.1.17",
     organization := "me.sgrouples",
-    crossScalaVersions := Seq("2.11.11","2.12.4"),
-    scalaVersion := "2.12.4",
+    scalaVersion := "2.12.5",
     isSnapshot := true,
     publishMavenStyle := true,
     publishArtifact in Test := false,
@@ -54,8 +53,8 @@ object RogueDependencies {
     "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
   val mongoDeps = Seq(
-    "org.mongodb"              % "mongodb-driver"      % "3.6.2"     % "compile",
-    "org.mongodb"              % "mongodb-driver-async"% "3.6.2"     % "compile"
+    "org.mongodb"              % "mongodb-driver"      % "3.6.3"     % "compile",
+    "org.mongodb"              % "mongodb-driver-async"% "3.6.3"     % "compile"
   )
 
   val testDeps = Seq(
