@@ -97,7 +97,9 @@ trait EnumValueFormats {
 
       override def write(t: T#Value): BsonValue = new BsonInt32(t.id)
 
-      override def defaultValue: T#Value = enumeration.apply(0)
+      override def defaultValue: T#Value = {
+        enumeration.values.head
+      }
     }
   }
 }

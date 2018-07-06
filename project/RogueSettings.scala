@@ -9,9 +9,9 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "3.1.18",
+    version := "3.1.19",
     organization := "me.sgrouples",
-    scalaVersion := "2.12.5",
+    scalaVersion := "2.12.6",
     isSnapshot := true,
     publishMavenStyle := true,
     publishArtifact in Test := false,
@@ -53,8 +53,8 @@ object RogueDependencies {
     "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
   val mongoDeps = Seq(
-    "org.mongodb"              % "mongodb-driver"      % "3.6.3"     % "compile",
-    "org.mongodb"              % "mongodb-driver-async"% "3.6.3"     % "compile"
+    "org.mongodb"              % "mongodb-driver"      % "3.6.4"     % "compile",
+    "org.mongodb"              % "mongodb-driver-async"% "3.6.4"     % "compile"
   )
 
   val testDeps = Seq(
