@@ -103,8 +103,11 @@ class BsonFormatsTests extends JUnitMustMatchers {
     locales.foreach { locale =>
       val serialized = f.write(locale)
       val deserialized = f.read(serialized)
-
-      deserialized mustEqual locale
+      if (locale.toString.isEmpty) {
+        deserialized mustEqual LocaleBsonFormat.defaultValue
+      } else {
+        deserialized mustEqual locale
+      }
     }
   }
 

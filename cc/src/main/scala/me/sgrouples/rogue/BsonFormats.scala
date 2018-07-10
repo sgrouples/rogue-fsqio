@@ -191,15 +191,21 @@ trait BaseBsonFormats {
     override def defaultValue: Currency = Currency.getInstance("USD")
   }
 
+  //deafult to US if empty
   implicit object LocaleBsonFormat extends BasicBsonFormat[Locale] {
     override def read(b: BsonValue): Locale = {
-      //taken from lift's LocaleField as the simpliest solution, albeit not optimal.
-      //commons-lang LocaleUtils were not able to parse all Locale.getAvailableLocales either.
       val value = b.asString().getValue
-      Locale.getAvailableLocales.filter(_.toString == value).headOption.getOrElse(defaultValue)
+      if (value.isEmpty) defaultValue
+      else {
+        if ("en" == value) Locale.ENGLISH
+        else SupportedLocales.map.get(value).getOrElse(defaultValue)
+      }
     }
-    override def write(l: Locale): BsonValue = new BsonString(l.toString)
-    override def defaultValue: Locale = Locale.US
+
+    override def write(l: Locale): BsonValue = {
+      new BsonString(l.toString)
+    }
+    override def defaultValue: Locale = Locale.ENGLISH
   }
 
   private def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
@@ -626,3 +632,14 @@ object BsonFormat {
 
 //thrown for derived encoders - which can't have
 class NoDefaultFormatForDerivedException(m: String) extends RuntimeException(m)
+
+private[rogue] object SupportedLocales {
+  lazy val map: Map[String, Locale] = {
+    val mb = Map.newBuilder[String, Locale]
+    Locale.getAvailableLocales.foreach { l =>
+      val key = l.toString
+      if (key.nonEmpty) mb += (key -> l)
+    }
+    mb.result()
+  }
+}
