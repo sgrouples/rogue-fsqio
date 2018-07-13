@@ -162,7 +162,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     // name map in order of trait linearization
 
     names ++= values.zipWithIndex.map(_.swap)
-
+    println(s"names are ${names}")
     resolved.set(true)
   }
 
