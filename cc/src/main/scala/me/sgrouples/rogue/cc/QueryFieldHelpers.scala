@@ -225,7 +225,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 
  */
 
-trait QueryFieldHelpers[Meta] extends NamesResolver {
+trait QueryFieldHelpersBase[Meta] extends NamesResolver {
   requires: Meta =>
 
   protected def IntField: IntField[Meta] @@ Marker = named(new IntField[Meta](_, this))
@@ -427,4 +427,8 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptLocaleField: OptLocaleField[Meta] @@ Marker = named(new OptLocaleField[Meta](_, this))
   protected def OptLocaleField(name: String): OptLocaleField[Meta] @@ Marker = named(name)(new OptLocaleField[Meta](_, this))
 
+}
+
+trait QueryFieldHelpers[Meta] extends QueryFieldHelpersBase[Meta] with RuntimeNameResolver[Meta] {
+  requires: Meta =>
 }
