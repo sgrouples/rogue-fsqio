@@ -3,7 +3,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import me.sgrouples.rogue.BsonFormat
 import me.sgrouples.rogue.cc.macros.MacroCC._
-import me.sgrouples.rogue.cc.macros.MacroGen
+import me.sgrouples.rogue.cc.macros.{ MacroGen }
 import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
 import shapeless.tag
 import shapeless.tag._
@@ -52,7 +52,6 @@ trait MacroNamesResolver[T] extends NamesResolver {
     tag[Marker][T](field)
   }
 }
-
 class MCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType], macroGen: MacroGen[RecordType])
   extends RCcMeta[RecordType](collName)(formats)
   with QueryFieldHelpersBase[OwnerType] with MacroNamesResolver[RecordType] { requires: OwnerType =>

@@ -1,11 +1,22 @@
 package me.sgrouples.rogue.cc.macros
 
-import scala.reflect.macros.blackbox.Context
+import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
 
 trait MacroGen[T] {
   def namesMap(): Vector[(Int, String)]
 }
+
+trait BlaDef {
+  implicit object BlaInt extends MacroGen[Int] {
+    override def namesMap(): Vector[(Int, String)] = Vector.empty
+  }
+  implicit object BlaString extends MacroGen[String] {
+    override def namesMap(): Vector[(Int, String)] = Vector.empty
+
+  }
+}
+object BlaDef extends BlaDef
 
 object MacroCC {
   implicit def gen[T]: MacroGen[T] = macro MacroCCGenerator.genImpl[T]
@@ -15,7 +26,55 @@ class MacroCCGenerator(val c: Context) {
   import c.universe._
   def genImpl[T: c.WeakTypeTag]: c.Tree = {
     val tpe = weakTypeOf[T]
-    val members = tpe.members
+    val members = tpe.decls
+
+    val ctorOpt = members.collectFirst {
+      case m: MethodSymbol if m.isPrimaryConstructor => m
+    }.headOption
+    ctorOpt.map { ctor =>
+      println(s"Main ctor ${ctor}")
+      //ctor fields
+      val fields = ctor.paramLists.head
+
+      val companion: c.universe.Symbol = tpe.typeSymbol.companion
+
+      if (companion == NoSymbol) {
+        c.abort(c.enclosingPosition, s"Companion symbol not found. Can't find companien for inner classes")
+      }
+
+      val defaults = fields.map(_.asTerm).zipWithIndex.map {
+        case (p, i) =>
+          if (!p.isParamWithDefault) None
+          else {
+            val getterName = TermName("apply$default$" + (i + 1))
+            Some(q"$companion.$getterName")
+          }
+      }
+      println(s"Defaults are ${defaults}")
+
+      println(s"FLDS ${fields}")
+      val f = fields.map { f =>
+        val name = f.name
+        val decoded = name.decodedName
+        val retType = f.typeSignature
+        //tpe.decl(name).typeSignature.finalResultType
+        println(s"F ${name} / ${decoded} / ${retType}")
+        //val x = q"BsonRW[c.typeOf[$retType]]"
+        //println(s"x ${x}")
+        //x
+        val tp = f.typeSignature
+        val at = appliedType(tp, tp.typeArgs)
+        //val s = q"implicitly[Bla[$tp]]"
+        val t = tq"_root_.me.sgrouples.rogue.cc.macros.MacroGen[$tp]"
+        println(s"T ${t} type ${t.tpe} , ${at}")
+        //val checkedType = c.typecheck(t)
+        //println(s"Serching for implicit value for ${checkedType}")
+        val s1 = c.inferImplicitValue(at)
+        println(s"s1 ${s1}")
+        //s1
+        "a"
+      }
+    }
     val terms = members.flatMap { symbol =>
       if (symbol.isTerm) {
         val term = symbol.asTerm
