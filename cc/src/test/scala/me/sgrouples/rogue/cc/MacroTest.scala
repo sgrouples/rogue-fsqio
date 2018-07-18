@@ -5,7 +5,7 @@ import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros.MacroCC._
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.cc.macros.MacroGen
-import me.sgrouples.rogue.cc.macros.BlaDef._
+// import me.sgrouples.rogue.cc.macros.BlaDef._
 import org.bson.types.ObjectId
 object Eni extends Enumeration {
 
@@ -17,14 +17,15 @@ case class SourceBson2(name: String = "Name", xx: Int = 8,
   outerOid: ObjectId,
   mp: Map[String, Int],
   s: Vector[Int],
-  rr: RejectReason.Value = RejectReason.cheater)
+  rr: ClaimStatus2.Value = ClaimStatus2.approved)
 
 class MacroTest extends FlatSpec with Matchers {
 
   "Macro" should "bla cclass" in {
 
     val k = implicitly[MacroGen[SourceBson2]]
-    import me.sgrouples.rogue.cc.macros.BlaDef._
+
+    //val m = implicitly[MacroGen[RejectReason.Value]]
     //val blaString = implicitly[Bla[String]]
     //println(s"bla string is ${blaString}")
 
