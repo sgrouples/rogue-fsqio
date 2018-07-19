@@ -11,7 +11,6 @@ import org.bson.types.{ Decimal128, ObjectId }
 import shapeless._
 import shapeless.labelled.{ FieldType, field }
 
-import scala.annotation.{ StaticAnnotation, implicitNotFound }
 import scala.collection.mutable.ArrayBuffer
 import scala.language.{ higherKinds, implicitConversions }
 import scala.reflect.ClassTag
@@ -20,32 +19,6 @@ import shapeless.tag.@@
 import scala.collection.TraversableLike
 import scala.collection.generic.CanBuildFrom
 
-@implicitNotFound("implicit BsonFormat not found for ${T}")
-trait BsonFormat[T] {
-  def read(b: BsonValue): T
-  def readArray(b: BsonArray): Seq[T]
-  def write(t: T): BsonValue
-  def flds: Map[String, BsonFormat[_]]
-  def defaultValue: T
-}
-
-trait BsonArrayReader[T] {
-  this: BsonFormat[T] =>
-  override def readArray(b: BsonArray) = {
-    val sb = Seq.newBuilder[T]
-    val it = b.iterator()
-    while (it.hasNext) {
-      sb += read(it.next())
-    }
-    sb.result()
-  }
-}
-
-trait BasicBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T] {
-  override def flds = Map.empty
-}
-
-class EnumSerializeValue extends StaticAnnotation
 /**
  * serialize enums as names
  */
@@ -625,9 +598,8 @@ trait LowPrioBsonFormats {
 
 }
 
-object BsonFormat {
+object LazyBsonFormat {
   def apply[T](implicit f: Lazy[BsonFormat[T]]): BsonFormat[T] = f.value
-
 }
 
 //thrown for derived encoders - which can't have

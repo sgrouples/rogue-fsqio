@@ -27,7 +27,7 @@ class EnumAnnotationTest extends FlatSpec with MustMatchers {
     import BsonFormats._
     import EnumAnnotatedFormats._
 
-    val f = BsonFormat[Statuses]
+    val f = LazyBsonFormat[Statuses]
     val e = Statuses(VenueStatus1.open, ClaimStatus2.approved)
     val bson = f.write(e)
     bson.asDocument().getString("enumName") mustBe new BsonString("Open")

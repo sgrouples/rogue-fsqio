@@ -10,11 +10,6 @@ import scala.annotation.implicitNotFound
 import scala.collection.{ GenSeqLike, MapLike }
 import scala.reflect.macros.Universe
 
-@implicitNotFound("MacroGen can't generate for ${T}")
-trait MacroGen[T] {
-  def namesMap(): Vector[(Int, String)]
-}
-
 /*trait BlaDef {
   implicit object BlaInt extends MacroGen[Int] {
     override def namesMap(): Vector[(Int, String)] = Vector.empty
@@ -27,7 +22,7 @@ trait MacroGen[T] {
 object BlaDef extends BlaDef
 */
 object MacroCC {
-  implicit def gen[T]: MacroGen[T] = macro MacroCCGenerator.genImpl[T]
+  implicit def gen[T]: MacroBsonFormat[T] = macro MacroCCGenerator.genImpl[T]
 }
 
 class MacroCCGenerator(val c: Context) {
@@ -184,9 +179,12 @@ class MacroCCGenerator(val c: Context) {
     }.toVector
     println(s"Name map is ${zipNames}")
     //println(s"terms ${terms}")
-    val r = q"""new MacroGen[$tpe] {
-                ${zipNames}
+    val r = q"""new MacroBsonFormat[$tpe] {
                   override def namesMap():Vector[(Int, String)] = ${zipNames}
+                  override def defaultValue(): $tpe = {???}
+                  override def read(b: _root_.org.bson.BsonValue): $tpe = ???
+                  override def write(t: $tpe): _root_.org.bson.BsonValue = ???
+                  override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
                 }
     """
     println(s"Will return ${r}")

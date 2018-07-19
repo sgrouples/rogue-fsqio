@@ -4,7 +4,7 @@ import org.scalatest.{ FlatSpec, Matchers }
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros.MacroCC._
 import me.sgrouples.rogue.BsonFormats._
-import me.sgrouples.rogue.cc.macros.MacroGen
+import me.sgrouples.rogue.cc.macros.{ MacroBsonFormat }
 // import me.sgrouples.rogue.cc.macros.BlaDef._
 import org.bson.types.ObjectId
 object Eni extends Enumeration {
@@ -23,7 +23,7 @@ class MacroTest extends FlatSpec with Matchers {
 
   "Macro" should "bla cclass" in {
 
-    val k = implicitly[MacroGen[SourceBson2]]
+    val k = implicitly[MacroBsonFormat[SourceBson2]]
 
     //val m = implicitly[MacroGen[RejectReason.Value]]
     //val blaString = implicitly[Bla[String]]

@@ -34,6 +34,7 @@ object RogueSettings {
 object RogueDependencies {
   val liftVersion = "3.1.0"
   val specsVer = "3.8.9"
+  val mongoVer = "3.6.4"
   val liftDeps = Seq(
     "net.liftweb"              %% "lift-mongodb"    % liftVersion  % "compile" intransitive(),
     "net.liftweb"              %% "lift-common"     % liftVersion  % "compile",
@@ -52,9 +53,12 @@ object RogueDependencies {
     "joda-time"                % "joda-time"           % "2.9.9"        % "compile",
     "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
   )
+
+  val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % "compile")
+
   val mongoDeps = Seq(
-    "org.mongodb"              % "mongodb-driver"      % "3.6.4"     % "compile",
-    "org.mongodb"              % "mongodb-driver-async"% "3.6.4"     % "compile"
+    "org.mongodb"              % "mongodb-driver"       % mongoVer     % "compile",
+    "org.mongodb"              % "mongodb-driver-async" % mongoVer    % "compile"
   )
 
   val testDeps = Seq(

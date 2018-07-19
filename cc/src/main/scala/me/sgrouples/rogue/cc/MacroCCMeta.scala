@@ -3,7 +3,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import me.sgrouples.rogue.BsonFormat
 import me.sgrouples.rogue.cc.macros.MacroCC._
-import me.sgrouples.rogue.cc.macros.{ MacroGen }
+import me.sgrouples.rogue.cc.macros.{ MacroBsonFormat }
 import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
 import shapeless.tag
 import shapeless.tag._
@@ -25,7 +25,7 @@ trait MacroNamesResolver[T] extends NamesResolver {
   def namesMap(): Vector[(Int, String)]
   //val macroGenProvided: MacroGen[T] = implicitly[MacroGen[T]]
   //implicitly[MacroGen[T]]
-  def resolve()(implicit macroGen: MacroGen[T]): Unit = {
+  def resolve()(implicit macroGen: MacroBsonFormat[T]): Unit = {
     val x = macroGen.namesMap()
     println(s"names from macro ${x}")
     names ++= x
@@ -52,12 +52,12 @@ trait MacroNamesResolver[T] extends NamesResolver {
     tag[Marker][T](field)
   }
 }
-class MCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType], macroGen: MacroGen[RecordType])
+class MCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType], macroGen: MacroBsonFormat[RecordType])
   extends RCcMeta[RecordType](collName)(formats)
   with QueryFieldHelpersBase[OwnerType] with MacroNamesResolver[RecordType] { requires: OwnerType =>
   override def namesMap(): Vector[(Int, String)] = macroGen.namesMap()
   def this(
-    namingStrategy: NamingStrategy = LowerCase)(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType], macroGen: MacroGen[RecordType]) {
+    namingStrategy: NamingStrategy = LowerCase)(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType], macroGen: MacroBsonFormat[RecordType]) {
     this(namingStrategy[RecordType])(formats, macroGen)
   }
 }
