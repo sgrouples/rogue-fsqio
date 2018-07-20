@@ -53,9 +53,26 @@ trait EnumMacroFormats {
     override def append(writer: BsonWriter, k: String, v: T#Value): Unit = {
       writer.writeString(k, v.toString)
     }
+  }
 
+  def dummyEnumFmt[T <: Enumeration](e: T): BaseBsonFormat[T#Value] = new BaseBsonFormat[T#Value] {
+    override def read(b: BsonValue): T#Value = {
+      if (b.isString) e.withName(b.asString().getValue)
+      else e.apply(b.asNumber().intValue())
+    }
+
+    override def write(t: T#Value): BsonValue = new BsonString(t.toString)
+
+    override def defaultValue: T#Value = ???
+
+    override def append(writer: BsonWriter, k: String, v: T#Value): Unit = {
+      writer.writeString(k, v.toString)
+    }
   }
 }
+
+object EnumMacroFormats extends EnumMacroFormats
+
 final class EnumValueMacroBsonFormat(default: String) extends BaseBsonFormat[String] {
   override def read(b: BsonValue): String = b.asString().getValue
 

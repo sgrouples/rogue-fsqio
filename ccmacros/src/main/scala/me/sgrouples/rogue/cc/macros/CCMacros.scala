@@ -9,7 +9,8 @@ import scala.collection.Seq
 import scala.annotation.implicitNotFound
 import scala.collection.{ GenSeqLike, MapLike }
 import scala.reflect.macros.Universe
-
+//http://www.strongtyped.io/blog/2014/05/23/case-class-related-macros/
+//http://imranrashid.com/posts/learning-scala-macros/
 /*trait BlaDef {
   implicit object BlaInt extends MacroGen[Int] {
     override def namesMap(): Vector[(Int, String)] = Vector.empty
@@ -26,7 +27,9 @@ object MacroCC {
 }
 
 class MacroCCGenerator(val c: Context) {
+
   import c.universe._
+
   val s: String = "aa"
 
   def genImpl[T: c.WeakTypeTag]: c.Tree = {
@@ -53,6 +56,7 @@ class MacroCCGenerator(val c: Context) {
       case m: MethodSymbol if m.isPrimaryConstructor => m
     }.headOption
     ctorOpt.map { ctor =>
+
       //println(s"Main ctor ${ctor} - members ${members}")
       //ctor.name = "Value" members == "scala$Enumeration$$outerEnum"
       //if(ctor.name == "Value" && members.collectFirst())
@@ -73,26 +77,32 @@ class MacroCCGenerator(val c: Context) {
             Some(q"$companion.$getterName")
           }
       }
+      //} getOrElse(c.error(c.enclosingPosition, "no stor"))
       //println(s"Defaults are ${defaults}")
 
       //println(s"FLDS ${fields}")
-      val f = fields.map { f =>
-        val name = f.name
-        val decoded = name.decodedName
-        val retType = f.typeSignature
-        //tpe.decl(name).typeSignature.finalResultType
-        //println(s"F ${name} / ${decoded} / ${retType}")
+      val df = fields zip defaults
+      val namesFormats = df.map {
+        case (f, dvOpt) =>
+          val name = f.name
+          val decoded = name.decodedName
+          val retType = f.typeSignature
+          //tpe.decl(name).typeSignature.finalResultType
+          //println(s"F ${name} / ${decoded} / ${retType}")
 
-        //val x = q"BsonRW[c.typeOf[$retType]]"
-        //println(s"x ${x}")
-        //x
-        val tp = f.typeSignature
-        val at = appliedType(tp, tp.typeArgs)
-        //println(s"Base ${at.baseClasses}")
-        //primitives
+          //val x = q"BsonRW[c.typeOf[$retType]]"
+          //println(s"x ${x}")
+          //x
+          val tp = f.typeSignature
+          val at = appliedType(tp, tp.typeArgs)
+          //println(s"Base ${at.baseClasses}")
+          //primitives
+          val fmtName = s"${name}_fmt"
 
-        if (at <:< typeOf[Int]) {
+          /* val format = if (at <:< typeOf[Int]) {
           println(s"Int member ${name}")
+          val defVal = dvOpt.getOrElse(q"0")
+          q"val $fmtName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat($defVal)"
         } else if (at <:< typeOf[Long]) {
           println(s"Long member ${name}")
         } else if (at <:< typeOf[Boolean]) {
@@ -123,14 +133,18 @@ class MacroCCGenerator(val c: Context) {
           println(s"Map type ${name}")
         } else if (at.baseClasses.contains(iterableTypeSymbol)) {
           println(s"Iterable like - ${name}")
-        } else if (at <:< typeOf[Enumeration#Value]) {
+        }
+        else if (at <:< typeOf[Enumeration#Value]) {
           val enumT = at.asInstanceOf[TypeRef].pre
-          println(s"RT ${enumT.resultType}")
-          println(s"!!! ENUMERATION VALUE OF ${name} ")
-          enumX(enumT, at)
+          //val defVal = dvOpt.getOrElse(q"0")
+          val enumType = enumT.termSymbol.asModule
+          q"val $fmtName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.dummyEnumFmt($enumType)"
           //val ev = enumValues(at)
           //println(s"EV ${ev}")
         } else {
+          q""
+        }
+      else {
           println("something else - implicit search")
           println(s"Annotations ${f.annotations}")
           //if(at <:< Enumeration)
@@ -160,35 +174,82 @@ class MacroCCGenerator(val c: Context) {
         //println(s"Serching for implicit value for ${checkedType}")
 
         //s1
-        "a"
+        "a"*/
+
+          val fieldName = name.decodedName.toString + "_fmt" // c.freshName()
+          val format = if (at <:< typeOf[Int]) {
+            println(s"Int member ${name}")
+            //val defVal = dvOpt.getOrElse(q"0")
+            val ser = q"new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
+            // q"val $fieldName = $ser"
+            ser
+          } else if (at <:< typeOf[Enumeration#Value]) {
+            val enumT = at.asInstanceOf[TypeRef].pre
+            //val defVal = dvOpt.getOrElse(q"0")
+            val enumType = enumT.termSymbol.asModule
+            q"_root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.dummyEnumFmt($enumType)"
+            //val ev = enumValues(at)
+            //println(s"EV ${ev}")
+          } else {
+            q"???"
+          }
+          (name.decodedName.toString, fieldName, format)
       }
-    }
-    val terms = members.flatMap { symbol =>
-      if (symbol.isTerm) {
-        val term = symbol.asTerm
-        if (term.isAccessor && term.getter.isMethod) {
-          Some(term.name)
+
+      println(s"outs ${namesFormats}")
+      val terms = members.flatMap { symbol =>
+        if (symbol.isTerm) {
+          val term = symbol.asTerm
+          if (term.isAccessor && term.getter.isMethod) {
+            Some(term.name)
+          } else None
         } else None
-      } else None
-    }
-    //println(s"T ${tpe}")
-    //println(s"names ${terms}")
-    val zipNames = terms.zipWithIndex.map {
-      case (n, i) =>
-        (i -> s"$n")
-    }.toVector
-    println(s"Name map is ${zipNames}")
-    //println(s"terms ${terms}")
-    val r = q"""new MacroBsonFormat[$tpe] {
+      }
+
+      //println(s"T ${tpe}")
+      //println(s"names ${terms}")
+      val zipNames = terms.zipWithIndex.map {
+        case (n, i) =>
+          (i -> s"$n")
+      }.toVector
+      println(s"Name map is ${zipNames}")
+      val bsonFormats = namesFormats.map { x =>
+        val fmt = q" val ${x._2} = ${x._3}"
+        println(s"FMT ${fmt}")
+        fmt
+      }
+      /* val writes = namesFormats.map { v =>
+
+        q"${v._2}.append(${v._1}, ${v._1})"
+      }*/
+      //println(s"terms ${terms}")
+      val testName = c.freshName()
+      val r =
+        q"""new MacroBsonFormat[$tpe] {
+                  val x = 1
                   override def namesMap():Vector[(Int, String)] = ${zipNames}
                   override def defaultValue(): $tpe = {???}
                   override def read(b: _root_.org.bson.BsonValue): $tpe = ???
-                  override def write(t: $tpe): _root_.org.bson.BsonValue = ???
+                  override def write(t: $tpe): _root_.org.bson.BsonValue = {
+                    val writer = new _root_.org.bson.BsonDocumentWriter()
+                    writer.getDocument()
+                  }
                   override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
                 }
-    """
-    println(s"Will return ${r}")
-    r
-    //c.Expr[MacroNamesResolver[T]](r)
+          """
+
+      println(s"Will return ${r}")
+      r
+      //c.Expr[MacroNamesResolver[T]](r)
+    } getOrElse {
+      q""" new MacroBsonFormat[$tpe] {
+          override def namesMap():Vector[(Int, String)] = Vector.empty
+                           override def defaultValue(): $tpe = {???}
+                           override def read(b: _root_.org.bson.BsonValue): $tpe = ???
+                           override def write(t: $tpe): _root_.org.bson.BsonValue = ???
+                           override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
+          }
+     """
+    }
   }
 }
