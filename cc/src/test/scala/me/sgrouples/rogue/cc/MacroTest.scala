@@ -20,14 +20,16 @@ case class SourceBson2(name: String = "Name", xx: Int = 8,
   rr: ClaimStatus2.Value = ClaimStatus2.approved)
 
 case class EnumIntCC(int: Int = 0, enum: ClaimStatus2.Value = ClaimStatus2.approved)
-case class JustInt(just: Int = 7)
+case class JustInt(just: Int = 7, other: Int = 0)
 class MacroTest extends FlatSpec with Matchers {
 
   "Macro" should "bla cclass" in {
 
     val k = implicitly[MacroBsonFormat[JustInt]]
-    val bson = k.write(JustInt(8))
+    val bson = k.write(JustInt(8, 4))
     println(s"BSON ${bson}")
+    val deser = k.read(bson)
+    println(s"Deser ${deser}")
 
     //val m = implicitly[MacroGen[RejectReason.Value]]
     //val blaString = implicitly[Bla[String]]

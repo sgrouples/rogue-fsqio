@@ -176,24 +176,26 @@ class MacroCCGenerator(val c: Context) {
         //s1
         "a"*/
 
-          val fieldName = name.decodedName.toString + "_fmt" // c.freshName()
+          val formatName = TermName(name.decodedName.toString + "_fmt") // c.freshName()
           val format = if (at <:< typeOf[Int]) {
             println(s"Int member ${name}")
             //val defVal = dvOpt.getOrElse(q"0")
-            val ser = q"new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
+            val ser = q"val $formatName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
             // q"val $fieldName = $ser"
+            println(s"SEr ${ser}")
             ser
           } else if (at <:< typeOf[Enumeration#Value]) {
             val enumT = at.asInstanceOf[TypeRef].pre
             //val defVal = dvOpt.getOrElse(q"0")
             val enumType = enumT.termSymbol.asModule
-            q"_root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.dummyEnumFmt($enumType)"
+            q"val $formatName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.dummyEnumFmt($enumType)"
             //val ev = enumValues(at)
             //println(s"EV ${ev}")
           } else {
-            q"???"
+            println("DUMMY")
+            q"val $formatName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
           }
-          (name.decodedName.toString, fieldName, format)
+          (name.decodedName.toString, formatName, format)
       }
 
       println(s"outs ${namesFormats}")
@@ -213,10 +215,24 @@ class MacroCCGenerator(val c: Context) {
           (i -> s"$n")
       }.toVector
       println(s"Name map is ${zipNames}")
-      val bsonFormats = namesFormats.map { x =>
-        val fmt = q" val ${x._2} = ${x._3}"
-        println(s"FMT ${fmt}")
-        fmt
+      val bsonFormats = namesFormats.map(_._3)
+      val writers = namesFormats.map {
+        case (fldName, formatName, _) =>
+          val key = Constant(fldName)
+          val accessor = TermName(fldName)
+          q"temporaryDocument.put($key, $formatName.write(t.$accessor))"
+      }
+      val reads = namesFormats.map {
+        case (fldName, formatName, _) =>
+          val key = Constant(fldName)
+          val accessor = TermName(fldName)
+          q"$formatName.readOrDefault(doc.get($key))"
+      }
+      val appends = namesFormats.map {
+        case (fldName, formatName, _) =>
+          val key = Constant(fldName)
+          val accessor = TermName(fldName)
+          q"$formatName.append(writer, $key, t.$accessor)"
       }
       /* val writes = namesFormats.map { v =>
 
@@ -226,15 +242,28 @@ class MacroCCGenerator(val c: Context) {
       val testName = c.freshName()
       val r =
         q"""new MacroBsonFormat[$tpe] {
-                  val x = 1
+           ..$bsonFormats
                   override def namesMap():Vector[(Int, String)] = ${zipNames}
                   override def defaultValue(): $tpe = {???}
-                  override def read(b: _root_.org.bson.BsonValue): $tpe = ???
-                  override def write(t: $tpe): _root_.org.bson.BsonValue = {
-                    val writer = new _root_.org.bson.BsonDocumentWriter()
-                    writer.getDocument()
+                  override def read(b: _root_.org.bson.BsonValue): $tpe = {
+                   if(b.isDocument()) {
+                     val doc = b.asDocument()
+                     new $tpe(..$reads)
+                   } else {
+                      defaultValue()
+                   }
                   }
-                  override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
+                  override def write(t: $tpe): _root_.org.bson.BsonValue = {
+                    val temporaryDocument = new _root_.org.bson.BsonDocument()
+                    ..$writers
+                    temporaryDocument
+                  }
+                  override def append(writer:_root_.org.bson.BsonWriter, k:String, t:$tpe): Unit = {
+                    writer.writeStartDocument(k)
+                    ..$appends
+                    writer.writeEndDocument()
+                  }
+
                 }
           """
 

@@ -9,6 +9,11 @@ import scala.annotation.implicitNotFound
 trait MacroBsonFormat[T] extends BasicBsonFormat[T] {
   def namesMap(): Vector[(Int, String)]
   def append(writer: BsonWriter, k: String, v: T): Unit
+  def readOrDefault(v: BsonValue): T = {
+    if (v != null) {
+      read(v)
+    } else defaultValue
+  }
 }
 
 abstract class BaseBsonFormat[T] extends MacroBsonFormat[T] {
@@ -16,7 +21,11 @@ abstract class BaseBsonFormat[T] extends MacroBsonFormat[T] {
 }
 
 final class IntMacroBsonFormat(default: Int) extends BaseBsonFormat[Int] {
-  override def read(b: BsonValue): Int = b.asNumber().intValue()
+  override def read(b: BsonValue): Int = if (b.isNumber) {
+    b.asNumber().intValue()
+  } else {
+    default
+  }
 
   override def write(t: Int): BsonValue = new BsonInt32(t)
 
@@ -28,7 +37,7 @@ final class IntMacroBsonFormat(default: Int) extends BaseBsonFormat[Int] {
 }
 
 final class StringMacroBsonFormat(default: String) extends BaseBsonFormat[String] {
-  override def read(b: BsonValue): String = b.asString().getValue
+  override def read(b: BsonValue): String = if (b.isString) b.asString().getValue else default
 
   override def write(t: String): BsonValue = new BsonString(t)
 
@@ -43,7 +52,8 @@ trait EnumMacroFormats {
   def enumValueMacroFormat[T <: Enumeration](e: T, default: T#Value): BaseBsonFormat[T#Value] = new BaseBsonFormat[T#Value] {
     override def read(b: BsonValue): T#Value = {
       if (b.isString) e.withName(b.asString().getValue)
-      else e.apply(b.asNumber().intValue())
+      else if (b.isNumber) e.apply(b.asNumber().intValue())
+      else default
     }
 
     override def write(t: T#Value): BsonValue = new BsonString(t.toString)
