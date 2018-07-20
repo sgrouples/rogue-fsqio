@@ -25,8 +25,8 @@ class MacroTest extends FlatSpec with Matchers {
 
   "Macro" should "bla cclass" in {
 
-    val k = implicitly[MacroBsonFormat[JustInt]]
-    val bson = k.write(JustInt(8, 4))
+    val k = implicitly[MacroBsonFormat[EnumIntCC]]
+    val bson = k.write(EnumIntCC(8, ClaimStatus2.pending))
     println(s"BSON ${bson}")
     val deser = k.read(bson)
     println(s"Deser ${deser}")

@@ -5,6 +5,8 @@ import scala.language.experimental.macros
 import org.bson.types.ObjectId
 import java.util.UUID
 
+import me.sgrouples.rogue.EnumSerializeValue
+
 import scala.collection.Seq
 import scala.annotation.implicitNotFound
 import scala.collection.{ GenSeqLike, MapLike }
@@ -48,8 +50,9 @@ class MacroCCGenerator(val c: Context) {
 
     val tpe = weakTypeOf[T]
     val members = tpe.decls
-    val mapTypeSymbol = typeOf[MapLike[_, _, _]].typeSymbol
-    val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
+    //val mapTypeSymbol = typeOf[MapLike[_, _, _]].typeSymbol
+    //val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
+    val enumSerializeValueType = typeOf[EnumSerializeValue]
     //val enumTypeSymbol = typeOf[Value]
 
     val ctorOpt = members.collectFirst {
@@ -84,6 +87,7 @@ class MacroCCGenerator(val c: Context) {
       val df = fields zip defaults
       val namesFormats = df.map {
         case (f, dvOpt) =>
+
           val name = f.name
           val decoded = name.decodedName
           val retType = f.typeSignature
@@ -188,6 +192,15 @@ class MacroCCGenerator(val c: Context) {
             val enumT = at.asInstanceOf[TypeRef].pre
             //val defVal = dvOpt.getOrElse(q"0")
             val enumType = enumT.termSymbol.asModule
+            println(s"Enum annotations ${enumType.annotations}")
+            //YES - enumSerializeValue!!!!!!
+            val ann = enumType.annotations.map(_.tree.tpe)
+            println(s"ANN ${ann}")
+            if (ann.contains(enumSerializeValueType)) {
+              println("YES CONTAINS")
+            } else {
+              println("Nt contains")
+            }
             q"val $formatName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.dummyEnumFmt($enumType)"
             //val ev = enumValues(at)
             //println(s"EV ${ev}")
