@@ -64,7 +64,7 @@ class MacroCCGenerator(val c: Context) {
           q"_root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.enumNameMacroFormat($enumType)"
         }
       } else if (at <:< typeOf[org.bson.types.ObjectId]) {
-        q"new _root_.me.sgrouples.rogue.cc.macros.ObjectIdMacroBsonFormat()"
+        q"new _root_.me.sgrouples.rogue.cc.macros.ObjectIdMacroBsonFormat[$at]()"
       } else if (at <:< typeOf[java.util.UUID]) {
         q"new _root_.me.sgrouples.rogue.cc.macros.UUIDMacroBsonFormat()"
       } else if (at <:< typeOf[java.util.Locale]) {
@@ -188,7 +188,7 @@ class MacroCCGenerator(val c: Context) {
         case (fldName, formatName, _) =>
           val key = Constant(fldName)
           val accessor = TermName(fldName)
-          q"{val _t = $formatName.write(t.$accessor); if(!_t.isNull()) temporaryDocument.put($key, _t) }"
+          q"addNotNull(doc, $key, $formatName.write(t.$accessor))"
       }
       val reads = namesFormats.map {
         case (fldName, formatName, _) =>
@@ -202,15 +202,12 @@ class MacroCCGenerator(val c: Context) {
           val accessor = TermName(fldName)
           q"$formatName.append(writer, $key, t.$accessor)"
       }
-      /* val writes = namesFormats.map { v =>
-
-        q"${v._2}.append(${v._1}, ${v._1})"
-      }*/
-      //println(s"terms ${terms}")
-      val testName = c.freshName()
       val r =
         q"""new MacroBsonFormat[$tpe] {
            ..$bsonFormats
+           private[this] def addNotNull(d:_root_.org.bson.BsonDocument, k:String, v:_root_.org.bson.BsonValue):Unit = {
+            if(!v.isNull()){d.put(k, v)}
+           }
                   override def namesMap():Vector[(Int, String)] = ${zipNames}
                   override def defaultValue(): $tpe = {???}
                   override def read(b: _root_.org.bson.BsonValue): $tpe = {
@@ -222,9 +219,9 @@ class MacroCCGenerator(val c: Context) {
                    }
                   }
                   override def write(t: $tpe): _root_.org.bson.BsonValue = {
-                    val temporaryDocument = new _root_.org.bson.BsonDocument()
+                    val doc = new _root_.org.bson.BsonDocument()
                     ..$writers
-                    temporaryDocument
+                    doc
                   }
                   private def appendVals(writer:_root_.org.bson.BsonWriter, t:$tpe): Unit = {
                      ..$appends
@@ -241,18 +238,19 @@ class MacroCCGenerator(val c: Context) {
                   }
                 }
           """
-
       println(s"Will return ${r}")
       r
       //c.Expr[MacroNamesResolver[T]](r)
     } getOrElse {
+      println(s"Not CC - tpe is ${tpe}, mem ${tpe.members}")
+      println(s"TS ${tpe.typeSymbol} tc ${tpe.typeConstructor}")
       q""" new MacroBsonFormat[$tpe] {
           override def namesMap():Vector[(Int, String)] = Vector.empty
-                           override def defaultValue(): $tpe = {???}
-                           override def read(b: _root_.org.bson.BsonValue): $tpe = ???
-                           override def write(t: $tpe): _root_.org.bson.BsonValue = ???
-                           override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
-                           override def append(writer:_root_.org.bson.BsonWriter, v:$tpe): Unit = ???
+          override def defaultValue(): $tpe = {???}
+          override def read(b: _root_.org.bson.BsonValue): $tpe = ???
+          override def write(t: $tpe): _root_.org.bson.BsonValue = ???
+          override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
+          override def append(writer:_root_.org.bson.BsonWriter, v:$tpe): Unit = ???
           }
      """
     }

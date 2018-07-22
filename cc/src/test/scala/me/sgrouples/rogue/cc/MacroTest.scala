@@ -4,9 +4,12 @@ import org.scalatest.{ FlatSpec, Matchers }
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros.MacroCC._
 import me.sgrouples.rogue.BsonFormats._
-import me.sgrouples.rogue.cc.macros.{ MacroBsonFormat }
+import me.sgrouples.rogue.cc.Metas.Counter
+import me.sgrouples.rogue.cc.macros.MacroBsonFormat
 // import me.sgrouples.rogue.cc.macros.BlaDef._
 import org.bson.types.ObjectId
+import shapeless.tag._
+import shapeless.tag
 object Eni extends Enumeration {
 
 }
@@ -21,6 +24,14 @@ case class SourceBson2(name: String = "Name", xx: Int = 8,
 
 case class EnumIntCC(int: Int = 0, enum: ClaimStatus2.Value = ClaimStatus2.approved)
 case class JustInt(just: Int = 7, other: Int = 0)
+
+trait Counter
+object Counter {
+  type Id = ObjectId @@ Counter
+}
+
+case class CounterCC(_id: Counter.Id, i: Int)
+
 class MacroTest extends FlatSpec with Matchers {
 
   "Macro" should "bla cclass" in {
@@ -41,7 +52,16 @@ class MacroTest extends FlatSpec with Matchers {
     println(s"${bs2V.arr.toSeq}")
     println(s"O: ${inV2}")
     println(s"${inV2.arr.toSeq}")
-    inV2 should ===(bs2V)
+
+    val counterF = implicitly[MacroBsonFormat[CounterCC]]
+    val tagCounter = tag[Counter](new ObjectId())
+    val counterC = CounterCC(tagCounter, 5)
+    val counterBson = counterF.write(counterC)
+    val counterR = counterF.read(counterBson)
+    println(s"Counter bson ${counterBson}")
+    counterC should ===(counterR)
+
+    //inV2 should ===(bs2V)
     //won't because arrays :(
 
     //val m = implicitly[MacroGen[RejectReason.Value]]

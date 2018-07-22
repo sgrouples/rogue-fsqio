@@ -105,32 +105,32 @@ final class BooleanMacroBsonFormat(default: Boolean = false) extends BaseBsonFor
   }
 }
 
-final class StringMacroBsonFormat(default: String = "") extends BaseBsonFormat[String] {
-  override def read(b: BsonValue): String = if (b.isString) b.asString().getValue else default
-  override def write(t: String): BsonValue = new BsonString(t)
-  override def defaultValue: String = default
-  override def append(writer: BsonWriter, k: String, v: String): Unit = {
+final class StringMacroBsonFormat[T <: String](default: T = "") extends BaseBsonFormat[T] {
+  override def read(b: BsonValue): T = if (b.isString) b.asString().getValue.asInstanceOf[T] else default
+  override def write(t: T): BsonValue = new BsonString(t)
+  override def defaultValue: T = default
+  override def append(writer: BsonWriter, k: String, v: T): Unit = {
     writer.writeString(k, v)
   }
-  override def append(writer: BsonWriter, v: String): Unit = {
+  override def append(writer: BsonWriter, v: T): Unit = {
     writer.writeString(v)
   }
 }
 
-final class ObjectIdMacroBsonFormat(default: ObjectId = new ObjectId(0, 0, 0.toShort, 0)) extends BaseBsonFormat[ObjectId] {
-  override def read(b: BsonValue): ObjectId = if (b.isObjectId) b.asObjectId().getValue else default
-  override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
-  override def defaultValue: ObjectId = default
-  override def append(writer: BsonWriter, k: String, v: ObjectId): Unit = {
+final class ObjectIdMacroBsonFormat[T <: ObjectId](default: T = new ObjectId(0, 0, 0.toShort, 0).asInstanceOf[T]) extends BaseBsonFormat[T] {
+  override def read(b: BsonValue): T = if (b.isObjectId) b.asObjectId().getValue.asInstanceOf[T] else default
+  override def write(t: T): BsonValue = new BsonObjectId(t)
+  override def defaultValue: T = default
+  override def append(writer: BsonWriter, k: String, v: T): Unit = {
     writer.writeObjectId(k, v)
   }
-  override def append(writer: BsonWriter, v: ObjectId): Unit = {
+  override def append(writer: BsonWriter, v: T): Unit = {
     writer.writeObjectId(v)
   }
 }
 
-final class UUIDMacroBsonFormat(default: UUID) extends BaseBsonFormat[UUID] {
-  override def read(b: BsonValue): UUID = {
+final class UUIDMacroBsonFormat[T <: UUID](default: T) extends BaseBsonFormat[T] {
+  override def read(b: BsonValue): T = {
     if (b.isBinary) {
       val bin = b.asBinary()
       val bb = ByteBuffer.wrap(bin.getData)
@@ -138,14 +138,14 @@ final class UUIDMacroBsonFormat(default: UUID) extends BaseBsonFormat[UUID] {
         bb.order(ByteOrder.LITTLE_ENDIAN)
       else
         bb.order(ByteOrder.BIG_ENDIAN)
-      new UUID(bb.getLong(0), bb.getLong(8))
+      new UUID(bb.getLong(0), bb.getLong(8)).asInstanceOf[T]
     } else default
   }
-  override def write(t: UUID): BsonValue = {
+  override def write(t: T): BsonValue = {
     toBinary(t)
   }
 
-  private def toBinary(t: UUID): BsonBinary = {
+  private def toBinary(t: T): BsonBinary = {
     val bytes = ByteBuffer.allocate(16)
     bytes.order(ByteOrder.LITTLE_ENDIAN)
     bytes.putLong(0, t.getMostSignificantBits)
@@ -153,11 +153,11 @@ final class UUIDMacroBsonFormat(default: UUID) extends BaseBsonFormat[UUID] {
     new BsonBinary(BsonBinarySubType.UUID_LEGACY, bytes.array())
   }
 
-  override def defaultValue: UUID = default
-  override def append(writer: BsonWriter, k: String, v: UUID): Unit = {
+  override def defaultValue: T = default
+  override def append(writer: BsonWriter, k: String, v: T): Unit = {
     writer.writeBinaryData(k, toBinary(v))
   }
-  override def append(writer: BsonWriter, v: UUID): Unit = {
+  override def append(writer: BsonWriter, v: T): Unit = {
     writer.writeBinaryData(toBinary(v))
   }
 }
