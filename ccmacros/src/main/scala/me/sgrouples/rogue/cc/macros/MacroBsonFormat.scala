@@ -28,7 +28,7 @@ abstract class BaseBsonFormat[T] extends MacroBsonFormat[T] {
   override def namesMap(): Vector[(Int, String)] = Vector.empty
 }
 
-final class IntMacroBsonFormat(default: Int) extends BaseBsonFormat[Int] {
+final class IntMacroBsonFormat(default: Int = 0) extends BaseBsonFormat[Int] {
   override def read(b: BsonValue): Int = if (b.isNumber) {
     b.asNumber().intValue()
   } else {
@@ -41,7 +41,7 @@ final class IntMacroBsonFormat(default: Int) extends BaseBsonFormat[Int] {
 
 }
 
-final class LongMacroBsonFormat(default: Long) extends BaseBsonFormat[Long] {
+final class LongMacroBsonFormat(default: Long = 0L) extends BaseBsonFormat[Long] {
   override def read(b: BsonValue): Long = if (b.isNumber) {
     b.asNumber().longValue()
   } else {
@@ -57,7 +57,7 @@ final class LongMacroBsonFormat(default: Long) extends BaseBsonFormat[Long] {
   }
 }
 
-final class DoubleMacroBsonFormat(default: Double) extends BaseBsonFormat[Double] {
+final class DoubleMacroBsonFormat(default: Double = 0.0d) extends BaseBsonFormat[Double] {
   override def read(b: BsonValue): Double = if (b.isNumber) {
     b.asNumber().doubleValue()
   } else {
@@ -89,7 +89,7 @@ final class BigDecimalMacroBsonFormat(default: BigDecimal) extends BaseBsonForma
   }
 }
 
-final class BooleanMacroBsonFormat(default: Boolean) extends BaseBsonFormat[Boolean] {
+final class BooleanMacroBsonFormat(default: Boolean = false) extends BaseBsonFormat[Boolean] {
   override def read(b: BsonValue): Boolean = if (b.isBoolean) {
     b.asBoolean().getValue
   } else {
@@ -105,7 +105,7 @@ final class BooleanMacroBsonFormat(default: Boolean) extends BaseBsonFormat[Bool
   }
 }
 
-final class StringMacroBsonFormat(default: String) extends BaseBsonFormat[String] {
+final class StringMacroBsonFormat(default: String = "") extends BaseBsonFormat[String] {
   override def read(b: BsonValue): String = if (b.isString) b.asString().getValue else default
   override def write(t: String): BsonValue = new BsonString(t)
   override def defaultValue: String = default
@@ -117,7 +117,7 @@ final class StringMacroBsonFormat(default: String) extends BaseBsonFormat[String
   }
 }
 
-final class ObjectIdMacroBsonFormat(default: ObjectId) extends BaseBsonFormat[ObjectId] {
+final class ObjectIdMacroBsonFormat(default: ObjectId = new ObjectId(0, 0, 0.toShort, 0)) extends BaseBsonFormat[ObjectId] {
   override def read(b: BsonValue): ObjectId = if (b.isObjectId) b.asObjectId().getValue else default
   override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
   override def defaultValue: ObjectId = default
@@ -241,7 +241,9 @@ final class InstantMacroBsonFormat(default: Instant) extends BaseBsonFormat[Inst
 }
 
 class OptMacroBsonFormat[T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Option[T]] {
-  override def read(b: BsonValue): Option[T] = if (b == null) None else Option(inner.readOrDefault(b))
+  override def read(b: BsonValue): Option[T] = if (b == null) None else {
+    Option(inner.read(b))
+  }
   override def write(t: Option[T]): BsonValue = if (t.isDefined) inner.write(t.get) else BsonNull.VALUE
   override def defaultValue: Option[T] = None
   override def append(writer: BsonWriter, k: String, v: Option[T]): Unit = {
@@ -337,7 +339,7 @@ class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(im
   }
 }
 
-class ArrayMacroFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Array[T]] {
+class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Array[T]] {
   private def appendVals(writer: BsonWriter, v: Array[T]) = {
     val it = v.iterator
     while (it.hasNext) {
@@ -387,7 +389,7 @@ class ArrayMacroFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends BaseBsonF
 class MapMacroFormat[T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Map[String, T]] {
   import scala.collection.JavaConverters._
 
-  private def appendVals(writer: BsonWriter, v: Map[String, T]) = {
+  private def appendVals(writer: BsonWriter, v: Map[String, T]): Unit = {
     v.foreach {
       case (k, v) =>
         inner.append(writer, v)

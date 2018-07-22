@@ -32,29 +32,97 @@ class MacroCCGenerator(val c: Context) {
 
   import c.universe._
 
-  private def fieldFormat(f: Symbol) = {
-
-  }
-
   def genImpl[T: c.WeakTypeTag]: c.Tree = {
-
-    //TODO - will it put proper package ?
-    def enumX(t: Type, v: Type) = {
-      val m = t.termSymbol.asModule
-
-      println(s"asModule ${t.termSymbol.asModule}")
-      //t.termSymbol.asModule.isPackage
-      val r = q"def read(s:String):${v} = { ${m}.withName(s) } "
-      println("qq ok ")
-      println(r)
-      ()
-    }
 
     val tpe = weakTypeOf[T]
     val members = tpe.decls
     val mapTypeSymbol = typeOf[MapLike[_, _, _]].typeSymbol
     val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
     val enumSerializeValueType = typeOf[EnumSerializeValue]
+    val optionTypeCons = typeOf[Option[_]].typeConstructor
+    val arrayTypeCons = typeOf[Array[_]].typeConstructor
+    val byteType = typeOf[Byte]
+
+    def typeFormat(at: Type): Tree = {
+      if (at <:< typeOf[Int]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat()"
+      } else if (at <:< typeOf[Long]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.LongMacroBsonFormat()"
+      } else if (at <:< typeOf[Boolean]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.BooleanMacroBsonFormat()"
+      } else if (at <:< typeOf[Double]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.DoubleMacroBsonFormat()"
+      } else if (at <:< typeOf[String]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.StringMacroBsonFormat()"
+      } else if (at <:< typeOf[Enumeration#Value]) {
+        val enumT = at.asInstanceOf[TypeRef].pre
+        val enumType = enumT.termSymbol.asModule
+        val ann = enumType.annotations.map(_.tree.tpe)
+        if (ann.contains(enumSerializeValueType)) {
+          q"_root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.enumValueMacroFormat($enumType)"
+        } else {
+          q"_root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.enumNameMacroFormat($enumType)"
+        }
+      } else if (at <:< typeOf[org.bson.types.ObjectId]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.ObjectIdMacroBsonFormat()"
+      } else if (at <:< typeOf[java.util.UUID]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.UUIDMacroBsonFormat()"
+      } else if (at <:< typeOf[java.util.Locale]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.LocaleMacroBsonFormat()"
+      } else if (at <:< typeOf[java.util.Currency]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.CurrencyMacroBsonFormat()"
+      } else if (at <:< typeOf[java.time.Instant]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.InstantMacroBsonFormat()"
+      } else if (at <:< typeOf[java.time.LocalDateTime]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.LocalDateTimeMacroBsonFormat()"
+      } else {
+        println(s"Should run implicit search ... how ? or genImpl ? AT  ${at}")
+        //at.ty
+        //println(s"implicit search for format MacroGen${at}")
+        //val t = c.inferImplicitValue(q"MacroBsonFormat[typeOf($at)]")
+        //t
+        val x = appliedType(typeOf[MacroBsonFormat[_]], at)
+        //val mgType = tq"_root_.me.sgrouples.rogue.cc.macros.MacroBsonFormat[$at]"
+
+        println(s"Implicit search for $x")
+        c.inferImplicitValue(x)
+      }
+    }
+
+    def fieldFormat(f: Symbol, dv: Option[Tree]): Tree = {
+      val name = f.name
+      val decoded = name.decodedName
+      val retType = f.typeSignature
+      val tp = f.typeSignature
+      val tc = tp.typeConstructor
+
+      if (tc == optionTypeCons) {
+        val inner = typeFormat(tp.typeArgs.head)
+        q"new _root_.me.sgrouples.rogue.cc.macros.OptMacroBsonFormat($inner)"
+      } else if (tc == arrayTypeCons) {
+        if (tp.typeArgs.head == byteType) {
+          q"new _root_.me.sgrouples.rogue.cc.macros.BinaryMacroBsonFormat()"
+        } else {
+          val inner = typeFormat(tp.typeArgs.head)
+          q"new _root_.me.sgrouples.rogue.cc.macros.ArrayMacroBsonFormat($inner)"
+        }
+      } else {
+        val at = appliedType(tp, tp.typeArgs)
+        if (at.baseClasses.contains(mapTypeSymbol)) {
+          if (!(tp.typeArgs.head <:< typeOf[String])) {
+            c.error(c.enclosingPosition, msg = s"Map key must be of type String for case class ${tpe}.${name}")
+          }
+          val inner = typeFormat(tp.typeArgs.tail.head)
+          q"new _root_.me.sgrouples.rogue.cc.macros.MapMacroFormat($inner)"
+        } else if (at.baseClasses.contains(iterableTypeSymbol)) {
+          val inner = typeFormat(tp.typeArgs.head)
+          q"new _root_.me.sgrouples.rogue.cc.macros.IterableLikeMacroFormat[${tp.typeArgs.head}, $at]($inner)"
+        } else {
+          typeFormat(at)
+        }
+      }
+    }
+
     //val enumTypeSymbol = typeOf[Value]
 
     val ctorOpt = members.collectFirst {
@@ -89,115 +157,9 @@ class MacroCCGenerator(val c: Context) {
       val df = fields zip defaults
       val namesFormats = df.map {
         case (f, dvOpt) =>
-
           val name = f.name
-          val decoded = name.decodedName
-          val retType = f.typeSignature
-          //tpe.decl(name).typeSignature.finalResultType
-          //println(s"F ${name} / ${decoded} / ${retType}")
-
-          //val x = q"BsonRW[c.typeOf[$retType]]"
-          //println(s"x ${x}")
-          //x
-          val tp = f.typeSignature
-          val at = appliedType(tp, tp.typeArgs)
-          //println(s"Base ${at.baseClasses}")
-          //primitives
-          val fmtName = s"${name}_fmt"
-
-          /* val format = if (at <:< typeOf[Int]) {
-          println(s"Int member ${name}")
-          val defVal = dvOpt.getOrElse(q"0")
-          q"val $fmtName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat($defVal)"
-        } else if (at <:< typeOf[Long]) {
-          println(s"Long member ${name}")
-        } else if (at <:< typeOf[Boolean]) {
-          println(s"Boolean member ${name}")
-        } else if (at <:< typeOf[Char]) {
-          println(s"Char member ${name}")
-        } else if (at <:< typeOf[Short]) {
-          println(s"Short member ${name}")
-        } else if (at <:< typeOf[Double]) {
-          println(s"Double member ${name}")
-        } else if (at <:< typeOf[Float]) {
-          println(s"Double member ${name}")
-        } else if (at <:< typeOf[String]) {
-          println(s"String member ${name}")
-        } else if (tp.typeConstructor == typeOf[Option[_]].typeConstructor) {
-          println(s"Option type constructor ${name}")
-        } else if (tp.typeConstructor == typeOf[Array[_]].typeConstructor) {
-          //Array[Byte] is special
-          println(s"Array type constructor ${name}")
-        } else if (at <:< typeOf[org.bson.types.ObjectId]) {
-          println(s"ObjectId subtype ${name}")
-        } else if (at <:< typeOf[java.util.UUID]) {
-          println(s"UUID subtype ${name}")
-        } else if (at.baseClasses.contains(mapTypeSymbol)) {
-          if (!(tp.typeArgs.head <:< typeOf[String])) {
-            c.error(c.enclosingPosition, msg = s"Map key must be of type String for case class ${tpe}.${name}")
-          }
-          println(s"Map type ${name}")
-        } else if (at.baseClasses.contains(iterableTypeSymbol)) {
-          println(s"Iterable like - ${name}")
-        }
-        else if (at <:< typeOf[Enumeration#Value]) {
-          val enumT = at.asInstanceOf[TypeRef].pre
-          //val defVal = dvOpt.getOrElse(q"0")
-          val enumType = enumT.termSymbol.asModule
-          q"val $fmtName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.dummyEnumFmt($enumType)"
-          //val ev = enumValues(at)
-          //println(s"EV ${ev}")
-        } else {
-          q""
-        }
-      else {
-          println("something else - implicit search")
-          println(s"Annotations ${f.annotations}")
-          //if(at <:< Enumeration)
-          //val wtt = weakTypeTag(at.typeParams)
-          //enum
-          println(s"Other - ... ${name} / ${at} / ${tp.typeConstructor}")
-          println(s"F ${f}")
-          println(s"ts ${f.typeSignature}")
-          println(f.info)
-
-          println(s"type params ${f.typeSignature.typeParams}")
-          println(f.typeSignature.typeConstructor)
-          println(f.typeSignature.resultType)
-          //f.
-          //Option[
-          //arrays
-          //Seq
-          //MapLike
-          println(s"implicit search for ${at} activated")
-          val s1 = c.inferImplicitValue(at)
-          println(s"found s1 ${s1}")
-        }
-        //val s = q"implicitly[Bla[$tp]]"
-        val t = tq"_root_.me.sgrouples.rogue.cc.macros.MacroGen[$tp]"
-        println(s"T ${t} type ${t.tpe} , ${at}")
-        //val checkedType = c.typecheck(t)
-        //println(s"Serching for implicit value for ${checkedType}")
-
-        //s1
-        "a"*/
-
           val formatName = TermName(name.decodedName.toString + "_fmt") // c.freshName()
-          val format = if (at <:< typeOf[Int]) {
-            q"val $formatName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
-          } else if (at <:< typeOf[Enumeration#Value]) {
-            val enumT = at.asInstanceOf[TypeRef].pre
-            val enumType = enumT.termSymbol.asModule
-            val ann = enumType.annotations.map(_.tree.tpe)
-            if (ann.contains(enumSerializeValueType)) {
-              q"val $formatName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.enumValueMacroFormat($enumType)"
-            } else {
-              q"val $formatName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.enumNameMacroFormat($enumType)"
-            }
-          } else {
-            println("DUMMY")
-            q"val $formatName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
-          }
+          val format = fieldFormat(f, dvOpt)
           (name.decodedName.toString, formatName, format)
       }
 
@@ -218,12 +180,15 @@ class MacroCCGenerator(val c: Context) {
           (i -> s"$n")
       }.toVector
       println(s"Name map is ${zipNames}")
-      val bsonFormats = namesFormats.map(_._3)
+      val bsonFormats = namesFormats.map {
+        case (_, formatName, format) =>
+          q"val $formatName = $format"
+      }
       val writers = namesFormats.map {
         case (fldName, formatName, _) =>
           val key = Constant(fldName)
           val accessor = TermName(fldName)
-          q"temporaryDocument.put($key, $formatName.write(t.$accessor))"
+          q"{val _t = $formatName.write(t.$accessor); if(!_t.isNull()) temporaryDocument.put($key, _t) }"
       }
       val reads = namesFormats.map {
         case (fldName, formatName, _) =>

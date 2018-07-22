@@ -31,6 +31,19 @@ class MacroTest extends FlatSpec with Matchers {
     val deser = k.read(bson)
     println(s"Deser ${deser}")
 
+    val s2 = implicitly[MacroBsonFormat[SourceBson2]]
+    val bs2V = SourceBson2(arr = Array(2, 3, 4), outerOid = new ObjectId(), mp = Map("ala" -> 7), s = Vector(3, 4, 6))
+    val bson2 = s2.write(bs2V)
+    println(s"BS2 = ${bson2}")
+
+    val inV2 = s2.read(bson2)
+    println(s"I: ${bs2V}")
+    println(s"${bs2V.arr.toSeq}")
+    println(s"O: ${inV2}")
+    println(s"${inV2.arr.toSeq}")
+    inV2 should ===(bs2V)
+    //won't because arrays :(
+
     //val m = implicitly[MacroGen[RejectReason.Value]]
     //val blaString = implicitly[Bla[String]]
     //println(s"bla string is ${blaString}")
