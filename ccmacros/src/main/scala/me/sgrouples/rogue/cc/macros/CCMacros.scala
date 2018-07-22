@@ -32,7 +32,9 @@ class MacroCCGenerator(val c: Context) {
 
   import c.universe._
 
-  val s: String = "aa"
+  private def fieldFormat(f: Symbol) = {
+
+  }
 
   def genImpl[T: c.WeakTypeTag]: c.Tree = {
 
@@ -182,28 +184,16 @@ class MacroCCGenerator(val c: Context) {
 
           val formatName = TermName(name.decodedName.toString + "_fmt") // c.freshName()
           val format = if (at <:< typeOf[Int]) {
-            println(s"Int member ${name}")
-            //val defVal = dvOpt.getOrElse(q"0")
-            val ser = q"val $formatName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
-            // q"val $fieldName = $ser"
-            println(s"SEr ${ser}")
-            ser
+            q"val $formatName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"
           } else if (at <:< typeOf[Enumeration#Value]) {
             val enumT = at.asInstanceOf[TypeRef].pre
-            //val defVal = dvOpt.getOrElse(q"0")
             val enumType = enumT.termSymbol.asModule
-            println(s"Enum annotations ${enumType.annotations}")
-            //YES - enumSerializeValue!!!!!!
             val ann = enumType.annotations.map(_.tree.tpe)
-            println(s"ANN ${ann}")
             if (ann.contains(enumSerializeValueType)) {
-              println("YES CONTAINS")
+              q"val $formatName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.enumValueMacroFormat($enumType)"
             } else {
-              println("Nt contains")
+              q"val $formatName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.enumNameMacroFormat($enumType)"
             }
-            q"val $formatName = _root_.me.sgrouples.rogue.cc.macros.EnumMacroFormats.dummyEnumFmt($enumType)"
-            //val ev = enumValues(at)
-            //println(s"EV ${ev}")
           } else {
             println("DUMMY")
             q"val $formatName = new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(0)"

@@ -604,14 +604,3 @@ object LazyBsonFormat {
 
 //thrown for derived encoders - which can't have
 class NoDefaultFormatForDerivedException(m: String) extends RuntimeException(m)
-
-private[rogue] object SupportedLocales {
-  lazy val map: Map[String, Locale] = {
-    val mb = Map.newBuilder[String, Locale]
-    Locale.getAvailableLocales.foreach { l =>
-      val key = l.toString
-      if (key.nonEmpty) mb += (key -> l)
-    }
-    mb.result()
-  }
-}
