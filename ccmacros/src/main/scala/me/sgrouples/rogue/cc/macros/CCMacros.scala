@@ -52,8 +52,8 @@ class MacroCCGenerator(val c: Context) {
 
     val tpe = weakTypeOf[T]
     val members = tpe.decls
-    //val mapTypeSymbol = typeOf[MapLike[_, _, _]].typeSymbol
-    //val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
+    val mapTypeSymbol = typeOf[MapLike[_, _, _]].typeSymbol
+    val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
     val enumSerializeValueType = typeOf[EnumSerializeValue]
     //val enumTypeSymbol = typeOf[Value]
 
@@ -261,12 +261,19 @@ class MacroCCGenerator(val c: Context) {
                     ..$writers
                     temporaryDocument
                   }
+                  private def appendVals(writer:_root_.org.bson.BsonWriter, t:$tpe): Unit = {
+                     ..$appends
+                  }
                   override def append(writer:_root_.org.bson.BsonWriter, k:String, t:$tpe): Unit = {
                     writer.writeStartDocument(k)
-                    ..$appends
+                    appendVals(writer, t)
                     writer.writeEndDocument()
                   }
-
+                  override def append(writer:_root_.org.bson.BsonWriter, t:$tpe): Unit = {
+                    writer.writeStartDocument()
+                    appendVals(writer, t)
+                    writer.writeEndDocument()
+                  }
                 }
           """
 
@@ -280,6 +287,7 @@ class MacroCCGenerator(val c: Context) {
                            override def read(b: _root_.org.bson.BsonValue): $tpe = ???
                            override def write(t: $tpe): _root_.org.bson.BsonValue = ???
                            override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
+                           override def append(writer:_root_.org.bson.BsonWriter, v:$tpe): Unit = ???
           }
      """
     }
