@@ -392,7 +392,7 @@ class MapMacroFormat[T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Map[St
   private def appendVals(writer: BsonWriter, v: Map[String, T]): Unit = {
     v.foreach {
       case (k, v) =>
-        inner.append(writer, v)
+        inner.append(writer, k, v)
     }
   }
 

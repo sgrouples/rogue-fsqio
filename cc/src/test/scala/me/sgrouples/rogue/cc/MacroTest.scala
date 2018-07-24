@@ -6,6 +6,7 @@ import me.sgrouples.rogue.cc.macros.MacroCC._
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.cc.Metas.Counter
 import me.sgrouples.rogue.cc.macros.MacroBsonFormat
+import org.bson.{ BsonDocument, BsonDocumentWriter }
 // import me.sgrouples.rogue.cc.macros.BlaDef._
 import org.bson.types.ObjectId
 import shapeless.tag._
@@ -52,7 +53,6 @@ class MacroTest extends FlatSpec with Matchers {
     println(s"${bs2V.arr.toSeq}")
     println(s"O: ${inV2}")
     println(s"${inV2.arr.toSeq}")
-
     val counterF = implicitly[MacroBsonFormat[CounterCC]]
     val tagCounter = tag[Counter](new ObjectId())
     val counterC = CounterCC(tagCounter, 5)
@@ -60,6 +60,11 @@ class MacroTest extends FlatSpec with Matchers {
     val counterR = counterF.read(counterBson)
     println(s"Counter bson ${counterBson}")
     counterC should ===(counterR)
+
+    val doc = new BsonDocument()
+    val wr = new BsonDocumentWriter(doc)
+    s2.append(wr, bs2V)
+    println(s"Wrote doc ${doc}")
 
     //inV2 should ===(bs2V)
     //won't because arrays :(
