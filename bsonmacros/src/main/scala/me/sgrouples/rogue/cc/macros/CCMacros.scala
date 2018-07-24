@@ -109,11 +109,14 @@ class MacroCCGenerator(val c: Context) {
       } else {
         val at = appliedType(tp, tp.typeArgs)
         if (at.baseClasses.contains(mapTypeSymbol)) {
-          if (!(tp.typeArgs.head <:< typeOf[String])) {
+          /*if (!(tp.typeArgs.head <:< typeOf[String])) {
             c.error(c.enclosingPosition, msg = s"Map key must be of type String for case class ${tpe}.${name}")
-          }
+          }*/
           val inner = typeFormat(tp.typeArgs.tail.head)
-          q"new _root_.me.sgrouples.rogue.cc.macros.MapMacroFormat($inner)"
+          val keyT = tp.typeArgs.head
+          val innerT = tp.typeArgs.tail.head
+
+          q"new _root_.me.sgrouples.rogue.cc.macros.MapMacroFormat[$keyT, $innerT]($inner)"
         } else if (at.baseClasses.contains(iterableTypeSymbol)) {
           val inner = typeFormat(tp.typeArgs.head)
           q"new _root_.me.sgrouples.rogue.cc.macros.IterableLikeMacroFormat[${tp.typeArgs.head}, $at]($inner)"
@@ -163,7 +166,7 @@ class MacroCCGenerator(val c: Context) {
           (name.decodedName.toString, formatName, format)
       }
 
-      println(s"outs ${namesFormats}")
+      // println(s"outs ${namesFormats}")
       val terms = members.flatMap { symbol =>
         if (symbol.isTerm) {
           val term = symbol.asTerm
@@ -179,7 +182,7 @@ class MacroCCGenerator(val c: Context) {
         case (n, i) =>
           (i -> s"$n")
       }.toVector
-      println(s"Name map is ${zipNames}")
+      //println(s"Name map is ${zipNames}")
       val bsonFormats = namesFormats.map {
         case (_, formatName, format) =>
           q"val $formatName = $format"
@@ -235,7 +238,7 @@ class MacroCCGenerator(val c: Context) {
                   }
                 }
           """
-      println(s"Will return ${r}")
+      //println(s"Will return ${r}")
       r
       //c.Expr[MacroNamesResolver[T]](r)
     } getOrElse {

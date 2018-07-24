@@ -1,5 +1,6 @@
 package me.sgrouples.rogue.map
 
+import me.sgrouples.rogue.map
 import org.bson.types.ObjectId
 
 trait MapKeyFormats {
@@ -13,7 +14,7 @@ trait MapKeyFormats {
   implicit object ObjectIdMapKeyFormat extends DefaultMapKeyFormat(new ObjectId(_))
 
   implicit def objectIdSubtypeMapKeyFormat[S <: ObjectId]: MapKeyFormat[S] =
-    MapKeyFormat[S](ObjectIdMapKeyFormat.read(_).asInstanceOf[S])
+    map.MapKeyFormat[S](ObjectIdMapKeyFormat.read(_).asInstanceOf[S])
 
 }
 

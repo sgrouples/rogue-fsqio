@@ -3,14 +3,13 @@ package me.sgrouples.rogue.cc
 import org.scalatest.{ FlatSpec, Matchers }
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros.MacroCC._
-import me.sgrouples.rogue.BsonFormats._
-import me.sgrouples.rogue.cc.Metas.Counter
 import me.sgrouples.rogue.cc.macros.MacroBsonFormat
 import org.bson.{ BsonDocument, BsonDocumentWriter }
 // import me.sgrouples.rogue.cc.macros.BlaDef._
 import org.bson.types.ObjectId
 import shapeless.tag._
 import shapeless.tag
+import me.sgrouples.rogue.map.MapKeyFormats._
 object Eni extends Enumeration {
 
 }
@@ -26,9 +25,9 @@ case class SourceBson2(name: String = "Name", xx: Int = 8,
 case class EnumIntCC(int: Int = 0, enum: ClaimStatus2.Value = ClaimStatus2.approved)
 case class JustInt(just: Int = 7, other: Int = 0)
 
-trait Counter
+trait CounterTag
 object Counter {
-  type Id = ObjectId @@ Counter
+  type Id = ObjectId @@ CounterTag
 }
 
 case class CounterCC(_id: Counter.Id, i: Int)
@@ -54,7 +53,7 @@ class MacroTest extends FlatSpec with Matchers {
     println(s"O: ${inV2}")
     println(s"${inV2.arr.toSeq}")
     val counterF = implicitly[MacroBsonFormat[CounterCC]]
-    val tagCounter = tag[Counter](new ObjectId())
+    val tagCounter = tag[CounterTag](new ObjectId())
     val counterC = CounterCC(tagCounter, 5)
     val counterBson = counterF.write(counterC)
     val counterR = counterF.read(counterBson)

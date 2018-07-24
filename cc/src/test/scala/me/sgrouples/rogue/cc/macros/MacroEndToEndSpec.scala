@@ -400,7 +400,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
     val counts = Map(ObjectId.get -> 100L)
 
-    val counter = Counter(counts = counts)
+    val counter = MCounter(counts = counts)
 
     Counters.insertOneAsync(counter).futureValue
 
@@ -417,7 +417,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
   "Map[K <: ObjectId, V] field" should "just work" in {
 
-    val counts: Map[CounterId, Long] = Map(tag[Counter](ObjectId.get) -> 100L)
+    val counts: Map[CounterId, Long] = Map(tag[MCounter](ObjectId.get) -> 100L)
 
     val counter = TypedCounter(counts = counts)
 

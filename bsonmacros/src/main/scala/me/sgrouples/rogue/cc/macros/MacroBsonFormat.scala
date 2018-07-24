@@ -4,6 +4,7 @@ import java.nio.{ ByteBuffer, ByteOrder }
 import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.{ Currency, Locale, UUID }
 
+import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{ BasicBsonFormat, SupportedLocales }
 import org.bson._
 import org.bson.types.{ Decimal128, ObjectId }
@@ -212,14 +213,14 @@ final class BinaryMacroBsonFormat extends BaseBsonFormat[Array[Byte]] {
   }
 }
 
-final class LocalDateTimeMacroBsonFormat(default: LocalDateTime) extends BaseBsonFormat[LocalDateTime] {
+final class LocalDateTimeMacroBsonFormat extends BaseBsonFormat[LocalDateTime] {
   override def read(b: BsonValue): LocalDateTime = {
     if (b.isDateTime) {
       LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
     } else defaultValue
   }
   override def write(t: LocalDateTime): BsonValue = new BsonDateTime(t.toInstant(ZoneOffset.UTC).toEpochMilli)
-  override def defaultValue: LocalDateTime = default
+  override def defaultValue: LocalDateTime = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)
   override def append(writer: BsonWriter, k: String, v: LocalDateTime): Unit = {
     writer.writeDateTime(k, v.toInstant(ZoneOffset.UTC).toEpochMilli)
   }
@@ -228,14 +229,14 @@ final class LocalDateTimeMacroBsonFormat(default: LocalDateTime) extends BaseBso
   }
 }
 
-final class InstantMacroBsonFormat(default: Instant) extends BaseBsonFormat[Instant] {
+final class InstantMacroBsonFormat extends BaseBsonFormat[Instant] {
   override def read(b: BsonValue): Instant = {
     if (b.isDateTime) {
       Instant.ofEpochMilli(b.asDateTime().getValue)
     } else defaultValue
   }
   override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
-  override def defaultValue: Instant = default
+  override def defaultValue: Instant = Instant.ofEpochMilli(0)
   override def append(writer: BsonWriter, k: String, v: Instant): Unit = {
     writer.writeDateTime(k, v.toEpochMilli)
   }
@@ -390,45 +391,79 @@ class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends BaseB
   override def defaultValue: Array[T] = Array.empty[T]
 }
 
-class MapMacroFormat[T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Map[String, T]] {
-  import scala.collection.JavaConverters._
+/*
+implicit def mapFormat[K: MapKeyFormat, V: BsonFormat]: BsonFormat[Map[K, V]] = {
 
-  private def appendVals(writer: BsonWriter, v: Map[String, T]): Unit = {
-    v.foreach {
-      case (k, v) =>
-        inner.append(writer, k, v)
+    new BsonFormat[Map[K, V]] with BsonArrayReader[Map[K, V]] {
+
+      implicit private val kf = implicitly[MapKeyFormat[K]]
+      implicit private val fv = implicitly[BsonFormat[V]]
+
+      def write(m: Map[K, V]): BsonDocument = {
+        val doc = new BsonDocument()
+        m.foreach {
+          case (k, v) =>
+            val kv = kf.write(k)
+            val vv = fv.write(v)
+            if (!vv.isNull) doc.append(kv, vv)
+        }
+        doc
+      }
+
+      def read(value: BsonValue): Map[K, V] = {
+        value.asDocument().asScala.map {
+          case (ks, v) =>
+            (kf.read(ks), fv.read(v))
+        }(collection.breakOut)
+      }
+
+      //in general terms, yes, as we don't know keys, but we need 'star' format for values
+      override def flds = Map("*" -> fv)
+
+      override def defaultValue: Map[K, V] = Map.empty
     }
   }
 
-  override def append(writer: BsonWriter, k: String, v: Map[String, T]): Unit = {
+ */
+class MapMacroFormat[K: MapKeyFormat, T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Map[K, T]] {
+  import scala.collection.JavaConverters._
+  implicit private val kf = implicitly[MapKeyFormat[K]]
+  private def appendVals(writer: BsonWriter, v: Map[K, T]): Unit = {
+    v.foreach {
+      case (k, v) =>
+        inner.append(writer, kf.write(k), v)
+    }
+  }
+
+  override def append(writer: BsonWriter, k: String, v: Map[K, T]): Unit = {
     writer.writeStartDocument(k)
     appendVals(writer, v)
     writer.writeEndDocument()
   }
 
-  override def append(writer: BsonWriter, v: Map[String, T]): Unit = {
+  override def append(writer: BsonWriter, v: Map[K, T]): Unit = {
     writer.writeStartDocument()
     appendVals(writer, v)
     writer.writeEndDocument()
   }
 
-  override def read(b: BsonValue): Map[String, T] = {
+  override def read(b: BsonValue): Map[K, T] = {
     if (b.isDocument) {
       val doc = b.asDocument()
       doc.asScala.map {
         case (k, v) =>
-          (k, inner.read(v))
+          (kf.read(k), inner.read(v))
       }(collection.breakOut)
     } else defaultValue
   }
 
-  override def write(t: Map[String, T]): BsonValue = {
+  override def write(t: Map[K, T]): BsonValue = {
     val doc = new BsonDocument()
-    t.foreach { case (k, v) => doc.append(k, inner.write(v)) }
+    t.foreach { case (k, v) => doc.append(kf.write(k), inner.write(v)) }
     doc
   }
 
-  override def defaultValue: Map[String, T] = Map.empty
+  override def defaultValue: Map[K, T] = Map.empty
 
 }
 

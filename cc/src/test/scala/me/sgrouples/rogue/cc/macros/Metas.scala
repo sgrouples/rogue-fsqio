@@ -9,10 +9,27 @@ import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
 import shapeless.tag.@@
 import me.sgrouples.rogue.cc.macros.MacroCC._
-object Metas {
-  implicit object BigIntegerMF extends MacroBsonFormat[BigInteger]() {
+import org.bson.{ BsonValue, BsonWriter }
+import me.sgrouples.rogue.map.MapKeyFormats._
 
+case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
+
+object Metas {
+  implicit object BigIntegerMF extends BaseBsonFormat[BigInteger] {
+
+    override def append(writer: BsonWriter, k: String, v: BigInteger): Unit = ???
+
+    override def append(writer: BsonWriter, v: BigInteger): Unit = ???
+
+    override def read(b: BsonValue): BigInteger = ???
+
+    override def write(t: BigInteger): BsonValue = ???
+
+    override def defaultValue: BigInteger = ???
   }
+
+  val bfx = implicitly[MacroBsonFormat[BigInteger]]
+  println(s"BFX ${bfx}")
 
   class SourceBsonMeta extends MCcMeta[SourceBson, SourceBsonMeta]("_") {
     val name = StringField
@@ -23,7 +40,7 @@ object Metas {
   class VenueClaimBsonRMeta extends MCcMeta[VenueClaimBson, VenueClaimBsonRMeta]("_") {
     val uid = LongField
     val status = EnumField(ClaimStatus)
-    val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
+    val source = OptClassField[SourceBson, SourceBsonMeta](SourceBsonR)
     val date = LocalDateTimeField("date")
   }
 
@@ -90,7 +107,6 @@ object Metas {
   }
   val OptValCCR = new OptValCCMeta
 
-  case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
   class UuidCcMeta extends MCcMeta[UuidCc, UuidCcMeta]("uuidcc") {
     val id = UUIdField("_id")
     val s = StringField
@@ -115,16 +131,16 @@ object Metas {
 
   val Invoices = new InvoiceMeta
 
-  case class Counter(_id: ObjectId = ObjectId.get(), counts: Map[ObjectId, Long])
+  case class MCounter(_id: ObjectId = ObjectId.get(), counts: Map[ObjectId, Long])
 
-  class CounterMeta extends MCcMeta[Counter, CounterMeta] {
+  class CounterMeta extends MCcMeta[MCounter, CounterMeta] {
     val id = ObjectIdField("_id")
     val counts = MapField[ObjectId, Long]
   }
 
   val Counters = new CounterMeta
 
-  type CounterId = ObjectId @@ Counter
+  type CounterId = ObjectId @@ MCounter
 
   case class TypedCounter(_id: ObjectId = ObjectId.get(), counts: Map[CounterId, Long])
 
