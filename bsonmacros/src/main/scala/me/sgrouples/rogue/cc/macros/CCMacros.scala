@@ -205,9 +205,6 @@ class MacroCCGenerator(val c: Context) {
       val r =
         q"""new MacroBsonFormat[$tpe] {
            ..$bsonFormats
-           private[this] def addNotNull(d:_root_.org.bson.BsonDocument, k:String, v:_root_.org.bson.BsonValue):Unit = {
-            if(!v.isNull()){d.put(k, v)}
-           }
                   override def namesMap():Vector[(Int, String)] = ${zipNames}
                   override def defaultValue(): $tpe = {???}
                   override def read(b: _root_.org.bson.BsonValue): $tpe = {

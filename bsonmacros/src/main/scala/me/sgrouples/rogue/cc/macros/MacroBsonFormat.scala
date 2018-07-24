@@ -22,6 +22,10 @@ trait MacroBsonFormat[T] extends BasicBsonFormat[T] {
       read(v)
     } else defaultValue
   }
+  protected def addNotNull(d: _root_.org.bson.BsonDocument, k: String, v: _root_.org.bson.BsonValue): Unit = {
+    if (!v.isNull()) { d.put(k, v) }
+  }
+
 }
 
 abstract class BaseBsonFormat[T] extends MacroBsonFormat[T] {
@@ -129,7 +133,7 @@ final class ObjectIdMacroBsonFormat[T <: ObjectId](default: T = new ObjectId(0, 
   }
 }
 
-final class UUIDMacroBsonFormat[T <: UUID](default: T) extends BaseBsonFormat[T] {
+final class UUIDMacroBsonFormat[T <: UUID]() extends BaseBsonFormat[T] {
   override def read(b: BsonValue): T = {
     if (b.isBinary) {
       val bin = b.asBinary()
@@ -139,7 +143,7 @@ final class UUIDMacroBsonFormat[T <: UUID](default: T) extends BaseBsonFormat[T]
       else
         bb.order(ByteOrder.BIG_ENDIAN)
       new UUID(bb.getLong(0), bb.getLong(8)).asInstanceOf[T]
-    } else default
+    } else defaultValue
   }
   override def write(t: T): BsonValue = {
     toBinary(t)
@@ -153,7 +157,7 @@ final class UUIDMacroBsonFormat[T <: UUID](default: T) extends BaseBsonFormat[T]
     new BsonBinary(BsonBinarySubType.UUID_LEGACY, bytes.array())
   }
 
-  override def defaultValue: T = default
+  override def defaultValue: T = new UUID(0, 0).asInstanceOf[T]
   override def append(writer: BsonWriter, k: String, v: T): Unit = {
     writer.writeBinaryData(k, toBinary(v))
   }
@@ -162,12 +166,12 @@ final class UUIDMacroBsonFormat[T <: UUID](default: T) extends BaseBsonFormat[T]
   }
 }
 
-final class CurrencyMacroBsonFormat(default: Currency) extends BaseBsonFormat[Currency] {
+final class CurrencyMacroBsonFormat extends BaseBsonFormat[Currency] {
   override def read(b: BsonValue): Currency = if (b.isString)
     Currency.getInstance(b.asString().getValue)
   else defaultValue
   override def write(t: Currency): BsonValue = new BsonString(t.getCurrencyCode)
-  override def defaultValue: Currency = default
+  override def defaultValue: Currency = Currency.getInstance("USD")
   override def append(writer: BsonWriter, k: String, v: Currency): Unit = {
     writer.writeString(k, v.getCurrencyCode)
   }
@@ -175,7 +179,7 @@ final class CurrencyMacroBsonFormat(default: Currency) extends BaseBsonFormat[Cu
     writer.writeString(v.getCurrencyCode)
   }
 }
-final class LocaleMacroBsonFormat(default: Locale) extends BaseBsonFormat[Locale] {
+final class LocaleMacroBsonFormat extends BaseBsonFormat[Locale] {
   override def read(b: BsonValue): Locale = if (b.isString) {
     val value = b.asString().getValue
     if (value.isEmpty) defaultValue
@@ -185,7 +189,7 @@ final class LocaleMacroBsonFormat(default: Locale) extends BaseBsonFormat[Locale
     }
   } else defaultValue
   override def write(t: Locale): BsonValue = new BsonString(t.toString)
-  override def defaultValue: Locale = default
+  override def defaultValue: Locale = Locale.ENGLISH
   override def append(writer: BsonWriter, k: String, v: Locale): Unit = {
     writer.writeString(k, v.toString)
   }
