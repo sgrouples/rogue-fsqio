@@ -1,15 +1,12 @@
-package me.sgrouples.rogue.cc
+package me.sgrouples.rogue.cc.macros
+
 import java.util.concurrent.atomic.AtomicInteger
 
-import me.sgrouples.rogue.BsonFormat
-import me.sgrouples.rogue.cc.macros.MacroCC._
-import me.sgrouples.rogue.cc.macros.{ MacroBsonFormat }
-import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
+import me.sgrouples.rogue.cc.{ Marker, NamesResolver }
 import shapeless.tag
-import shapeless.tag._
+import shapeless.tag.@@
 
 import scala.collection.mutable
-import scala.reflect.ClassTag
 
 trait MacroNamesResolver[T] extends NamesResolver {
   private var resolved: Boolean = false
@@ -22,15 +19,13 @@ trait MacroNamesResolver[T] extends NamesResolver {
   private[this] val fields: mutable.Map[String, io.fsq.field.Field[_, _]] = mutable.Map.empty
   private[this] val names: mutable.Map[Int, String] = mutable.Map.empty[Int, String]
 
-  def namesMap(): Vector[(Int, String)]
+  protected def macroGen: MacroBsonFormat[T]
   //val macroGenProvided: MacroGen[T] = implicitly[MacroGen[T]]
   //implicitly[MacroGen[T]]
-  def resolve()(implicit macroGen: MacroBsonFormat[T]): Unit = {
+  def resolve(): Unit = {
     val x = macroGen.namesMap()
-    println(s"names from macro ${x}")
     names ++= x
     resolved = true
-    println(s"Names Resolved - ${names}")
   }
   override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = {
     if (!resolved) resolve()
@@ -50,14 +45,5 @@ trait MacroNamesResolver[T] extends NamesResolver {
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
     fields += (name -> field)
     tag[Marker][T](field)
-  }
-}
-class MCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType], macroGen: MacroBsonFormat[RecordType])
-  extends RCcMeta[RecordType](collName)(formats)
-  with QueryFieldHelpersBase[OwnerType] with MacroNamesResolver[RecordType] { requires: OwnerType =>
-  override def namesMap(): Vector[(Int, String)] = macroGen.namesMap()
-  def this(
-    namingStrategy: NamingStrategy = LowerCase)(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType], macroGen: MacroBsonFormat[RecordType]) {
-    this(namingStrategy[RecordType])(formats, macroGen)
   }
 }
