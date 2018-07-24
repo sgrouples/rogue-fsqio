@@ -566,7 +566,7 @@ trait LowPrioBsonFormats {
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
     override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
 
-    override val flds = sg.value.value.flds
+    override val flds: Map[String, BsonFormat[_]] = sg.value.value.flds
 
     /**
      * for nested case classes, with default constructors provides a default value
