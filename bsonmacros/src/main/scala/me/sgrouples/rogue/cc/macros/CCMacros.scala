@@ -75,6 +75,8 @@ class MacroCCGenerator(val c: Context) {
         q"new _root_.me.sgrouples.rogue.cc.macros.InstantMacroBsonFormat()"
       } else if (at <:< typeOf[java.time.LocalDateTime]) {
         q"new _root_.me.sgrouples.rogue.cc.macros.LocalDateTimeMacroBsonFormat()"
+      } else if (at <:< typeOf[BigDecimal]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.BigDecimalMacroBsonFormat()"
       } else {
         println(s"Should run implicit search ... how ? or genImpl ? AT  ${at}")
         //at.ty
@@ -84,7 +86,7 @@ class MacroCCGenerator(val c: Context) {
         val x = appliedType(typeOf[MacroBsonFormat[_]], at)
         //val mgType = tq"_root_.me.sgrouples.rogue.cc.macros.MacroBsonFormat[$at]"
 
-        println(s"Implicit search for $x")
+        //println(s"Implicit search for $x")
         c.inferImplicitValue(x)
       }
     }
@@ -121,6 +123,7 @@ class MacroCCGenerator(val c: Context) {
           val inner = typeFormat(tp.typeArgs.head)
           q"new _root_.me.sgrouples.rogue.cc.macros.IterableLikeMacroFormat[${tp.typeArgs.head}, $at]($inner)"
         } else {
+          println(s"Type format search for ${at}")
           typeFormat(at)
         }
       }

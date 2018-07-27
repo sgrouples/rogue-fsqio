@@ -26,13 +26,16 @@ trait MacroNamesResolver[T] extends NamesResolver {
     val x = macroGen.namesMap()
     names ++= x
     resolved = true
+    println(s"Resolved names to ${names.toList.sortBy(_._1).mkString("\n")}")
   }
   override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = {
     if (!resolved) resolve()
     names += nextNameId -> name
     val field = func(name)
+    println(s"Adding ${this.getClass} F ${name} -> ${field} - named1 keys before ${fields.keys.toList}")
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
     fields += (name -> field)
+
     tag[Marker][T](field)
   }
   override def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = {
@@ -42,8 +45,10 @@ trait MacroNamesResolver[T] extends NamesResolver {
     val name = names.getOrElse(nextId, resolveError(nextId))
 
     val field = func(name)
+    println(s"Adding ${this.getClass} F ${name} -> ${field} - named2 keys before ${fields.keys.toList}")
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
     fields += (name -> field)
+
     tag[Marker][T](field)
   }
 }

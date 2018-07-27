@@ -78,14 +78,14 @@ final class DoubleMacroBsonFormat(default: Double = 0.0d) extends BaseBsonFormat
   }
 }
 
-final class BigDecimalMacroBsonFormat(default: BigDecimal) extends BaseBsonFormat[BigDecimal] {
+final class BigDecimalMacroBsonFormat() extends BaseBsonFormat[BigDecimal] {
   override def read(b: BsonValue): BigDecimal = if (b.isDecimal128) {
     b.asDecimal128().decimal128Value().bigDecimalValue()
   } else {
-    default
+    defaultValue
   }
   override def write(t: BigDecimal): BsonValue = new BsonDecimal128(new Decimal128(t.bigDecimal))
-  override def defaultValue: BigDecimal = default
+  override def defaultValue: BigDecimal = BigDecimal(0)
   override def append(writer: BsonWriter, k: String, v: BigDecimal): Unit = {
     writer.writeDecimal128(k, new Decimal128(v.bigDecimal))
   }

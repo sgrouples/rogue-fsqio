@@ -11,6 +11,7 @@ import shapeless.tag.@@
 import me.sgrouples.rogue.cc.macros.MacroCC._
 import org.bson.{ BsonValue, BsonWriter }
 import me.sgrouples.rogue.map.MapKeyFormats._
+import scala.language.experimental.macros
 
 case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
 
@@ -47,28 +48,34 @@ object Metas {
   val VenueClaimBsonR = new VenueClaimBsonRMeta
 
   class VenueRMeta extends MCcMeta[Venue, VenueRMeta](PluralLowerCase) {
-
     val id = ObjectIdTaggedField[Venue]("_id")
-    val mayor = LongField
-    val venuename = StringField
-    val closed = BooleanField
+    println("Mayor")
+    @f val mayor = LongField
+    println("venuename")
+    @f val venuename = StringField
+    println("closed")
+    @f val closed = BooleanField
+    println("status")
     val status = EnumField(VenueStatus)
-    val mayor_count = LongField
+    println("mayor_count")
+    @f val mayor_count = LongField
+    println("legacyid")
     val legacyid = LongField("legId")
-    val userId = LongField
-    val tags = ListField[String]
+    @f val userId = LongField
+    @f val tags = ListField[String]
 
     val claims = ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
     val lastClaim = OptClassField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
     val firstClaim = ClassRequiredField(VenueClaimBsonR, VenueClaimBson.default)
 
-    val last_updated = LocalDateTimeField
-    val popularity = ListField[Long]
-    val categories = ListField[ObjectId]
+    @f val last_updated = LocalDateTimeField
+    @f val popularity = ListField[Long]
+    @f val categories = ListField[ObjectId]
   }
 
+  println("Create VenueRMeta")
   val VenueR = new VenueRMeta
-
+  println("Done ")
   class VenueClaimRMeta extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
     val venueid = ObjectIdTaggedField[Venue]("vid")
     val status = EnumField[ClaimStatus.type]
@@ -107,13 +114,13 @@ object Metas {
   }
   val OptValCCR = new OptValCCMeta
 
-  class UuidCcMeta extends MCcMeta[UuidCc, UuidCcMeta]("uuidcc") {
+  /*class UuidCcMeta extends MCcMeta[UuidCc, UuidCcMeta]("uuidcc") {
     val id = UUIdField("_id")
     val s = StringField
     val dt = InstantField("i")
   }
   val UuidCcR = new UuidCcMeta
-
+*/
   case class Money(amount: BigDecimal, currency: Currency)
 
   case class Invoice(id: Long, name: String, total: Money)
