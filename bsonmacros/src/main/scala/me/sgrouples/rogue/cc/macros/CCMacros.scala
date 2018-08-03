@@ -181,10 +181,7 @@ class MacroCCGenerator(val c: Context) {
 
       //println(s"T ${tpe}")
       //println(s"names ${terms}")
-      val zipNames = terms.zipWithIndex.map {
-        case (n, i) =>
-          (i -> s"$n")
-      }.toVector
+      val zipNames = terms.map { n => s"$n" }.toVector
       //println(s"Name map is ${zipNames}")
       val bsonFormats = namesFormats.map {
         case (_, formatName, format) =>
@@ -211,7 +208,7 @@ class MacroCCGenerator(val c: Context) {
       val r =
         q"""new MacroBsonFormat[$tpe] {
            ..$bsonFormats
-                  override def namesMap():Vector[(Int, String)] = ${zipNames}
+                  override def validNames():Vector[String] = ${zipNames}
                   override def defaultValue(): $tpe = {???}
                   override def read(b: _root_.org.bson.BsonValue): $tpe = {
                    if(b.isDocument()) {
@@ -245,10 +242,12 @@ class MacroCCGenerator(val c: Context) {
       r
       //c.Expr[MacroNamesResolver[T]](r)
     } getOrElse {
+      //c.abort(c.enclosingPosition, s"no Macro can be generated for ${tpe}")
+
       println(s"Not CC - tpe is ${tpe}, mem ${tpe.members}")
       println(s"TS ${tpe.typeSymbol} tc ${tpe.typeConstructor}")
       q""" new MacroBsonFormat[$tpe] {
-          override def namesMap():Vector[(Int, String)] = Vector.empty
+          override def validNames():Vector[String] = Vector.empty
           override def defaultValue(): $tpe = {???}
           override def read(b: _root_.org.bson.BsonValue): $tpe = ???
           override def write(t: $tpe): _root_.org.bson.BsonValue = ???

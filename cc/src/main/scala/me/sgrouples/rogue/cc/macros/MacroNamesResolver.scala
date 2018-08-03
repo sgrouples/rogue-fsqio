@@ -17,38 +17,27 @@ trait MacroNamesResolver[T] extends NamesResolver {
     s"error macro resolving id ${id}"
   }
   private[this] val fields: mutable.Map[String, io.fsq.field.Field[_, _]] = mutable.Map.empty
-  private[this] val names: mutable.Map[Int, String] = mutable.Map.empty[Int, String]
+  private[this] val _validNames: mutable.Set[String] = mutable.Set.empty[String]
 
   protected def macroGen: MacroBsonFormat[T]
   //val macroGenProvided: MacroGen[T] = implicitly[MacroGen[T]]
   //implicitly[MacroGen[T]]
   def resolve(): Unit = {
-    val x = macroGen.namesMap()
-    names ++= x
+    // _validNames ++= macroGen.validNames()
     resolved = true
-    println(s"Resolved names to ${names.toList.sortBy(_._1).mkString("\n")}")
   }
   override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = {
     if (!resolved) resolve()
-    names += nextNameId -> name
+    //if (!_validNames.contains(name)) throw new IllegalArgumentException(s"no field named ${name} found in ${this.getClass.getName}")
     val field = func(name)
-    println(s"Adding ${this.getClass} F ${name} -> ${field} - named1 keys before ${fields.keys.toList}")
     if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
     fields += (name -> field)
 
     tag[Marker][T](field)
   }
   override def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = {
-    if (!resolved) resolve()
-    val nextId = nextNameId
-
-    val name = names.getOrElse(nextId, resolveError(nextId))
-
-    val field = func(name)
-    println(s"Adding ${this.getClass} F ${name} -> ${field} - named2 keys before ${fields.keys.toList}")
-    if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
-    fields += (name -> field)
-
-    tag[Marker][T](field)
+    val caller = Thread.currentThread().getStackTrace()(1)
+    new RuntimeException().printStackTrace()
+    throw new IllegalArgumentException(s"[${caller.getClassName}:L${caller.getLineNumber}] named without name not supported in macros. use @f [me.sgrouples.rogue.cc.macros.f] or provide name")
   }
 }

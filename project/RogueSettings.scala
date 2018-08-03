@@ -24,7 +24,7 @@ object RogueSettings {
     }.value,
    
     resolvers ++= Seq(nexusReleases, nexusSnapshots),
-    scalacOptions ++= Seq("-deprecation", "-unchecked"), //, "-Xlog-implicit-conversions"),
+    scalacOptions ++= Seq("-deprecation", "-unchecked"), //,"-Ymacro-debug-lite", "-Xlog-implicit-conversions"),
     scalacOptions ++= Seq("-feature", "-language:_"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials") ,
     testOptions in Test ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=> MongoEmbedded.stop))

@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
 
 @implicitNotFound("MacroGen can't generate for ${T}")
 trait MacroBsonFormat[T] extends BasicBsonFormat[T] {
-  def namesMap(): Vector[(Int, String)]
+  def validNames(): Vector[String]
   def append(writer: BsonWriter, k: String, v: T): Unit
   def append(writer: BsonWriter, v: T): Unit
   def readOrDefault(v: BsonValue): T = {
@@ -30,7 +30,7 @@ trait MacroBsonFormat[T] extends BasicBsonFormat[T] {
 }
 
 abstract class BaseBsonFormat[T] extends MacroBsonFormat[T] {
-  override def namesMap(): Vector[(Int, String)] = Vector.empty
+  override def validNames(): Vector[String] = Vector.empty
 }
 
 final class IntMacroBsonFormat(default: Int = 0) extends BaseBsonFormat[Int] {
