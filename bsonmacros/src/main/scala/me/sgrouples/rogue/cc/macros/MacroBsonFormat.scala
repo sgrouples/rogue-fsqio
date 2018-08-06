@@ -5,7 +5,7 @@ import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.{ Currency, Locale, UUID }
 
 import me.sgrouples.rogue.map.MapKeyFormat
-import me.sgrouples.rogue.{ BasicBsonFormat, SupportedLocales }
+import me.sgrouples.rogue.{ BaseBsonFormat, BasicBsonFormat, BsonFormat, SupportedLocales }
 import org.bson._
 import org.bson.types.{ Decimal128, ObjectId }
 
@@ -14,7 +14,7 @@ import scala.collection.generic.CanBuildFrom
 import scala.reflect.ClassTag
 
 @implicitNotFound("MacroGen can't generate for ${T}")
-trait MacroBsonFormat[T] extends BasicBsonFormat[T] {
+trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
   def validNames(): Vector[String]
   def append(writer: BsonWriter, k: String, v: T): Unit
   def append(writer: BsonWriter, v: T): Unit
@@ -29,11 +29,12 @@ trait MacroBsonFormat[T] extends BasicBsonFormat[T] {
 
 }
 
-abstract class BaseBsonFormat[T] extends MacroBsonFormat[T] {
+abstract class MacroBaseBsonFormat[T] extends MacroBsonFormat[T] {
+  override def flds: Map[String, BsonFormat[_]] = Map.empty
   override def validNames(): Vector[String] = Vector.empty
 }
 
-final class IntMacroBsonFormat(default: Int = 0) extends BaseBsonFormat[Int] {
+final class IntMacroBsonFormat(default: Int = 0) extends MacroBaseBsonFormat[Int] {
   override def read(b: BsonValue): Int = if (b.isNumber) {
     b.asNumber().intValue()
   } else {
@@ -46,7 +47,7 @@ final class IntMacroBsonFormat(default: Int = 0) extends BaseBsonFormat[Int] {
 
 }
 
-final class LongMacroBsonFormat(default: Long = 0L) extends BaseBsonFormat[Long] {
+final class LongMacroBsonFormat(default: Long = 0L) extends MacroBaseBsonFormat[Long] {
   override def read(b: BsonValue): Long = if (b.isNumber) {
     b.asNumber().longValue()
   } else {
@@ -62,7 +63,7 @@ final class LongMacroBsonFormat(default: Long = 0L) extends BaseBsonFormat[Long]
   }
 }
 
-final class DoubleMacroBsonFormat(default: Double = 0.0d) extends BaseBsonFormat[Double] {
+final class DoubleMacroBsonFormat(default: Double = 0.0d) extends MacroBaseBsonFormat[Double] {
   override def read(b: BsonValue): Double = if (b.isNumber) {
     b.asNumber().doubleValue()
   } else {
@@ -78,7 +79,7 @@ final class DoubleMacroBsonFormat(default: Double = 0.0d) extends BaseBsonFormat
   }
 }
 
-final class BigDecimalMacroBsonFormat() extends BaseBsonFormat[BigDecimal] {
+final class BigDecimalMacroBsonFormat() extends MacroBaseBsonFormat[BigDecimal] {
   override def read(b: BsonValue): BigDecimal = if (b.isDecimal128) {
     b.asDecimal128().decimal128Value().bigDecimalValue()
   } else {
@@ -94,7 +95,7 @@ final class BigDecimalMacroBsonFormat() extends BaseBsonFormat[BigDecimal] {
   }
 }
 
-final class BooleanMacroBsonFormat(default: Boolean = false) extends BaseBsonFormat[Boolean] {
+final class BooleanMacroBsonFormat(default: Boolean = false) extends MacroBaseBsonFormat[Boolean] {
   override def read(b: BsonValue): Boolean = if (b.isBoolean) {
     b.asBoolean().getValue
   } else {
@@ -110,7 +111,7 @@ final class BooleanMacroBsonFormat(default: Boolean = false) extends BaseBsonFor
   }
 }
 
-final class StringMacroBsonFormat[T <: String](default: T = "") extends BaseBsonFormat[T] {
+final class StringMacroBsonFormat[T <: String](default: T = "") extends MacroBaseBsonFormat[T] {
   override def read(b: BsonValue): T = if (b.isString) b.asString().getValue.asInstanceOf[T] else default
   override def write(t: T): BsonValue = new BsonString(t)
   override def defaultValue: T = default
@@ -122,7 +123,7 @@ final class StringMacroBsonFormat[T <: String](default: T = "") extends BaseBson
   }
 }
 
-final class ObjectIdMacroBsonFormat[T <: ObjectId](default: T = new ObjectId(0, 0, 0.toShort, 0).asInstanceOf[T]) extends BaseBsonFormat[T] {
+final class ObjectIdMacroBsonFormat[T <: ObjectId](default: T = new ObjectId(0, 0, 0.toShort, 0).asInstanceOf[T]) extends MacroBaseBsonFormat[T] {
   override def read(b: BsonValue): T = if (b.isObjectId) b.asObjectId().getValue.asInstanceOf[T] else default
   override def write(t: T): BsonValue = new BsonObjectId(t)
   override def defaultValue: T = default
@@ -134,7 +135,7 @@ final class ObjectIdMacroBsonFormat[T <: ObjectId](default: T = new ObjectId(0, 
   }
 }
 
-final class UUIDMacroBsonFormat[T <: UUID]() extends BaseBsonFormat[T] {
+final class UUIDMacroBsonFormat[T <: UUID]() extends MacroBaseBsonFormat[T] {
   override def read(b: BsonValue): T = {
     if (b.isBinary) {
       val bin = b.asBinary()
@@ -167,7 +168,7 @@ final class UUIDMacroBsonFormat[T <: UUID]() extends BaseBsonFormat[T] {
   }
 }
 
-final class CurrencyMacroBsonFormat extends BaseBsonFormat[Currency] {
+final class CurrencyMacroBsonFormat extends MacroBaseBsonFormat[Currency] {
   override def read(b: BsonValue): Currency = if (b.isString)
     Currency.getInstance(b.asString().getValue)
   else defaultValue
@@ -180,7 +181,7 @@ final class CurrencyMacroBsonFormat extends BaseBsonFormat[Currency] {
     writer.writeString(v.getCurrencyCode)
   }
 }
-final class LocaleMacroBsonFormat extends BaseBsonFormat[Locale] {
+final class LocaleMacroBsonFormat extends MacroBaseBsonFormat[Locale] {
   override def read(b: BsonValue): Locale = if (b.isString) {
     val value = b.asString().getValue
     if (value.isEmpty) defaultValue
@@ -199,7 +200,7 @@ final class LocaleMacroBsonFormat extends BaseBsonFormat[Locale] {
   }
 }
 
-final class BinaryMacroBsonFormat extends BaseBsonFormat[Array[Byte]] {
+final class BinaryMacroBsonFormat extends MacroBaseBsonFormat[Array[Byte]] {
   override def read(b: BsonValue): Array[Byte] = if (b.isBinary)
     b.asBinary().getData
   else defaultValue
@@ -213,7 +214,7 @@ final class BinaryMacroBsonFormat extends BaseBsonFormat[Array[Byte]] {
   }
 }
 
-final class LocalDateTimeMacroBsonFormat extends BaseBsonFormat[LocalDateTime] {
+final class LocalDateTimeMacroBsonFormat extends MacroBaseBsonFormat[LocalDateTime] {
   override def read(b: BsonValue): LocalDateTime = {
     if (b.isDateTime) {
       LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
@@ -229,7 +230,7 @@ final class LocalDateTimeMacroBsonFormat extends BaseBsonFormat[LocalDateTime] {
   }
 }
 
-final class InstantMacroBsonFormat extends BaseBsonFormat[Instant] {
+final class InstantMacroBsonFormat extends MacroBaseBsonFormat[Instant] {
   override def read(b: BsonValue): Instant = {
     if (b.isDateTime) {
       Instant.ofEpochMilli(b.asDateTime().getValue)
@@ -245,7 +246,7 @@ final class InstantMacroBsonFormat extends BaseBsonFormat[Instant] {
   }
 }
 
-class OptMacroBsonFormat[T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Option[T]] {
+class OptMacroBsonFormat[T](inner: MacroBsonFormat[T]) extends MacroBsonFormat[Option[T]] {
   override def read(b: BsonValue): Option[T] = if (b == null) None else {
     Option(inner.read(b))
   }
@@ -257,11 +258,14 @@ class OptMacroBsonFormat[T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Op
   override def append(writer: BsonWriter, v: Option[T]): Unit = {
     if (v.isDefined) inner.append(writer, v.get)
   }
+  override def validNames(): Vector[String] = inner.validNames()
+
+  override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
 
 trait EnumMacroFormats {
 
-  def enumNameMacroFormat[T <: Enumeration](e: T): MacroBsonFormat[T#Value] = new BaseBsonFormat[T#Value] {
+  def enumNameMacroFormat[T <: Enumeration](e: T): MacroBsonFormat[T#Value] = new MacroBaseBsonFormat[T#Value] {
     override def read(b: BsonValue): T#Value = {
       if (b.isString) e.withName(b.asString().getValue)
       else if (b.isNumber) e.apply(b.asNumber().intValue())
@@ -279,7 +283,7 @@ trait EnumMacroFormats {
     }
   }
 
-  def enumValueMacroFormat[T <: Enumeration](e: T): MacroBsonFormat[T#Value] = new BaseBsonFormat[T#Value] {
+  def enumValueMacroFormat[T <: Enumeration](e: T): MacroBsonFormat[T#Value] = new MacroBaseBsonFormat[T#Value] {
     override def read(b: BsonValue): T#Value = {
       if (b.isNumber) e.apply(b.asNumber().intValue())
       else if (b.isString) e.withName(b.asString().getValue)
@@ -297,7 +301,7 @@ trait EnumMacroFormats {
 
 }
 
-class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(implicit cbf: CanBuildFrom[_, T, C]) extends BaseBsonFormat[C] {
+class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(implicit cbf: CanBuildFrom[_, T, C]) extends MacroBsonFormat[C] {
   private def appendVals(writer: BsonWriter, v: C) = {
     val it = v.iterator
     while (it.hasNext) {
@@ -342,9 +346,13 @@ class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(im
   override def defaultValue: C = {
     cbf.apply().result()
   }
+
+  override def validNames(): Vector[String] = inner.validNames()
+
+  override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
 
-class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Array[T]] {
+class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends MacroBsonFormat[Array[T]] {
   private def appendVals(writer: BsonWriter, v: Array[T]) = {
     val it = v.iterator
     while (it.hasNext) {
@@ -389,6 +397,10 @@ class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends BaseB
   }
 
   override def defaultValue: Array[T] = Array.empty[T]
+
+  override def validNames(): Vector[String] = inner.validNames()
+
+  override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
 
 /*
@@ -425,7 +437,7 @@ implicit def mapFormat[K: MapKeyFormat, V: BsonFormat]: BsonFormat[Map[K, V]] = 
   }
 
  */
-class MapMacroFormat[K: MapKeyFormat, T](inner: MacroBsonFormat[T]) extends BaseBsonFormat[Map[K, T]] {
+class MapMacroFormat[K: MapKeyFormat, T](inner: MacroBsonFormat[T]) extends MacroBsonFormat[Map[K, T]] {
   import scala.collection.JavaConverters._
   implicit private val kf = implicitly[MapKeyFormat[K]]
   private def appendVals(writer: BsonWriter, v: Map[K, T]): Unit = {
@@ -465,6 +477,9 @@ class MapMacroFormat[K: MapKeyFormat, T](inner: MacroBsonFormat[T]) extends Base
 
   override def defaultValue: Map[K, T] = Map.empty
 
+  override def validNames(): Vector[String] = inner.validNames()
+
+  override def flds: Map[String, BsonFormat[_]] = Map("*" -> inner)
 }
 
 object EnumMacroFormats extends EnumMacroFormats

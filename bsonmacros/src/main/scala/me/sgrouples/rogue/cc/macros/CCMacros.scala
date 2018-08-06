@@ -205,9 +205,15 @@ class MacroCCGenerator(val c: Context) {
           val accessor = TermName(fldName)
           q"$formatName.append(writer, $key, t.$accessor)"
       }
+      val fldsMap = namesFormats.map {
+        case (fldName, formatName, _) =>
+          val fn = fldName.toString
+          q"$fn -> $formatName"
+      }
       val r =
         q"""new MacroBsonFormat[$tpe] {
            ..$bsonFormats
+           override val flds = Map(..$fldsMap)
                   override def validNames():Vector[String] = ${zipNames}
                   override def defaultValue(): $tpe = {???}
                   override def read(b: _root_.org.bson.BsonValue): $tpe = {
@@ -238,7 +244,7 @@ class MacroCCGenerator(val c: Context) {
                   }
                 }
           """
-      //println(s"Will return ${r}")
+      // println(s"Will return ${r}")
       r
       //c.Expr[MacroNamesResolver[T]](r)
     } getOrElse {

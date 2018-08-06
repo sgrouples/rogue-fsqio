@@ -25,8 +25,10 @@ trait BsonArrayReader[T] {
   }
 }
 
-trait BasicBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T] {
-  override def flds: Map[String, BsonFormat[_]] = Map.empty
+trait BaseBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T]
+
+trait BasicBsonFormat[T] extends BaseBsonFormat[T] {
+  override val flds: Map[String, BsonFormat[_]] = Map.empty
 }
 
 class EnumSerializeValue extends StaticAnnotation
