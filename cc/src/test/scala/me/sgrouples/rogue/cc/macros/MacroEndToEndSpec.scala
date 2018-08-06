@@ -14,6 +14,9 @@ import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 import scala.concurrent.duration._
 import shapeless.tag
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Failure
+
 class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
   import Metas._
 
@@ -252,13 +255,20 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
       .upsertOneAsync(returnNew = false).futureValue
 
     v1 mustBe None
-    val v2 = VenueR.where(_.venuename eqs "v2")
+    val v2F = VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userId setTo 5)
       .and(_.legacyid setTo 0L).and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
       .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userId setTo 0L)
-      .upsertOneAsync(returnNew = true).futureValue
+      .upsertOneAsync(returnNew = true)
 
+    v2F.onFailure {
+      case f: Throwable =>
+        println("V2 failed with ")
+        f.printStackTrace()
+    }
+
+    val v2 = v2F.futureValue
     v2.map(_.userId) mustBe Some(5)
 
     val v3 = VenueR.where(_.venuename eqs "v2")

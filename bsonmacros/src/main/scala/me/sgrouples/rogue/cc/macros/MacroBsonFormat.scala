@@ -5,7 +5,7 @@ import java.time.{ Instant, LocalDateTime, ZoneOffset }
 import java.util.{ Currency, Locale, UUID }
 
 import me.sgrouples.rogue.map.MapKeyFormat
-import me.sgrouples.rogue.{ BaseBsonFormat, BasicBsonFormat, BsonFormat, SupportedLocales }
+import me.sgrouples.rogue.{ BaseBsonFormat, BsonFormat, SupportedLocales }
 import org.bson._
 import org.bson.types.{ Decimal128, ObjectId }
 
@@ -26,7 +26,12 @@ trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
   protected def addNotNull(d: _root_.org.bson.BsonDocument, k: String, v: _root_.org.bson.BsonValue): Unit = {
     if (!v.isNull()) { d.put(k, v) }
   }
-
+  protected def subfields(prefix: String, f: BsonFormat[_]): Seq[(String, BsonFormat[_])] = {
+    f.flds.toSeq.flatMap {
+      case (k, v) =>
+        Seq((s"$prefix.$k", v)) ++ subfields(s"$prefix.$k", v)
+    }
+  }
 }
 
 abstract class MacroBaseBsonFormat[T] extends MacroBsonFormat[T] {

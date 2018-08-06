@@ -1,6 +1,5 @@
 package me.sgrouples.rogue.cc.macros
 
-import java.math.BigInteger
 import java.time.Instant
 import java.util.{ Currency, Locale, UUID }
 
@@ -9,7 +8,6 @@ import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
 import shapeless.tag.@@
 import me.sgrouples.rogue.cc.macros.MacroCC._
-import org.bson.{ BsonValue, BsonWriter }
 import me.sgrouples.rogue.map.MapKeyFormats._
 import scala.language.experimental.macros
 
@@ -54,7 +52,7 @@ object Metas {
 
   println("Create VenueRMeta")
   val VenueR = new VenueRMeta
-  println("Done ")
+  println("Done")
   class VenueClaimRMeta extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
     @f val venueid = ObjectIdTaggedField[Venue]("vid")
     @f val status = EnumField[ClaimStatus.type]
@@ -93,13 +91,13 @@ object Metas {
   }
   val OptValCCR = new OptValCCMeta
 
-  /*class UuidCcMeta extends MCcMeta[UuidCc, UuidCcMeta]("uuidcc") {
+  class UuidCcMeta extends MCcMeta[UuidCc, UuidCcMeta]("uuidcc") {
     @f val id = UUIdField("_id")
     @f val s = StringField
     @f val dt = InstantField("i")
   }
   val UuidCcR = new UuidCcMeta
-*/
+
   case class Money(amount: BigDecimal, currency: Currency)
 
   case class Invoice(id: Long, name: String, total: Money)

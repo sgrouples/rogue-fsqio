@@ -24,7 +24,7 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(imp
 
   override def reader(field: Field[_, _]): BsonFormat[_] = {
     val fieldName = field.name.replaceAll("\\.\\$", "")
-    println(s"FIeld name ${fieldName}")
+    // println(s"Reader for field name ${fieldName}")
     // if field.isInstanceOf[]
     val r = macroGen.flds.get(fieldName)
     r.orElse(starReader(fieldName)).getOrElse {
@@ -34,10 +34,11 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(imp
 
   //special case for Map formats
   private[this] def starReader(fieldName: String): Option[BsonFormat[_]] = {
+    //println(s"Try star reader for ${fieldName}")
     val i = fieldName.lastIndexOf('.')
     if (i > 0) {
       val newName = fieldName.substring(0, i + 1) + "*"
-      println(s"New name ${newName}")
+      //println(s"New name ${newName}")
       macroGen.flds.get(newName)
     } else None
   }

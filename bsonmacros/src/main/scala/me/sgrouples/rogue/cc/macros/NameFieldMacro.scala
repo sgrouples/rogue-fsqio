@@ -51,14 +51,14 @@ object GenFieldName {
 
       case q"$mods val $pat = $expr($exp1)" :: Nil =>
         val r = q"$mods val $pat = $expr($exp1)"
-        println(s"No change - let's assume we have name - ${r}")
+        //println(s"No change - let's assume we have name - ${r}")
         r
 
       case q"$mods val $pat = $expr" :: Nil =>
         val fname = Constant(pat.toString())
-        println(s"Expr ${expr} , fname ${fname}")
+        //println(s"Expr ${expr} , fname ${fname}")
         val res = q"$mods val $pat = $expr($fname)"
-        println(s"rewrote to ${res}")
+        //println(s"rewrote to ${res}")
         res
       case _ => c.abort(c.enclosingPosition, "@f macro can only annotate val in cc meta")
     }

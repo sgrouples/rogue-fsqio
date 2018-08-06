@@ -1,4 +1,5 @@
 package me.sgrouples.rogue.cc
+import java.time.temporal.{ ChronoUnit, TemporalUnit }
 import java.time.{ Instant, LocalDateTime }
 import java.util.{ Currency, Locale, UUID }
 
@@ -45,13 +46,15 @@ object VenueClaimBson {
     -1L, ClaimStatus.pending)
 }
 
-case class VenueClaimBson(uid: Long, status: ClaimStatus.Value, source: Option[SourceBson] = None, date: LocalDateTime = LocalDateTime.now())
+case class VenueClaimBson(uid: Long = -1L, status: ClaimStatus.Value = ClaimStatus.pending, source: Option[SourceBson] = None,
+  date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
 
 object VenueClaim {
   def newId = tag[VenueClaim](new ObjectId())
 }
 
-case class VenueClaim(_id: ObjectId @@ VenueClaim, vid: ObjectId, uid: Long, status: ClaimStatus.Value, reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now())
+case class VenueClaim(_id: ObjectId @@ VenueClaim, vid: ObjectId, uid: Long, status: ClaimStatus.Value,
+  reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
 
 object Venue {
   def newId = tag[Venue](new ObjectId())

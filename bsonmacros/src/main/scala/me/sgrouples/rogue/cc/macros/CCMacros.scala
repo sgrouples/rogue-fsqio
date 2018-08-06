@@ -32,6 +32,43 @@ class MacroCCGenerator(val c: Context) {
 
   import c.universe._
 
+  //copied from https://github.com/lihaoyi/upickle/blob/master/upickle/src/upickle/internal/Macros.scala
+  def companionTree(tpe: c.Type): Either[String, Tree] = {
+    val companionSymbol = tpe.typeSymbol.companion
+
+    if (companionSymbol == NoSymbol && tpe.typeSymbol.isClass) {
+      val clsSymbol = tpe.typeSymbol.asClass
+      val msg = "[error] The companion symbol could not be determined for " +
+        s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +
+        "that arises when a case class within a function is upickle. As a " +
+        "workaround, move the declaration to the module-level."
+      Left(msg)
+    } else {
+      val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
+      val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
+      Right(c.universe.internal.gen.mkAttributedRef(pre, companionSymbol))
+    }
+  }
+  //copied from https://github.com/lihaoyi/upickle/blob/master/upickle/src/upickle/internal/Macros.scala
+  def getArgSyms(tpe: c.Type) = {
+    companionTree(tpe).right.flatMap { companion =>
+      //tickle the companion members -- Not doing this leads to unexpected runtime behavior
+      //I wonder if there is an SI related to this?
+      companion.tpe.members.foreach(_ => ())
+      tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
+        case None => Left("Can't find primary constructor of " + tpe)
+        case Some(primaryConstructor) =>
+          val flattened = primaryConstructor.asMethod.paramLists.flatten
+          Right((
+            companion,
+            tpe.typeSymbol.asClass.typeParams,
+            flattened,
+            flattened.map(_.asTerm.isParamWithDefault)))
+      }
+
+    }
+  }
+
   def genImpl[T: c.WeakTypeTag]: c.Tree = {
 
     val tpe = weakTypeOf[T]
@@ -43,17 +80,22 @@ class MacroCCGenerator(val c: Context) {
     val arrayTypeCons = typeOf[Array[_]].typeConstructor
     val byteType = typeOf[Byte]
 
-    def typeFormat(at: Type): Tree = {
+    def typeFormat(at: Type, dv: Option[Tree]): Tree = {
       if (at <:< typeOf[Int]) {
-        q"new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat()"
+        val t = dv.getOrElse(q"0")
+        q"new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(${t})"
       } else if (at <:< typeOf[Long]) {
-        q"new _root_.me.sgrouples.rogue.cc.macros.LongMacroBsonFormat()"
+        val t = dv.getOrElse(q"0L")
+        q"new _root_.me.sgrouples.rogue.cc.macros.LongMacroBsonFormat($t)"
       } else if (at <:< typeOf[Boolean]) {
-        q"new _root_.me.sgrouples.rogue.cc.macros.BooleanMacroBsonFormat()"
+        val t = dv.getOrElse(q"false")
+        q"new _root_.me.sgrouples.rogue.cc.macros.BooleanMacroBsonFormat($t)"
       } else if (at <:< typeOf[Double]) {
-        q"new _root_.me.sgrouples.rogue.cc.macros.DoubleMacroBsonFormat()"
+        val t = dv.getOrElse(q"0.0d")
+        q"new _root_.me.sgrouples.rogue.cc.macros.DoubleMacroBsonFormat($t)"
       } else if (at <:< typeOf[String]) {
-        q"new _root_.me.sgrouples.rogue.cc.macros.StringMacroBsonFormat()"
+        val t = dv.getOrElse(q"""""""")
+        q"new _root_.me.sgrouples.rogue.cc.macros.StringMacroBsonFormat($t)"
       } else if (at <:< typeOf[Enumeration#Value]) {
         val enumT = at.asInstanceOf[TypeRef].pre
         val enumType = enumT.termSymbol.asModule
@@ -66,7 +108,7 @@ class MacroCCGenerator(val c: Context) {
       } else if (at <:< typeOf[org.bson.types.ObjectId]) {
         q"new _root_.me.sgrouples.rogue.cc.macros.ObjectIdMacroBsonFormat[$at]()"
       } else if (at <:< typeOf[java.util.UUID]) {
-        q"new _root_.me.sgrouples.rogue.cc.macros.UUIDMacroBsonFormat()"
+        q"new _root_.me.sgrouples.rogue.cc.macros.UUIDMacroBsonFormat[$at]()"
       } else if (at <:< typeOf[java.util.Locale]) {
         q"new _root_.me.sgrouples.rogue.cc.macros.LocaleMacroBsonFormat()"
       } else if (at <:< typeOf[java.util.Currency]) {
@@ -78,7 +120,7 @@ class MacroCCGenerator(val c: Context) {
       } else if (at <:< typeOf[BigDecimal]) {
         q"new _root_.me.sgrouples.rogue.cc.macros.BigDecimalMacroBsonFormat()"
       } else {
-        println(s"Should run implicit search ... how ? or genImpl ? AT  ${at}")
+        //println(s"Should run implicit search ... how ? or genImpl ? AT  ${at}")
         //at.ty
         //println(s"implicit search for format MacroGen${at}")
         //val t = c.inferImplicitValue(q"MacroBsonFormat[typeOf($at)]")
@@ -99,32 +141,29 @@ class MacroCCGenerator(val c: Context) {
       val tc = tp.typeConstructor
 
       if (tc == optionTypeCons) {
-        val inner = typeFormat(tp.typeArgs.head)
+        val inner = typeFormat(tp.typeArgs.head, None)
         q"new _root_.me.sgrouples.rogue.cc.macros.OptMacroBsonFormat($inner)"
       } else if (tc == arrayTypeCons) {
         if (tp.typeArgs.head == byteType) {
           q"new _root_.me.sgrouples.rogue.cc.macros.BinaryMacroBsonFormat()"
         } else {
-          val inner = typeFormat(tp.typeArgs.head)
+          val inner = typeFormat(tp.typeArgs.head, None)
           q"new _root_.me.sgrouples.rogue.cc.macros.ArrayMacroBsonFormat($inner)"
         }
       } else {
         val at = appliedType(tp, tp.typeArgs)
         if (at.baseClasses.contains(mapTypeSymbol)) {
-          /*if (!(tp.typeArgs.head <:< typeOf[String])) {
-            c.error(c.enclosingPosition, msg = s"Map key must be of type String for case class ${tpe}.${name}")
-          }*/
-          val inner = typeFormat(tp.typeArgs.tail.head)
+          val inner = typeFormat(tp.typeArgs.tail.head, None)
           val keyT = tp.typeArgs.head
           val innerT = tp.typeArgs.tail.head
 
           q"new _root_.me.sgrouples.rogue.cc.macros.MapMacroFormat[$keyT, $innerT]($inner)"
         } else if (at.baseClasses.contains(iterableTypeSymbol)) {
-          val inner = typeFormat(tp.typeArgs.head)
+          val inner = typeFormat(tp.typeArgs.head, None)
           q"new _root_.me.sgrouples.rogue.cc.macros.IterableLikeMacroFormat[${tp.typeArgs.head}, $at]($inner)"
         } else {
-          println(s"Type format search for ${at}")
-          typeFormat(at)
+          //println(s"Type format search for ${at}")
+          typeFormat(at, dv)
         }
       }
     }
@@ -148,18 +187,35 @@ class MacroCCGenerator(val c: Context) {
         c.error(c.enclosingPosition, s"Companion symbol not found for case class ${tpe}. Can't find companion for inner classes")
       }
 
-      val defaults = fields.map(_.asTerm).zipWithIndex.map {
+      val defaults: Seq[Option[c.universe.Tree]] = getArgSyms(tpe) match {
+        case Right((companion, typeParams, argSyms, hasDefaults)) =>
+          companion.tpe.member(TermName("apply")).info
+          val x = fields.map(_.asTerm).zipWithIndex.map {
+            case (p, i) =>
+              if (!p.isParamWithDefault) None
+              else {
+                val getterName = TermName("apply$default$" + (i + 1))
+                Some(q"$companion.$getterName")
+              }
+          }
+          x
+        case Left(_) =>
+          fields.map(_.asTerm).map(_ => None)
+      }
+
+      /*val defaults = fields.map(_.asTerm).zipWithIndex.map {
         case (p, i) =>
           if (!p.isParamWithDefault) None
           else {
             val getterName = TermName("apply$default$" + (i + 1))
             Some(q"$companion.$getterName")
           }
-      }
+      }*/
       //} getOrElse(c.error(c.enclosingPosition, "no stor"))
       //println(s"Defaults are ${defaults}")
 
       //println(s"FLDS ${fields}")
+      println(s"Defaults are ${defaults}")
       val df = fields zip defaults
       val namesFormats = df.map {
         case (f, dvOpt) =>
@@ -208,14 +264,33 @@ class MacroCCGenerator(val c: Context) {
       val fldsMap = namesFormats.map {
         case (fldName, formatName, _) =>
           val fn = fldName.toString
+          ///subfields($fn, formatName)
           q"$fn -> $formatName"
       }
+      val subFieldsAdd = namesFormats.map {
+        case (fldName, formatName, _) =>
+          val fn = fldName.toString
+          q"subfields($fn, $formatName)"
+      }
+
+      val tpC = Constant(tpe.toString)
+
+      val defImpl = if (defaults.forall(_.isDefined)) {
+        val dd = defaults.flatten
+        println("case class has all default values, can create deafult ")
+        q"""$companion.apply(..$dd)"""
+      } else {
+        q"""throw new RuntimeException("No defaultValue implementation for type " + $tpC)"""
+      }
+
       val r =
         q"""new MacroBsonFormat[$tpe] {
            ..$bsonFormats
-           override val flds = Map(..$fldsMap)
+           override val flds = Map(..$fldsMap) ++ Seq(..$subFieldsAdd).flatten
                   override def validNames():Vector[String] = ${zipNames}
-                  override def defaultValue(): $tpe = {???}
+                  override def defaultValue(): $tpe = {
+                    $defImpl
+                  }
                   override def read(b: _root_.org.bson.BsonValue): $tpe = {
                    if(b.isDocument()) {
                      val doc = b.asDocument()
@@ -244,7 +319,7 @@ class MacroCCGenerator(val c: Context) {
                   }
                 }
           """
-      // println(s"Will return ${r}")
+      //println(s"Will return ${r}")
       r
       //c.Expr[MacroNamesResolver[T]](r)
     } getOrElse {
@@ -254,11 +329,26 @@ class MacroCCGenerator(val c: Context) {
       println(s"TS ${tpe.typeSymbol} tc ${tpe.typeConstructor}")
       q""" new MacroBsonFormat[$tpe] {
           override def validNames():Vector[String] = Vector.empty
-          override def defaultValue(): $tpe = {???}
-          override def read(b: _root_.org.bson.BsonValue): $tpe = ???
-          override def write(t: $tpe): _root_.org.bson.BsonValue = ???
-          override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = ???
-          override def append(writer:_root_.org.bson.BsonWriter, v:$tpe): Unit = ???
+          override def defaultValue(): $tpe = {
+            println("T def val not impl")
+            ???
+          }
+          override def read(b: _root_.org.bson.BsonValue): $tpe = {
+            println("Missing read")
+            ???
+          }
+          override def write(t: $tpe): _root_.org.bson.BsonValue = {
+            println("Missing write")
+            ???
+          }
+          override def append(writer:_root_.org.bson.BsonWriter, k:String, v:$tpe): Unit = {
+            println("Missing append")
+            ???
+          }
+          override def append(writer:_root_.org.bson.BsonWriter, v:$tpe): Unit = {
+            println("missing append2")
+            ???
+            }
           }
      """
     }
