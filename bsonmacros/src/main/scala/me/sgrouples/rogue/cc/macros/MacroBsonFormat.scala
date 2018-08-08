@@ -235,14 +235,14 @@ final class LocalDateTimeMacroBsonFormat extends MacroBaseBsonFormat[LocalDateTi
   }
 }
 
-final class InstantMacroBsonFormat extends MacroBaseBsonFormat[Instant] {
+final class InstantMacroBsonFormat(default: Instant = Instant.ofEpochMilli(0)) extends MacroBaseBsonFormat[Instant] {
   override def read(b: BsonValue): Instant = {
     if (b.isDateTime) {
       Instant.ofEpochMilli(b.asDateTime().getValue)
     } else defaultValue
   }
   override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
-  override def defaultValue: Instant = Instant.ofEpochMilli(0)
+  override def defaultValue: Instant = default
   override def append(writer: BsonWriter, k: String, v: Instant): Unit = {
     writer.writeDateTime(k, v.toEpochMilli)
   }
@@ -407,44 +407,8 @@ class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends Macro
 
   override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
-
-/*
-implicit def mapFormat[K: MapKeyFormat, V: BsonFormat]: BsonFormat[Map[K, V]] = {
-
-    new BsonFormat[Map[K, V]] with BsonArrayReader[Map[K, V]] {
-
-      implicit private val kf = implicitly[MapKeyFormat[K]]
-      implicit private val fv = implicitly[BsonFormat[V]]
-
-      def write(m: Map[K, V]): BsonDocument = {
-        val doc = new BsonDocument()
-        m.foreach {
-          case (k, v) =>
-            val kv = kf.write(k)
-            val vv = fv.write(v)
-            if (!vv.isNull) doc.append(kv, vv)
-        }
-        doc
-      }
-
-      def read(value: BsonValue): Map[K, V] = {
-        value.asDocument().asScala.map {
-          case (ks, v) =>
-            (kf.read(ks), fv.read(v))
-        }(collection.breakOut)
-      }
-
-      //in general terms, yes, as we don't know keys, but we need 'star' format for values
-      override def flds = Map("*" -> fv)
-
-      override def defaultValue: Map[K, V] = Map.empty
-    }
-  }
-
- */
-class MapMacroFormat[K: MapKeyFormat, T](inner: MacroBsonFormat[T]) extends MacroBsonFormat[Map[K, T]] {
+class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit kf: MapKeyFormat[K]) extends MacroBsonFormat[Map[K, T]] {
   import scala.collection.JavaConverters._
-  implicit private val kf = implicitly[MapKeyFormat[K]]
   private def appendVals(writer: BsonWriter, v: Map[K, T]): Unit = {
     v.foreach {
       case (k, v) =>

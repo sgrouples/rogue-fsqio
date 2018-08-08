@@ -1,97 +1,75 @@
-package me.sgrouples.rogue.cc
+package me.sgrouples.rogue.cc.macros
 
-import me.sgrouples.rogue.{ BsonFormats, EnumNameFormats }
-import org.bson.types.ObjectId
+import me.sgrouples.rogue.StringField
+import me.sgrouples.rogue.cc.{ RCcMetaExt, TestDomainObject, TestQueryTraitA, TestQueryTraitB }
 import org.scalatest.{ FlatSpec, MustMatchers }
-import me.sgrouples.rogue._
-import BsonFormats._
-import EnumNameFormats._
-import me.sgrouples.rogue.cc.Metas.VenueRMeta
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Seconds, Span }
 
 import scala.concurrent.Future
 import scala.util.Try
 
-case class TestDomainObject(id: ObjectId)
-
-trait TestQueryTraitA[OwnerType] {
-  requires: OwnerType with QueryFieldHelpersBase[OwnerType] =>
-
-  val int = IntField
-  val int_named = IntField("int_custom_name")
-
-}
-
-trait TestQueryTraitB[OwnerType] {
-  requires: OwnerType with QueryFieldHelpersBase[OwnerType] =>
-
-  val optInt = OptIntField
-  val optInt_named = OptIntField("optInt_custom_name")
-
-}
-
-class TestDomainObjectMeta extends RCcMetaExt[TestDomainObject, TestDomainObjectMeta]
+class TestDomainObjectMeta extends MCcMeta[TestDomainObject, TestDomainObjectMeta]("coll")
   with TestQueryTraitA[TestDomainObjectMeta]
   with TestQueryTraitB[TestDomainObjectMeta] {
 
-  val claims = ListField[String]
+  @f val claims = ListField[String]
 
-  val string = StringField
-  val string_named = StringField("string_custom_name")
+  @f val string = StringField
+  @f val string_named = StringField("string_custom_name")
 
-  val optString = OptStringField
-  val optString_named = OptStringField("optString_custom_name")
+  @f val optString = OptStringField
+  @f val optString_named = OptStringField("optString_custom_name")
 
-  val long = LongField
-  val long_named = LongField("long_custom_name")
+  @f val long = LongField
+  @f val long_named = LongField("long_custom_name")
 
-  val optLong = OptLongField
-  val optLong_named = OptLongField("optLong_custom_name")
+  @f val optLong = OptLongField
+  @f val optLong_named = OptLongField("optLong_custom_name")
 
-  val double = DoubleField
-  val double_named = DoubleField("double_custom_name")
+  @f val double = DoubleField
+  @f val double_named = DoubleField("double_custom_name")
 
-  val optDouble = OptDoubleField
-  val optDouble_named = OptDoubleField("optDouble_custom_name")
+  @f val optDouble = OptDoubleField
+  @f val optDouble_named = OptDoubleField("optDouble_custom_name")
 
-  val objectId = ObjectIdField
-  val objectId_named = ObjectIdField("objectId_custom_name")
+  @f val objectId = ObjectIdField
+  @f val objectId_named = ObjectIdField("objectId_custom_name")
 
-  val optObjectId = OptObjectIdField
-  val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
+  @f val optObjectId = OptObjectIdField
+  @f val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
 
-  val randomSomething = 42
+  @f val randomSomething = 42
 
-  val backwardCompatibilityCheck = new StringField("foo", this)
+  @f val backwardCompatibilityCheck = new StringField("foo", this)
 
-  val uuid = UUIdField
-  val uuid_named = UUIdField("uuid_custom_name")
+  @f val uuid = UUIdField
+  @f val uuid_named = UUIdField("uuid_custom_name")
 
-  val optUUID = OptUUIdField
-  val optUUID_named = OptUUIdField("optUUID_custom_name")
+  @f val optUUID = OptUUIdField
+  @f val optUUID_named = OptUUIdField("optUUID_custom_name")
 
-  val localDateTime = LocalDateTimeField
-  val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
+  @f val localDateTime = LocalDateTimeField
+  @f val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
 
-  val optLocalDateTime = OptLocalDateTimeField
-  val optLocalDateTime_named = OptLocalDateTimeField("optLocalDateTime_custom_name")
+  @f val optLocalDateTime = OptLocalDateTimeField
+  @f val optLocalDateTime_named = OptLocalDateTimeField("optLocalDateTime_custom_name")
 
-  val instant = InstantField
-  val instant_named = InstantField("instant_custom_name")
+  @f val instant = InstantField
+  @f val instant_named = InstantField("instant_custom_name")
 
-  val optInstant = OptInstantField
-  val optInstant_named = OptInstantField("optInstant_custom_name")
+  @f val optInstant = OptInstantField
+  @f val optInstant_named = OptInstantField("optInstant_custom_name")
 
-  val boolean = BooleanField
-  val boolean_named = BooleanField("boolean_custom_name")
+  @f val boolean = BooleanField
+  @f val boolean_named = BooleanField("boolean_custom_name")
 
-  val optBoolean = OptBooleanField
-  val optBoolean_named = OptBooleanField("optBoolean_custom_name")
+  @f val optBoolean = OptBooleanField
+  @f val optBoolean_named = OptBooleanField("optBoolean_custom_name")
 
 }
 
-class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures {
+class MacroQueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -198,3 +176,4 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
     println((new TestDomainObjectMeta).debugInfo(0))
   }
 }
+

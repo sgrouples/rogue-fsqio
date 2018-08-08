@@ -15,7 +15,6 @@ import scala.concurrent.duration._
 import shapeless.tag
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Failure
 
 class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
   import Metas._
