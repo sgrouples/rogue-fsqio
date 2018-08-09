@@ -113,7 +113,8 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
 
 class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType])
   extends RCcMeta[RecordType](collName)(formats)
-  with QueryFieldHelpers[OwnerType] { requires: OwnerType =>
+  with QueryFieldHelpers[OwnerType]
+  with RuntimeNameResolver[OwnerType] { requires: OwnerType =>
 
   def this(
     namingStrategy: NamingStrategy = LowerCase)(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType]) {

@@ -63,8 +63,8 @@ case class Group(
   publicUrlId: Option[String],
   color: String,
   description: Option[String],
-  groupDefaultRoles: Seq[Role],
-  membersCount: Seq[Long],
+  groupDefaultRoles: List[Role],
+  membersCount: List[Long],
   inviteeDefaultRole: Option[Role],
   publicApplyQuestions: Option[List[String]],
   mandatoryQuestions: Boolean,
@@ -105,7 +105,7 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
       tag[User][ObjectId](id)),
       None,
       "color", None,
-      Seq(
+      List(
         Role(
           RoleName.one,
           Set(Permission.one, Permission.two),
@@ -114,7 +114,7 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
           RoleName.two,
           Set(Permission.two),
           origin = Some(RoleName.one))),
-      Seq(0L, 1L, 2L),
+      List(0L, 1L, 2L),
       None, None,
       false, None,
       false, None,

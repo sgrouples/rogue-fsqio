@@ -4,7 +4,7 @@ import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.IndexOptions
 import io.fsq.field.Field
 import me.sgrouples.rogue.BsonFormat
-import me.sgrouples.rogue.cc.{ CcMeta, PromiseSingleValueAdapter, QueryFieldHelpersBase }
+import me.sgrouples.rogue.cc.{ CcMeta, PromiseSingleValueAdapter, QueryFieldHelpers }
 import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
 import org.bson.{ BsonDocument, BsonInt32, BsonValue }
 
@@ -13,7 +13,7 @@ import scala.reflect.ClassTag
 
 //TODO - memoize field readers
 class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(implicit val macroGen: MacroBsonFormat[RecordType])
-  extends QueryFieldHelpersBase[OwnerType] with CcMeta[RecordType] with MacroNamesResolver[RecordType] {
+  extends QueryFieldHelpers[OwnerType] with CcMeta[RecordType] with MacroNamesResolver[RecordType] {
   requires: OwnerType =>
   def this(
     namingStrategy: NamingStrategy = LowerCase)(implicit macroGen: MacroBsonFormat[RecordType], classTag: ClassTag[RecordType]) {

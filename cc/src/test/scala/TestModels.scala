@@ -98,7 +98,8 @@ object Metas {
     val url = new StringField("url", this)
   }
 
-  class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta] {
+  class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta]
+    with RuntimeNameResolver[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
     val status = EnumField("status", ClaimStatus)
     val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
@@ -130,7 +131,9 @@ object Metas {
 
   val VenueR = new VenueRMeta
 
-  class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims") with QueryFieldHelpers[VenueClaimRMeta] {
+  class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims")
+    with QueryFieldHelpers[VenueClaimRMeta]
+    with RuntimeNameResolver[VenueClaimRMeta] {
     val venueid = ObjectIdTaggedField[Venue]("vid")
     val status = EnumField[ClaimStatus.type]
     val reason = OptEnumField[RejectReason.type]

@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc
 import me.sgrouples.rogue.map.{ MapKeyFormat, MapKeyFormats }
 import org.bson.types.ObjectId
-
 import scala.language.experimental.{ macros => ms }
 
 package object macros {

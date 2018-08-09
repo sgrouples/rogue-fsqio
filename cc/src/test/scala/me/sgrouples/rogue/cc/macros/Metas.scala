@@ -47,9 +47,7 @@ object Metas {
     @f val categories = ListField[ObjectId]
   }
 
-  println("Create VenueRMeta")
   val VenueR = new VenueRMeta
-  println("Done")
   class VenueClaimRMeta extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
     @f val venueid = ObjectIdTaggedField[Venue]("vid")
     @f val status = EnumField[ClaimStatus.type]

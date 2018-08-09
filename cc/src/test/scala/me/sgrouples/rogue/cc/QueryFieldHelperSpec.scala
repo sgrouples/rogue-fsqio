@@ -16,16 +16,13 @@ import scala.util.Try
 case class TestDomainObject(id: ObjectId)
 
 trait TestQueryTraitA[OwnerType] {
-  requires: OwnerType with QueryFieldHelpersBase[OwnerType] =>
-
+  requires: OwnerType with QueryFieldHelpers[OwnerType] =>
   val int = IntField
   val int_named = IntField("int_custom_name")
-
 }
 
 trait TestQueryTraitB[OwnerType] {
-  requires: OwnerType with QueryFieldHelpersBase[OwnerType] =>
-
+  requires: OwnerType with QueryFieldHelpers[OwnerType] =>
   val optInt = OptIntField
   val optInt_named = OptIntField("optInt_custom_name")
 

@@ -162,7 +162,6 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     // name map in order of trait linearization
 
     names ++= values.zipWithIndex.map(_.swap)
-    println(s"names are ${names}")
     resolved.set(true)
   }
 
@@ -225,7 +224,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 
  */
 
-trait QueryFieldHelpersBase[Meta] extends NamesResolver {
+trait QueryFieldHelpers[Meta] extends NamesResolver {
   requires: Meta =>
 
   protected def IntField: IntField[Meta] @@ Marker = named(new IntField[Meta](_, this))
@@ -429,6 +428,6 @@ trait QueryFieldHelpersBase[Meta] extends NamesResolver {
 
 }
 
-trait QueryFieldHelpers[Meta] extends QueryFieldHelpersBase[Meta] with RuntimeNameResolver[Meta] {
+trait NamedQueryFieldHelpers[Meta] extends QueryFieldHelpers[Meta] with RuntimeNameResolver[Meta] {
   requires: Meta =>
 }

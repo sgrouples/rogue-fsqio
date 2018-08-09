@@ -1,11 +1,12 @@
-package me.sgrouples.rogue.cc.macros
+package me.sgrouples.rogue.macrotests
 
 import java.time.Instant
 
 import me.sgrouples.rogue.cc._
+import me.sgrouples.rogue.cc.macros._
 import org.bson.types.ObjectId
 import org.scalatest.{ FlatSpec, Matchers }
-import shapeless.tag
+import shapeless._
 
 class MacroComplexCaseClassSpec extends FlatSpec with Matchers {
 
@@ -32,7 +33,7 @@ class MacroComplexCaseClassSpec extends FlatSpec with Matchers {
       tag[User][ObjectId](id)),
       None,
       "color", None,
-      Seq(
+      List(
         Role(
           RoleName.one,
           Set(Permission.one, Permission.two),
@@ -41,7 +42,7 @@ class MacroComplexCaseClassSpec extends FlatSpec with Matchers {
           RoleName.two,
           Set(Permission.two),
           origin = Some(RoleName.one))),
-      Seq(0L, 1L, 2L),
+      List(0L, 1L, 2L),
       None, None,
       false, None,
       false, None,

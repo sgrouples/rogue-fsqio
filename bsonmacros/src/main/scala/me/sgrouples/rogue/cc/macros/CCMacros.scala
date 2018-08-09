@@ -2,11 +2,11 @@ package me.sgrouples.rogue.cc.macros
 
 import scala.reflect.macros.blackbox.Context
 import scala.language.experimental.macros
-
 import me.sgrouples.rogue.EnumSerializeValue
+import me.sgrouples.rogue.map.MapKeyFormat
 
 import scala.collection.Seq
-import scala.collection.{ MapLike }
+import scala.collection.MapLike
 
 class MacroCCGenerator(val c: Context) {
 
@@ -74,8 +74,8 @@ class MacroCCGenerator(val c: Context) {
         val t = dv.getOrElse(q"0.0d")
         q"new _root_.me.sgrouples.rogue.cc.macros.DoubleMacroBsonFormat($t)"
       } else if (at <:< typeOf[String]) {
-        val t = dv.getOrElse(q"""""""")
-        q"new _root_.me.sgrouples.rogue.cc.macros.StringMacroBsonFormat($t)"
+        val t = dv.getOrElse(q""""".asInstanceOf[$at]""")
+        q"new _root_.me.sgrouples.rogue.cc.macros.StringMacroBsonFormat[$at]($t)"
       } else if (at <:< typeOf[Enumeration#Value]) {
         val enumT = at.asInstanceOf[TypeRef].pre
         val enumType = enumT.termSymbol.asModule
@@ -107,11 +107,9 @@ class MacroCCGenerator(val c: Context) {
     }
 
     def tcFormat(tp: Type, tc: Type, dv: Option[Tree]): Tree = {
-      println(s"TC call with ${tp} / ${tc}")
       if (tc == optionTypeCons) {
         val ha = tp.typeArgs.head
         val inner = if (ha.typeArgs.nonEmpty) {
-          println(s"Non empty inter ta ${ha.typeArgs}")
           tcFormat(ha, ha.typeConstructor, None)
         } else typeFormat(tp.typeArgs.head, None)
         q"new _root_.me.sgrouples.rogue.cc.macros.OptMacroBsonFormat($inner)"
@@ -127,8 +125,14 @@ class MacroCCGenerator(val c: Context) {
         if (at.baseClasses.contains(mapTypeSymbol)) {
           val inner = typeFormat(tp.typeArgs.tail.head, None)
           val keyT = tp.typeArgs.head
+          val apT = appliedType(keyT.typeConstructor, keyT.typeArgs)
           val innerT = tp.typeArgs.tail.head
-          q"new _root_.me.sgrouples.rogue.cc.macros.MapMacroFormat[$keyT, $innerT]($inner)"
+          val kf = appliedType(typeOf[me.sgrouples.rogue.map.MapKeyFormat[_]], apT)
+          val inferred = c.inferImplicitValue(kf, false, false, c.enclosingPosition)
+          if (inferred == null) {
+            c.error(c.enclosingPosition, s"Can't find MapKeyFormat for ${keyT} - class ${tpe}")
+          }
+          q"new _root_.me.sgrouples.rogue.cc.macros.MapMacroFormat[$keyT, $innerT]($inner)($inferred)"
         } else if (at.baseClasses.contains(iterableTypeSymbol)) {
           val inner = typeFormat(tp.typeArgs.head, None)
           q"new _root_.me.sgrouples.rogue.cc.macros.IterableLikeMacroFormat[${tp.typeArgs.head}, $at]($inner)"
@@ -270,15 +274,8 @@ class MacroCCGenerator(val c: Context) {
                   }
                 }
           """
-      println(s"TPE ${tpe.toString}")
-      if (tpe.toString.contains("Group")) {
-        println(s"Will return ${r}")
-      }
       r
     } getOrElse {
-
-      println(s"Not CC - tpe is ${tpe}, mem ${tpe.members}")
-      println(s"TS ${tpe.typeSymbol} tc ${tpe.typeConstructor}")
       q""" new MacroBsonFormat[$tpe] {
           override def validNames():Vector[String] = Vector.empty
           override def defaultValue(): $tpe = {
