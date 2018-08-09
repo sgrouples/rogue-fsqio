@@ -39,9 +39,9 @@ class TestDomainObjectMeta extends MCcMeta[TestDomainObject, TestDomainObjectMet
   @f val optObjectId = OptObjectIdField
   @f val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
 
-  @f val randomSomething = 42
+  val randomSomething = 42
 
-  @f val backwardCompatibilityCheck = new StringField("foo", this)
+  val backwardCompatibilityCheck = new StringField("foo", this)
 
   @f val uuid = UUIdField
   @f val uuid_named = UUIdField("uuid_custom_name")

@@ -106,20 +106,13 @@ class MacroCCGenerator(val c: Context) {
       }
     }
 
-    def fieldFormat(f: Symbol, dv: Option[Tree]): Tree = {
-      val name = f.name
-      val decoded = name.decodedName
-      val tp = f.typeSignature
-      val tc = tp.typeConstructor
-
+    def tcFormat(tp: Type, tc: Type, dv: Option[Tree]): Tree = {
+      println(s"TC call with ${tp} / ${tc}")
       if (tc == optionTypeCons) {
         val ha = tp.typeArgs.head
         val inner = if (ha.typeArgs.nonEmpty) {
           println(s"Non empty inter ta ${ha.typeArgs}")
-          fieldFormat(ha.,None)
-          //need to
-          //val x= c.app
-          q""
+          tcFormat(ha, ha.typeConstructor, None)
         } else typeFormat(tp.typeArgs.head, None)
         q"new _root_.me.sgrouples.rogue.cc.macros.OptMacroBsonFormat($inner)"
       } else if (tc == arrayTypeCons) {
@@ -144,6 +137,13 @@ class MacroCCGenerator(val c: Context) {
           typeFormat(at, dv)
         }
       }
+    }
+
+    def fieldFormat(f: Symbol, dv: Option[Tree]): Tree = {
+      val name = f.name
+      val tp = f.typeSignature
+      val tc = tp.typeConstructor
+      tcFormat(tp, tc, dv)
     }
 
     //val enumTypeSymbol = typeOf[Value]
@@ -270,7 +270,8 @@ class MacroCCGenerator(val c: Context) {
                   }
                 }
           """
-      if (tpe.toString.contains("GroupMeta")) {
+      println(s"TPE ${tpe.toString}")
+      if (tpe.toString.contains("Group")) {
         println(s"Will return ${r}")
       }
       r
