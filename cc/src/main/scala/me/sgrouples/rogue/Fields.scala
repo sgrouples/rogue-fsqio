@@ -115,6 +115,10 @@ class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
   override def defaultValue = Nil
 }
 
+class VectorField[V, O](name: String, o: O) extends MCField[Vector[V], O](name, o) {
+  override def defaultValue = Vector.empty[V]
+}
+
 class ArrayField[V: ClassTag, O](name: String, o: O) extends MCField[Array[V], O](name, o) {
   override def defaultValue = Array.empty[V]
 }
@@ -203,6 +207,7 @@ class OptEnumField[T <: Enumeration, O](name: String, o: O) extends OCField[T#Va
 class OptEnumIdField[T <: Enumeration, O](name: String, o: O) extends OCField[T#Value, O](name, o)
 class OptListField[V, O](name: String, o: O) extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O) extends OCField[Array[V], O](name, o)
+class OptVectorField[V, O](name: String, o: O) extends OCField[Vector[V], O](name, o)
 class OptCClassField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, owner: O)
   extends OCField[C, O](name, owner) with HasChildMeta[C, MC]
 class OptCClassListField[C, MC <: CcMeta[C], O](name: String, val childMeta: MC, o: O) extends OCField[Seq[C], O](name, o) with HasChildMeta[C, MC]

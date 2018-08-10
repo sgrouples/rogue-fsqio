@@ -137,20 +137,16 @@ class MacroCCGenerator(val c: Context) {
           val inner = typeFormat(tp.typeArgs.head, None)
           q"new _root_.me.sgrouples.rogue.cc.macros.IterableLikeMacroFormat[${tp.typeArgs.head}, $at]($inner)"
         } else {
-          //println(s"Type format search for ${at}")
           typeFormat(at, dv)
         }
       }
     }
 
     def fieldFormat(f: Symbol, dv: Option[Tree]): Tree = {
-      val name = f.name
       val tp = f.typeSignature
       val tc = tp.typeConstructor
       tcFormat(tp, tc, dv)
     }
-
-    //val enumTypeSymbol = typeOf[Value]
 
     val ctorOpt = members.collectFirst {
       case m: MethodSymbol if m.isPrimaryConstructor => m
