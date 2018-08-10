@@ -1,94 +1,91 @@
-package me.sgrouples.rogue.cc
+package me.sgrouples.rogue.macrotests
 
-import me.sgrouples.rogue.{ BsonFormats, EnumNameFormats }
-import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, MustMatchers }
-import me.sgrouples.rogue._
-import BsonFormats._
-import EnumNameFormats._
-import me.sgrouples.rogue.cc.Metas.VenueRMeta
+import me.sgrouples.rogue.cc.{ QueryFieldHelpers, TestDomainObject }
+import me.sgrouples.rogue.cc.macros._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Seconds, Span }
+import org.scalatest.{ FlatSpec, MustMatchers }
 
 import scala.concurrent.Future
 import scala.util.Try
-
-case class TestDomainObject(id: ObjectId)
-
 trait TestQueryTraitA[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
-  val int = IntField
-  val int_named = IntField("int_custom_name")
+  @f val int = IntField
+  @f val int_named = IntField("int_custom_name")
 }
 
 trait TestQueryTraitB[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
-  val optInt = OptIntField
-  val optInt_named = OptIntField("optInt_custom_name")
+  @f val optInt = OptIntField
+  @f val optInt_named = OptIntField("optInt_custom_name")
 
 }
 
-class TestDomainObjectMeta extends RCcMetaExt[TestDomainObject, TestDomainObjectMeta]
-  with TestQueryTraitA[TestDomainObjectMeta]
-  with TestQueryTraitB[TestDomainObjectMeta] {
+trait X {
 
-  val claims = ListField[String]
+  class TestDomainObjectMeta extends MCcMeta[TestDomainObject, TestDomainObjectMeta]("abc")
+    with TestQueryTraitA[TestDomainObjectMeta]
+    with TestQueryTraitB[TestDomainObjectMeta] {
 
-  val string = StringField
-  val string_named = StringField("string_custom_name")
+    @f val claims = ListField[String]
 
-  val optString = OptStringField
-  val optString_named = OptStringField("optString_custom_name")
+    @f val string = StringField
+    @f val string_named = StringField("string_custom_name")
 
-  val long = LongField
-  val long_named = LongField("long_custom_name")
+    @f val optString = OptStringField
+    @f val optString_named = OptStringField("optString_custom_name")
 
-  val optLong = OptLongField
-  val optLong_named = OptLongField("optLong_custom_name")
+    @f val long = LongField
+    @f val long_named = LongField("long_custom_name")
 
-  val double = DoubleField
-  val double_named = DoubleField("double_custom_name")
+    @f val optLong = OptLongField
+    @f val optLong_named = OptLongField("optLong_custom_name")
 
-  val optDouble = OptDoubleField
-  val optDouble_named = OptDoubleField("optDouble_custom_name")
+    @f val double = DoubleField
+    @f val double_named = DoubleField("double_custom_name")
 
-  val objectId = ObjectIdField
-  val objectId_named = ObjectIdField("objectId_custom_name")
+    @f val optDouble = OptDoubleField
+    @f val optDouble_named = OptDoubleField("optDouble_custom_name")
 
-  val optObjectId = OptObjectIdField
-  val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
+    @f val objectId = ObjectIdField
+    @f val objectId_named = ObjectIdField("objectId_custom_name")
 
-  val randomSomething = 42
+    @f val optObjectId = OptObjectIdField
+    @f val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
 
-  val backwardCompatibilityCheck = new StringField("foo", this)
+    val randomSomething = 42
 
-  val uuid = UUIdField
-  val uuid_named = UUIdField("uuid_custom_name")
+    //val backwardCompatibilityCheck = new StringField("foo", this)
 
-  val optUUID = OptUUIdField
-  val optUUID_named = OptUUIdField("optUUID_custom_name")
+    @f val uuid = UUIdField
+    @f val uuid_named = UUIdField("uuid_custom_name")
 
-  val localDateTime = LocalDateTimeField
-  val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
+    @f val optUUID = OptUUIdField
+    @f val optUUID_named = OptUUIdField("optUUID_custom_name")
 
-  val optLocalDateTime = OptLocalDateTimeField
-  val optLocalDateTime_named = OptLocalDateTimeField("optLocalDateTime_custom_name")
+    @f val localDateTime = LocalDateTimeField
+    @f val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
 
-  val instant = InstantField
-  val instant_named = InstantField("instant_custom_name")
+    @f val optLocalDateTime = OptLocalDateTimeField
+    @f val optLocalDateTime_named = OptLocalDateTimeField("optLocalDateTime_custom_name")
 
-  val optInstant = OptInstantField
-  val optInstant_named = OptInstantField("optInstant_custom_name")
+    @f val instant = InstantField
+    @f val instant_named = InstantField("instant_custom_name")
 
-  val boolean = BooleanField
-  val boolean_named = BooleanField("boolean_custom_name")
+    @f val optInstant = OptInstantField
+    @f val optInstant_named = OptInstantField("optInstant_custom_name")
 
-  val optBoolean = OptBooleanField
-  val optBoolean_named = OptBooleanField("optBoolean_custom_name")
+    @f val boolean = BooleanField
+    @f val boolean_named = BooleanField("boolean_custom_name")
+
+    @f val optBoolean = OptBooleanField
+    @f val optBoolean_named = OptBooleanField("optBoolean_custom_name")
+
+  }
 
 }
 
-class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures {
+class MacroQueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures with X {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -103,7 +100,6 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
 
     TestDomainObjects.optInt.name mustBe "optInt"
     TestDomainObjects.optInt_named.name mustBe "optInt_custom_name"
-
     TestDomainObjects.string.name mustBe "string"
     TestDomainObjects.string_named.name mustBe "string_custom_name"
 
@@ -156,18 +152,18 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
 
   case class AnotherValue(a: String)
 
-  class AnotherTestMeta extends RCcMetaExt[AnotherValue, AnotherTestMeta] {
-    val a = StringField
-    val b = StringField("a")
+  class AnotherTestMeta extends MCcMeta[AnotherValue, AnotherTestMeta] {
+    @f val a = StringField
+    @f val b = StringField("a")
   }
 
-  class MultiThreadedTestMeta extends RCcMetaExt[AnotherValue, MultiThreadedTestMeta] {
-    val a = StringField
-    val b = StringField
-    val c = StringField
-    val d = StringField
-    val e = StringField
-    val f = StringField
+  class MultiThreadedTestMeta extends MCcMeta[AnotherValue, MultiThreadedTestMeta] {
+    @f val a = StringField
+    @f val b = StringField
+    @f val c = StringField
+    @f val d = StringField
+    @f val e = StringField
+    @f val f = StringField
   }
 
   it should "fail when name is duplicated" in {
@@ -176,8 +172,8 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
 
   case class DifferentValue(a: String)
 
-  class DifferentTestMeta extends RCcMetaExt[DifferentValue, DifferentTestMeta] {
-    val a = StringField
+  class DifferentTestMeta extends MCcMeta[DifferentValue, DifferentTestMeta] {
+    @f val a = StringField
   }
 
   it should "not fail when resolving an inner meta class" in {
@@ -191,7 +187,5 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
     }.futureValue
   }
 
-  it should "print out debug info for given field" in {
-    println((new TestDomainObjectMeta).debugInfo(0))
-  }
 }
+

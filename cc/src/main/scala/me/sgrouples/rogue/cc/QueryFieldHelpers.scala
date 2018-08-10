@@ -54,9 +54,12 @@ private[cc] object DebugImplicits {
   }
 }
 
-trait QueryFieldHelpers[Meta] extends {
-  requires: Meta =>
+trait NamesResolver {
+  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker
+  protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker
+}
 
+trait RuntimeNameResolver[Meta] extends NamesResolver {
   private[this] val lock = new Object
 
   private[this] val names: mutable.Map[Int, String] = mutable.Map.empty
@@ -159,7 +162,6 @@ trait QueryFieldHelpers[Meta] extends {
     // name map in order of trait linearization
 
     names ++= values.zipWithIndex.map(_.swap)
-
     resolved.set(true)
   }
 
@@ -171,7 +173,7 @@ trait QueryFieldHelpers[Meta] extends {
     Its complicated, I know, meta programming usually is... But Miles Sabin's @@ is awesome, don't you think?
    */
 
-  protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = lock.synchronized {
+  override def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = lock.synchronized {
     if (!resolved.get()) resolve() // lets try one more time to find those names
 
     val nextId = nextNameId
@@ -184,7 +186,7 @@ trait QueryFieldHelpers[Meta] extends {
     tag[Marker][T](field)
   }
 
-  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = lock.synchronized {
+  override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = lock.synchronized {
     if (!resolved.get()) resolve()
     names += nextNameId -> name
     val field = func(name)
@@ -208,13 +210,22 @@ trait QueryFieldHelpers[Meta] extends {
   }
 
   private[this] def resolveError(id: Int): Nothing = throw new IllegalStateException(debugInfo(id))
+  def fieldNamesSorted: Seq[String] = Seq(names.toSeq.sortBy(_._1).map(_._2): _*) // making sure its a copy
 
-  // utility methods, not sure if they are usefull...
+}
+
+/*
+ // utility methods, not sure if they are usefull...
   def fieldByName[T <: io.fsq.field.Field[_, _]](name: String): T = fields(name).asInstanceOf[T]
 
   def fieldNames: Iterable[String] = Seq(names.values.toSeq: _*) // making sure its a copy
   def fieldNamesSorted: Seq[String] = Seq(names.toSeq.sortBy(_._1).map(_._2): _*) // making sure its a copy
   def fieldNamesWithIndexes: Map[Int, String] = Map(names.toSeq: _*) // making sure its a copy
+
+ */
+
+trait QueryFieldHelpers[Meta] extends NamesResolver {
+  requires: Meta =>
 
   protected def IntField: IntField[Meta] @@ Marker = named(new IntField[Meta](_, this))
   protected def IntField(name: String): IntField[Meta] @@ Marker = named(name)(new IntField[Meta](_, this))
@@ -382,6 +393,12 @@ trait QueryFieldHelpers[Meta] extends {
   protected def OptArrayField[V: ClassTag]: OptArrayField[V, Meta] @@ Marker = named(new OptArrayField[V, Meta](_, this))
   protected def OptArrayField[V: ClassTag](name: String): OptArrayField[V, Meta] @@ Marker = named(name)(new OptArrayField[V, Meta](_, this))
 
+  protected def VectorField[V]: VectorField[V, Meta] @@ Marker = named(new VectorField[V, Meta](_, this))
+  protected def VectorField[V](name: String): VectorField[V, Meta] @@ Marker = named(name)(new VectorField[V, Meta](_, this))
+
+  protected def OptVectorField[V]: OptVectorField[V, Meta] @@ Marker = named(new OptVectorField[V, Meta](_, this))
+  protected def OptVectorField[V](name: String): OptVectorField[V, Meta] @@ Marker = named(name)(new OptVectorField[V, Meta](_, this))
+
   protected def ClassField[C, MC <: CcMeta[C]](mc: MC): CClassField[C, MC, Meta] @@ Marker = named(new CClassField[C, MC, Meta](_, mc, this))
   protected def ClassField[C, MC <: CcMeta[C]](name: String, mc: MC): CClassField[C, MC, Meta] @@ Marker = named(name)(new CClassField[C, MC, Meta](_, mc, this))
 
@@ -415,4 +432,8 @@ trait QueryFieldHelpers[Meta] extends {
   protected def OptLocaleField: OptLocaleField[Meta] @@ Marker = named(new OptLocaleField[Meta](_, this))
   protected def OptLocaleField(name: String): OptLocaleField[Meta] @@ Marker = named(name)(new OptLocaleField[Meta](_, this))
 
+}
+
+trait NamedQueryFieldHelpers[Meta] extends QueryFieldHelpers[Meta] with RuntimeNameResolver[Meta] {
+  requires: Meta =>
 }

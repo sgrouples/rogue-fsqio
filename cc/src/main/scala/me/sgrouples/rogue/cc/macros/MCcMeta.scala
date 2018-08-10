@@ -1,47 +1,32 @@
-package me.sgrouples.rogue.cc
+package me.sgrouples.rogue.cc.macros
 
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.IndexOptions
 import io.fsq.field.Field
 import me.sgrouples.rogue.BsonFormat
+import me.sgrouples.rogue.cc.{ CcMeta, PromiseSingleValueAdapter, QueryFieldHelpers }
 import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
 import org.bson.{ BsonDocument, BsonInt32, BsonValue }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 
-trait CcMetaLike[-T] {
-  type R
-}
-
-trait CcMeta[T] extends CcMetaLike[T] {
-  type R = T
-  //capture T to be able to cast to it
-  //type R >: T
-  def collectionName: String
-
-  def read(b: BsonValue): T
-  def write(t: T): BsonValue
-  //TODO - how to make it play nice with types?
-  def writeAnyRef(t: AnyRef): BsonDocument
-
-  def reader(field: Field[_, _]): BsonFormat[_]
-}
-
-class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] {
-
-  def this(namingStrategy: NamingStrategy = LowerCase)(implicit f: BsonFormat[T], classTag: ClassTag[T]) {
-    this(namingStrategy[T])
+//TODO - memoize field readers
+class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(implicit val macroGen: MacroBsonFormat[RecordType])
+  extends QueryFieldHelpers[OwnerType] with CcMeta[RecordType] with MacroNamesResolver[RecordType] {
+  requires: OwnerType =>
+  def this(
+    namingStrategy: NamingStrategy = LowerCase)(implicit macroGen: MacroBsonFormat[RecordType], classTag: ClassTag[RecordType]) {
+    this(namingStrategy[RecordType])(macroGen)
   }
 
   override def collectionName: String = collName
 
   override def reader(field: Field[_, _]): BsonFormat[_] = {
     val fieldName = field.name.replaceAll("\\.\\$", "")
-    // if field.isInstanceOf[]
-    val r = f.flds.get(fieldName)
+    val r = macroGen.flds.get(fieldName)
     r.orElse(starReader(fieldName)).getOrElse {
-      throw new RuntimeException(s"No reader for field ${fieldName}, available keys ${f.flds.keys.mkString(",")}")
+      throw new RuntimeException(s"No reader for field ${fieldName}, available keys ${macroGen.flds.keys.mkString(",")}")
     }
   }
 
@@ -50,15 +35,15 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
     val i = fieldName.lastIndexOf('.')
     if (i > 0) {
       val newName = fieldName.substring(0, i + 1) + "*"
-      f.flds.get(newName)
+      macroGen.flds.get(newName)
     } else None
   }
 
-  override def read(b: BsonValue): T = f.read(b)
+  override def read(b: BsonValue): RecordType = macroGen.read(b)
 
-  override def write(t: T): BsonValue = f.write(t)
+  override def write(t: RecordType): BsonValue = macroGen.write(t)
 
-  override def writeAnyRef(t: AnyRef): BsonDocument = f.write(t.asInstanceOf[T]).asDocument()
+  override def writeAnyRef(t: AnyRef): BsonDocument = macroGen.write(t.asInstanceOf[RecordType]).asDocument()
 
   /**
    * @param indexTuples  sequence of (name, int)
@@ -72,6 +57,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   }
 
   /**
+   * ``
    * @param indexTuples  sequence of (name, int)
    * @param opts IndexOptions- from mongo
    * @return  - index name
@@ -102,22 +88,3 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
 
 }
 
-/**
- * Rogue Case Class Meta Extended, awesome name!
- *
- * @param collName
- * @param formats
- * @tparam RecordType
- * @tparam OwnerType
- */
-
-class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)(implicit formats: BsonFormat[RecordType])
-  extends RCcMeta[RecordType](collName)(formats)
-  with QueryFieldHelpers[OwnerType]
-  with RuntimeNameResolver[OwnerType] { requires: OwnerType =>
-
-  def this(
-    namingStrategy: NamingStrategy = LowerCase)(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType]) {
-    this(namingStrategy[RecordType])(formats)
-  }
-}

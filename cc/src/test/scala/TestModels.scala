@@ -1,4 +1,5 @@
 package me.sgrouples.rogue.cc
+import java.time.temporal.{ ChronoUnit, TemporalUnit }
 import java.time.{ Instant, LocalDateTime }
 import java.util.{ Currency, Locale, UUID }
 
@@ -45,13 +46,15 @@ object VenueClaimBson {
     -1L, ClaimStatus.pending)
 }
 
-case class VenueClaimBson(uid: Long, status: ClaimStatus.Value, source: Option[SourceBson] = None, date: LocalDateTime = LocalDateTime.now())
+case class VenueClaimBson(uid: Long = -1L, status: ClaimStatus.Value = ClaimStatus.pending, source: Option[SourceBson] = None,
+  date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
 
 object VenueClaim {
   def newId = tag[VenueClaim](new ObjectId())
 }
 
-case class VenueClaim(_id: ObjectId @@ VenueClaim, vid: ObjectId, uid: Long, status: ClaimStatus.Value, reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now())
+case class VenueClaim(_id: ObjectId @@ VenueClaim, vid: ObjectId, uid: Long, status: ClaimStatus.Value,
+  reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
 
 object Venue {
   def newId = tag[Venue](new ObjectId())
@@ -95,7 +98,8 @@ object Metas {
     val url = new StringField("url", this)
   }
 
-  class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta] {
+  class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta]
+    with RuntimeNameResolver[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
     val status = EnumField("status", ClaimStatus)
     val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
@@ -127,7 +131,9 @@ object Metas {
 
   val VenueR = new VenueRMeta
 
-  class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims") with QueryFieldHelpers[VenueClaimRMeta] {
+  class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims")
+    with QueryFieldHelpers[VenueClaimRMeta]
+    with RuntimeNameResolver[VenueClaimRMeta] {
     val venueid = ObjectIdTaggedField[Venue]("vid")
     val status = EnumField[ClaimStatus.type]
     val reason = OptEnumField[RejectReason.type]

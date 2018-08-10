@@ -30,7 +30,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
     import EnumNameFormats._
     val o = new ObjectId()
     val cc = OidTypedCC(o, "Ala", 10)
-    val f = BsonFormat[OidTypedCC]
+    val f = LazyBsonFormat[OidTypedCC]
     val bson = f.write(cc)
     //println(bson)
     val deserialized = f.read(bson)
@@ -42,7 +42,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
   def optionalSerializeTest(): Unit = {
     import EnumNameFormats._
     val opt = OptCC(1L, Some("opt"), List("one1", "two", "three"), Map("four" -> 4, "five" -> 5))
-    val f = BsonFormat[OptCC]
+    val f = LazyBsonFormat[OptCC]
     val bson = f.write(opt)
     //println(s"bson ${bson}")
     val d = f.read(bson)
@@ -53,7 +53,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
   def nestedCCTest(): Unit = {
     import EnumNameFormats._
     val r = RootC(1, Nest("nest"))
-    val f = BsonFormat[RootC]
+    val f = LazyBsonFormat[RootC]
     val bson = f.write(r)
     //  println(s"Bson root ${bson}")
     f.read(bson) must_== r
@@ -64,7 +64,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
     import EnumValueFormats.enumValueFormat
     implicit val ev = VenueStatus
     val r = OneEnum("a", VenueStatus.open)
-    val f = BsonFormat[OneEnum]
+    val f = LazyBsonFormat[OneEnum]
     val bson = f.write(r)
     //  println(s"Bson root ${bson}")
     f.read(bson) must_== r
@@ -76,7 +76,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
     implicit val ev = VenueStatus
     implicit val ev2 = ClaimStatus
     val r = TwoEnums("a", VenueStatus.open, ClaimStatus.approved)
-    val f = BsonFormat[TwoEnums]
+    val f = LazyBsonFormat[TwoEnums]
     val bson = f.write(r)
     //println(s"Bson root ${bson}")
     f.read(bson) must_== r
@@ -84,7 +84,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
 
   @Test
   def defaultCaseClass: Unit = {
-    val f = BsonFormat[B]
+    val f = LazyBsonFormat[B]
     val b = f.read(new BsonDocument)
     //println(s"B ${b}")
     //really want that
@@ -96,7 +96,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
 
   @Test
   def localeTest(): Unit = {
-    val f = BsonFormat[Locale]
+    val f = LazyBsonFormat[Locale]
 
     val locales = Locale.getAvailableLocales
 
@@ -113,7 +113,7 @@ class BsonFormatsTests extends JUnitMustMatchers {
 
   @Test
   def timeZoneTest(): Unit = {
-    val f = BsonFormat[TimeZone]
+    val f = LazyBsonFormat[TimeZone]
     val timezones = TimeZone.getAvailableIDs
 
     timezones.foreach { tzId =>
