@@ -59,6 +59,13 @@ class MongoBsonJavaDriverAdapter[MB](
     }
   }
 
+  private def getDBCollection[M <: MB, R](
+    query: Query[M, _, _],
+    readPreference: Option[ReadPreference])(implicit db: MongoDatabase): MongoCollection[BsonDocument] = {
+    val c = dbCollectionFactory.getDBCollection(query)
+    (readPreference.toSeq ++ query.readPreference.toSeq).headOption.fold(c)(c.withReadPreference)
+  }
+
   def count[M <: MB](query: Query[M, _, _], readPreference: Option[ReadPreference])(implicit db: MongoDatabase): Long = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
@@ -167,13 +174,6 @@ class MongoBsonJavaDriverAdapter[MB](
     } else {
       None
     }
-  }
-
-  private def getDBCollection[M <: MB, R](
-    query: Query[M, _, _],
-    readPreference: Option[ReadPreference])(implicit db: MongoDatabase): MongoCollection[BsonDocument] = {
-    val c = dbCollectionFactory.getDBCollection(query)
-    (readPreference.toSeq ++ query.readPreference.toSeq).headOption.fold(c)(c.withReadPreference)
   }
 
   def findIterable[M <: MB, R](query: Query[M, _, _], batchSize: Option[Int] = None, readPreference: Option[ReadPreference] = None)(implicit db: MongoDatabase): FindIterable[BsonDocument] = {

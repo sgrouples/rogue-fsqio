@@ -73,7 +73,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     query: Query[M, R, State],
     readPreference: Option[ReadPreference] = None)(implicit ev: ShardingOk[M, State], dba: MongoAsyncDatabase): Future[Seq[R]] = {
     val s = readSerializer[M, R](query.meta, query.select)
-    adapter.find(query, s)
+    adapter.find(query, s, readPreference)
   }
 
   def fetchOne[M <: MB, R, State, S2](
@@ -81,7 +81,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     readPreference: Option[ReadPreference] = None)(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], dba: MongoAsyncDatabase): Future[Option[R]] = {
     val q = query.limit(1)
     val s = readSerializer[M, R](q.meta, q.select)
-    adapter.fineOne(q, s)
+    adapter.fineOne(q, s, readPreference)
   }
 
   def foreach[M <: MB, R, State](
@@ -90,7 +90,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     val s = readSerializer[M, R](query.meta, query.select)
     val docBlock: BsonDocument => Unit = doc => f(s.fromDocument(doc))
     //applies docBlock to each Document = conversion + f(R)
-    adapter.foreach(query, docBlock)
+    adapter.foreach(query, docBlock, readPreference)
   }
 
   def bulkDelete_!![M <: MB, State](
