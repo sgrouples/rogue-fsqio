@@ -63,7 +63,7 @@ class MongoBsonJavaDriverAdapter[MB](
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val condition: Bson = buildCondition(queryClause.condition)
-    val coll = dbCollectionFactory.getDBCollection(query)
+    val coll = getDBCollection(query, readPreference)
     if (queryClause.lim.isDefined || queryClause.sk.isDefined) {
       val options = new CountOptions()
       queryClause.lim.map(options.limit(_))
@@ -82,7 +82,7 @@ class MongoBsonJavaDriverAdapter[MB](
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd: Bson = buildCondition(queryClause.condition)
-    val coll = dbCollectionFactory.getDBCollection(query)
+    val coll = getDBCollection(query, readPreference)
     val rClass = ct.runtimeClass.asInstanceOf[Class[R]]
     coll.distinct(key, cnd, rClass).asScala.toSet.size.toLong
   }
@@ -95,7 +95,7 @@ class MongoBsonJavaDriverAdapter[MB](
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd: Bson = buildCondition(queryClause.condition)
-    val coll = dbCollectionFactory.getDBCollection(query)
+    val coll = getDBCollection(query, readPreference)
     val rClass = ct.runtimeClass.asInstanceOf[Class[R]]
     coll.distinct[R](key, cnd, rClass).asScala
   }
@@ -169,14 +169,18 @@ class MongoBsonJavaDriverAdapter[MB](
     }
   }
 
+  private def getDBCollection[M <: MB, R](
+    query: Query[M, _, _],
+    readPreference: Option[ReadPreference])(implicit db: MongoDatabase): MongoCollection[BsonDocument] = {
+    val c = dbCollectionFactory.getDBCollection(query)
+    (readPreference.toSeq ++ query.readPreference.toSeq).headOption.fold(c)(c.withReadPreference)
+  }
+
   def findIterable[M <: MB, R](query: Query[M, _, _], batchSize: Option[Int] = None, readPreference: Option[ReadPreference] = None)(implicit db: MongoDatabase): FindIterable[BsonDocument] = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
     val cnd: Bson = buildCondition(queryClause.condition)
-    val coll = {
-      val c = dbCollectionFactory.getDBCollection(query)
-      readPreference.fold(c)(c.withReadPreference(_))
-    }
+    val coll = getDBCollection(query, readPreference)
 
     val sel: Bson = queryClause.select.map(buildSelect)
       .getOrElse(BasicDBObjectBuilder
