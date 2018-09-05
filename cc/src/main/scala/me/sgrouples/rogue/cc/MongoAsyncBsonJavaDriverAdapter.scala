@@ -3,19 +3,19 @@ package me.sgrouples.rogue.cc
 import java.util
 
 import com.mongodb._
-import com.mongodb.async.SingleResultCallback
-import com.mongodb.async.client.{ MongoCollection, MongoDatabase }
+import com.mongodb.async.{AsyncBatchCursor, SingleResultCallback}
+import com.mongodb.async.client.{FindIterable, MongoCollection, MongoDatabase}
 import com.mongodb.client.model._
-import com.mongodb.client.result.{ DeleteResult, UpdateResult }
+import com.mongodb.client.result.{DeleteResult, UpdateResult}
 import io.fsq.rogue.MongoHelpers.MongoBuilder._
-import io.fsq.rogue.{ FindAndModifyQuery, ModifyQuery, Query }
+import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
 import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
-import org.bson.{ BsonDocument }
+import org.bson.BsonDocument
 import org.bson.conversions.Bson
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import scala.reflect.ClassTag
 import scala.util.Try
 import com.mongodb.ErrorCategory._
@@ -26,11 +26,7 @@ trait AsyncBsonDBCollectionFactory[MB] {
 
   def getPrimaryDBCollection[M <: MB](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument]
 
-  //def getPrimaryDBCollection(record: RB): MongoCollection[BsonDocument]
-
   def getInstanceName[M <: MB](query: Query[M, _, _])(implicit dba: MongoDatabase): String
-
-  //def getInstanceName(record: RB): String
 
   // A set of of indexes, which are ordered lists of field names
   def getIndexes[M <: MB](query: Query[M, _, _])(implicit dba: MongoDatabase): Option[Seq[UntypedMongoIndex]]
@@ -407,6 +403,52 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     val filter = new BsonDocument("_id", doc.get("_id"))
     collection.replaceOne(filter, doc, new UpdateOptions().upsert(upsert), callback)
     callback.future
+  }
+
+  private def queryToFindIterable[M,R](query:Query[M, R, _],readPreference: Option[ReadPreference])(implicit dba:MongoDatabase): FindIterable[BsonDocument] = {
+    val cnd: Bson = buildCondition(query.condition)
+    val coll = getDBCollection(query, readPreference)
+    val sel: Bson = query.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
+    val ord = query.order.map(buildOrder)
+    val baseCursor = coll.find(cnd).projection(sel)
+    val limitedCursor = query.lim.fold(baseCursor)(baseCursor.limit _)
+    val skippedCursor = query.sk.fold(limitedCursor)(limitedCursor.skip _)
+    ord.fold(skippedCursor)(skippedCursor.sort _)
+  }
+
+
+  def batch[M <: MB, R, T](query: Query[M, R, _],  serializer: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]], batchSize: Int,
+                           readPreference: Option[ReadPreference])(implicit dba:MongoDatabase): Future[Seq[T]] = {
+    val fi = queryToFindIterable(query, readPreference)
+    val batchedFi = fi.batchSize(batchSize)
+
+    val cb = new SingleResultCallback[AsyncBatchCursor[BsonDocument]] {
+      override def onResult(result: AsyncBatchCursor[BsonDocument], t: Throwable): Unit = {
+        if(t != null) {
+          ??? // fail
+        } else if(result == null) {
+            ??? // fail - no data
+          } else {
+          ??? // OK - there is batch cursor, go
+          result.next(new SingleResultCallback[java.util.List[BsonDocument]]{
+            override def onResult(result: util.List[BsonDocument], t: Throwable): Unit = {
+              if(t != null) {
+                ???
+              } else if(result == null) {
+                ??? // finish iterating
+              } else {
+                ??? // process data
+              }
+            }
+          })
+        }
+      }
+    }
+    batchedFi.batchCursor(cb)
+    ???
+      //cursor.map(adaptedSerializer).into(pa.coll, pa)
+      //pa.future
+
   }
 
 }
