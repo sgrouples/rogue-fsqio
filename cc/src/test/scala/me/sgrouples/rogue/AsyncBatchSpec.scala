@@ -34,7 +34,7 @@ class AsyncBatchSpec extends AsyncFlatSpec with Matchers {
       processed.length should ===(5)
       val topPiece = for { i <- 90 to 71 by -1 } yield i
       val bottomPiece = for { i <- 10 to 1 by -1 } yield i
-       processed.head should ===(topPiece)
+      processed.head should ===(topPiece)
       processed.last should ===(bottomPiece)
       processed.flatten.length should ===(90)
     }

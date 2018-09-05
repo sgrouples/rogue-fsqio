@@ -157,7 +157,7 @@ case class ExecutableQuery[MB, M <: MB, R, State](
 
   def findAndDeleteOneAsync()(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[Option[R]] = ex.async.findAndDeleteOne(query)
 
-  def batchAsync[T](f: Iterable[R] => Future[Seq[T]], batchSize: Int = 100, readPreference: Option[ReadPreference] = None)(implicit dba: MongoAsyncDatabase, ec: ExecutionContext): Future[Seq[T]] =
+  def batchAsync[T](f: Seq[R] => Future[Seq[T]], batchSize: Int = 100, readPreference: Option[ReadPreference] = None)(implicit dba: MongoAsyncDatabase, ec: ExecutionContext): Future[Seq[T]] =
     ex.async.batch(query, f, batchSize, readPreference)
 
 }

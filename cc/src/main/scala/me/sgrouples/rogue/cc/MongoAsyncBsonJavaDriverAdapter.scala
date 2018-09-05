@@ -166,7 +166,7 @@ class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument => Option[R])(retry:
   def future = p.future
 }
 
-class BatchingCallback[R, T](r: RogueBsonRead[R], f: Iterable[R] => Future[Seq[T]])(implicit ec: ExecutionContext) extends SingleResultCallback[AsyncBatchCursor[BsonDocument]] with HasFuture[Seq[T]] {
+class BatchingCallback[R, T](r: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]])(implicit ec: ExecutionContext) extends SingleResultCallback[AsyncBatchCursor[BsonDocument]] with HasFuture[Seq[T]] {
   private val p = Promise[Seq[T]]
   private val resBuilder = Seq.newBuilder[T]
 
@@ -449,7 +449,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     ord.fold(skippedCursor)(skippedCursor.sort _)
   }
 
-  def batch[M <: MB, R, T](query: Query[M, R, _], serializer: RogueBsonRead[R], f: Iterable[R] => Future[Seq[T]], batchSize: Int,
+  def batch[M <: MB, R, T](query: Query[M, R, _], serializer: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]], batchSize: Int,
     readPreference: Option[ReadPreference])(implicit dba: MongoDatabase, ec: ExecutionContext): Future[Seq[T]] = {
     val fi = queryToFindIterable(query, readPreference)
     val batchCB = new BatchingCallback(serializer, f)
