@@ -165,7 +165,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
 
   def batch[M <: MB, R, T, State](
     query: Query[M, R, State],
-    f: Iterable[R] => Future[Seq[T]],
+    f: Seq[R] => Future[Seq[T]],
     batchSize: Int = 100,
     readPreference: Option[ReadPreference] = None)(implicit ev: ShardingOk[M, State], dba: MongoAsyncDatabase, ec: ExecutionContext): Future[Seq[T]] = {
     val s = readSerializer[M, R](query.meta, query.select)
