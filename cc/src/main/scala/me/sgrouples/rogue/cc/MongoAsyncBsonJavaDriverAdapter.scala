@@ -177,7 +177,7 @@ class BatchingCallback[R, T](r: RogueBsonRead[R], f: Iterable[R] => Future[Seq[T
       } else if (docs == null) {
         p.success(resBuilder.result())
       } else {
-        f(docs.asScala.flatMap(r.fromDocumentOpt)).foreach { resT =>
+        f(docs.asScala.map(r.fromDocument)).foreach { resT =>
           resBuilder ++= resT
           batchCursor.next(this)
         }
