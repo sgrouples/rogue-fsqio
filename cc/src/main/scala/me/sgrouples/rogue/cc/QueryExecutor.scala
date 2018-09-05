@@ -1,7 +1,5 @@
 package me.sgrouples.rogue.cc
 
-// Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
-
 import java.util.function.Consumer
 
 import com.mongodb._
@@ -11,9 +9,9 @@ import io.fsq.field.Field
 import io.fsq.rogue.MongoHelpers.{ MongoModify, MongoSelect }
 import io.fsq.rogue._
 import io.fsq.spindle.types.MongoDisallowed
-import org.bson.{ BsonDocument, BsonValue }
+import org.bson.{ BsonDocument }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 import scala.collection.mutable.{ Builder, ListBuffer }
 
@@ -166,10 +164,10 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
   }
 
   def batch[M <: MB, R, T, State](
-                                query: Query[M, R, State],
-                                f: Seq[R] => Future[Seq[T]],
-                                batchSize: Int = 100,
-                                readPreference: Option[ReadPreference] = None)(implicit ev: ShardingOk[M, State], dba: MongoAsyncDatabase): Future[Seq[T]] = {
+    query: Query[M, R, State],
+    f: Iterable[R] => Future[Seq[T]],
+    batchSize: Int = 100,
+    readPreference: Option[ReadPreference] = None)(implicit ev: ShardingOk[M, State], dba: MongoAsyncDatabase, ec: ExecutionContext): Future[Seq[T]] = {
     val s = readSerializer[M, R](query.meta, query.select)
     adapter.batch(query, s, f, batchSize, readPreference)
   }

@@ -7,11 +7,10 @@ import com.mongodb.{ ReadPreference, WriteConcern }
 import io.fsq.field.Field
 import io.fsq.rogue.{ AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _ }
 import io.fsq.rogue.MongoHelpers.MongoSelect
-
 import com.mongodb.client.MongoDatabase
 import com.mongodb.async.client.{ MongoDatabase => MongoAsyncDatabase }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, R, State](
@@ -157,6 +156,9 @@ case class ExecutableQuery[MB, M <: MB, R, State](
   def bulkDeleteAsync_!!(concern: WriteConcern)(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], dba: MongoAsyncDatabase): Future[Unit] = ex.async.bulkDelete_!!(query, concern)
 
   def findAndDeleteOneAsync()(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[Option[R]] = ex.async.findAndDeleteOne(query)
+
+  def batchAsync[T](f: Iterable[R] => Future[Seq[T]], batchSize: Int = 100, readPreference: Option[ReadPreference] = None)(implicit dba: MongoAsyncDatabase, ec: ExecutionContext): Future[Seq[T]] =
+    ex.async.batch(query, f, batchSize, readPreference)
 
 }
 

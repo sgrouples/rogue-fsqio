@@ -3,19 +3,19 @@ package me.sgrouples.rogue.cc
 import java.util
 
 import com.mongodb._
-import com.mongodb.async.{AsyncBatchCursor, SingleResultCallback}
-import com.mongodb.async.client.{FindIterable, MongoCollection, MongoDatabase}
+import com.mongodb.async.{ AsyncBatchCursor, SingleResultCallback }
+import com.mongodb.async.client.{ FindIterable, MongoCollection, MongoDatabase }
 import com.mongodb.client.model._
-import com.mongodb.client.result.{DeleteResult, UpdateResult}
+import com.mongodb.client.result.{ DeleteResult, UpdateResult }
 import io.fsq.rogue.MongoHelpers.MongoBuilder._
-import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
+import io.fsq.rogue.{ FindAndModifyQuery, ModifyQuery, Query }
 import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.BsonDocument
 import org.bson.conversions.Bson
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.reflect.ClassTag
 import scala.util.Try
 import com.mongodb.ErrorCategory._
@@ -164,6 +164,39 @@ class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument => Option[R])(retry:
   }
 
   def future = p.future
+}
+
+class BatchingCallback[R, T](r: RogueBsonRead[R], f: Iterable[R] => Future[Seq[T]])(implicit ec: ExecutionContext) extends SingleResultCallback[AsyncBatchCursor[BsonDocument]] with HasFuture[Seq[T]] {
+  private val p = Promise[Seq[T]]
+  private val resBuilder = Seq.newBuilder[T]
+
+  class ResultListCallback(batchCursor: AsyncBatchCursor[BsonDocument]) extends SingleResultCallback[java.util.List[BsonDocument]] {
+    override def onResult(docs: util.List[BsonDocument], t: Throwable): Unit = {
+      if (t != null) {
+        p.failure(t)
+      } else if (docs == null) {
+        p.success(resBuilder.result())
+      } else {
+        f(docs.asScala.flatMap(r.fromDocumentOpt)).foreach { resT =>
+          resBuilder ++= resT
+          batchCursor.next(this)
+        }
+      }
+    }
+  }
+
+  override def onResult(batchCursor: AsyncBatchCursor[BsonDocument], t: Throwable): Unit = {
+    if (t != null) {
+      p.failure(t)
+    } else if (batchCursor == null) {
+      p.success(resBuilder.result())
+    } else {
+      val resultCB = new ResultListCallback(batchCursor)
+      batchCursor.next(resultCB)
+    }
+  }
+
+  override def future: Future[Seq[T]] = p.future
 }
 
 class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollectionFactory[MB]) {
@@ -405,7 +438,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     callback.future
   }
 
-  private def queryToFindIterable[M,R](query:Query[M, R, _],readPreference: Option[ReadPreference])(implicit dba:MongoDatabase): FindIterable[BsonDocument] = {
+  private def queryToFindIterable[M <: MB, R](query: Query[M, R, _], readPreference: Option[ReadPreference])(implicit dba: MongoDatabase): FindIterable[BsonDocument] = {
     val cnd: Bson = buildCondition(query.condition)
     val coll = getDBCollection(query, readPreference)
     val sel: Bson = query.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
@@ -416,39 +449,12 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     ord.fold(skippedCursor)(skippedCursor.sort _)
   }
 
-
-  def batch[M <: MB, R, T](query: Query[M, R, _],  serializer: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]], batchSize: Int,
-                           readPreference: Option[ReadPreference])(implicit dba:MongoDatabase): Future[Seq[T]] = {
+  def batch[M <: MB, R, T](query: Query[M, R, _], serializer: RogueBsonRead[R], f: Iterable[R] => Future[Seq[T]], batchSize: Int,
+    readPreference: Option[ReadPreference])(implicit dba: MongoDatabase, ec: ExecutionContext): Future[Seq[T]] = {
     val fi = queryToFindIterable(query, readPreference)
-    val batchedFi = fi.batchSize(batchSize)
-
-    val cb = new SingleResultCallback[AsyncBatchCursor[BsonDocument]] {
-      override def onResult(result: AsyncBatchCursor[BsonDocument], t: Throwable): Unit = {
-        if(t != null) {
-          ??? // fail
-        } else if(result == null) {
-            ??? // fail - no data
-          } else {
-          ??? // OK - there is batch cursor, go
-          result.next(new SingleResultCallback[java.util.List[BsonDocument]]{
-            override def onResult(result: util.List[BsonDocument], t: Throwable): Unit = {
-              if(t != null) {
-                ???
-              } else if(result == null) {
-                ??? // finish iterating
-              } else {
-                ??? // process data
-              }
-            }
-          })
-        }
-      }
-    }
-    batchedFi.batchCursor(cb)
-    ???
-      //cursor.map(adaptedSerializer).into(pa.coll, pa)
-      //pa.future
-
+    val batchCB = new BatchingCallback(serializer, f)
+    fi.batchSize(batchSize).batchCursor(batchCB)
+    batchCB.future
   }
 
 }
