@@ -9,7 +9,7 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "4.0.3",
+    version := "4.1.0",
     organization := "me.sgrouples",
     scalaVersion := "2.12.6",
     isSnapshot := true,
@@ -33,7 +33,7 @@ object RogueSettings {
 
 object RogueDependencies {
   val specsVer = "3.8.9"
-  val mongoVer = "3.6.4"
+  val mongoVer = "3.8.1"
 
   val joda = Seq(
     "joda-time"                % "joda-time"           % "2.9.9"        % "compile",
