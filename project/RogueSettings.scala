@@ -22,7 +22,7 @@ object RogueSettings {
       else
         Some(nexusReleases)
     }.value,
-   
+    parallelExecution in Test := false,
     resolvers ++= Seq(nexusReleases, nexusSnapshots),
     scalacOptions ++= Seq("-deprecation", "-unchecked"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
     scalacOptions ++= Seq("-feature", "-language:_"),
