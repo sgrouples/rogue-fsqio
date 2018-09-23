@@ -139,7 +139,7 @@ class SingleDocumentOptCallback[R](f: BsonDocument => Option[R]) extends SingleR
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
     if (t == null) {
-      if (result != null) p.success(f(result))
+      if (result != null) p.complete(Try(f(result)))
       else p.success(None)
     } else p.failure(t)
   }
