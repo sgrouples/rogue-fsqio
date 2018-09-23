@@ -1,7 +1,9 @@
 package me.sgrouples.rogue
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import me.sgrouples.rogue.cc.{ MongoTestConn, UnitCallback }
-import org.scalatest.{ AsyncFlatSpec, FlatSpec, Matchers }
+import org.scalatest.{ AsyncFlatSpec, BeforeAndAfterAll, FlatSpec, Matchers }
 import me.sgrouples.rogue.cc.macros._
 import me.sgrouples.rogue.cc.CcRogue._
 
@@ -9,7 +11,7 @@ import scala.concurrent.Future
 
 case class NumModel(_id: Int, bla: String)
 
-class AsyncBatchSpec extends AsyncFlatSpec with Matchers {
+class AsyncBatchSpec extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
   class NumModelMeta extends MCcMeta[NumModel, NumModelMeta]("nummodel") {
     @f val id = IntField("_id")
   }
@@ -38,5 +40,36 @@ class AsyncBatchSpec extends AsyncFlatSpec with Matchers {
       processed.last should ===(bottomPiece)
       processed.flatten.length should ===(90)
     }
+  }
+
+  "batch async" should "fail if given processing function fails" in {
+    implicit val mongo = MongoTestConn.connectToMongo.getDatabase("nummodel")
+    val counter = new AtomicInteger(0)
+
+    def reader(s: Iterable[Int]): Future[Seq[Seq[Int]]] = {
+      //I want to first batch to succeed and the second one to fail
+      if (counter.incrementAndGet() % 2 == 1)
+        Future.successful(Seq(s.toSeq))
+      else
+        Future.failed(new UnsupportedOperationException("Some funky exception to test failures"))
+    }
+
+    val callback = new UnitCallback[Void]
+    val NumModels = new NumModelMeta
+    val nums = for (i <- 1 to 90) yield NumModel(i, "bla")
+    mongo.getCollection("nummodel").drop(callback)
+    for {
+      _ <- callback.future
+      _ <- NumModels.insertManyAsync(nums)
+      _ <- recoverToSucceededIf[UnsupportedOperationException](NumModels.select(_.id).orderDesc(_.id).batchAsync(reader, 20))
+    } yield {
+      MongoTestConn.disconnectFromMongo
+      succeed
+    }
+  }
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    MongoTestConn.disconnectFromMongo
   }
 }
