@@ -173,8 +173,10 @@ class BatchingCallback[R, T](r: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]])(i
   class ResultListCallback(batchCursor: AsyncBatchCursor[BsonDocument]) extends SingleResultCallback[java.util.List[BsonDocument]] {
     override def onResult(docs: util.List[BsonDocument], t: Throwable): Unit = {
       if (t != null) {
+        batchCursor.close()
         p.failure(t)
       } else if (docs == null) {
+        batchCursor.close()
         p.success(resBuilder.result())
       } else {
         f(docs.asScala.map(r.fromDocument)).andThen {
