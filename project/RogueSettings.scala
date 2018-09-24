@@ -9,7 +9,7 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "4.0.3",
+    version := "4.0.4",
     organization := "me.sgrouples",
     scalaVersion := "2.12.6",
     isSnapshot := true,
@@ -22,7 +22,7 @@ object RogueSettings {
       else
         Some(nexusReleases)
     }.value,
-   
+    parallelExecution in Test := false,
     resolvers ++= Seq(nexusReleases, nexusSnapshots),
     scalacOptions ++= Seq("-deprecation", "-unchecked"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
     scalacOptions ++= Seq("-feature", "-language:_"),

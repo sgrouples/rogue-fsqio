@@ -17,7 +17,7 @@ import org.bson.conversions.Bson
 import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.reflect.ClassTag
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 import com.mongodb.ErrorCategory._
 
 trait AsyncBsonDBCollectionFactory[MB] {
@@ -139,7 +139,7 @@ class SingleDocumentOptCallback[R](f: BsonDocument => Option[R]) extends SingleR
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
     if (t == null) {
-      if (result != null) p.success(f(result))
+      if (result != null) p.complete(Try(f(result)))
       else p.success(None)
     } else p.failure(t)
   }
@@ -173,13 +173,19 @@ class BatchingCallback[R, T](r: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]])(i
   class ResultListCallback(batchCursor: AsyncBatchCursor[BsonDocument]) extends SingleResultCallback[java.util.List[BsonDocument]] {
     override def onResult(docs: util.List[BsonDocument], t: Throwable): Unit = {
       if (t != null) {
+        batchCursor.close()
         p.failure(t)
       } else if (docs == null) {
+        batchCursor.close()
         p.success(resBuilder.result())
       } else {
-        f(docs.asScala.map(r.fromDocument)).foreach { resT =>
-          resBuilder ++= resT
-          batchCursor.next(this)
+        f(docs.asScala.map(r.fromDocument)).andThen {
+          case Success(resT) =>
+            resBuilder ++= resT
+            batchCursor.next(this)
+          case Failure(t) =>
+            batchCursor.close()
+            p.failure(t)
         }
       }
     }
@@ -191,8 +197,15 @@ class BatchingCallback[R, T](r: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]])(i
     } else if (batchCursor == null) {
       p.success(resBuilder.result())
     } else {
-      val resultCB = new ResultListCallback(batchCursor)
-      batchCursor.next(resultCB)
+      //batchCursor.next can throw  java.util.NoSuchElementException, thats why Try is here
+      Try {
+        val resultCB = new ResultListCallback(batchCursor)
+        batchCursor.next(resultCB)
+      }.recover {
+        case e =>
+          batchCursor.close()
+          p.failure(e)
+      }
     }
   }
 
