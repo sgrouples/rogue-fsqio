@@ -147,7 +147,7 @@ class TrivialAsyncORMQueryTest extends JUnitMustMatchers {
   @Test
   def canBuildQuery: Unit = {
     (SimpleRecord: Query[SimpleRecord.type, SimpleRecord, InitialState]).toString() must_== """db.simple_records.find({ })"""
-    SimpleRecord.where(_.a eqs 1).toString() must_== """db.simple_records.find({ "a" : 1})"""
+    SimpleRecord.where(_.a eqs 1).toString() must_== """db.simple_records.find({ "a" : 1 })"""
   }
 
   @Test
