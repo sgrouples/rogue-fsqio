@@ -1,7 +1,6 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 
 package io.fsq.rogue
-
 import com.mongodb.{
   BasicDBObjectBuilder,
   DBCollection,
