@@ -35,11 +35,10 @@ trait Rogue {
   implicit def rdbobjectFieldToQueryField[M](f: RField[DBObject, M]): QueryField[DBObject, M] = new QueryField(f)
 
   implicit def renumNameFieldToEnumNameQueryField[M, F <: Enumeration#Value](f: RField[F, M]): EnumNameQueryField[M, F] = new EnumNameQueryField(f)
-  implicit def renumerationListFieldToEnumerationListQueryField[M, F <: Enumeration#Value](f: RField[List[F], M]): EnumerationListQueryField[F, M] = new EnumerationListQueryField[F, M](f)
+  implicit def renumerationListFieldToEnumerationListQueryField[M, F <: Enumeration#Value](f: RField[List[F], M]): EnumerationSeqQueryField[F, M] = new EnumerationSeqQueryField[F, M](f)
   implicit def rlatLongFieldToGeoQueryField[M](f: RField[LatLong, M]): GeoQueryField[M] = new GeoQueryField(f)
-  implicit def rStringsListFieldToStringsListQueryField[M](f: RField[List[String], M]): StringsListQueryField[M] = new StringsListQueryField[M](f)
-  implicit def rlistFieldToListQueryField[M, F: BSONType](f: RField[List[F], M]): ListQueryField[F, M] = new ListQueryField[F, M](f)
-  implicit def rseqFieldToSeqQueryField[M, F: BSONType](f: RField[Seq[F], M]): SeqQueryField[F, M] = new SeqQueryField[F, M](f)
+  implicit def rStringsListFieldToStringsListQueryField[M](f: RField[List[String], M]): StringsSeqQueryField[M] = new StringsSeqQueryField[M](f)
+  implicit def rseqFieldToSeqQueryField[M, F: BSONType, ST[F] <: Seq[F]](f: RField[ST[F], M]): SeqQueryField[F, M, ST] = new SeqQueryField[F, M, ST](f)
   implicit def rmapFieldToMapQueryField[M, F](f: RField[Map[String, F], M]): MapQueryField[F, M] = new MapQueryField[F, M](f)
 
   /**

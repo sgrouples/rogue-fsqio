@@ -32,7 +32,7 @@ abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field
 //abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field[CC[F], M])
 
 class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasChildMeta[C, M], owner: O) //, toBson: B => BsonValue)
-  extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {
+  extends AbstractSeqQueryField[C, C, BsonValue, O, Seq](fld) {
   override def valueToDB(c: C) = fld.childMeta.write(c)
 
   def subfield[V, V1](f: M => Field[V, M])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], O] = {

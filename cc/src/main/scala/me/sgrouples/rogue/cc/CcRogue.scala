@@ -10,7 +10,7 @@ package me.sgrouples.rogue.cc
 import java.time.{ Instant, LocalDateTime }
 
 import io.fsq.field.{ RequiredField, Field => RField, OptionalField => ROptionalField }
-import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
+import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, SeqQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsSeqQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
 import java.util.{ Currency, Date, Locale, UUID }

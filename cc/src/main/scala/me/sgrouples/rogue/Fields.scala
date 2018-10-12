@@ -115,6 +115,10 @@ class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
   override def defaultValue = Nil
 }
 
+class SeqField[V, O](name: String, o: O) extends MCField[Seq[V], O](name, o) {
+  override def defaultValue = Nil
+}
+
 class VectorField[V, O](name: String, o: O) extends MCField[Vector[V], O](name, o) {
   override def defaultValue = Vector.empty[V]
 }
