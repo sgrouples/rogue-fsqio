@@ -3,7 +3,7 @@ import java.time.temporal.{ ChronoUnit, TemporalUnit }
 import java.time.{ Instant, LocalDateTime }
 import java.util.{ Currency, Locale, UUID }
 
-import io.fsq.rogue.EnumerationListModifyField
+import io.fsq.rogue.EnumerationSeqModifyField
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 import BsonFormats._

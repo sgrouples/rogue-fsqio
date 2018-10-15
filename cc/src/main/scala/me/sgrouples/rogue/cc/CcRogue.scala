@@ -9,11 +9,28 @@ package me.sgrouples.rogue.cc
 
 import java.time.{ Instant, LocalDateTime }
 
-import io.fsq.field.{ RequiredField, Field => RField, OptionalField => ROptionalField }
-import io.fsq.rogue.{ BSONType, FindAndModifyQuery, LatLong, ListModifyField, ListQueryField, MandatorySelectField, MapModifyField, MapQueryField, ModifyField, ModifyQuery, NumericModifyField, NumericQueryField, ObjectIdQueryField, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SafeModifyField, SelectField, ShardingOk, StringQueryField, StringsListQueryField, Unlimited, Unordered, Unselected, Unskipped, _ }
+import io.fsq.field.{ Field => RField, OptionalField => ROptionalField }
+import io.fsq.rogue.{
+  FindAndModifyQuery,
+  MandatorySelectField,
+  ModifyQuery,
+  OptionalSelectField,
+  Query,
+  QueryField,
+  QueryHelpers,
+  Rogue,
+  RogueException,
+  SelectField,
+  ShardingOk,
+  Unlimited,
+  Unordered,
+  Unselected,
+  Unskipped,
+  _
+}
 import io.fsq.rogue.MongoHelpers.AndCondition
 import io.fsq.rogue.index.IndexBuilder
-import java.util.{ Currency, Date, Locale, UUID }
+import java.util.{ Currency, Locale, UUID }
 
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
@@ -100,9 +117,9 @@ trait CcRogue {
     new CClassLikeQueryField[C, M, O](f, f.meta, f.owner)
   }
 
-  implicit def ccListFieldToListQueryField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqQueryField[C, M, O] = new CClassSeqQueryField[C, M, O](f, f.owner)
+  implicit def ccListFieldToListQueryField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqQueryField[C, M, O, List] = new CClassSeqQueryField[C, M, O, List](f, f.owner)
 
-  implicit def optCCListFieldToListQueryField[C, M <: CcMeta[C], O](f: OptCClassListField[C, M, O]): CClassSeqQueryField[C, M, O] = new CClassSeqQueryField[C, M, O](f, f.owner)
+  implicit def optCCListFieldToListQueryField[C, M <: CcMeta[C], O](f: OptCClassListField[C, M, O]): CClassSeqQueryField[C, M, O, List] = new CClassSeqQueryField[C, M, O, List](f, f.owner)
 
   implicit def ccArrayFieldToListQueryField[C, M <: CcMeta[C], O](f: CClassArrayField[C, M, O]): CClassArrayQueryField[C, M, O] = new CClassArrayQueryField[C, M, O](f, f.owner)
 
@@ -116,9 +133,9 @@ trait CcRogue {
 
   implicit def uuidFieldToQueryField[O <: CcMeta[_]](f: RField[UUID, O]): QueryField[UUID, O] = new QueryField(f)
 
-  implicit def ccListFieldToCCSeqModifyField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqModifyField[C, M, O] = new CClassSeqModifyField[C, M, O](f)
+  implicit def ccListFieldToCCSeqModifyField[C, M <: CcMeta[C], O](f: CClassListField[C, M, O]): CClassSeqModifyField[C, M, O, List] = new CClassSeqModifyField[C, M, O, List](f)
 
-  implicit def optCListFieldToCCSeqModifyField[C, M <: CcMeta[C], O](f: OptCClassListField[C, M, O]): CClassSeqModifyField[C, M, O] = new CClassSeqModifyField[C, M, O](f)
+  implicit def optCListFieldToCCSeqModifyField[C, M <: CcMeta[C], O](f: OptCClassListField[C, M, O]): CClassSeqModifyField[C, M, O, List] = new CClassSeqModifyField[C, M, O, List](f)
 
   implicit def ccArrayFieldToCCArrayModifyField[C, M <: CcMeta[C], O](f: CClassArrayField[C, M, O]): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
 

@@ -399,6 +399,12 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptVectorField[V]: OptVectorField[V, Meta] @@ Marker = named(new OptVectorField[V, Meta](_, this))
   protected def OptVectorField[V](name: String): OptVectorField[V, Meta] @@ Marker = named(name)(new OptVectorField[V, Meta](_, this))
 
+  protected def SeqField[V]: SeqField[V, Meta] @@ Marker = named(new SeqField[V, Meta](_, this))
+  protected def SeqField[V](name: String): SeqField[V, Meta] @@ Marker = named(name)(new SeqField[V, Meta](_, this))
+
+  protected def OptSeqField[V]: OptSeqField[V, Meta] @@ Marker = named(new OptSeqField[V, Meta](_, this))
+  protected def OptSeqField[V](name: String): OptSeqField[V, Meta] @@ Marker = named(name)(new OptSeqField[V, Meta](_, this))
+
   protected def ClassField[C, MC <: CcMeta[C]](mc: MC): CClassField[C, MC, Meta] @@ Marker = named(new CClassField[C, MC, Meta](_, mc, this))
   protected def ClassField[C, MC <: CcMeta[C]](name: String, mc: MC): CClassField[C, MC, Meta] @@ Marker = named(name)(new CClassField[C, MC, Meta](_, mc, this))
 

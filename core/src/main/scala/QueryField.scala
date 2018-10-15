@@ -1,6 +1,7 @@
 // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
 
 package io.fsq.rogue
+import scala.language.higherKinds
 
 import java.time.{ LocalDateTime, ZoneOffset }
 
@@ -306,7 +307,7 @@ class BsonRecordQueryField[M, B](field: Field[B, M], asDBObject: B => DBObject, 
   def subselect[V](f: B => Field[V, B]): SelectableDummyField[V, M] = subfield(f)
 }
 
-abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field[CC[F], M])
+abstract class AbstractSeqQueryField[F, V, DB, M, CC[_] <: Seq[_]](field: Field[CC[F], M])
   extends AbstractQueryField[CC[F], V, DB, M](field) {
 
   def all(vs: Traversable[V]) =
@@ -360,25 +361,23 @@ abstract class AbstractArrayQueryField[F, V, DB, M, X](field: Field[Array[X], M]
   def idx(i: Int): DummyField[V, M] = at(i)
 }
 
-class ListQueryField[V: BSONType, M](field: Field[List[V], M])
-  extends AbstractListQueryField[V, V, AnyRef, M, List](field) {
+/*
+AbstractSeqQueryField[F, V, DB, M, CC[_] <: Seq[_]]
+ */
+class SeqQueryField[V: BSONType, M, ST[_] <: Seq[_]](field: Field[ST[V], M])
+  extends AbstractSeqQueryField[V, V, AnyRef, M, ST](field) {
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
 }
 
-class StringsListQueryField[M](override val field: Field[List[String], M])
-  extends AbstractListQueryField[String, String, String, M, List](field)
-  with StringRegexOps[List[String], M] {
+class StringsSeqQueryField[M, CC[_] <: Seq[_]](override val field: Field[CC[String], M])
+  extends AbstractSeqQueryField[String, String, String, M, CC](field)
+  with StringRegexOps[CC[String], M] {
 
   override def valueToDB(v: String) = v
 }
 
-class SeqQueryField[V: BSONType, M](field: Field[Seq[V], M])
-  extends AbstractListQueryField[V, V, AnyRef, M, Seq](field) {
-  override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
-}
-
-class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)
-  extends AbstractListQueryField[B, B, DBObject, M, List](field) {
+class BsonRecordSeqQueryField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)
+  extends AbstractSeqQueryField[B, B, DBObject, M, List](field) {
   override def valueToDB(b: B) = asDBObject(b)
 
   def subfield[V, V1](f: B => Field[V, B])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], M] = {
@@ -400,8 +399,8 @@ class BsonRecordListQueryField[M, B](field: Field[List[B], M], rec: B, asDBObjec
   }
 }
 
-class CaseClassListQueryField[M, B](field: Field[List[B], M], asDBObject: B => DBObject)
-  extends AbstractListQueryField[B, B, DBObject, M, List](field) {
+class CaseClassSeqQueryField[M, B](field: Field[List[B], M], asDBObject: B => DBObject)
+  extends AbstractSeqQueryField[B, B, DBObject, M, List](field) {
   override def valueToDB(b: B) = asDBObject(b)
 
   /*def subfield[V, V1](f: B => Field[V, B])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], M] = {
@@ -430,8 +429,8 @@ class MapQueryField[V, M](val field: Field[Map[String, V], M]) {
   }
 }
 
-class EnumerationListQueryField[V <: Enumeration#Value, M](field: Field[List[V], M])
-  extends AbstractListQueryField[V, V, String, M, List](field) {
+class EnumerationSeqQueryField[V <: Enumeration#Value, M, CC[_] <: Seq[_]](field: Field[CC[V], M])
+  extends AbstractSeqQueryField[V, V, String, M, CC](field) {
   override def valueToDB(v: V) = v.toString
 }
 
@@ -523,7 +522,7 @@ class MapModifyField[V, M](field: Field[Map[String, V], M])
   override def valueToDB(m: Map[String, V]) = QueryHelpers.makeJavaMap(m)
 }
 
-abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Field[CC[V], M]) {
+abstract class AbstractSeqModifyField[V, DB, M, CC[_] <: Seq[_]](val field: Field[CC[V], M]) {
   def valueToDB(v: V): DB
 
   def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB _)
@@ -585,13 +584,8 @@ abstract class AbstractListModifyField[V, DB, M, CC[X] <: Seq[X]](val field: Fie
   }
 }
 
-class SeqModifyField[V: BSONType, M](field: Field[Seq[V], M])
-  extends AbstractListModifyField[V, AnyRef, M, Seq](field) {
-  override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
-}
-
-class ListModifyField[V: BSONType, M](field: Field[List[V], M])
-  extends AbstractListModifyField[V, AnyRef, M, List](field) {
+class SeqModifyField[V: BSONType, M, CC[_] <: Seq[_]](field: Field[CC[V], M])
+  extends AbstractSeqModifyField[V, AnyRef, M, CC](field) {
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
 }
 
@@ -600,9 +594,8 @@ class ArrayModifyField[V: BSONType, M](field: Field[Array[V], M])
   override def valueToDB(v: V): AnyRef = BSONType[V].asBSONObject(v)
 }
 
-//?manifets ?
-class CaseClassListModifyField[V, M](field: Field[List[V], M], asDBObject: V => DBObject)
-  extends AbstractListModifyField[V, DBObject, M, List](field) {
+class CaseClassSeqModifyField[V, M, CC[_] <: Seq[_]](field: Field[CC[V], M], asDBObject: V => DBObject)
+  extends AbstractSeqModifyField[V, DBObject, M, CC](field) {
   override def valueToDB(v: V) = asDBObject(v)
   //QueryHelpers.asDBObject(v)
 }
@@ -669,13 +662,13 @@ abstract class AbstractArrayModifyField[V, DB, M](val field: Field[Array[V], M])
   }
 }
 
-class EnumerationListModifyField[V <: Enumeration#Value, M](field: Field[List[V], M])
-  extends AbstractListModifyField[V, String, M, List](field) {
+class EnumerationSeqModifyField[V <: Enumeration#Value, M, CC[_] <: Seq[_]](field: Field[CC[V], M])
+  extends AbstractSeqModifyField[V, String, M, CC](field) {
   override def valueToDB(v: V) = v.toString
 }
 
-class BsonRecordListModifyField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)(implicit mf: Manifest[B])
-  extends AbstractListModifyField[B, DBObject, M, List](field) {
+class BsonRecordSeqModifyField[M, B](field: Field[List[B], M], rec: B, asDBObject: B => DBObject)(implicit mf: Manifest[B])
+  extends AbstractSeqModifyField[B, DBObject, M, List](field) {
   override def valueToDB(b: B) = asDBObject(b)
 
   // override def $: BsonRecordField[M, B] = {

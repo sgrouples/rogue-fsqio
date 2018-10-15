@@ -383,25 +383,25 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
       Invoices.insertOneAsync(invoice).futureValue
     }
 
-    Invoices.where(_.total.subfield(_.amount) eqs BigDecimal(12.34)).fetchAsync().futureValue mustBe Seq(invoice1)
+    Invoices.where(_.total.subfield(_.amount) eqs BigDecimal(12.34)).fetchAsync().futureValue must contain allElementsOf (Seq(invoice1))
 
     Invoices.where(_.id eqs 2L).modify(_.total setTo Money(59.12, USD)).updateOneAsync().futureValue
 
     Invoices.where(_.id eqs 2L)
-      .fetchAsync().futureValue mustBe Seq(Invoice(2L, "Invoice no. 2", Money(59.12, USD)))
+      .fetchAsync().futureValue must contain allElementsOf (Seq(Invoice(2L, "Invoice no. 2", Money(59.12, USD))))
 
     Invoices.where(_.total.subfield(_.currency) eqs EUR)
-      .fetchAsync().futureValue mustBe Seq(invoice4)
+      .fetchAsync().futureValue must contain allElementsOf (Seq(invoice4))
 
     Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.currency) setTo EUR).updateOneAsync().futureValue
 
     Invoices.where(_.id eqs 2L)
-      .fetchAsync().futureValue mustBe Seq(Invoice(2L, "Invoice no. 2", Money(59.12, EUR)))
+      .fetchAsync().futureValue must contain allElementsOf (Seq(Invoice(2L, "Invoice no. 2", Money(59.12, EUR))))
 
     Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.amount) setTo 1352.98).updateOneAsync().futureValue
 
     Invoices.where(_.id eqs 2L)
-      .fetchAsync().futureValue mustBe Seq(Invoice(2L, "Invoice no. 2", Money(1352.98, EUR)))
+      .fetchAsync().futureValue must contain allElementsOf (Seq(Invoice(2L, "Invoice no. 2", Money(1352.98, EUR))))
 
   }
 

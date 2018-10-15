@@ -31,8 +31,8 @@ abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field
 // - B -
 //abstract class AbstractListQueryField[F, V, DB, M, CC[X] <: Seq[X]](field: Field[CC[F], M])
 
-class CClassSeqQueryField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasChildMeta[C, M], owner: O) //, toBson: B => BsonValue)
-  extends AbstractListQueryField[C, C, BsonValue, O, Seq](fld) {
+class CClassSeqQueryField[C, M <: CcMeta[C], O, CC[_] <: Seq[_]](fld: CField[CC[C], O] with HasChildMeta[C, M], owner: O) //, toBson: B => BsonValue)
+  extends AbstractSeqQueryField[C, C, BsonValue, O, CC](fld) {
   override def valueToDB(c: C) = fld.childMeta.write(c)
 
   def subfield[V, V1](f: M => Field[V, M])(implicit ev: Rogue.Flattened[V, V1]): SelectableDummyField[List[V1], O] = {
@@ -163,8 +163,8 @@ class OptCClassModifyField[C, M <: CcMeta[C], O](fld: OptCClassField[C, M, O]) e
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 }
 
-class CClassSeqModifyField[C, M <: CcMeta[C], O](fld: CField[Seq[C], O] with HasChildMeta[C, M])
-  extends AbstractListModifyField[C, BsonDocument, O, Seq](fld) {
+class CClassSeqModifyField[C, M <: CcMeta[C], O, CC[_] <: Seq[_]](fld: CField[CC[C], O] with HasChildMeta[C, M])
+  extends AbstractSeqModifyField[C, BsonDocument, O, CC](fld) {
   override def valueToDB(b: C): BsonDocument = fld.childMeta.write(b).asDocument()
 
   def pullObjectWhere(clauseFuncs: (M => QueryClause[_])*) = {

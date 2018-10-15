@@ -35,11 +35,10 @@ trait Rogue {
   implicit def rdbobjectFieldToQueryField[M](f: RField[DBObject, M]): QueryField[DBObject, M] = new QueryField(f)
 
   implicit def renumNameFieldToEnumNameQueryField[M, F <: Enumeration#Value](f: RField[F, M]): EnumNameQueryField[M, F] = new EnumNameQueryField(f)
-  implicit def renumerationListFieldToEnumerationListQueryField[M, F <: Enumeration#Value](f: RField[List[F], M]): EnumerationListQueryField[F, M] = new EnumerationListQueryField[F, M](f)
+  implicit def renumerationSeqFieldToEnumerationSeqQueryField[M, F <: Enumeration#Value, CC[_] <: Seq[_]](f: RField[CC[F], M]): EnumerationSeqQueryField[F, M, CC] = new EnumerationSeqQueryField[F, M, CC](f)
   implicit def rlatLongFieldToGeoQueryField[M](f: RField[LatLong, M]): GeoQueryField[M] = new GeoQueryField(f)
-  implicit def rStringsListFieldToStringsListQueryField[M](f: RField[List[String], M]): StringsListQueryField[M] = new StringsListQueryField[M](f)
-  implicit def rlistFieldToListQueryField[M, F: BSONType](f: RField[List[F], M]): ListQueryField[F, M] = new ListQueryField[F, M](f)
-  implicit def rseqFieldToSeqQueryField[M, F: BSONType](f: RField[Seq[F], M]): SeqQueryField[F, M] = new SeqQueryField[F, M](f)
+  implicit def rStringsSeqFieldToStringsSeqQueryField[M, CC[String] <: Seq[String]](f: RField[CC[String], M]): StringsSeqQueryField[M, CC] = new StringsSeqQueryField[M, CC](f)
+  implicit def rseqFieldToSeqQueryField[M, F: BSONType, ST[F] <: Seq[F]](f: RField[ST[F], M]): SeqQueryField[F, M, ST] = new SeqQueryField[F, M, ST](f)
   implicit def rmapFieldToMapQueryField[M, F](f: RField[Map[String, F], M]): MapQueryField[F, M] = new MapQueryField[F, M](f)
 
   /**
@@ -67,17 +66,14 @@ trait Rogue {
   implicit def renumerationFieldToEnumerationModifyField[M, F <: Enumeration#Value](f: RField[F, M]): EnumerationModifyField[M, F] =
     new EnumerationModifyField(f)
 
-  implicit def renumerationListFieldToEnumerationListModifyField[M, F <: Enumeration#Value](f: RField[List[F], M]): EnumerationListModifyField[F, M] =
-    new EnumerationListModifyField[F, M](f)
+  implicit def renumerationSeqFieldToEnumerationSeqModifyField[M, F <: Enumeration#Value, CC[_] <: Seq[_]](f: RField[CC[F], M]): EnumerationSeqModifyField[F, M, CC] =
+    new EnumerationSeqModifyField[F, M, CC](f)
 
   implicit def rlatLongFieldToGeoQueryModifyField[M](f: RField[LatLong, M]): GeoModifyField[M] =
     new GeoModifyField(f)
 
-  implicit def rlistFieldToListModifyField[M, F: BSONType](f: RField[List[F], M]): ListModifyField[F, M] =
-    new ListModifyField[F, M](f)
-
-  implicit def rSeqFieldToSeqModifyField[M, F: BSONType](f: RField[Seq[F], M]): SeqModifyField[F, M] =
-    new SeqModifyField[F, M](f)
+  implicit def rSeqFieldToSeqModifyField[M, F: BSONType, CC[F] <: Seq[F]](f: RField[CC[F], M]): SeqModifyField[F, M, CC] =
+    new SeqModifyField[F, M, CC](f)
 
   implicit def rArrayFieldToArrayModifyField[M, F: BSONType](f: RField[Array[F], M]): ArrayModifyField[F, M] =
     new ArrayModifyField[F, M](f)
@@ -99,6 +95,7 @@ trait Rogue {
   implicit val objectIdIsFlattened = new Flattened[ObjectId, ObjectId]
   implicit val dateIsFlattened = new Flattened[java.util.Date, java.util.Date]
   implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]) = new Flattened[List[A], B]
+  implicit def recursiveFlattenVector[A, B](implicit ev: Flattened[A, B]) = new Flattened[Vector[A], B]
   implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]) = new Flattened[Seq[A], B]
   implicit def recursiveFlattenArray[A, B](implicit ev: Flattened[A, B]) = new Flattened[Array[A], B]
 
