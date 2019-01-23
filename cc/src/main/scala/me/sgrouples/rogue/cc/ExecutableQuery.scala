@@ -229,7 +229,10 @@ case class InsertableQuery[MB, M <: MB, R, State](
     ex.async.insertOne(query, t)
   }
   def insertManyAsync(ts: Seq[R])(implicit dba: MongoAsyncDatabase): Future[Unit] = {
-    ex.async.insertMany(query, ts)
+    if (ts.nonEmpty)
+      ex.async.insertMany(query, ts)
+    else
+      Future.unit
   }
 
   /**
@@ -243,7 +246,12 @@ case class InsertableQuery[MB, M <: MB, R, State](
 
   def insertOne(t: R)(implicit db: MongoDatabase): Unit = ex.sync.insertOne(query, t)
 
-  def insertMany(ts: Seq[R])(implicit db: MongoDatabase): Unit = ex.sync.insertMany(query, ts)
+  def insertMany(ts: Seq[R])(implicit db: MongoDatabase): Unit = {
+    if (ts.nonEmpty)
+      ex.sync.insertMany(query, ts)
+    else
+      Future.unit
+  }
 
   /**
    * *
