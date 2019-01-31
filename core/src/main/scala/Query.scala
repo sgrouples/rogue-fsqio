@@ -48,7 +48,7 @@ case class Query[M, R, +State](
   sk: Option[Int],
   maxScan: Option[Int],
   comment: Option[String],
-  hint: Option[ListMap[String, Any]],
+  hint: Option[Hint],
   condition: AndCondition,
   order: Option[MongoOrder],
   select: Option[MongoSelect[M, R]],
@@ -300,9 +300,20 @@ case class Query[M, R, +State](
    */
   def setReadPreference(r: ReadPreference): Query[M, R, State] = this.copy(readPreference = Some(r))
 
-  def hint[S2](index: MongoIndex[M])(implicit ev: AddHint[State, S2]): Query[M, R, S2] = {
-    this.copy(hint = Some(index.asListMap))
+  def hint[S2](name: String)(implicit ev: AddHint[State, S2]): Query[M, R, S2] = {
+    this.copy(hint = Some(new NamedHint(name)))
   }
+
+
+  /*
+  naturalHint
+  def hint[S2](name: String)(implicit ev: AddHint[State, S2]): Query[M, R, S2] = {
+    this.copy(hint = Some(new NamedHint(name)))
+  }
+
+  fields hint
+
+  */
 
   /**
    * Adds a select clause to the query. The use of this method constrains the type

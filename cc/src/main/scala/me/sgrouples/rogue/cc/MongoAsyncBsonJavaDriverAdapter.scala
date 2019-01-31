@@ -318,6 +318,9 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     queryClause.lim.foreach(cursor.limit _)
     queryClause.sk.foreach(cursor.skip _)
     ord.foreach(cursor.sort _)
+    query.hint.foreach{ hints =>
+      cursor.hint()
+    }
     cursor.map(adaptedSerializer).into(pa.coll, pa)
     pa.future
   }
