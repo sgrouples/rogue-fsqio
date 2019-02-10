@@ -98,66 +98,66 @@ case class MongoIndex6[R](
       (f6.name, m6.value))
 }
 
-case class IndexBuilder[M](rec: M) {
+trait IndexBuilder[M] {
   def index(
-    f1: M => Field[_, M],
+    f1: Field[_, M],
     m1: IndexModifier): MongoIndex1[M] =
-    MongoIndex1[M](f1(rec), m1)
+    MongoIndex1[M](f1, m1)
 
   def index(
-    f1: M => Field[_, M],
+    f1: Field[_, M],
     m1: IndexModifier,
-    f2: M => Field[_, M],
+    f2: Field[_, M],
     m2: IndexModifier): MongoIndex2[M] =
-    MongoIndex2[M](f1(rec), m1, f2(rec), m2)
+    MongoIndex2[M](f1, m1, f2, m2)
 
   def index(
-    f1: M => Field[_, M],
+    f1: Field[_, M],
     m1: IndexModifier,
-    f2: M => Field[_, M],
+    f2: Field[_, M],
     m2: IndexModifier,
-    f3: M => Field[_, M],
+    f3: Field[_, M],
     m3: IndexModifier): MongoIndex3[M] =
-    MongoIndex3[M](f1(rec), m1, f2(rec), m2, f3(rec), m3)
+    MongoIndex3[M](f1, m1, f2, m2, f3, m3)
 
   def index(
-    f1: M => Field[_, M],
+    f1: Field[_, M],
     m1: IndexModifier,
-    f2: M => Field[_, M],
+    f2: Field[_, M],
     m2: IndexModifier,
-    f3: M => Field[_, M],
+    f3: Field[_, M],
     m3: IndexModifier,
-    f4: M => Field[_, M],
+    f4: Field[_, M],
     m4: IndexModifier): MongoIndex4[M] =
-    MongoIndex4[M](f1(rec), m1, f2(rec), m2, f3(rec), m3, f4(rec), m4)
+    MongoIndex4[M](f1, m1, f2, m2, f3, m3, f4, m4)
 
   def index(
-    f1: M => Field[_, M],
+    f1: Field[_, M],
     m1: IndexModifier,
-    f2: M => Field[_, M],
+    f2: Field[_, M],
     m2: IndexModifier,
-    f3: M => Field[_, M],
+    f3: Field[_, M],
     m3: IndexModifier,
-    f4: M => Field[_, M],
+    f4: Field[_, M],
     m4: IndexModifier,
-    f5: M => Field[_, M],
+    f5: Field[_, M],
     m5: IndexModifier): MongoIndex5[M] =
-    MongoIndex5[M](f1(rec), m1, f2(rec), m2, f3(rec), m3, f4(rec), m4, f5(rec), m5)
+    MongoIndex5[M](f1, m1, f2, m2, f3, m3, f4, m4, f5, m5)
 
   def index(
-    f1: M => Field[_, M],
+    f1: Field[_, M],
     m1: IndexModifier,
-    f2: M => Field[_, M],
+    f2: Field[_, M],
     m2: IndexModifier,
-    f3: M => Field[_, M],
+    f3: Field[_, M],
     m3: IndexModifier,
-    f4: M => Field[_, M],
+    f4: Field[_, M],
     m4: IndexModifier,
-    f5: M => Field[_, M],
+    f5: Field[_, M],
     m5: IndexModifier,
-    f6: M => Field[_, M],
+    f6: Field[_, M],
     m6: IndexModifier): MongoIndex6[M] =
-    MongoIndex6[M](f1(rec), m1, f2(rec), m2, f3(rec), m3, f4(rec), m4, f5(rec), m5, f6(rec), m6)
+    MongoIndex6[M](f1, m1, f2, m2, f3, m3, f4, m4, f5, m5, f6, m6)
 }
 
 trait MongoTextIndex[R] extends UntypedMongoIndex
@@ -216,41 +216,41 @@ case class TextIndexBuilder[M](rec: M) {
     MongoTextIndexAll[M]()
 
   def textIndex(
-    f1: M => Field[_, M]): MongoTextIndex1[M] =
-    MongoTextIndex1[M](f1(rec))
+    f1: Field[_, M]): MongoTextIndex1[M] =
+    MongoTextIndex1[M](f1)
 
   def textIndex(
-    f1: M => Field[_, M],
-    f2: M => Field[_, M]): MongoTextIndex2[M] =
-    MongoTextIndex2[M](f1(rec), f2(rec))
+    f1: Field[_, M],
+    f2: Field[_, M]): MongoTextIndex2[M] =
+    MongoTextIndex2[M](f1, f2)
 
   def textIndex(
-    f1: M => Field[_, M],
-    f2: M => Field[_, M],
-    f3: M => Field[_, M]): MongoTextIndex3[M] =
-    MongoTextIndex3[M](f1(rec), f2(rec), f3(rec))
+    f1: Field[_, M],
+    f2: Field[_, M],
+    f3: Field[_, M]): MongoTextIndex3[M] =
+    MongoTextIndex3[M](f1, f2, f3)
 
   def textIndex(
-    f1: M => Field[_, M],
-    f2: M => Field[_, M],
-    f3: M => Field[_, M],
-    f4: M => Field[_, M]): MongoTextIndex4[M] =
-    MongoTextIndex4[M](f1(rec), f2(rec), f3(rec), f4(rec))
+    f1: Field[_, M],
+    f2: Field[_, M],
+    f3: Field[_, M],
+    f4: Field[_, M]): MongoTextIndex4[M] =
+    MongoTextIndex4[M](f1, f2, f3, f4)
 
   def textIndex(
-    f1: M => Field[_, M],
-    f2: M => Field[_, M],
-    f3: M => Field[_, M],
-    f4: M => Field[_, M],
-    f5: M => Field[_, M]): MongoTextIndex5[M] =
-    MongoTextIndex5[M](f1(rec), f2(rec), f3(rec), f4(rec), f5(rec))
+    f1: Field[_, M],
+    f2: Field[_, M],
+    f3: Field[_, M],
+    f4: Field[_, M],
+    f5: Field[_, M]): MongoTextIndex5[M] =
+    MongoTextIndex5[M](f1, f2, f3, f4, f5)
 
   def textIndex(
-    f1: M => Field[_, M],
-    f2: M => Field[_, M],
-    f3: M => Field[_, M],
-    f4: M => Field[_, M],
-    f5: M => Field[_, M],
-    f6: M => Field[_, M]): MongoTextIndex6[M] =
-    MongoTextIndex6[M](f1(rec), f2(rec), f3(rec), f4(rec), f5(rec), f6(rec))
+    f1: Field[_, M],
+    f2: Field[_, M],
+    f3: Field[_, M],
+    f4: Field[_, M],
+    f5: Field[_, M],
+    f6: Field[_, M]): MongoTextIndex6[M] =
+    MongoTextIndex6[M](f1, f2, f3, f4, f5, f6)
 }

@@ -135,14 +135,14 @@ object MongoHelpers extends Rogue {
       builder.get.asInstanceOf[BasicDBObject]
     }
 
-    def buildHint(h: ListMap[String, Any]): DBObject = {
+    def buildHint(h: ListMap[String, Any]): BasicDBObject = {
       val builder = BasicDBObjectBuilder.start
       h.foreach {
         case (field, attr) => {
           builder.add(field, attr)
         }
       }
-      builder.get
+      builder.get.asInstanceOf[BasicDBObject]
     }
 
     val OidPattern = Pattern.compile("""\{ "\$oid" : "([0-9a-f]{24})"\}""")

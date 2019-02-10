@@ -8,6 +8,7 @@ import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 import BsonFormats._
 import EnumNameFormats._
+import io.fsq.rogue.index.{ Asc, Desc, IndexBuilder }
 import me.sgrouples.rogue.naming.PluralLowerCase
 import shapeless.tag.@@
 import shapeless.tag
@@ -108,7 +109,14 @@ object Metas {
 
   val VenueClaimBsonR = new VenueClaimBsonRMeta
 
-  class VenueRMeta extends RCcMetaExt[Venue, VenueRMeta](PluralLowerCase) {
+  /*
+  VenueR.where(_.legacyid eqs 1).hint(VenueR.idIdx).toString()        must_== """db.venues.find({ "legId" : 1 }).hint({ "_id" : 1 })"""
+      VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdx).toString()       must_== """db.venues.find({ "legId" : 1 }).hint({ "legid" : -1 })"""
+      VenueR.where(_.legacyid eqs 1).hint(VenueR.geoIdx).toString()       must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "2d" })"""
+      VenueR.where(_.legacyid eqs 1).hint(VenueR.geoCustomIdx).toString() must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "custom", "tags" : 1 })"""
+
+   */
+  class VenueRMeta extends RCcMetaExt[Venue, VenueRMeta](PluralLowerCase) with IndexBuilder[VenueRMeta] {
 
     val id = ObjectIdTaggedField[Venue]("_id")
     val mayor = LongField
@@ -127,6 +135,9 @@ object Metas {
     val last_updated = LocalDateTimeField
     val popularity = ListField[Long]
     val categories = ListField[ObjectId]
+
+    val idIdx = index(id, Asc)
+    val legIdx = index(legacyid, Desc)
   }
 
   val VenueR = new VenueRMeta

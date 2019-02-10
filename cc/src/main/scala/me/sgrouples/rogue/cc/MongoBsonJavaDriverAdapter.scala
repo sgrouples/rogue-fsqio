@@ -193,6 +193,7 @@ class MongoBsonJavaDriverAdapter[MB](
     queryClause.lim.foreach(cursor.limit _)
     queryClause.sk.foreach(cursor.skip _)
     ord.foreach(cursor.sort _)
+    query.hint.foreach(h => cursor.hint(buildHint(h)))
     cursor
   }
 

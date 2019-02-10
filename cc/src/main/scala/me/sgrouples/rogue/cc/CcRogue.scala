@@ -54,10 +54,7 @@ trait CcRogue {
   implicit def ccMetaToQueryBuilder[M <: CcMeta[_], R](meta: M with CcMeta[R]): Query[M, R, InitialState] =
     Query[M, R, InitialState](
       meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)
-
-  implicit def metaRecordToIndexBuilder[M <: CcMeta[_]](meta: M): IndexBuilder[M] =
-    IndexBuilder(meta)
-
+  
   implicit def ccMetaToInsertQuery[MB <: CcMeta[_], M <: MB, R, State](meta: M): InsertableQuery[MB, M, R, InitialState] = {
     val query = Query[M, R, InitialState](
       meta, meta.collectionName, None, None, None, None, None, AndCondition(Nil, None, None), None, None, None)

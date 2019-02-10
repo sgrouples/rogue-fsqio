@@ -318,6 +318,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     queryClause.lim.foreach(cursor.limit _)
     queryClause.sk.foreach(cursor.skip _)
     ord.foreach(cursor.sort _)
+    query.hint.foreach(h => cursor.hint(buildHint(h)))
     cursor.map(adaptedSerializer).into(pa.coll, pa)
     pa.future
   }
@@ -341,7 +342,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     queryClause.lim.foreach(cursor.limit _)
     queryClause.sk.foreach(cursor.skip _)
     ord.foreach(cursor.sort _)
-
+    query.hint.foreach(h => cursor.hint(buildHint(h)))
     cursor.map(adaptedSerializer).into(oneP.coll, oneP)
     oneP.future
   }
@@ -355,9 +356,9 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     val cnd: Bson = buildCondition(queryClause.condition)
     val coll = getDBCollection(query, readPreference)
     val callback = new UnitCallback[Void]
-    coll.find(cnd).forEach(new Block[BsonDocument] {
-      override def apply(t: BsonDocument): Unit = f(t)
-    }, callback)
+    val cursor = coll.find(cnd)
+    query.hint.foreach(h => cursor.hint(buildHint(h)))
+    cursor.forEach((t: BsonDocument) => f(t), callback)
     callback.future
   }
 
@@ -456,10 +457,13 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     val coll = getDBCollection(query, readPreference)
     val sel: Bson = query.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
     val ord = query.order.map(buildOrder)
-    val baseCursor = coll.find(cnd).projection(sel)
-    val limitedCursor = query.lim.fold(baseCursor)(baseCursor.limit _)
-    val skippedCursor = query.sk.fold(limitedCursor)(limitedCursor.skip _)
-    ord.fold(skippedCursor)(skippedCursor.sort _)
+    val cursor = coll.find(cnd).projection(sel)
+    //mongo driver has side-effecting fuctions for limit, skip, hint
+    query.lim.foreach(cursor.limit _)
+    query.sk.foreach(cursor.skip _)
+    query.hint.foreach(h => cursor.hint(buildHint(h)))
+    ord.foreach(cursor.sort _)
+    cursor
   }
 
   def batch[M <: MB, R, T](query: Query[M, R, _], serializer: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]], batchSize: Int,

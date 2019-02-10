@@ -249,8 +249,6 @@ case class InsertableQuery[MB, M <: MB, R, State](
   def insertMany(ts: Seq[R])(implicit db: MongoDatabase): Unit = {
     if (ts.nonEmpty)
       ex.sync.insertMany(query, ts)
-    else
-      Future.unit
   }
 
   /**
