@@ -304,6 +304,10 @@ case class Query[M, R, +State](
     this.copy(hint = Some(index.asListMap))
   }
 
+  def hintOpt[S2](indexOpt: Option[MongoIndex[M]])(implicit ev: AddHint[State, S2]): Query[M, R, S2] = {
+    this.copy(hint = indexOpt.map(_.asListMap))
+  }
+
   /**
    * Adds a select clause to the query. The use of this method constrains the type
    * signature of the query to force the "Sel" field to be type "Selected".

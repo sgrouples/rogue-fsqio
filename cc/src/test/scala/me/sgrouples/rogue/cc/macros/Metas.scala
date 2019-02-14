@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc.macros
 import java.time.Instant
 import java.util.{ Currency, Locale, UUID }
 
+import io.fsq.rogue.index.{ Asc, Desc, IndexBuilder }
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
@@ -27,7 +28,7 @@ object Metas {
 
   val VenueClaimBsonR = new VenueClaimBsonRMeta
 
-  class VenueRMeta extends MCcMeta[Venue, VenueRMeta](PluralLowerCase) {
+  class VenueRMeta extends MCcMeta[Venue, VenueRMeta](PluralLowerCase) with IndexBuilder[VenueRMeta] {
     val id = ObjectIdTaggedField[Venue]("_id")
     @f val mayor = LongField
     @f val venuename = StringField
@@ -45,6 +46,9 @@ object Metas {
     @f val last_updated = LocalDateTimeField
     @f val popularity = ListField[Long]
     @f val categories = ListField[ObjectId]
+
+    val idIdx = index(id, Asc)
+    val legIdx = index(legacyid, Desc)
   }
 
   val VenueR = new VenueRMeta

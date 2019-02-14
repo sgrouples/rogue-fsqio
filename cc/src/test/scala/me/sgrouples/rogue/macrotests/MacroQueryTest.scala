@@ -509,14 +509,20 @@ class MacroQueryTest extends JUnitMustMatchers {
       """db.venues.find({ "$or" : [{ "legId" : { "$numberLong" : "1" } }, { "legId" : { "$numberLong" : "2" }, "$or" : [{ "closed" : true }, { "closed" : { "$exists" : false } }] }] })"""
   }
 
-  /*@Test
-      def testHints {
-        VenueR.where(_.legacyid eqs 1).hint(VenueR.idIdx).toString()        must_== """db.venues.find({ "legId" : 1 }).hint({ "_id" : 1 })"""
-        VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdx).toString()       must_== """db.venues.find({ "legId" : 1 }).hint({ "legid" : -1 })"""
-        VenueR.where(_.legacyid eqs 1).hint(VenueR.geoIdx).toString()       must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "2d"})"""
-        VenueR.where(_.legacyid eqs 1).hint(VenueR.geoCustomIdx).toString() must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "custom" , "tags" : 1 })"""
-      }
-  */
+  @Test
+  def testHints {
+    VenueR.where(_.legacyid eqs 1).hint(VenueR.idIdx).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } }).hint({ "_id" : 1 })"""
+    VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdx).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } }).hint({ "legId" : -1 })"""
+    //no support for geo indexes yet in test
+    //VenueR.where(_.legacyid eqs 1).hint(VenueR.geoIdx).toString()       must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "2d" })"""
+    //VenueR.where(_.legacyid eqs 1).hint(VenueR.geoCustomIdx).toString() must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "custom", "tags" : 1 })"""
+
+    //optional hints
+    VenueR.where(_.legacyid eqs 1).hintOpt(Some(VenueR.idIdx)).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } }).hint({ "_id" : 1 })"""
+    VenueR.where(_.legacyid eqs 1).hintOpt(Some(VenueR.legIdx)).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } }).hint({ "legId" : -1 })"""
+    VenueR.where(_.legacyid eqs 1).hintOpt(None).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } })"""
+  }
+
   @Test
   def testDollarSelector {
 
