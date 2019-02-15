@@ -4,6 +4,7 @@ package io.fsq.rogue.indexchecker
 
 import io.fsq.rogue.{ DocumentScan, Index, IndexScan, MongoHelpers, PartialIndexScan, Query, QueryClause, QueryHelpers }
 import io.fsq.rogue.index.UntypedMongoIndex
+import scala.collection.JavaConverters._
 
 trait IndexChecker {
   /**
@@ -102,7 +103,7 @@ object MongoIndexChecker extends IndexChecker {
     lazy val indexString = indexes.map(idx => "{%s}".format(idx.toString())).mkString(", ")
     conditions.forall(clauses => {
       clauses.isEmpty || matchesUniqueIndex(clauses) ||
-        indexes.exists(idx => matchesIndex(idx.asListMap.keys.toList, clauses) && logIndexHit(query, idx)) ||
+        indexes.exists(idx => matchesIndex(idx.asBsonDocument.keySet.asScala.toList, clauses) && logIndexHit(query, idx)) ||
         signalError(query, "Query does not match an index! query: %s, indexes: %s" format (
           query.toString, indexString))
     })

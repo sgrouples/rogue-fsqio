@@ -49,6 +49,7 @@ object Metas {
 
     val idIdx = index(id, Asc)
     val legIdx = index(legacyid, Desc)
+    val legIdIdx = index(legacyid, Asc, id, Desc)
   }
 
   val VenueR = new VenueRMeta

@@ -2,8 +2,12 @@
 
 package io.fsq.rogue
 
-import com.mongodb.{ BasicDBObjectBuilder, DBObject, BasicDBObject }
+import com.mongodb.{ BasicDBObject, BasicDBObjectBuilder, DBObject }
 import java.util.regex.Pattern
+
+import io.fsq.rogue.index.MongoIndex
+import org.bson.BsonDocument
+
 import scala.collection.immutable.ListMap
 
 object MongoHelpers extends Rogue {
@@ -135,14 +139,8 @@ object MongoHelpers extends Rogue {
       builder.get.asInstanceOf[BasicDBObject]
     }
 
-    def buildHint(h: ListMap[String, Any]): BasicDBObject = {
-      val builder = BasicDBObjectBuilder.start
-      h.foreach {
-        case (field, attr) => {
-          builder.add(field, attr)
-        }
-      }
-      builder.get.asInstanceOf[BasicDBObject]
+    def buildHint[M](idx: MongoIndex[M]): BsonDocument = {
+      idx.asBsonDocument
     }
 
     val OidPattern = Pattern.compile("""\{ "\$oid" : "([0-9a-f]{24})"\}""")

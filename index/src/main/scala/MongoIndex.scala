@@ -3,13 +3,14 @@
 package io.fsq.rogue.index
 
 import io.fsq.field.Field
+import org.bson.{ BsonDocument, BsonString }
+
 import scala.collection.immutable.ListMap
 
 trait UntypedMongoIndex {
-  def asListMap: ListMap[String, Any]
+  def asBsonDocument: BsonDocument
 
-  override def toString() =
-    asListMap.map(fld => "%s:%s".format(fld._1, fld._2)).mkString(", ")
+  override def toString() = asBsonDocument.toString
 }
 
 trait MongoIndex[R] extends UntypedMongoIndex
@@ -17,7 +18,7 @@ trait MongoIndex[R] extends UntypedMongoIndex
 case class MongoIndex1[R](
   f1: Field[_, R],
   m1: IndexModifier) extends MongoIndex[R] {
-  def asListMap = ListMap((f1.name, m1.value))
+  def asBsonDocument: BsonDocument = new BsonDocument().append(f1.name, m1.bsonValue)
 }
 
 case class MongoIndex2[R](
@@ -25,7 +26,9 @@ case class MongoIndex2[R](
   m1: IndexModifier,
   f2: Field[_, R],
   m2: IndexModifier) extends MongoIndex[R] {
-  def asListMap = ListMap((f1.name, m1.value), (f2.name, m2.value))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, m1.bsonValue)
+    .append(f2.name, m2.bsonValue)
 }
 
 case class MongoIndex3[R](
@@ -35,7 +38,10 @@ case class MongoIndex3[R](
   m2: IndexModifier,
   f3: Field[_, R],
   m3: IndexModifier) extends MongoIndex[R] {
-  def asListMap = ListMap((f1.name, m1.value), (f2.name, m2.value), (f3.name, m3.value))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, m1.bsonValue)
+    .append(f2.name, m2.bsonValue)
+    .append(f3.name, m3.bsonValue)
 }
 
 case class MongoIndex4[R](
@@ -47,12 +53,11 @@ case class MongoIndex4[R](
   m3: IndexModifier,
   f4: Field[_, R],
   m4: IndexModifier) extends MongoIndex[R] {
-  def asListMap =
-    ListMap(
-      (f1.name, m1.value),
-      (f2.name, m2.value),
-      (f3.name, m3.value),
-      (f4.name, m4.value))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, m1.bsonValue)
+    .append(f2.name, m2.bsonValue)
+    .append(f3.name, m3.bsonValue)
+    .append(f4.name, m4.bsonValue)
 }
 
 case class MongoIndex5[R](
@@ -66,13 +71,12 @@ case class MongoIndex5[R](
   m4: IndexModifier,
   f5: Field[_, R],
   m5: IndexModifier) extends MongoIndex[R] {
-  def asListMap =
-    ListMap(
-      (f1.name, m1.value),
-      (f2.name, m2.value),
-      (f3.name, m3.value),
-      (f4.name, m4.value),
-      (f5.name, m5.value))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, m1.bsonValue)
+    .append(f2.name, m2.bsonValue)
+    .append(f3.name, m3.bsonValue)
+    .append(f4.name, m4.bsonValue)
+    .append(f5.name, m5.bsonValue)
 }
 
 case class MongoIndex6[R](
@@ -88,14 +92,13 @@ case class MongoIndex6[R](
   m5: IndexModifier,
   f6: Field[_, R],
   m6: IndexModifier) extends MongoIndex[R] {
-  def asListMap =
-    ListMap(
-      (f1.name, m1.value),
-      (f2.name, m2.value),
-      (f3.name, m3.value),
-      (f4.name, m4.value),
-      (f5.name, m5.value),
-      (f6.name, m6.value))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, m1.bsonValue)
+    .append(f2.name, m2.bsonValue)
+    .append(f3.name, m3.bsonValue)
+    .append(f4.name, m4.bsonValue)
+    .append(f5.name, m5.bsonValue)
+    .append(f6.name, m6.bsonValue)
 }
 
 trait IndexBuilder[M] {
@@ -163,25 +166,30 @@ trait IndexBuilder[M] {
 trait MongoTextIndex[R] extends UntypedMongoIndex
 
 case class MongoTextIndexAll[R]() extends MongoTextIndex[R] {
-  def asListMap = ListMap(("$**", "text"))
+  def asBsonDocument: BsonDocument = new BsonDocument().append("$**", new BsonString("text"))
 }
 
 case class MongoTextIndex1[R](
   f1: Field[_, R]) extends MongoTextIndex[R] {
-  def asListMap = ListMap((f1.name, "text"))
+  def asBsonDocument: BsonDocument = new BsonDocument().append(f1.name, new BsonString("text"))
 }
 
 case class MongoTextIndex2[R](
   f1: Field[_, R],
   f2: Field[_, R]) extends MongoTextIndex[R] {
-  def asListMap = ListMap((f1.name, "text"), (f2.name, "text"))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, new BsonString("text"))
+    .append(f2.name, new BsonString("text"))
 }
 
 case class MongoTextIndex3[R](
   f1: Field[_, R],
   f2: Field[_, R],
   f3: Field[_, R]) extends MongoTextIndex[R] {
-  def asListMap = ListMap((f1.name, "text"), (f2.name, "text"), (f3.name, "text"))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, new BsonString("text"))
+    .append(f2.name, new BsonString("text"))
+    .append(f3.name, new BsonString("text"))
 }
 
 case class MongoTextIndex4[R](
@@ -189,7 +197,11 @@ case class MongoTextIndex4[R](
   f2: Field[_, R],
   f3: Field[_, R],
   f4: Field[_, R]) extends MongoTextIndex[R] {
-  def asListMap = ListMap((f1.name, "text"), (f2.name, "text"), (f3.name, "text"), (f4.name, "text"))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, new BsonString("text"))
+    .append(f2.name, new BsonString("text"))
+    .append(f3.name, new BsonString("text"))
+    .append(f4.name, new BsonString("text"))
 }
 
 case class MongoTextIndex5[R](
@@ -198,7 +210,12 @@ case class MongoTextIndex5[R](
   f3: Field[_, R],
   f4: Field[_, R],
   f5: Field[_, R]) extends MongoTextIndex[R] {
-  def asListMap = ListMap((f1.name, "text"), (f2.name, "text"), (f3.name, "text"), (f4.name, "text"), (f5.name, "text"))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, new BsonString("text"))
+    .append(f2.name, new BsonString("text"))
+    .append(f3.name, new BsonString("text"))
+    .append(f4.name, new BsonString("text"))
+    .append(f5.name, new BsonString("text"))
 }
 
 case class MongoTextIndex6[R](
@@ -208,7 +225,13 @@ case class MongoTextIndex6[R](
   f4: Field[_, R],
   f5: Field[_, R],
   f6: Field[_, R]) extends MongoTextIndex[R] {
-  def asListMap = ListMap((f1.name, "text"), (f2.name, "text"), (f3.name, "text"), (f4.name, "text"), (f5.name, "text"), (f6.name, "text"))
+  def asBsonDocument: BsonDocument = new BsonDocument()
+    .append(f1.name, new BsonString("text"))
+    .append(f2.name, new BsonString("text"))
+    .append(f3.name, new BsonString("text"))
+    .append(f4.name, new BsonString("text"))
+    .append(f5.name, new BsonString("text"))
+    .append(f6.name, new BsonString("text"))
 }
 
 case class TextIndexBuilder[M](rec: M) {

@@ -513,6 +513,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   def testHints {
     VenueR.where(_.legacyid eqs 1).hint(VenueR.idIdx).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } }).hint({ "_id" : 1 })"""
     VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdx).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } }).hint({ "legId" : -1 })"""
+    VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdIdx).toString() must_== """db.venues.find({ "legId" : { "$numberLong" : "1" } }).hint({ "legId" : 1, "_id" : -1 })"""
     //no support for geo indexes yet in test
     //VenueR.where(_.legacyid eqs 1).hint(VenueR.geoIdx).toString()       must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "2d" })"""
     //VenueR.where(_.legacyid eqs 1).hint(VenueR.geoCustomIdx).toString() must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "custom", "tags" : 1 })"""
