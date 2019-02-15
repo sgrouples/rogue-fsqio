@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc.macros
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.IndexOptions
 import io.fsq.field.Field
+import io.fsq.rogue.index.MongoIndex
 import me.sgrouples.rogue.BsonFormat
 import me.sgrouples.rogue.cc.{ CcMeta, PromiseSingleValueAdapter, QueryFieldHelpers }
 import me.sgrouples.rogue.naming.{ LowerCase, NamingStrategy }
@@ -50,6 +51,7 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(imp
    * @param opts IndexOptions- from mongo
    * @return  - index name
    */
+  @deprecated("Use `MongoIndex` version instead", "2019/02/15")
   def createIndex(indexTuples: Seq[(String, Int)], opts: IndexOptions)(implicit dbs: MongoDatabase): String = {
     val keys = new BsonDocument()
     indexTuples.foreach { case (k, v) => keys.append(k, new BsonInt32(v)) }
@@ -62,6 +64,7 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(imp
    * @param opts IndexOptions- from mongo
    * @return  - index name
    */
+  @deprecated("Use `MongoIndex` version instead", "2019/02/15")
   def createIndexAsync(indexTuples: Seq[(String, Int)], opts: IndexOptions)(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
     val cb = new PromiseSingleValueAdapter[String]
     val keys = new BsonDocument()
@@ -75,16 +78,62 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(imp
    * @param opts - IndexOptions
    * @return index name (string)
    */
+  @deprecated("Use `MongoIndex` version instead", "2019/02/15")
   def createIndex(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions())(implicit dbs: MongoDatabase): String =
     createIndex(Seq(indexTuple), opts)
 
+  @deprecated("Use `MongoIndex` version instead", "2019/02/15")
   def createIndexAsync(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions())(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] =
     createIndexAsync(Seq(indexTuple), opts)
 
+  @deprecated("Use `MongoIndex` version instead", "2019/02/15")
   def createIndex(indexTuples: Seq[(String, Int)])(implicit dbs: MongoDatabase): String = createIndex(indexTuples, new IndexOptions())
 
+  @deprecated("Use `MongoIndex` version instead", "2019/02/15")
   def createIndexAsync(indexTuples: Seq[(String, Int)])(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] =
     createIndexAsync(indexTuples, new IndexOptions())
+
+  /**
+   * Index creation without any checks or enforcements - might lock entire collection if `background` flag is not specified
+   * @param index  MongoIndex to create
+   * @param opts IndexOptions- from mongo
+   * @return  - index name
+   */
+  def createIndexUnsafe(index: MongoIndex[RecordType], opts: IndexOptions = new IndexOptions())(implicit dbs: MongoDatabase): String = {
+    val indexBson = index.asBsonDocument
+    dbs.getCollection(collectionName).createIndex(indexBson, opts)
+  }
+
+  /**
+   * Index creation without any checks or enforcements - might lock entire collection if `background` flag is not specified
+   * @param index  MongoIndex to create
+   * @param opts IndexOptions- from mongo
+   * @return  - index name
+   */
+  def createIndexUnsafeAsync(index: MongoIndex[RecordType], opts: IndexOptions = new IndexOptions())(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+    val indexBson = index.asBsonDocument
+    val cb = new PromiseSingleValueAdapter[String]
+    dba.getCollection(collectionName).createIndex(indexBson, opts, cb)
+    cb.future
+  }
+
+  /**
+   * "Safe" version of index creation - it forces index to be created in the background
+   */
+  def createIndex(index: MongoIndex[RecordType], opts: IndexOptions)(implicit dbs: MongoDatabase): String = {
+    createIndexUnsafe(index, opts.background(true))
+  }
+  def createIndex(index: MongoIndex[RecordType])(implicit dbs: MongoDatabase): String = createIndex(index, new IndexOptions())
+
+  /**
+   * "Safe" version of index creation - it forces index to be created in the background
+   */
+  def createIndexAsync(index: MongoIndex[RecordType], opts: IndexOptions)(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+    createIndexUnsafeAsync(index, opts.background(true))
+  }
+  def createIndexAsync(index: MongoIndex[RecordType])(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+    createIndexAsync(index, new IndexOptions())
+  }
 
 }
 

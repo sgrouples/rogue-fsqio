@@ -8,8 +8,6 @@ import java.util.regex.Pattern
 import io.fsq.rogue.index.MongoIndex
 import org.bson.BsonDocument
 
-import scala.collection.immutable.ListMap
-
 object MongoHelpers extends Rogue {
   case class AndCondition(clauses: List[QueryClause[_]], orCondition: Option[OrCondition], searchCondition: Option[SearchCondition]) {
     def isEmpty: Boolean = clauses.isEmpty && orCondition.isEmpty && searchCondition.isEmpty

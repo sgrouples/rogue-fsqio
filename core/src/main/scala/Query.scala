@@ -5,8 +5,6 @@ package io.fsq.rogue
 import com.mongodb.{ BasicDBObjectBuilder, DBObject, ReadPreference }
 import io.fsq.rogue.MongoHelpers.{ AndCondition, FieldOrderTerm, MongoBuilder, MongoModify, MongoOrder, MongoSelect, NaturalOrderTerm, ScoreOrderTerm, SearchCondition }
 import io.fsq.rogue.index.MongoIndex
-
-import scala.collection.immutable.ListMap
 import scala.concurrent.duration.FiniteDuration
 
 // ***************************************************************************

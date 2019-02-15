@@ -5,8 +5,6 @@ package io.fsq.rogue.index
 import io.fsq.field.Field
 import org.bson.{ BsonDocument, BsonString }
 
-import scala.collection.immutable.ListMap
-
 trait UntypedMongoIndex {
   def asBsonDocument: BsonDocument
 
