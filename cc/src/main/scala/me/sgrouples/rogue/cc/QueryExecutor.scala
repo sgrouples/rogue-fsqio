@@ -5,11 +5,12 @@ import java.util.function.Consumer
 import com.mongodb._
 import com.mongodb.async.client.{ MongoDatabase => MongoAsyncDatabase }
 import com.mongodb.client.MongoDatabase
+import com.mongodb.client.result.UpdateResult
 import io.fsq.field.Field
 import io.fsq.rogue.MongoHelpers.{ MongoModify, MongoSelect }
 import io.fsq.rogue._
 import io.fsq.spindle.types.MongoDisallowed
-import org.bson.{ BsonDocument }
+import org.bson.BsonDocument
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
@@ -105,16 +106,34 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     adapter.modify(query, upsert = false, multi = false, writeConcern = writeConcern)
   }
 
+  def updateOneRet[M <: MB, State](
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[UpdateResult] = {
+    adapter.modifyRet(query, upsert = false, multi = false, writeConcern = writeConcern)
+  }
+
   def upsertOne[M <: MB, State](
     query: ModifyQuery[M, State],
     writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[Unit] = {
     adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
   }
 
+  def upsertOneRet[M <: MB, State](
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[UpdateResult] = {
+    adapter.modifyRet(query, upsert = true, multi = false, writeConcern = writeConcern)
+  }
+
   def updateMulti[M <: MB, State](
     query: ModifyQuery[M, State],
     writeConcern: WriteConcern = defaultWriteConcern)(implicit dba: MongoAsyncDatabase): Future[Unit] = {
     adapter.modify(query, upsert = false, multi = true, writeConcern = writeConcern)
+  }
+
+  def updateMultiRet[M <: MB, State](
+    query: ModifyQuery[M, State],
+    writeConcern: WriteConcern = defaultWriteConcern)(implicit dba: MongoAsyncDatabase): Future[UpdateResult] = {
+    adapter.modifyRet(query, upsert = false, multi = true, writeConcern = writeConcern)
   }
 
   //WARNING - it might not behave like original - since I don't know how to handle selection
