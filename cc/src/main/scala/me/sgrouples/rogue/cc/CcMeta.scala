@@ -113,7 +113,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
    * @param opts IndexOptions- from mongo
    * @return  - index name
    */
-  def createIndexUnsafe(index: MongoIndex[T], opts: IndexOptions = new IndexOptions())(implicit dbs: MongoDatabase): String = {
+  def createIndexUnsafe[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions = new IndexOptions())(implicit dbs: MongoDatabase): String = {
     val indexBson = index.asBsonDocument
     dbs.getCollection(collectionName).createIndex(indexBson, opts)
   }
@@ -124,7 +124,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
    * @param opts IndexOptions- from mongo
    * @return  - index name
    */
-  def createIndexUnsafeAsync(index: MongoIndex[T], opts: IndexOptions = new IndexOptions())(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+  def createIndexUnsafeAsync[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions = new IndexOptions())(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
     val indexBson = index.asBsonDocument
     val cb = new PromiseSingleValueAdapter[String]
     dba.getCollection(collectionName).createIndex(indexBson, opts, cb)
@@ -134,18 +134,18 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   /**
    * "Safe" version of index creation - it forces index to be created in the background
    */
-  def createIndex(index: MongoIndex[T], opts: IndexOptions)(implicit dbs: MongoDatabase): String = {
+  def createIndex[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions)(implicit dbs: MongoDatabase): String = {
     createIndexUnsafe(index, opts.background(true))
   }
-  def createIndex(index: MongoIndex[T])(implicit dbs: MongoDatabase): String = createIndex(index, new IndexOptions())
+  def createIndex[M <: CcMeta[T]](index: MongoIndex[M])(implicit dbs: MongoDatabase): String = createIndex(index, new IndexOptions())
 
   /**
    * "Safe" version of index creation - it forces index to be created in the background
    */
-  def createIndexAsync(index: MongoIndex[T], opts: IndexOptions)(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+  def createIndexAsync[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions)(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
     createIndexUnsafeAsync(index, opts.background(true))
   }
-  def createIndexAsync(index: MongoIndex[T])(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+  def createIndexAsync[M <: CcMeta[T]](index: MongoIndex[M])(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
     createIndexAsync(index, new IndexOptions())
   }
 
