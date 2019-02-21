@@ -9,6 +9,7 @@ import io.fsq.rogue.{ AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, Re
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.client.MongoDatabase
 import com.mongodb.async.client.{ MongoDatabase => MongoAsyncDatabase }
+import com.mongodb.client.result.UpdateResult
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
@@ -196,11 +197,20 @@ case class ExecutableModifyQuery[MB, M <: MB, State](
   def updateMultiAsync(writeConcern: WriteConcern)(implicit dba: MongoAsyncDatabase): Future[Unit] =
     ex.async.updateMulti(query, writeConcern)
 
+  def updateMultiAsyncRet(writeConcern: WriteConcern)(implicit dba: MongoAsyncDatabase): Future[UpdateResult] =
+    ex.async.updateMultiRet(query, writeConcern)
+
   def updateOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[Unit] =
     ex.async.updateOne(query, writeConcern)
 
+  def updateOneAsyncRet(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[UpdateResult] =
+    ex.async.updateOneRet(query, writeConcern)
+
   def upsertOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[Unit] =
     ex.async.upsertOne(query, writeConcern)
+
+  def upsertOneAsyncRet(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoAsyncDatabase): Future[UpdateResult] =
+    ex.async.upsertOneRet(query, writeConcern)
 
 }
 

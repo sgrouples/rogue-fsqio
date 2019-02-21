@@ -117,6 +117,16 @@ class UpdateResultCallback extends SingleResultCallback[UpdateResult] with HasFu
   def future = p.future
 }
 
+class UpdateResultCallbackReturning extends SingleResultCallback[UpdateResult] with HasFuture[UpdateResult] {
+  private[this] val p = Promise[UpdateResult]
+
+  override def onResult(result: UpdateResult, t: Throwable): Unit = {
+    if (t == null) p.success(result)
+    else p.failure(t)
+  }
+  def future = p.future
+}
+
 class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] => Unit) extends SingleResultCallback[UpdateResult] with HasFuture[Unit] {
   private[this] val p = Promise[Unit]
   @volatile private[this] var retried = false
@@ -124,6 +134,23 @@ class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] =>
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
     t match {
       case null => p.success(())
+      case e: MongoException if fromErrorCode(e.getCode) == DUPLICATE_KEY && !retried =>
+        retried = true
+        retry(this)
+      case _ => p.failure(t)
+    }
+  }
+
+  def future = p.future
+}
+
+class UpdateResultCallbackWithRetryReturning(retry: SingleResultCallback[UpdateResult] => Unit) extends SingleResultCallback[UpdateResult] with HasFuture[UpdateResult] {
+  private[this] val p = Promise[UpdateResult]
+  @volatile private[this] var retried = false
+
+  override def onResult(result: UpdateResult, t: Throwable): Unit = {
+    t match {
+      case null => p.success(result)
       case e: MongoException if fromErrorCode(e.getCode) == DUPLICATE_KEY && !retried =>
         retried = true
         retry(this)
@@ -374,11 +401,12 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     callback.future
   }
 
-  def modify[M <: MB](
+  private[this] def modifyInternal[M <: MB, RT](
     mod: ModifyQuery[M, _],
     upsert: Boolean,
     multi: Boolean,
-    writeConcern: WriteConcern)(implicit dba: MongoDatabase): Future[Unit] = {
+    writeConcern: WriteConcern, emptyRT: RT,
+    callbackCreator: (SingleResultCallback[UpdateResult] => Unit) => SingleResultCallback[UpdateResult] with HasFuture[RT])(implicit dba: MongoDatabase): Future[RT] = {
     val modClause = transformer.transformModify(mod)
     validator.validateModify(modClause, dbCollectionFactory.getIndexes(modClause.query))
     if (!modClause.mod.clauses.isEmpty) {
@@ -391,13 +419,44 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
       } else {
         coll.updateOne(q, m, updateOptions, _)
       }
-      val callback = if (upsert) new UpdateResultCallbackWithRetry(updater)
-      else new UpdateResultCallback
+      val callback = callbackCreator(updater)
       updater(callback)
       callback.future
-    } else Future.successful(())
-    //else clause = no modify, automatic success ... strange but true
+    } else {
+      Future.successful(emptyRT)
+    }
+  }
 
+  def modify[M <: MB](
+    mod: ModifyQuery[M, _],
+    upsert: Boolean,
+    multi: Boolean,
+    writeConcern: WriteConcern)(implicit dba: MongoDatabase): Future[Unit] = {
+    modifyInternal[M, Unit](mod, upsert, multi, writeConcern,
+      (),
+      (updater) => if (upsert) new UpdateResultCallbackWithRetry(updater)
+      else new UpdateResultCallback)
+  }
+
+  /**
+   *
+   * @param mod
+   * @param upsert
+   * @param multi
+   * @param writeConcern
+   * @param dba
+   * @tparam M
+   * @return UpdateResult if writeConcern >= Acknowledged, so writer can learn about relevant data (number of updated, created etc)
+   */
+  def modifyRet[M <: MB](
+    mod: ModifyQuery[M, _],
+    upsert: Boolean,
+    multi: Boolean,
+    writeConcern: WriteConcern)(implicit dba: MongoDatabase): Future[UpdateResult] = {
+    modifyInternal[M, UpdateResult](mod, upsert, multi, writeConcern,
+      UpdateResult.unacknowledged(),
+      (updater) => if (upsert) new UpdateResultCallbackWithRetryReturning(updater)
+      else new UpdateResultCallbackReturning)
   }
 
   def findAndModify[M <: MB, R](
