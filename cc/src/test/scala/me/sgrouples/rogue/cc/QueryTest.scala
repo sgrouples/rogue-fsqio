@@ -644,4 +644,12 @@ class QueryTest extends JUnitMustMatchers {
     UuidCcR.where(_.id eqs u)
     UuidCcR.where(_.dt gte Instant.now())
   }
+
+  @Test
+  def testNullEq(): Unit = {
+    val q1 = UuidCcR.where(_.dt eqsNull).asDBObject
+    val q2 = UuidCcR.where(_.dt neqsNull).asDBObject
+    q1.toString must_== """{ "i" : null }"""
+    q2.toString must_== """{ "i" : { "$ne" : null } }"""
+  }
 }

@@ -2,7 +2,6 @@
 
 package io.fsq.rogue
 import scala.language.higherKinds
-
 import java.time.{ LocalDateTime, ZoneOffset }
 
 import com.mongodb.DBObject
@@ -10,6 +9,8 @@ import io.fsq.field.{ Field, OptionalField, RequiredField }
 import java.util.Date
 import java.util.regex.Pattern
 
+import org.bson
+import org.bson.BsonNull
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
@@ -130,6 +131,9 @@ abstract class AbstractQueryField[F, V, DB, M](val field: Field[F, M]) {
     c.negated = true
     c
   }
+
+  def eqsNull = EqClause(field.name, BsonNull.VALUE)
+  def neqsNull = NeQueryClause(field.name, BsonNull.VALUE)
 }
 
 class QueryField[V: BSONType, M](field: Field[V, M])
