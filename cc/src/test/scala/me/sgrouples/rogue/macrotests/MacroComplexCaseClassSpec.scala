@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.macrotests
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros._
@@ -17,8 +18,7 @@ class MacroComplexCaseClassSpec extends FlatSpec with Matchers {
 
   "RCcMeta of a complex case class" should "properly read/write the given instance" in {
 
-    val now = Instant.now
-
+    val now = Instant.now.truncatedTo(ChronoUnit.MILLIS)
     val id = new ObjectId()
 
     val group = Group(

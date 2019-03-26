@@ -123,13 +123,19 @@ object MongoHelpers extends Rogue {
       if (select.isExists) {
         builder.add("_id", 1)
       } else {
+        var hasId = false
         select.fields.foreach(f => {
+          val fName = f.field.name
+          if (fName == "_id") hasId = true
           f.slc match {
-            case None => builder.add(f.field.name, 1)
-            case Some((s, None)) => builder.push(f.field.name).add("$slice", s).pop()
-            case Some((s, Some(e))) => builder.push(f.field.name).add("$slice", QueryHelpers.makeJavaList(List(s, e))).pop()
+            case None => builder.add(fName, 1)
+            case Some((s, None)) => builder.push(fName).add("$slice", s).pop()
+            case Some((s, Some(e))) => builder.push(fName).add("$slice", QueryHelpers.makeJavaList(List(s, e))).pop()
           }
         })
+        if (!hasId) {
+          builder.add("_id", 0)
+        }
       }
 
       // add score "field"

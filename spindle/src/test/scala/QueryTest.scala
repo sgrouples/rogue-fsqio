@@ -464,7 +464,7 @@ class QueryTest extends JUnitMustMatchers {
     Q(ThriftVenue).where(_.legacyid eqs 1).orderAsc(_.popularity).findAndModify(_.venuename setTo "fshq").toString().must_==(
       """db.venues.findAndModify({ query: { "legid" : 1}, sort: { "popularity" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, upsert: false })""")
     Q(ThriftVenue).where(_.legacyid eqs 1).select(_.mayor, _.closed).findAndModify(_.venuename setTo "fshq").toString().must_==(
-      """db.venues.findAndModify({ query: { "legid" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, fields: { "mayor" : 1 , "closed" : 1}, upsert: false })""")
+      """db.venues.findAndModify({ query: { "legid" : 1}, update: { "$set" : { "venuename" : "fshq"}}, new: false, fields: { "_id" : 0, "mayor" : 1 , "closed" : 1}, upsert: false })""")
   }
 
   @Test

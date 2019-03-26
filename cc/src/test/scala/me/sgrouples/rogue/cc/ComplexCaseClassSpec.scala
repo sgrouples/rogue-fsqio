@@ -1,6 +1,8 @@
 package me.sgrouples.rogue.cc
 
 import java.time.Instant
+import java.time.temporal.{ ChronoUnit, TemporalUnit }
+import java.util.concurrent.TimeUnit
 
 import org.bson.types.ObjectId
 import org.scalatest.{ FlatSpec, Matchers }
@@ -89,7 +91,7 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
 
   "RCcMeta of a complex case class" should "properly read/write the given instance" in {
 
-    val now = Instant.now
+    val now = Instant.now.truncatedTo(ChronoUnit.MILLIS)
 
     val id = new ObjectId()
 
