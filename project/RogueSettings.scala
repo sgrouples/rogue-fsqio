@@ -9,7 +9,7 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
-    version := "4.2.3",
+    version := "4.2.4",
     organization := "me.sgrouples",
     scalaVersion := "2.12.8",
     isSnapshot := true,
@@ -33,11 +33,11 @@ object RogueSettings {
 
 object RogueDependencies {
   val specsVer = "3.8.9"
-  val mongoVer = "3.8.2"
+  val mongoVer = "3.10.1"
 
   val joda = Seq(
-    "joda-time"                % "joda-time"           % "2.9.9"        % "compile",
-    "org.joda"                 % "joda-convert"        % "1.8.1"        % "compile"
+    "joda-time"                % "joda-time"           % "2.10.1"        % "compile",
+    "org.joda"                 % "joda-convert"        % "2.2.0"        % "compile"
   )
 
   val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % "compile")
@@ -52,9 +52,9 @@ object RogueDependencies {
     "org.specs2"              %% "specs2-core"              % specsVer % "test",
     "org.specs2"              %% "specs2-matcher"              % specsVer % "test",
     "org.specs2"              %% "specs2-junit"              % specsVer % "test",
-    "org.scalatest" %% "scalatest" % "3.0.3" % "test",
+    "org.scalatest" %% "scalatest" % "3.0.7" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test",
-    "org.slf4j" % "slf4j-simple" % "1.7.25" % "test"
+    "org.slf4j" % "slf4j-simple" % "1.7.26" % "test"
   )
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.3"
