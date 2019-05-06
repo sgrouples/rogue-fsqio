@@ -26,6 +26,6 @@ class EnumIdFieldSpec extends FlatSpec with Matchers {
 
     val meta = new EnumIdFieldSpecMeta
 
-    meta.where(_.enum eqs EnumIdFieldEnum.one).toString shouldBe "db.enumidfieldclass.find({ \"enum\" : 0 })"
+    meta.where(_.enum eqs EnumIdFieldEnum.one).toString shouldBe """db.enumidfieldclass.find({"enum": 0})"""
   }
 }
