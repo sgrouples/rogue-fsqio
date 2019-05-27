@@ -452,3 +452,16 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit kf: MapKeyFormat[
 }
 
 object EnumMacroFormats extends EnumMacroFormats
+
+object MacroInstances {
+  val intFormat = new IntMacroBsonFormat(0)
+  val longFormat = new LongMacroBsonFormat(0)
+  val doubleFormat = new DoubleMacroBsonFormat(0.0d)
+  val bigDecimalFormat = new BigDecimalMacroBsonFormat()
+  val stringFormat = new StringMacroBsonFormat("")
+  val currencyFormat = new CurrencyMacroBsonFormat
+  val localeFormat = new LocaleMacroBsonFormat
+  val binaryFormat = new BinaryMacroBsonFormat
+  val localDateTimeFormat = new LocalDateTimeMacroBsonFormat
+  val instantFormat = new InstantMacroBsonFormat()
+}

@@ -11,5 +11,6 @@ lazy val core = (project in file("core")).settings(defaultSettings).dependsOn(fi
 lazy val indexchecker = (project in file("indexchecker")).settings(defaultSettings).dependsOn(core)
 lazy val bsonmacros = (project in file("bsonmacros")).dependsOn(bsonformats).settings(defaultSettings)
 lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings)
-lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros, bsonshapeless).settings(defaultSettings)
+lazy val moneyMacro = (project in file("money-macro")).dependsOn(core, bsonformats, bsonmacros).settings(defaultSettings)
+lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros, bsonshapeless, moneyMacro).settings(defaultSettings)
 lazy val root = (project in file(".")).settings(defaultSettings).aggregate(field,core,index,indexchecker,cc,bsonmacros,bsonshapeless,bsonformats)
