@@ -60,7 +60,6 @@ trait NamesResolver {
 }
 
 trait RuntimeNameResolver[Meta] extends NamesResolver {
-  private[this] val lock = new Object
 
   private[this] val names: mutable.Map[Int, String] = mutable.Map.empty
 
@@ -95,7 +94,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 
     /*
       The idea of automatic name resolution is taken from Scala's Enumeration,
-      but imlemented without falling back to Java's reflection api.
+      but implemented without falling back to Java's reflection api.
      */
 
     val decode: Symbol => String = _.name.decodedName.toString.trim
@@ -173,7 +172,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     Its complicated, I know, meta programming usually is... But Miles Sabin's @@ is awesome, don't you think?
    */
 
-  override def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = lock.synchronized {
+  override def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = synchronized {
     if (!resolved.get()) resolve() // lets try one more time to find those names
 
     val nextId = nextNameId
@@ -186,7 +185,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     tag[Marker][T](field)
   }
 
-  override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = lock.synchronized {
+  override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = synchronized {
     if (!resolved.get()) resolve()
     names += nextNameId -> name
     val field = func(name)
@@ -199,7 +198,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 
     import DebugImplicits._
 
-    s"""Something went wrong: couldn't auto-resolve field names, pleace contact author at mikolaj@sgrouples.com
+    s"""Something went wrong: couldn't auto-resolve field names, please contact author at mikolaj@sgrouples.com
        | Class is ${this.getClass}, implicit type tag is: ${typeTag.tpe}
        | Was looking for index $id in
        |${Debug.debug(names.toSeq.sortBy(_._1).map(_._2)).mkIndent}
@@ -215,7 +214,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 }
 
 /*
- // utility methods, not sure if they are usefull...
+ // utility methods, not sure if they are useful...
   def fieldByName[T <: io.fsq.field.Field[_, _]](name: String): T = fields(name).asInstanceOf[T]
 
   def fieldNames: Iterable[String] = Seq(names.values.toSeq: _*) // making sure its a copy
@@ -334,7 +333,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
 
   /**
    * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
-   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
+   * So instead of writing val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
    * @param e
    * @tparam E
    * @return
@@ -373,7 +372,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
 
   /**
    * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
-   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
+   * So instead of writing val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
    * @param e
    * @tparam E
    * @return
