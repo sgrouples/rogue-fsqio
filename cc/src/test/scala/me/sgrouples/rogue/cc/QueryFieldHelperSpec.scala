@@ -15,7 +15,19 @@ import scala.util.Try
 
 case class TestDomainObject(id: ObjectId)
 
-trait TestQueryTraitA[OwnerType] {
+trait BaseTraitA[OwnerType] {
+  requires: OwnerType with QueryFieldHelpers[OwnerType] =>
+
+  val baseA = IntField
+}
+
+trait BaseTraitB[OwnerType] {
+  requires: OwnerType with QueryFieldHelpers[OwnerType] =>
+
+  val baseB = IntField
+}
+
+trait TestQueryTraitA[OwnerType] extends BaseTraitA[OwnerType] with BaseTraitB[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
   val int = IntField
   val int_named = IntField("int_custom_name")
@@ -97,6 +109,9 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
   val TestDomainObjects = new TestDomainObjectMeta
 
   "QueryFieldHelper" should "auto-resolve field names" in {
+
+    TestDomainObjects.baseA.name mustBe "baseA"
+    TestDomainObjects.baseB.name mustBe "baseB"
 
     TestDomainObjects.int.name mustBe "int"
     TestDomainObjects.int_named.name mustBe "int_custom_name"

@@ -1,5 +1,6 @@
 package me.sgrouples.rogue.cc
 
+import java.util.concurrent.{ ConcurrentHashMap, ConcurrentLinkedQueue, TimeUnit }
 import java.util.concurrent.atomic.{ AtomicBoolean, AtomicInteger }
 
 import me.sgrouples.rogue._
@@ -8,18 +9,24 @@ import org.bson.types.ObjectId
 import shapeless.tag
 import shapeless.tag._
 
-import scala.collection.mutable
+import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
 import scala.reflect.{ ClassTag, api }
 import Debug.DefaultImplicits._
 import me.sgrouples.rogue.map.MapKeyFormat
 
+import scala.concurrent.duration.Duration
+
 private[cc] sealed trait Marker
 
-private[cc] case class Visited(clazz: Type, fields: Seq[Symbol])
+private[cc] case class VisitedClass(clazz: Type, fields: Seq[Symbol])
 
-private[cc] case class Ignored(field: Symbol, reason: String)
+private[cc] case class MarkerInfo(isMarked: Boolean, details: String)
+
+private[cc] case class VisitedField(field: Symbol, markerInfo: MarkerInfo)
+
+private[cc] case class IgnoredField(field: Symbol, reason: String)
 
 private[cc] object DebugImplicits {
 
@@ -37,18 +44,25 @@ private[cc] object DebugImplicits {
       t.name.toString
   }
 
-  implicit object DebugVisited extends Debug[Visited] {
-    override def show(t: Visited): String = t match {
-      case Visited(clazz, Nil) => Debug.debug(clazz)
-      case Visited(clazz, fields) =>
+  implicit object DebugVisitedClass extends Debug[VisitedClass] {
+    override def show(t: VisitedClass): String = t match {
+      case VisitedClass(clazz, Nil) => Debug.debug(clazz)
+      case VisitedClass(clazz, fields) =>
         s"""${Debug.debug(clazz)}
            |  ${Debug.debug(fields).mkIndent}"""
     }
   }
 
-  implicit object DebugIgnored extends Debug[Ignored] {
-    override def show(t: Ignored): String = t match {
-      case Ignored(field, cause) =>
+  implicit object DebugVisitedField extends Debug[VisitedField] {
+    override def show(t: VisitedField): String = t match {
+      case VisitedField(field, MarkerInfo(isMarked, details)) =>
+        s"""${Debug.debug(field)}, isMarked: $isMarked ($details)"""
+    }
+  }
+
+  implicit object DebugIgnoredField extends Debug[IgnoredField] {
+    override def show(t: IgnoredField): String = t match {
+      case IgnoredField(field, cause) =>
         s"""${Debug.debug(field)} ($cause)"""
     }
   }
@@ -61,17 +75,19 @@ trait NamesResolver {
 
 trait RuntimeNameResolver[Meta] extends NamesResolver {
 
-  private[this] val names: mutable.Map[Int, String] = mutable.Map.empty
+  private[this] val names: ConcurrentHashMap[Int, String] = new ConcurrentHashMap
 
-  private[this] val fields: mutable.Map[String, io.fsq.field.Field[_, _]] = mutable.Map.empty
+  private[this] val fields: ConcurrentHashMap[String, io.fsq.field.Field[_, _]] = new ConcurrentHashMap
 
   private[this] val resolved = new AtomicBoolean(false)
 
   private[this] val nameId = new AtomicInteger(-1)
 
-  private[this] val visitedClasses: mutable.ArrayBuffer[Visited] = mutable.ArrayBuffer.empty
+  private[this] val visitedClasses: ConcurrentLinkedQueue[VisitedClass] = new ConcurrentLinkedQueue
 
-  private[this] val ignoredFields: mutable.ArrayBuffer[Ignored] = mutable.ArrayBuffer.empty
+  private[this] val visitedFields: ConcurrentLinkedQueue[VisitedField] = new ConcurrentLinkedQueue
+
+  private[this] val ignoredFields: ConcurrentLinkedQueue[IgnoredField] = new ConcurrentLinkedQueue
 
   // This one is hacky, we need to find the type tag from Java's getClass method...
 
@@ -101,24 +117,33 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 
     // we are looking for vals accessible from io.fsq.field.Field[_, _] and tagged with Marker
 
-    def returnsMarkedField(symbol: Symbol): Boolean = {
+    def returnsMarkedField(symbol: Symbol): MarkerInfo = {
 
-      val typeArgs = symbol.asMethod.returnType.typeArgs
+      val typeArgs = Seq(symbol.asMethod.returnType.typeArgs: _*) // copy here
 
-      if (!typeArgs.exists(_ =:= typeOf[Marker]))
-        ignoredFields += Ignored(
+      val isMarked = typeArgs.exists(_ =:= typeOf[Marker])
+      val isMetaField = symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]]
+
+      if (!isMarked)
+        ignoredFields add IgnoredField(
           symbol,
           s"!typeArgs.exists(_ =:= typeOf[Marker]), " +
             s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}")
 
-      if (!typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]]))
-        ignoredFields += Ignored(
+      if (!isMetaField)
+        ignoredFields add IgnoredField(
           symbol,
-          s"!typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]]), " +
+          s"!symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]], " +
             s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}")
 
-      typeArgs.exists(_ =:= typeOf[Marker]) &&
-        typeArgs.exists(_ <:< typeOf[io.fsq.field.Field[_, _]])
+      MarkerInfo(
+        isMarked &&
+          isMetaField,
+        s"""
+          | symbol.asMethod.returnType: ${symbol.asMethod.returnType}
+          | typeArgs.exists(_ =:= typeOf[Marker]): $isMarked
+          | symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]]: $isMetaField
+        """.stripMargin)
     }
 
     /*
@@ -130,15 +155,17 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     val valuesOfMarkedFieldTypeOnly: Symbol => Boolean = {
       case symbol if symbol.isTerm =>
         symbol.asTerm match {
-          case term if term.isAccessor =>
+          case term if term.isGetter =>
             term.getter match {
               case getterSymbol if getterSymbol.isMethod =>
-                returnsMarkedField(getterSymbol.asMethod)
-              case s => ignoredFields += Ignored(s, "getter is not a method"); false
+                val markerInfo = returnsMarkedField(getterSymbol.asMethod)
+                visitedFields.add(VisitedField(getterSymbol, markerInfo))
+                markerInfo.isMarked
+              case s => ignoredFields add IgnoredField(s, "getter is not a method"); false
             }
-          case s => ignoredFields += Ignored(s, "term is not an accessor"); false
+          case s => ignoredFields add IgnoredField(s, "term is not a getter"); false
         }
-      case s => ignoredFields += Ignored(s, "symbol is not a term"); false
+      case s => ignoredFields add IgnoredField(s, "symbol is not a term"); false
     }
 
     /*
@@ -153,14 +180,14 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
         val fields = appType.decls
           .sorted.filter(valuesOfMarkedFieldTypeOnly)
 
-        visitedClasses += Visited(appType, fields)
+        visitedClasses add VisitedClass(appType, fields)
 
         fields
     }.map(decode)
 
     // name map in order of trait linearization
 
-    names ++= values.zipWithIndex.map(_.swap)
+    for ((k, v) <- values.zipWithIndex.map(_.swap)) names.put(k, v)
     resolved.set(true)
   }
 
@@ -175,22 +202,22 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
   override def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = synchronized {
     if (!resolved.get()) resolve() // lets try one more time to find those names
 
-    val nextId = nextNameId
+    val id = nextNameId
 
-    val name = names.getOrElse(nextId, resolveError(nextId))
+    val name: String = Option(names.get(id)).getOrElse(resolveError(id))
 
     val field = func(name)
-    if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
-    fields += (name -> field)
+    if (fields.containsKey(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
+    fields.put(name, field)
     tag[Marker][T](field)
   }
 
   override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = synchronized {
     if (!resolved.get()) resolve()
-    names += nextNameId -> name
+    names.put(nextNameId, name)
     val field = func(name)
-    if (fields.contains(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
-    fields += (name -> field)
+    if (fields.containsKey(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
+    fields.put(name, field)
     tag[Marker][T](field)
   }
 
@@ -201,15 +228,17 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     s"""Something went wrong: couldn't auto-resolve field names, please contact author at mikolaj@sgrouples.com
        | Class is ${this.getClass}, implicit type tag is: ${typeTag.tpe}
        | Was looking for index $id in
-       |${Debug.debug(names.toSeq.sortBy(_._1).map(_._2)).mkIndent}
+       |${Debug.debug(names.asScala.toSeq.sortBy(_._1).map(_._2)).mkIndent}
        | Classes visited during field resolution:
-       |${Debug.debug(visitedClasses).mkIndent}
+       |${Debug.debug(visitedClasses.asScala).mkIndent}
+       | Fields visited during field resolution:
+       |${Debug.debug(visitedFields.asScala).mkIndent}
        | Fields not matching predicates:
-       |${Debug.debug(ignoredFields.distinct).mkIndent}""".stripMargin
+       |${Debug.debug(ignoredFields.asScala.toSeq.distinct).mkIndent}""".stripMargin
   }
 
   private[this] def resolveError(id: Int): Nothing = throw new IllegalStateException(debugInfo(id))
-  def fieldNamesSorted: Seq[String] = Seq(names.toSeq.sortBy(_._1).map(_._2): _*) // making sure its a copy
+  def fieldNamesSorted: Seq[String] = Seq(names.asScala.toSeq.sortBy(_._1).map(_._2): _*) // making sure its a copy
 
 }
 

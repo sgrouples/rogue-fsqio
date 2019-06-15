@@ -12,4 +12,6 @@ lazy val indexchecker = (project in file("indexchecker")).settings(defaultSettin
 lazy val bsonmacros = (project in file("bsonmacros")).dependsOn(bsonformats).settings(defaultSettings)
 lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings)
 lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros, bsonshapeless).settings(defaultSettings)
-lazy val root = (project in file(".")).settings(defaultSettings).aggregate(field,core,index,indexchecker,cc,bsonmacros,bsonshapeless,bsonformats)
+lazy val root = (project in file("."))
+  .settings(defaultSettings)
+  .aggregate(field,core,index,indexchecker,cc,bsonmacros,bsonshapeless,bsonformats)
