@@ -8,7 +8,7 @@ import me.sgrouples.rogue._
 import org.bson.types.ObjectId
 import BsonFormats._
 import EnumNameFormats._
-import io.fsq.rogue.index.{ Asc, Desc, IndexBuilder }
+import io.fsq.rogue.index.{ Asc, Desc, Text, IndexBuilder }
 import me.sgrouples.rogue.naming.PluralLowerCase
 import shapeless.tag.@@
 import shapeless.tag
@@ -139,6 +139,7 @@ object Metas {
     val idIdx = index(id, Asc)
     val legIdx = index(legacyid, Desc)
     val legIdIdx = index(legacyid, Asc, id, Desc)
+    val venuenameIdx = index(legacyid, Text)
   }
 
   val VenueR = new VenueRMeta

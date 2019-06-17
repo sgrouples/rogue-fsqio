@@ -15,7 +15,7 @@ object MongoHelpers extends Rogue {
 
   case class OrCondition(conditions: List[AndCondition])
 
-  case class SearchCondition(search: String, language: Option[String])
+  case class SearchCondition(search: String, language: Option[String], caseSensitivity: Option[Boolean], diacriticSensitive: Option[Boolean])
 
   sealed trait MongoOrderTerm {
     def extend(builder: BasicDBObjectBuilder): Unit
@@ -92,6 +92,8 @@ object MongoHelpers extends Rogue {
       cond.searchCondition.foreach(txt => {
         builder.push("$text").add("$search", txt.search)
         txt.language.foreach { lang => builder.add("$language", lang) }
+        txt.caseSensitivity.foreach { cs => builder.add("$caseSensitive", cs) }
+        txt.diacriticSensitive.foreach { ds => builder.add("$diacriticSensitive", ds) }
         builder.pop
       })
 

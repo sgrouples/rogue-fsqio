@@ -252,6 +252,15 @@ class QueryTest extends JUnitMustMatchers {
     VenueR.scan(_.tags not (_ in List("a", "b"))).toString() must_== """db.venues.find({"tags": {"$not": {"$in": ["a", "b"]}}})"""
     VenueR.scan(_.tags not (_ size 0)).toString() must_== """db.venues.find({"tags": {"$not": {"$size": 0}}})"""
     VenueR.scan(_.popularity at 0 not (_ lt 0)).toString() must_== """db.venues.find({"popularity.0": {"$not": {"$lt": {"$numberLong": "0"}}}})"""
+
+    VenueR.search("test name", Some("pl"), Some(true), Some(false)).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$language": "pl", "$caseSensitive": true, "$diacriticSensitive": false}})"""
+    VenueR.search("test name", None, Some(true), Some(false)).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$caseSensitive": true, "$diacriticSensitive": false}})"""
+    VenueR.search("test name", Some("pl"), None, Some(false)).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$language": "pl", "$diacriticSensitive": false}})"""
+    VenueR.search("test name", Some("pl"), Some(true), None).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$language": "pl", "$caseSensitive": true}})"""
+    VenueR.search("test name", Some("pl"), None, None).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$language": "pl"}})"""
+    VenueR.search("test name", None, None, Some(true)).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$diacriticSensitive": true}})"""
+    VenueR.search("test name", None, Some(true), None).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$caseSensitive": true}})"""
+    VenueR.search("test name", None, None, None).toString() must_== """db.venues.find({"$text": {"$search": "test name"}})"""
   }
 
   @Test
