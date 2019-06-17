@@ -88,8 +88,8 @@ case class Query[M, R, +State](
   /**
    * Adds text search to the query.
    */
-  def search(s: String, lang: Option[String] = None): Query[M, R, State] =
-    this.copy(condition = condition.copy(searchCondition = Some(SearchCondition(s, lang))))
+  def search(s: String, lang: Option[String] = None, caseSensitive: Option[Boolean] = None, diacriticSensitive: Option[Boolean] = None): Query[M, R, State] =
+    this.copy(condition = condition.copy(searchCondition = Some(SearchCondition(s, lang, caseSensitive, diacriticSensitive))))
 
   /**
    * Adds an eqs clause specifying the shard key.
@@ -123,9 +123,9 @@ case class Query[M, R, +State](
   def scanOpt[V, F](opt: Option[V])(clause: (M, V) => QueryClause[F]) =
     addClauseOpt(opt)(clause, expectedIndexBehavior = DocumentScan)
 
-  def searchOpt(opt: Option[String], lang: Option[String] = None): Query[M, R, State] = {
+  def searchOpt(opt: Option[String], lang: Option[String] = None, caseSensitive: Option[Boolean] = None, diacriticSensitive: Option[Boolean] = None): Query[M, R, State] = {
     opt match {
-      case Some(s) => this.copy(condition = condition.copy(searchCondition = Some(SearchCondition(s, lang))))
+      case Some(s) => this.copy(condition = condition.copy(searchCondition = Some(SearchCondition(s, lang, caseSensitive, diacriticSensitive))))
       case None => this
     }
   }
