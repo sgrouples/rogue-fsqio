@@ -454,15 +454,20 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
   }
 
-  "LocaleBsonFormat & LocaleField" should "just work" in {
+  "LocaleBsonFormat & LocaleField" should "contain at least all MeWe supported locales" in {
 
-    val sample = LocaleData(Locale.CANADA_FRENCH)
+    val samples = Seq(Locale.CANADA_FRENCH, new Locale("pt", "BR"), new Locale("zh", "CN")) ++
+      Seq("ar", "cs", "da", "de", "el", "es", "fi", "fr", "he", "it", "ja", "ko", "nb", "nl", "pl", "sv").map(l => new Locale(l))
 
-    Locales.insertOneAsync(sample).futureValue
+    // samples.foreach { sample => Locales.insertOneAsync(LocaleData(sample)).futureValue }
+    Locales.insertManyAsync(samples.map(LocaleData)).futureValue
 
-    val seq: Seq[Locale] = Locales.where(_.locale eqs Locale.CANADA_FRENCH)
+    val seq: Seq[Locale] = Locales.where(_.locale in samples)
       .select(_.locale).fetchAsync().futureValue
-    seq must contain(Locale.CANADA_FRENCH)
+
+    samples.foreach { sample =>
+      seq must contain(sample)
+    }
 
     Locales.where(_.locale eqs Locale.CANADA_FRENCH).modify(_.locale setTo Locale.CHINESE).updateOneAsync()
 

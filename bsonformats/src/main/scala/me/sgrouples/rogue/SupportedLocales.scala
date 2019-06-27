@@ -9,6 +9,7 @@ private[rogue] object SupportedLocales {
       val key = l.toString
       if (key.nonEmpty) mb += (key -> l)
     }
+    mb += ("nb" -> new Locale("nb")) // norwegian bokmål, missing from getAvailableLocales
     mb.result()
   }
 }
