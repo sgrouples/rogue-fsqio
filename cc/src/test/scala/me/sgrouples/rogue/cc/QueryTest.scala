@@ -261,6 +261,8 @@ class QueryTest extends JUnitMustMatchers {
     VenueR.search("test name", None, None, Some(true)).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$diacriticSensitive": true}})"""
     VenueR.search("test name", None, Some(true), None).toString() must_== """db.venues.find({"$text": {"$search": "test name", "$caseSensitive": true}})"""
     VenueR.search("test name", None, None, None).toString() must_== """db.venues.find({"$text": {"$search": "test name"}})"""
+
+    VenueR.where(_.mayor eqs 1).modify(_.claims.`$[]`.subfield(_.status) setTo ClaimStatus.approved).toString() must_== """db.venues.update({"mayor": {"$numberLong": "1"}}, {"$set": {"claims.$[].status": "Approved"}}, false, false)"""
   }
 
   @Test
