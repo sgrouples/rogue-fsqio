@@ -4,7 +4,8 @@ import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.DBObject
 import com.mongodb.async.client.{ MongoCollection, MongoDatabase }
-import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveMongoCollection}
+
+import com.mongodb.reactivestreams.client.{ MongoCollection => ReactiveMongoCollection, MongoClients => ReactiveMongoClients }
 import com.mongodb.reactivestreams.client.internal.MongoDatabaseImpl
 
 import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
@@ -26,7 +27,6 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
     val wrappedDb = new MongoDatabaseImpl(dba)
     wrappedDb.getCollection(query.collectionName, bsonDocClass)
   }
-
 
   override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument] = {
     getDBCollection(query)
