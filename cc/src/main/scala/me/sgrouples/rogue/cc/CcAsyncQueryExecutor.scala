@@ -4,10 +4,8 @@ import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.DBObject
 import com.mongodb.async.client.{ MongoCollection, MongoDatabase }
-
-import com.mongodb.reactivestreams.client.{ MongoCollection => ReactiveMongoCollection, MongoClients => ReactiveMongoClients }
-import com.mongodb.reactivestreams.client.internal.MongoDatabaseImpl
-
+import com.mongodb.reactivestreams.client.{ MongoClients => ReactiveMongoClients, MongoCollection => ReactiveMongoCollection }
+import com.mongodb.reactivestreams.client.internal.{ MongoDatabaseImpl, ReactiveDbWrapper }
 import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
 import io.fsq.rogue._
 import org.bson.codecs.configuration.CodecRegistries
@@ -24,7 +22,7 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }
 
   override def getReactiveCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): ReactiveMongoCollection[BsonDocument] = {
-    val wrappedDb = new MongoDatabaseImpl(dba)
+    val wrappedDb = new ReactiveDbWrapper().wrap(dba)
     wrappedDb.getCollection(query.collectionName, bsonDocClass)
   }
 

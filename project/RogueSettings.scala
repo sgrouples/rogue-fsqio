@@ -12,7 +12,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "4.5.0",
+    version := "4.9.9", //before 5.0.0 with streams
     organization := "me.sgrouples",
     scalaVersion := "2.12.8",
     isSnapshot := true,
@@ -59,7 +59,7 @@ object RogueDependencies {
     "org.specs2"              %% "specs2-core"              % specsVer % "test",
     "org.specs2"              %% "specs2-matcher"              % specsVer % "test",
     "org.specs2"              %% "specs2-junit"              % specsVer % "test",
-    "org.scalatest" %% "scalatest" % "3.0.7" % "test",
+    "org.scalatest" %% "scalatest" % "3.0.8" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.slf4j" % "slf4j-simple" % "1.7.26" % "test"
   )

@@ -139,7 +139,7 @@ case class ExecutableQuery[MB, M <: MB, R, State](
 
   def fetchAsync()(implicit dba: MongoAsyncDatabase): Future[Seq[R]] = ex.async.fetch(query)
 
-  def fetchPublisher(batchSize: Int = 20)(implicit dba: MongoAsyncDatabase): Publisher[R] = ex.async.fetchPublisher(query, batchSize)
+  def fetchPublisher(batchSize: Int = 20)(implicit dba: MongoAsyncDatabase, ctR: ClassTag[R]): Publisher[R] = ex.async.fetchPublisher(query, batchSize)
 
   def fetchAsync[S2](limit: Int)(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], dba: MongoAsyncDatabase): Future[Seq[R]] = ex.async.fetch(query.limit(limit))
 

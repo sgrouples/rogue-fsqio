@@ -20,9 +20,10 @@ import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }
 import com.mongodb.ErrorCategory._
-import org.bson.codecs.{ Codec, DecoderContext, EncoderContext }
+import org.bson.codecs.{ Codec, DecoderContext, EncoderContext, RawBsonDocumentCodec }
 import org.bson.codecs.configuration.CodecRegistries
-import org.reactivestreams.{ Processor, Publisher, Subscriber, Subscription }
+import org.reactivestreams.Publisher
+
 import scala.reflect._
 
 trait AsyncBsonDBCollectionFactory[MB] {
@@ -364,33 +365,33 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     pa.future
   }
 
+  private[this] val rawBsonDocumentCodec = new RawBsonDocumentCodec
+
   def findPublisher[M <: MB, R: ClassTag](
     query: Query[M, _, _],
     serializer: RogueBsonRead[R],
     batchSize: Int,
     readPreference: Option[ReadPreference] = None)(implicit dba: MongoDatabase): Publisher[R] = {
-    val classR = classTag[R].runtimeClass
+    val classR = classTag[R].runtimeClass.asInstanceOf[Class[R]]
     val queryClause = transformer.transformQuery(query)
 
     val cnd: Bson = buildCondition(queryClause.condition)
     val sel: Bson = queryClause.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
     val ord = queryClause.order.map(buildOrder)
     val baseColl = getReactiveCollection(query, readPreference)
-    val rCoded = new Codec[R] {
-      //val adaptedSerializer = new com.mongodb.Function[BsonDocument, R] {
-      //  override def apply(d: BsonDocument): R = serializer.fromDocument(d)
-      // }
+    val rCodec = new Codec[R] {
 
       override def decode(reader: BsonReader, decoderContext: DecoderContext): R = {
-
-        //serializer.fromDocument(doc)
-        ???
+        val bsonDoc = rawBsonDocumentCodec.decode(reader, decoderContext)
+        serializer.fromDocument(bsonDoc)
       }
 
       //don't care - only read
-      override def encode(writer: BsonWriter, value: R, encoderContext: EncoderContext): Unit = {}
+      override def encode(writer: BsonWriter, value: R, encoderContext: EncoderContext): Unit = {
+        throw new IllegalStateException(s"Not implemented encoder for ${classR} - only reader in fetch")
+      }
 
-      override def getEncoderClass: Class[R] = classR
+      override def getEncoderClass: Class[R] = classR.asInstanceOf[Class[R]]
     }
 
     val singleR = CodecRegistries.fromCodecs(rCodec)
