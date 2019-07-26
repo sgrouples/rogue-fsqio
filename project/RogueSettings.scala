@@ -38,7 +38,8 @@ object RogueSettings {
 
 object RogueDependencies {
   val specsVer = "3.8.9"
-  val mongoVer = "3.10.1"
+  val mongoVer = "3.10.2"
+  val mongoReactiveVer = "1.11.0"
 
   val joda = Seq(
     "joda-time"                % "joda-time"           % "2.10.1"        % "compile",
@@ -49,7 +50,8 @@ object RogueDependencies {
 
   val mongoDeps = Seq(
     "org.mongodb"              % "mongodb-driver"       % mongoVer     % "compile",
-    "org.mongodb"              % "mongodb-driver-async" % mongoVer    % "compile"
+    "org.mongodb"              % "mongodb-driver-async" % mongoVer    % "compile",
+    "org.mongodb"              % "mongodb-driver-reactivestreams" % mongoReactiveVer    % "compile"
   )
 
   val testDeps = Seq(

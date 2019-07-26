@@ -3,26 +3,30 @@ package me.sgrouples.rogue.cc
 import java.util
 
 import com.mongodb._
-import com.mongodb.async.{ AsyncBatchCursor, SingleResultCallback }
-import com.mongodb.async.client.{ FindIterable, MongoCollection, MongoDatabase }
+import com.mongodb.async.{AsyncBatchCursor, SingleResultCallback}
+import com.mongodb.async.client.{FindIterable, MongoCollection, MongoDatabase}
 import com.mongodb.client.model._
-import com.mongodb.client.result.{ DeleteResult, UpdateResult }
+import com.mongodb.client.result.{DeleteResult, UpdateResult}
+import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveMongoCollection}
 import io.fsq.rogue.MongoHelpers.MongoBuilder._
-import io.fsq.rogue.{ FindAndModifyQuery, ModifyQuery, Query }
+import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
 import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.BsonDocument
 import org.bson.conversions.Bson
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.reflect.ClassTag
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import com.mongodb.ErrorCategory._
+import org.reactivestreams.{Processor, Publisher, Subscriber, Subscription}
 
 trait AsyncBsonDBCollectionFactory[MB] {
 
   def getDBCollection[M <: MB](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument]
+
+  def getReactiveCollection[M <: MB](query: Query[M, _, _])(implicit dba: MongoDatabase): ReactiveMongoCollection[BsonDocument]
 
   def getPrimaryDBCollection[M <: MB](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument]
 
@@ -250,6 +254,13 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     (readPreference.toSeq ++ query.readPreference.toSeq).headOption.fold(c)(c.withReadPreference)
   }
 
+  private def getReactiveCollection[M <: MB, R](
+                                           query: Query[M, _, _],
+                                           readPreference: Option[ReadPreference])(implicit dba: MongoDatabase): ReactiveMongoCollection[BsonDocument] = {
+    val c = dbCollectionFactory.getReactiveCollection(query)
+    (readPreference.toSeq ++ query.readPreference.toSeq).headOption.fold(c)(c.withReadPreference)
+  }
+
   def count[M <: MB](query: Query[M, _, _], readPreference: Option[ReadPreference])(implicit dba: MongoDatabase): Future[Long] = {
     val queryClause = transformer.transformQuery(query)
     validator.validateQuery(queryClause, dbCollectionFactory.getIndexes(queryClause))
@@ -348,6 +359,57 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     query.hint.foreach(h => cursor.hint(buildHint(h)))
     cursor.map(adaptedSerializer).into(pa.coll, pa)
     pa.future
+  }
+
+  def findPublisher[M <: MB, R](
+                        query: Query[M, _, _],
+                        serializer: RogueBsonRead[R],
+                        batchSize: Int = 20,
+                        readPreference: Option[ReadPreference] = None)(implicit dba: MongoDatabase): Publisher[R] = {
+
+    val queryClause = transformer.transformQuery(query)
+
+    val cnd: Bson = buildCondition(queryClause.condition)
+    val sel: Bson = queryClause.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
+    val ord = queryClause.order.map(buildOrder)
+    val coll = getReactiveCollection(query, readPreference)
+    //check if serializer will work - quite possible that no, and separate mapper from BsonDocument-> R will be needed
+    val adaptedSerializer = new com.mongodb.Function[BsonDocument, R] {
+      override def apply(d: BsonDocument): R = serializer.fromDocument(d)
+    }
+   // val pa = new PromiseArrayListAdapter[R]()
+    //sort, hints
+    val cursor = coll.find(cnd).projection(sel)
+    queryClause.lim.foreach(cursor.limit _)
+    queryClause.sk.foreach(cursor.skip _)
+    ord.foreach(cursor.sort _)
+    query.hint.foreach(h => cursor.hint(buildHint(h)))
+    //cursor.map(adaptedSerializer).into(pa.coll, pa)
+    cursor.batchSize(batchSize)
+    val processor = new Processor[BsonDocument, R] {
+
+      //var sub: Subscriber[ _ >:R] = null
+      var sub: Subscription = null
+      override def subscribe(s: Subscriber[_ >: R]): Unit = {
+        s.onSubscribe( )
+      }
+
+      override def onSubscribe(s: Subscription): Unit = {
+        sub = s
+      }
+
+      override def onNext(t: BsonDocument): Unit = {
+        val doc = serializer.fromDocument(t)
+       // subscriber.
+        sub.
+      }
+
+      override def onError(t: Throwable): Unit = ???
+
+      override def onComplete(): Unit = ???
+    }
+    cursor.subscribe(processor)
+    processor
   }
 
   def fineOne[M <: MB, R](
