@@ -11,6 +11,7 @@ import io.fsq.rogue.MongoHelpers.{ MongoModify, MongoSelect }
 import io.fsq.rogue._
 import io.fsq.spindle.types.MongoDisallowed
 import org.bson.BsonDocument
+import org.reactivestreams.Publisher
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
@@ -73,6 +74,14 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     readPreference: Option[ReadPreference] = None)(implicit ev: ShardingOk[M, State], dba: MongoAsyncDatabase): Future[Seq[R]] = {
     val s = readSerializer[M, R](query.meta, query.select)
     adapter.find(query, s, readPreference)
+  }
+
+  def fetchPublisher[M <: MB, R, State](
+    query: Query[M, R, State],
+    batchSize: Int,
+    readPreference: Option[ReadPreference] = None)(implicit ev: ShardingOk[M, State], dba: MongoAsyncDatabase, ctR: ClassTag[R]): Publisher[R] = {
+    val s = readSerializer[M, R](query.meta, query.select)
+    adapter.findPublisher(query, s, batchSize, readPreference)
   }
 
   def fetchOne[M <: MB, R, State, S2](

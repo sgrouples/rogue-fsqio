@@ -12,7 +12,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "4.5.0",
+    version := "4.9.9", //before 5.0.0 with streams
     organization := "me.sgrouples",
     scalaVersion := "2.12.8",
     isSnapshot := true,
@@ -38,7 +38,8 @@ object RogueSettings {
 
 object RogueDependencies {
   val specsVer = "3.8.9"
-  val mongoVer = "3.10.1"
+  val mongoVer = "3.10.2"
+  val mongoReactiveVer = "1.11.0"
 
   val joda = Seq(
     "joda-time"                % "joda-time"           % "2.10.1"        % "compile",
@@ -49,7 +50,8 @@ object RogueDependencies {
 
   val mongoDeps = Seq(
     "org.mongodb"              % "mongodb-driver"       % mongoVer     % "compile",
-    "org.mongodb"              % "mongodb-driver-async" % mongoVer    % "compile"
+    "org.mongodb"              % "mongodb-driver-async" % mongoVer    % "compile",
+    "org.mongodb"              % "mongodb-driver-reactivestreams" % mongoReactiveVer    % "compile"
   )
 
   val testDeps = Seq(
@@ -57,7 +59,7 @@ object RogueDependencies {
     "org.specs2"              %% "specs2-core"              % specsVer % "test",
     "org.specs2"              %% "specs2-matcher"              % specsVer % "test",
     "org.specs2"              %% "specs2-junit"              % specsVer % "test",
-    "org.scalatest" %% "scalatest" % "3.0.7" % "test",
+    "org.scalatest" %% "scalatest" % "3.0.8" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.slf4j" % "slf4j-simple" % "1.7.26" % "test"
   )

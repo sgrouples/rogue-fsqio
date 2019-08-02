@@ -10,7 +10,9 @@ import io.fsq.rogue.MongoHelpers.MongoSelect
 import com.mongodb.client.MongoDatabase
 import com.mongodb.async.client.{ MongoDatabase => MongoAsyncDatabase }
 import com.mongodb.client.result.UpdateResult
+import org.reactivestreams.Publisher
 
+import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
@@ -136,6 +138,8 @@ case class ExecutableQuery[MB, M <: MB, R, State](
   def foreachAsync(f: R => Unit)(implicit dba: MongoAsyncDatabase): Future[Unit] = ex.async.foreach(query)(f)
 
   def fetchAsync()(implicit dba: MongoAsyncDatabase): Future[Seq[R]] = ex.async.fetch(query)
+
+  def fetchPublisher(batchSize: Int = 20)(implicit dba: MongoAsyncDatabase, ctR: ClassTag[R]): Publisher[R] = ex.async.fetchPublisher(query, batchSize)
 
   def fetchAsync[S2](limit: Int)(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], dba: MongoAsyncDatabase): Future[Seq[R]] = ex.async.fetch(query.limit(limit))
 
