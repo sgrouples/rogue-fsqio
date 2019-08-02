@@ -22,7 +22,7 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }
 
   override def getReactiveCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): ReactiveMongoCollection[BsonDocument] = {
-    val wrappedDb = new ReactiveDbWrapper().wrap(dba)
+    val wrappedDb = new ReactiveDbWrapper(dba).wrap
     wrappedDb.getCollection(query.collectionName, bsonDocClass)
   }
 
