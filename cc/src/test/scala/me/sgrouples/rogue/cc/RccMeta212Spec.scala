@@ -36,7 +36,7 @@ class RccMeta212Spec extends FlatSpec with Matchers {
 
   "UserBlockMeta" should "be creatable" in {
     val UserBlock = new UserBlockMeta()
-    println(s"User block ${UserBlock}")
+    // println(s"User block ${UserBlock}")
     assert(UserBlock != null)
   }
 
