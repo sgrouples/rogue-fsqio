@@ -152,7 +152,7 @@ class MacroCCGenerator(val c: Context) {
     def fieldFormat(f: Symbol, dv: Option[Tree]): Tree = {
       val tp = f.typeSignature
       val tc = tp.typeConstructor
-      tcFormat(tp, tc, dv)
+      tcFormat(tp.dealias, tc.dealias, dv)
     }
 
     val ctorOpt = members.collectFirst {
