@@ -111,7 +111,14 @@ class MacroCCGenerator(val c: Context) {
         val ha = tp.typeArgs.head
         val inner = if (ha.typeArgs.nonEmpty) {
           tcFormat(ha, ha.typeConstructor, None)
-        } else typeFormat(tp.typeArgs.head, None)
+        } else {
+          val dealiased = tp.typeArgs.head.dealias
+          if (dealiased.typeArgs.nonEmpty) {
+            tcFormat(dealiased, dealiased.typeConstructor, None)
+          } else {
+            typeFormat(tp.typeArgs.head, None)
+          }
+        }
         q"new _root_.me.sgrouples.rogue.cc.macros.OptMacroBsonFormat($inner)"
       } else if (tc == arrayTypeCons) {
         if (tp.typeArgs.head == byteType) {

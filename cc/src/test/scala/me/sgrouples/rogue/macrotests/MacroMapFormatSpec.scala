@@ -2,15 +2,20 @@ package me.sgrouples.rogue.macrotests
 
 import me.sgrouples.rogue.cc.CustomKey
 import me.sgrouples.rogue.cc.macros._
-
+import me.sgrouples.rogue.macrotests.Domain.StrLongMapT
 import org.bson.types.ObjectId
 import org.scalatest.{ FlatSpec, Matchers }
 import shapeless.tag
 import shapeless.tag.@@
+
+object Domain {
+  type StrLongMapT = Map[String, Long]
+}
 class MacroMapFormatSpec extends FlatSpec with Matchers {
 
   case class StringMap(value: Map[String, Long])
   case class ObjectIdMap(value: Map[ObjectId, Long])
+  case class OptMapStrLong(expanded: Option[Map[String, Long]], aliased: Option[StrLongMapT])
 
   trait M
 
@@ -63,4 +68,14 @@ class MacroMapFormatSpec extends FlatSpec with Matchers {
     val bson = meta.write(v)
     meta.read(bson) shouldBe v
   }*/
+
+  class OptMapMeta extends MCcMeta[OptMapStrLong, OptMapMeta]("omm") {
+    @f val value = OptMapField[Long]
+  }
+  it should "deal with type aliases" in {
+    val meta = new OptMapMeta
+    val v = OptMapStrLong(Some(Map("ab" -> 4L)), Some(Map("xy" -> 2L)))
+    val bson = meta.write(v)
+    meta.read(bson) shouldBe v
+  }
 }
