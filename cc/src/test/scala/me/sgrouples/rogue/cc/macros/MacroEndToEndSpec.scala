@@ -474,5 +474,25 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
     Locales.where(_.locale eqs Locale.CHINESE).existsAsync.futureValue mustBe true
 
   }
+
+  "receive fetch" should "work with MCc" in {
+    val sub = new TestSubscriber()
+    VenueR.insertManyAsync(Seq(baseTestVenue(), baseTestVenue(), baseTestVenue())).futureValue
+
+    val pub = VenueR.where(_.closed neqs true).select(_.venuename).fetchPublisher(2)
+    val s = pub.subscribe(sub)
+    sub.waitForAll()
+    val rcv = sub.getRecieved()
+    rcv.length mustEqual 3
+    rcv mustEqual List("test venue", "test venue", "test venue")
+
+    val sub2 = new TestSubscriber()
+    //special case - objectIds
+    val pub2 = VenueR.where(_.closed neqs true).select(_.id).fetchPublisher(2)
+    val s2 = pub.subscribe(sub2)
+    sub2.waitForAll()
+    val rcv2 = sub.getRecieved()
+    rcv2.length mustEqual 3
+  }
 }
 

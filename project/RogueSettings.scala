@@ -12,7 +12,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "5.0.0", //before 5.0.0 with streams
+    version := "5.0.1", //before 5.0.0 with streams
     organization := "me.sgrouples",
     scalaVersion := "2.12.8",
     isSnapshot := true,
@@ -38,8 +38,8 @@ object RogueSettings {
 
 object RogueDependencies {
   val specsVer = "3.8.9"
-  val mongoVer = "3.10.2"
-  val mongoReactiveVer = "1.11.0"
+  val mongoVer = "3.11.0"
+  val mongoReactiveVer = "1.12.0"
 
   val joda = Seq(
     "joda-time"                % "joda-time"           % "2.10.1"        % "compile",

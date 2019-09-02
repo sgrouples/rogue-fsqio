@@ -1,22 +1,17 @@
 package me.sgrouples.rogue.cc
 
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
 import java.util.{ Currency, Locale }
 import java.util.regex.Pattern
 
 import com.mongodb.async.client.MongoDatabase
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
-import org.reactivestreams.{ Subscriber, Subscription }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 
 import scala.concurrent.duration._
 import shapeless.tag
-
-import scala.collection.mutable.ListBuffer
 
 class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
   import Metas._
@@ -466,38 +461,6 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   }
 
   "reactive fetch" should "work" in {
-    class TestSubscriber extends Subscriber[AnyRef] {
-      val latch = new CountDownLatch(1)
-      val recieved = new ListBuffer[AnyRef]()
-      var x: Subscription = null
-      override def onSubscribe(s: Subscription): Unit = {
-        x = s
-        s.request(Int.MaxValue)
-      }
-
-      override def onNext(t: AnyRef): Unit = {
-        recieved += t
-      }
-
-      override def onError(t: Throwable): Unit = {
-        onComplete()
-      }
-
-      override def onComplete(): Unit = {
-        latch.countDown()
-      }
-
-      def getRecieved(): List[AnyRef] = recieved.result()
-
-      def waitForAll(): Unit = {
-        import com.mongodb.MongoTimeoutException
-        if (!(latch.await(5, TimeUnit.SECONDS))) {
-          throw new MongoTimeoutException("Publisher onComplete timed out")
-        } else {
-          ()
-        }
-      }
-    }
 
     val sub = new TestSubscriber()
 
