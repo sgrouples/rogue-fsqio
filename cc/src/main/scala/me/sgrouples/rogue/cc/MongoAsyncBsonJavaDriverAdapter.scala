@@ -383,11 +383,8 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
 
     val encoder = Try {
       baseColl.getCodecRegistry.get(classR)
-    } getOrElse {
-      throw new IllegalStateException(s"Encoder not implemented encoder for ${classR} - only reader in fetch - query was ${cnd} / ${sel}")
     }
 
-    baseColl.getCodecRegistry.get(classR)
     val rCodec = new Codec[R] {
 
       override def decode(reader: BsonReader, decoderContext: DecoderContext): R = {
@@ -397,7 +394,8 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
 
       //don't care - only read
       override def encode(writer: BsonWriter, value: R, encoderContext: EncoderContext): Unit = {
-        encoder.encode(writer, value, encoderContext)
+        encoder.map(_.encode(writer, value, encoderContext)).getOrElse(
+          throw new IllegalStateException(s"Encoder not implemented encoder for ${classR} - only reader in fetch - query was ${cnd} / ${sel}"))
       }
 
       override def getEncoderClass: Class[R] = classR.asInstanceOf[Class[R]]

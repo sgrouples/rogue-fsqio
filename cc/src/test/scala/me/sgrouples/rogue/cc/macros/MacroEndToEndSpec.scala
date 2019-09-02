@@ -491,8 +491,24 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
     val pub2 = VenueR.where(_.closed neqs true).select(_.id).fetchPublisher(2)
     val s2 = pub.subscribe(sub2)
     sub2.waitForAll()
-    val rcv2 = sub.getRecieved()
+    val rcv2 = sub2.getRecieved()
     rcv2.length mustEqual 3
+
+    val sub3 = new TestSubscriber()
+    //special case - objectIds
+    val pub3 = VenueR.where(_.closed neqs true).select(_.id, _.venuename).fetchPublisher(2)
+    val s3 = pub.subscribe(sub3)
+    sub3.waitForAll()
+    val rcv3 = sub3.getRecieved()
+    rcv3.length mustEqual 3
+
+    val sub4 = new TestSubscriber()
+    //special case - objectIds
+    val pub4 = VenueR.where(_.closed neqs true).fetchPublisher(2)
+    val s4 = pub.subscribe(sub4)
+    sub4.waitForAll()
+    val rcv4 = sub4.getRecieved()
+    rcv4.length mustEqual 3
   }
 }
 
