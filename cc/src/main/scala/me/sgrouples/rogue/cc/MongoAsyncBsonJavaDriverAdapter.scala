@@ -21,7 +21,7 @@ import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }
 import com.mongodb.ErrorCategory._
 import org.bson.codecs.{ Codec, DecoderContext, EncoderContext, RawBsonDocumentCodec }
-import org.bson.codecs.configuration.CodecRegistries
+import org.bson.codecs.configuration.{ CodecConfigurationException, CodecRegistries }
 import org.bson.types.ObjectId
 import org.reactivestreams.Publisher
 
@@ -380,29 +380,31 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     val sel: Bson = queryClause.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
     val ord = queryClause.order.map(buildOrder)
     val baseColl = getReactiveCollection(query, readPreference)
-    //special handling of queries that expect a single ObjectId in result - we can't just override registry
-    //maybe it should be extended to avoid creation of extra registry for all known single instances (Ints, Longs, etc)
-    val cr = if (classR == classOf[ObjectId]) {
-      baseColl.getCodecRegistry
-    } else {
+
+    val encoder = Try {
       baseColl.getCodecRegistry.get(classR)
-      val rCodec = new Codec[R] {
-
-        override def decode(reader: BsonReader, decoderContext: DecoderContext): R = {
-          val bsonDoc = rawBsonDocumentCodec.decode(reader, decoderContext)
-          readSerializer.fromDocument(bsonDoc)
-        }
-
-        //don't care - only read
-        override def encode(writer: BsonWriter, value: R, encoderContext: EncoderContext): Unit = {
-          throw new IllegalStateException(s"Not implemented encoder for ${classR} - only reader in fetch - query was ${cnd} / ${sel}")
-        }
-
-        override def getEncoderClass: Class[R] = classR.asInstanceOf[Class[R]]
-      }
-      val singleR = CodecRegistries.fromCodecs(rCodec)
-      CodecRegistries.fromRegistries(singleR, baseColl.getCodecRegistry)
+    } getOrElse {
+      throw new IllegalStateException(s"Encoder not implemented encoder for ${classR} - only reader in fetch - query was ${cnd} / ${sel}")
     }
+
+    baseColl.getCodecRegistry.get(classR)
+    val rCodec = new Codec[R] {
+
+      override def decode(reader: BsonReader, decoderContext: DecoderContext): R = {
+        val bsonDoc = rawBsonDocumentCodec.decode(reader, decoderContext)
+        readSerializer.fromDocument(bsonDoc)
+      }
+
+      //don't care - only read
+      override def encode(writer: BsonWriter, value: R, encoderContext: EncoderContext): Unit = {
+        encoder.encode(writer, value, encoderContext)
+      }
+
+      override def getEncoderClass: Class[R] = classR.asInstanceOf[Class[R]]
+    }
+    val singleR = CodecRegistries.fromCodecs(rCodec)
+    val cr = CodecRegistries.fromRegistries(singleR, baseColl.getCodecRegistry)
+
     val coll = baseColl.withCodecRegistry(cr)
     //check if serializer will work - quite possible that no, and separate mapper from BsonDocument-> R will be needed
 
