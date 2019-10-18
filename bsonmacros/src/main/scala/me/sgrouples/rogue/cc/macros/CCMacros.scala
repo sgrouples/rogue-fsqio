@@ -11,6 +11,7 @@ import scala.collection.MapLike
 class MacroCCGenerator(val c: Context) {
 
   import c.universe._
+  //new file to check https://github.com/lihaoyi/upickle/blob/master/implicits/src/upickle/implicits/internal/Macros.scala
 
   //copied from https://github.com/lihaoyi/upickle/blob/master/upickle/src/upickle/internal/Macros.scala
   def companionTree(tpe: c.Type): Either[String, Tree] = {
