@@ -50,8 +50,8 @@ class MacroCCGenerator(val c: Context) {
   }
 
   def genImpl[T: c.WeakTypeTag]: c.Tree = {
-
     val tpe = weakTypeOf[T]
+    println(s"genImpl ${tpe}")
     val members = tpe.decls
     val mapTypeSymbol = typeOf[MapLike[_, _, _]].typeSymbol
     val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
@@ -61,6 +61,7 @@ class MacroCCGenerator(val c: Context) {
     val byteType = typeOf[Byte]
 
     def typeFormat(at: Type, dv: Option[Tree]): Tree = {
+      println(s"typeFormat ${at} : ${dv}")
       if (at <:< typeOf[Int]) {
         val t = dv.getOrElse(q"0")
         q"new _root_.me.sgrouples.rogue.cc.macros.IntMacroBsonFormat(${t})"
@@ -107,6 +108,8 @@ class MacroCCGenerator(val c: Context) {
     }
 
     def tcFormat(tp: Type, tc: Type, dv: Option[Tree]): Tree = {
+      println(s"tcFormat ${tp} : ${tc} : ${dv}")
+
       if (tc == optionTypeCons) {
         val ha = tp.typeArgs.head
         val inner = if (ha.typeArgs.nonEmpty) {
@@ -144,12 +147,14 @@ class MacroCCGenerator(val c: Context) {
           val inner = typeFormat(tp.typeArgs.head, None)
           q"new _root_.me.sgrouples.rogue.cc.macros.IterableLikeMacroFormat[${tp.typeArgs.head}, $at]($inner)"
         } else {
+          println(s"Else type format ${at} / ${dv}")
           typeFormat(at, dv)
         }
       }
     }
 
     def fieldFormat(f: Symbol, dv: Option[Tree]): Tree = {
+      println(s"Field format ${f} : ${dv}")
       val tp = f.typeSignature
       val tc = tp.typeConstructor
       tcFormat(tp.dealias, tc.dealias, dv)
@@ -169,6 +174,7 @@ class MacroCCGenerator(val c: Context) {
 
       val defaults: Seq[Option[c.universe.Tree]] = getArgSyms(tpe) match {
         case Right((companion, typeParams, argSyms, hasDefaults)) =>
+          println(s"Right ${companion} / ${typeParams} / ${argSyms} / ${hasDefaults}")
           companion.tpe.member(TermName("apply")).info
           fields.map(_.asTerm).zipWithIndex.map {
             case (p, i) =>
@@ -178,9 +184,11 @@ class MacroCCGenerator(val c: Context) {
                 Some(q"$companion.$getterName")
               }
           }
-        case Left(_) =>
+        case Left(x) =>
+          println(s"Left ${x}")
           fields.map(_.asTerm).map(_ => None)
       }
+      println(s"DEFAULTS ${defaults}")
       val df = fields zip defaults
       val namesFormats = df.map {
         case (f, dvOpt) =>
@@ -233,11 +241,12 @@ class MacroCCGenerator(val c: Context) {
       }
 
       val tpC = Constant(tpe.toString)
-
+      println(s"defaults for all ${defaults} - for ${tpC} ")
       val defImpl = if (defaults.forall(_.isDefined)) {
         val dd = defaults.flatten
         q"""$companion.apply(..$dd)"""
       } else {
+        println("throw exception - lack of default value ? why")
         q"""throw new RuntimeException("No defaultValue implementation for type " + $tpC)"""
       }
 
