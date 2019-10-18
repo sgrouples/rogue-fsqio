@@ -12,7 +12,7 @@ class MacroCCGenerator(val c: Context) {
 
   import c.universe._
   //new file to check https://github.com/lihaoyi/upickle/blob/master/implicits/src/upickle/implicits/internal/Macros.scala
-
+  //and also check what borer does https://github.com/sirthias/borer/blob/master/derivation/src/main/scala/io/bullet/borer/derivation/internal/Deriver.scala
   //copied from https://github.com/lihaoyi/upickle/blob/master/upickle/src/upickle/internal/Macros.scala
   def companionTree(tpe: c.Type): Either[String, Tree] = {
     val companionSymbol = tpe.typeSymbol.companion
