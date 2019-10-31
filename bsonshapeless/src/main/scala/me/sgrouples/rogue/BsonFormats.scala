@@ -32,18 +32,20 @@ trait EnumNameFormats {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
+      private val enum = enumeration
+
       override def read(b: BsonValue): T#Value = {
         try {
-          enumeration.withName(b.asString().getValue)
+          enum.withName(b.asString().getValue)
         } catch {
           case e: IllegalArgumentException =>
-            throw new IllegalArgumentException(s"cannot read enum name ${b.asString()} for enum ${enumeration.toString()}", e)
+            throw new IllegalArgumentException(s"cannot read enum name ${b.asString()} for enum ${enum.toString()}", e)
         }
       }
 
       override def write(t: T#Value): BsonValue = new BsonString(t.toString)
 
-      override def defaultValue: T#Value = enumeration.apply(0)
+      override def defaultValue: T#Value = enum.apply(0)
     }
   }
 }
@@ -61,17 +63,19 @@ trait EnumValueFormats {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
+      private val enum = enumeration
+
       override def read(b: BsonValue): T#Value = try {
-        enumeration.apply(b.asNumber().intValue())
+        enum.apply(b.asNumber().intValue())
       } catch {
         case e: IllegalArgumentException =>
-          throw new IllegalArgumentException(s"cannot read enum value ${b.asNumber()}, for enum ${enumeration.toString()} ", e)
+          throw new IllegalArgumentException(s"cannot read enum value ${b.asNumber()}, for enum ${enum.toString()} ", e)
       }
 
       override def write(t: T#Value): BsonValue = new BsonInt32(t.id)
 
       override def defaultValue: T#Value = {
-        enumeration.values.head
+        enum.values.head
       }
     }
   }
