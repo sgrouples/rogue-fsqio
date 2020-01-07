@@ -10,7 +10,7 @@ import org.bson._
 import org.bson.types.{ Decimal128, ObjectId }
 
 import scala.annotation.implicitNotFound
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 import scala.reflect.ClassTag
 
 @implicitNotFound("MacroGen can't generate for ${T}")
@@ -306,7 +306,7 @@ trait EnumMacroFormats {
 
 }
 
-class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(implicit cbf: CanBuildFrom[_, T, C]) extends MacroBsonFormat[C] {
+class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(implicit f: Factory[T, C]) extends MacroBsonFormat[C] {
   private def appendVals(writer: BsonWriter, v: C) = {
     val it = v.iterator
     while (it.hasNext) {
@@ -329,8 +329,9 @@ class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(im
   override def read(b: BsonValue): C = {
     if (b.isArray) {
       val arr = b.asArray()
-      val builder = cbf.apply()
+
       val it = arr.iterator()
+      val builder = f.newBuilder
       while (it.hasNext) {
         builder.+=(inner.readOrDefault(it.next()))
       }
@@ -349,7 +350,7 @@ class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(im
   }
 
   override def defaultValue: C = {
-    cbf.apply().result()
+    f.newBuilder.result()
   }
 
   override def validNames(): Vector[String] = inner.validNames()
@@ -434,7 +435,7 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit kf: MapKeyFormat[
       doc.asScala.map {
         case (k, v) =>
           (kf.read(k), inner.read(v))
-      }(collection.breakOut)
+      }.toMap /*(collection.breakOut)*/
     } else defaultValue
   }
 
