@@ -14,8 +14,9 @@ import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.{ BsonDocument, BsonReader, BsonWriter }
 import org.bson.conversions.Bson
-
-import scala.collection.JavaConverters._
+import scala.collection.compat._
+import scala.jdk.CollectionConverters._
+//import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }
@@ -86,7 +87,7 @@ class PromiseArrayListAdapter[R] extends SingleResultCallback[java.util.Collecti
 
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
-    if (t == null) p.success(coll.asScala)
+    if (t == null) p.success(coll.asScala.toSeq) //immutable Seq - may be slow
     else p.failure(t)
   }
 
@@ -215,7 +216,7 @@ class BatchingCallback[R, T](r: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]])(i
         batchCursor.close()
         p.success(resBuilder.result())
       } else {
-        f(docs.asScala.map(r.fromDocument)).andThen {
+        f(docs.asScala.map(r.fromDocument).toSeq).andThen { //TODO toSeq may be slow
           case Success(resT) =>
             resBuilder ++= resT
             batchCursor.next(this)

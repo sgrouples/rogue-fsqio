@@ -6,7 +6,6 @@ import me.sgrouples.rogue.EnumSerializeValue
 import me.sgrouples.rogue.map.MapKeyFormat
 
 import scala.collection.Seq
-import scala.collection.MapLike
 
 class MacroCCGenerator(val c: Context) {
 
@@ -50,10 +49,10 @@ class MacroCCGenerator(val c: Context) {
   }
 
   def genImpl[T: c.WeakTypeTag]: c.Tree = {
-
     val tpe = weakTypeOf[T]
     val members = tpe.decls
-    val mapTypeSymbol = typeOf[MapLike[_, _, _]].typeSymbol
+    val mapTypeSymbol = new MapTypeObject(c).mapTypeSymbol
+    //typeOf[MapLike[_, _, _]].typeSymbol
     val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
     val enumSerializeValueType = typeOf[EnumSerializeValue]
     val optionTypeCons = typeOf[Option[_]].typeConstructor

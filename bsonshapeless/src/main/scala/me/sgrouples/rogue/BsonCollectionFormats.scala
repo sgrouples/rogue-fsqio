@@ -3,8 +3,7 @@ package me.sgrouples.rogue
 import me.sgrouples.rogue.map.{ MapKeyFormat, MapKeyFormats }
 import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
 
-import scala.collection.TraversableLike
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.language.{ higherKinds, implicitConversions }
@@ -15,8 +14,8 @@ trait BsonCollectionFormats {
 
   implicit def traversableLikeFormat[L[_], T: BsonFormat](
     implicit
-    ev: L[T] <:< TraversableLike[T, L[T]],
-    cb: CanBuildFrom[List[BsonValue], T, L[T]]): BsonFormat[L[T]] = {
+    ev: L[T] <:< Iterable[T],
+    cb: Factory[T, L[T]]): BsonFormat[L[T]] = {
 
     new BsonFormat[L[T]] with BsonArrayReader[L[T]] {
 
@@ -29,7 +28,7 @@ trait BsonCollectionFormats {
       }
 
       def read(value: BsonValue): L[T] = {
-        val b = cb(List.empty[BsonValue])
+        val b = cb.newBuilder
         if (!value.isNull) {
           val arr = value.asArray()
           val i = arr.iterator()
@@ -42,7 +41,9 @@ trait BsonCollectionFormats {
 
       override def flds: Map[String, BsonFormat[_]] = f.flds
 
-      override def defaultValue: L[T] = List.empty[BsonValue].map(f.read)(cb)
+      override def defaultValue: L[T] = {
+        cb.fromSpecific(List.empty[BsonValue].map(f.read))
+      }
     }
   }
 
@@ -56,7 +57,7 @@ trait BsonCollectionFormats {
 
     def read(value: BsonValue): Set[T] = {
       val list: Seq[BsonValue] = if (value.isNull) Seq.empty[BsonValue]
-      else value.asArray().asScala
+      else value.asArray().asScala.toSeq
       list.map(f.read).toSet
     }
 
@@ -141,7 +142,7 @@ trait BsonCollectionFormats {
         value.asDocument().asScala.map {
           case (ks, v) =>
             (kf.read(ks), fv.read(v))
-        }(collection.breakOut)
+        }.toMap /*(collection.breakOut)*/
       }
 
       //in general terms, yes, as we don't know keys, but we need 'star' format for values

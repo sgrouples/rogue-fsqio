@@ -34,7 +34,7 @@ class QueryTest extends JUnitMustMatchers {
   })
 
   @Test
-  def testProduceACorrectJSONQueryString {
+  def testProduceACorrectJSONQueryString = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
     val oid1 = ObjectId.createFromLegacyFormat(d1.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
@@ -266,7 +266,7 @@ class QueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testModifyQueryShouldProduceACorrectJSONQueryString {
+  def testModifyQueryShouldProduceACorrectJSONQueryString = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0) //, DateTimeZone.UTC)
 
     val query = """db.venues.update({"legId": {"$numberLong": "1"}}, """
@@ -372,7 +372,7 @@ class QueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testProduceACorrectSignatureString {
+  def testProduceACorrectSignatureString = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
     val oid = tag[Venue](new ObjectId)
@@ -453,7 +453,7 @@ class QueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testFindAndModifyQueryShouldProduceACorrectJSONQueryString {
+  def testFindAndModifyQueryShouldProduceACorrectJSONQueryString = {
     VenueR.where(_.legacyid eqs 1).findAndModify(_.venuename setTo "fshq").toString().must_==(
       """db.venues.findAndModify({ query: {"legId": {"$numberLong": "1"}}, update: {"$set": {"venuename": "fshq"}}, new: false, upsert: false })""")
     VenueR.where(_.legacyid eqs 1).orderAsc(_.popularity).findAndModify(_.venuename setTo "fshq").toString().must_==(
@@ -463,7 +463,7 @@ class QueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testOrQueryShouldProduceACorrectJSONQueryString {
+  def testOrQueryShouldProduceACorrectJSONQueryString = {
     // Simple $or
     VenueR.or(
       _.where(_.legacyid eqs 1),
@@ -522,7 +522,7 @@ class QueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testHints {
+  def testHints = {
     VenueR.where(_.legacyid eqs 1).hint(VenueR.idIdx).toString() must_== """db.venues.find({"legId": {"$numberLong": "1"}}).hint({"_id": 1})"""
     VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdx).toString() must_== """db.venues.find({"legId": {"$numberLong": "1"}}).hint({"legId": -1})"""
     VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdIdx).toString() must_== """db.venues.find({"legId": {"$numberLong": "1"}}).hint({"legId": 1, "_id": -1})"""
@@ -537,7 +537,7 @@ class QueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testDollarSelector {
+  def testDollarSelector = {
 
     VenueR.where(_.legacyid eqs 1)
       .and(_.claims.subfield(_.uid) contains 2)

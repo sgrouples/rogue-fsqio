@@ -261,8 +261,8 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
       .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userId setTo 0L)
       .upsertOneAsync(returnNew = true)
 
-    v2F.onFailure {
-      case f: Throwable =>
+    v2F.onComplete {
+      case scala.util.Failure(f) =>
         println("V2 failed with ")
         f.printStackTrace()
     }
@@ -409,7 +409,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
     val counts = Map(ObjectId.get -> 100L)
 
-    val counter = MCounter(counts = counts)
+    val counter = me.sgrouples.rogue.cc.macros.Metas.MCounter(counts = counts)
 
     Counters.insertOneAsync(counter).futureValue
 
@@ -426,7 +426,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
   "Map[K <: ObjectId, V] field" should "just work" in {
 
-    val counts: Map[CounterId, Long] = Map(tag[MCounter](ObjectId.get) -> 100L)
+    val counts: Map[CounterId, Long] = Map(tag[Counter](ObjectId.get) -> 100L)
 
     val counter = TypedCounter(counts = counts)
 

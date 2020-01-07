@@ -40,7 +40,7 @@ object RogueSettings {
     },
     version := "5.1.0-SNAPSHOT",
     organization := "me.sgrouples",
-    scalaVersion := "2.12.10",
+    scalaVersion := "2.13.1",
     crossScalaVersions := Seq("2.12.10", "2.13.1"),
     isSnapshot := true,
     publishMavenStyle := true,
