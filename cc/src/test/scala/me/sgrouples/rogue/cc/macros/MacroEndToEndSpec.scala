@@ -17,7 +17,7 @@ import shapeless.tag
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
-  import Metas._
+  import me.sgrouples.rogue.cc.macros.Metas._
 
   implicit val atMost = PatienceConfig(15 seconds)
 
@@ -265,6 +265,8 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
       case scala.util.Failure(f) =>
         println("V2 failed with ")
         f.printStackTrace()
+      case scala.util.Success(_) =>
+        ()
     }
 
     val v2 = v2F.futureValue
@@ -409,7 +411,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
     val counts = Map(ObjectId.get -> 100L)
 
-    val counter = me.sgrouples.rogue.cc.macros.Metas.MCounter(counts = counts)
+    val counter = MCounter(counts = counts)
 
     Counters.insertOneAsync(counter).futureValue
 
@@ -426,7 +428,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
   "Map[K <: ObjectId, V] field" should "just work" in {
 
-    val counts: Map[CounterId, Long] = Map(tag[Counter](ObjectId.get) -> 100L)
+    val counts: Map[CounterId, Long] = Map(tag[MCounter](ObjectId.get) -> 100L)
 
     val counter = TypedCounter(counts = counts)
 
