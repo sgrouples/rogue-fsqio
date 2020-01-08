@@ -15,6 +15,7 @@ import org.specs2.matcher.JUnitMustMatchers
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Awaitable }
 import CcRogue._
+import scala.collection.Seq
 
 class EndToEndBsonTest extends JUnitMustMatchers {
   import Metas._
@@ -250,7 +251,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
    */
   @Test
-  def testFindAndModify {
+  def testFindAndModify: Unit = {
     val v1 = VenueR.where(_.venuename eqs "v1")
       .findAndModify(_.userId setTo 5) //all required fields have to be set, because they are required in CC
       .and(_.legacyid setTo 0L).and(_.venuename setTo "").and(_.mayor_count setTo 0L)
@@ -281,7 +282,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testRegexQuery {
+  def testRegexQuery: Unit = {
     val v = baseTestVenue()
     VenueR.insertOne(v)
     VenueR.where(_.id eqs v._id).and(_.venuename startsWith "test v").count() must_== 1
@@ -294,14 +295,14 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testLimitAndBatch {
+  def testLimitAndBatch: Unit = {
     (1 to 50).foreach(_ => VenueR.insertOne(baseTestVenue()))
     val q = VenueR.select(_.id)
     q.limit(10).fetch().length must_== 10
     q.limit(-10).fetch().length must_== 10
   }
   @Test
-  def testCount {
+  def testCount: Unit = {
     (1 to 10).foreach(_ => VenueR.insertOne(baseTestVenue()))
     val q = VenueR.select(_.id)
     q.count() must_== 10
@@ -314,7 +315,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   }
   // distincts need codecs for Long, and probably Int in db
   @Test
-  def testDistinct {
+  def testDistinct: Unit = {
     (1 to 5).foreach(_ => VenueR.insertOne(baseTestVenue().copy(userId = 1L)))
     (1 to 5).foreach(_ => VenueR.insertOne(baseTestVenue().copy(userId = 2L)))
     (1 to 5).foreach(_ => VenueR.insertOne(baseTestVenue().copy(userId = 3L)))

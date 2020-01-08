@@ -15,6 +15,7 @@ import org.reactivestreams.Publisher
 import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
+import scala.collection.Seq
 
 case class ExecutableQuery[MB, M <: MB, R, State](
   query: Query[M, R, State],

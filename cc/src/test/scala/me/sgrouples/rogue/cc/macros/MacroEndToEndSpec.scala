@@ -13,6 +13,7 @@ import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 
 import scala.concurrent.duration._
 import shapeless.tag
+import scala.collection.Seq
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

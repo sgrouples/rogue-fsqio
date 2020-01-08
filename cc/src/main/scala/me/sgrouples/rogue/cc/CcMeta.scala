@@ -10,6 +10,7 @@ import org.bson.{ BsonDocument, BsonInt32, BsonValue }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
+import scala.collection.Seq
 
 trait CcMetaLike[-T] {
   type R

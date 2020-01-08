@@ -9,6 +9,7 @@ import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
+import scala.collection.Seq
 
 import scala.concurrent.duration._
 import shapeless.tag

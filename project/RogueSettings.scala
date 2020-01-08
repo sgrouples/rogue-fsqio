@@ -65,8 +65,8 @@ object RogueSettings {
 
 object RogueDependencies {
   val specsVer = "4.8.1"
-  val mongoVer = "3.11.0"
-  val mongoReactiveVer = "1.12.0"
+  val mongoVer = "3.12.0"
+  val mongoReactiveVer = "1.13.0"
 
   val joda = Seq(
     "joda-time"                % "joda-time"           % "2.10.1"        % "compile",

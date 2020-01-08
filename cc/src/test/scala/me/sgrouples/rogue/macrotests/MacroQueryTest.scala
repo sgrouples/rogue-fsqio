@@ -97,8 +97,7 @@ class MacroQueryTest extends JUnitMustMatchers {
     VenueR.where(_.venuename regexWarningNotIndexed p1).toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""
     VenueR.where(_.venuename matches p1).toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""
     val p2 = Pattern.compile("Star.*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
-    println(p2.toString)
-    //warning - two testes below are bogus - as patterns might be `mi` or `im`
+    //warning - two testes below are bogus - as patterns might be `mi` or `im` - depends on scala version (2.12 / 2.13)
     VenueR.where(_.venuename matches p2).toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": "mi"}})"""
     VenueR.where(_.venuename matches p2).and(_.venuename nin List("a", "b")).toString() must_== """db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "mi"}})"""
 
@@ -320,8 +319,9 @@ class MacroQueryTest extends JUnitMustMatchers {
 
     // Multiple updates
     VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count setTo 3).toString() must_== query + """{"$set": {"mayor_count": {"$numberLong": "3"}, "venuename": "fshq"}}""" + suffix
-    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count inc 1).toString() must_== query + """{"$set": {"venuename": "fshq"}, "$inc": {"mayor_count": 1}}""" + suffix
-    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count setTo 3).and(_.mayor_count inc 1).toString() must_== query + """{"$set": {"mayor_count": {"$numberLong": "3"}, "venuename": "fshq"}, "$inc": {"mayor_count": 1}}""" + suffix
+    //WARNING - order of $set / $inc differes in scala 2.12 / 2.13
+    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count inc 1).toString() must_== query + """{"$inc": {"mayor_count": 1}, "$set": {"venuename": "fshq"}}""" + suffix
+    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count setTo 3).and(_.mayor_count inc 1).toString() must_== query + """{"$inc": {"mayor_count": 1}, "$set": {"mayor_count": {"$numberLong": "3"}, "venuename": "fshq"}}""" + suffix
     VenueR.where(_.legacyid eqs 1).modify(_.popularity addToSet 3).and(_.tags addToSet List("a", "b")).toString() must_== query + """{"$addToSet": {"tags": {"$each": ["a", "b"]}, "popularity": {"$numberLong": "3"}}}""" + suffix
 
     // Noop query

@@ -9,6 +9,7 @@ import com.mongodb.reactivestreams.client.internal.{ MongoDatabaseImpl, Reactive
 import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
 import io.fsq.rogue._
 import org.bson.codecs.configuration.CodecRegistries
+import scala.collection.Seq
 
 import scala.util.Try
 

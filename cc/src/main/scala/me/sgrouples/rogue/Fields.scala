@@ -13,6 +13,7 @@ import shapeless.tag.@@
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
+import scala.collection.Seq
 
 abstract class CField[V, O](val name: String, val owner: O) extends Field[V, O]
 

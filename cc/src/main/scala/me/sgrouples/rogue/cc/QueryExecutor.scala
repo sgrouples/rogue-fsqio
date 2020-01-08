@@ -16,6 +16,7 @@ import org.reactivestreams.Publisher
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 import scala.collection.mutable.{ Builder, ListBuffer }
+import scala.collection.Seq
 
 trait RogueBsonRead[R] {
   def fromDocument(dbo: BsonDocument): R
