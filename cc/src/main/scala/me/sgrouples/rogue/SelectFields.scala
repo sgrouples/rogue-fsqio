@@ -8,6 +8,7 @@ import io.fsq.rogue._
 import me.sgrouples.rogue.cc.CcMeta
 import org.bson.types.Decimal128
 import org.bson._
+import scala.collection.Seq
 
 /**
  * Trait representing a field and all the operations on it.

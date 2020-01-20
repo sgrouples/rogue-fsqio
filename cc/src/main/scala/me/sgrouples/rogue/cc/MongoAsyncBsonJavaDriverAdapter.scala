@@ -14,8 +14,9 @@ import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.{ BsonDocument, BsonReader, BsonWriter }
 import org.bson.conversions.Bson
-
-import scala.collection.JavaConverters._
+import scala.collection.compat._
+import scala.jdk.CollectionConverters._
+//import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }
@@ -24,6 +25,7 @@ import org.bson.codecs.{ Codec, DecoderContext, EncoderContext, RawBsonDocumentC
 import org.bson.codecs.configuration.{ CodecConfigurationException, CodecRegistries }
 import org.bson.types.ObjectId
 import org.reactivestreams.Publisher
+import scala.collection.Seq
 
 import scala.reflect._
 
@@ -86,7 +88,7 @@ class PromiseArrayListAdapter[R] extends SingleResultCallback[java.util.Collecti
 
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
-    if (t == null) p.success(coll.asScala)
+    if (t == null) p.success(coll.asScala) //immutable Seq - may be slow
     else p.failure(t)
   }
 

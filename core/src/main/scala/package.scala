@@ -15,7 +15,7 @@ package object rogue {
   trait ShardKey[V] {
     def name: String
     def eqs(v: V) = new EqClause(this.name, v) with ShardKeyClause
-    def in[L <% Traversable[V]](vs: L) = new InQueryClause(this.name, QueryHelpers.validatedList(vs.toSet)) with ShardKeyClause
+    def in[L <% Iterable[V]](vs: L) = new InQueryClause(this.name, QueryHelpers.validatedList(vs.toSet)) with ShardKeyClause
   }
 
   /**

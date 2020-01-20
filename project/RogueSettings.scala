@@ -1,4 +1,6 @@
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
+// Copyright 2015 Sgrouples Inc. All Rights Reserved.
+
 import sbt._
 import Keys.{scalaVersion, _}
 
@@ -8,13 +10,38 @@ object RogueSettings {
   val nexusReleases = "releases" at nexus+"repository/maven-releases/"
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 
+  def priorTo2_13(scalaVersion: String): Boolean =
+    CrossVersion.partialVersion(scalaVersion) match {
+      case Some((2, minor)) if minor < 13 => true
+      case _                              => false
+    }
+
+  val paradiseVersion = "2.1.1"
+
+  lazy val macroSettings: Seq[Setting[_]] = Seq(
+    libraryDependencies ++= Seq(
+      scalaOrganization.value % "scala-compiler" % scalaVersion.value % Provided,
+      scalaOrganization.value % "scala-reflect" % scalaVersion.value % Provided
+    ) ++ (
+      if (priorTo2_13(scalaVersion.value)) {
+        Seq(
+          compilerPlugin(("org.scalamacros" % "paradise" % paradiseVersion).cross(CrossVersion.patch))
+        )
+      } else Nil
+      ),
+    scalacOptions ++= (
+      if (priorTo2_13(scalaVersion.value)) Nil else Seq("-Ymacro-annotations")
+      )
+  )
+
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "5.0.4", //before 5.0.0 with streams
+    version := "5.1.0-SNAPSHOT",
     organization := "me.sgrouples",
-    scalaVersion := "2.12.8",
+    scalaVersion := "2.13.1",
+    crossScalaVersions := Seq("2.12.10", "2.13.1"),
     isSnapshot := true,
     publishMavenStyle := true,
     publishArtifact in Test := false,
@@ -33,13 +60,13 @@ object RogueSettings {
     scalacOptions ++= Seq("-feature", "-language:_"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials") ,
     testOptions in Test ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=> MongoEmbedded.stop))
-	)
+	) ++ macroSettings
 }
 
 object RogueDependencies {
-  val specsVer = "3.8.9"
-  val mongoVer = "3.11.0"
-  val mongoReactiveVer = "1.12.0"
+  val specsVer = "4.8.1"
+  val mongoVer = "3.12.0"
+  val mongoReactiveVer = "1.13.0"
 
   val joda = Seq(
     "joda-time"                % "joda-time"           % "2.10.1"        % "compile",
@@ -66,7 +93,9 @@ object RogueDependencies {
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.3"
 
+  val collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.3"
+
   val coreDeps = mongoDeps ++ joda
 
-  val ccDeps = mongoDeps ++ Seq(shapeless)  ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(shapeless, collectionCompat)  ++ testDeps
 }

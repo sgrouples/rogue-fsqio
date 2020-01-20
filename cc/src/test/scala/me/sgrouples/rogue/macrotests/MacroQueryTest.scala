@@ -33,7 +33,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   })
 
   @Test
-  def testProduceACorrectJSONQueryString {
+  def testProduceACorrectJSONQueryString: Unit = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
     val oid1 = ObjectId.createFromLegacyFormat(d1.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
@@ -97,8 +97,9 @@ class MacroQueryTest extends JUnitMustMatchers {
     VenueR.where(_.venuename regexWarningNotIndexed p1).toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""
     VenueR.where(_.venuename matches p1).toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""
     val p2 = Pattern.compile("Star.*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
-    VenueR.where(_.venuename matches p2).toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": "im"}})"""
-    VenueR.where(_.venuename matches p2).and(_.venuename nin List("a", "b")).toString() must_== """db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "im"}})"""
+    //warning - two testes below are bogus - as patterns might be `mi` or `im` - depends on scala version (2.12 / 2.13)
+    VenueR.where(_.venuename matches p2).toString() must_== """db.venues.find({"venuename": {"$regex": "Star.*", "$options": "mi"}})"""
+    VenueR.where(_.venuename matches p2).and(_.venuename nin List("a", "b")).toString() must_== """db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "mi"}})"""
 
     // all, in, size, contains, at
     VenueR.where(_.tags eqs List("db", "ka")).toString() must_== """db.venues.find({"tags": ["db", "ka"]})"""
@@ -254,7 +255,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testModifyQueryShouldProduceACorrectJSONQueryString {
+  def testModifyQueryShouldProduceACorrectJSONQueryString: Unit = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0) //, DateTimeZone.UTC)
 
     val query = """db.venues.update({"legId": {"$numberLong": "1"}}, """
@@ -318,8 +319,9 @@ class MacroQueryTest extends JUnitMustMatchers {
 
     // Multiple updates
     VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count setTo 3).toString() must_== query + """{"$set": {"mayor_count": {"$numberLong": "3"}, "venuename": "fshq"}}""" + suffix
-    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count inc 1).toString() must_== query + """{"$set": {"venuename": "fshq"}, "$inc": {"mayor_count": 1}}""" + suffix
-    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count setTo 3).and(_.mayor_count inc 1).toString() must_== query + """{"$set": {"mayor_count": {"$numberLong": "3"}, "venuename": "fshq"}, "$inc": {"mayor_count": 1}}""" + suffix
+    //WARNING - order of $set / $inc differes in scala 2.12 / 2.13
+    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count inc 1).toString() must_== query + """{"$inc": {"mayor_count": 1}, "$set": {"venuename": "fshq"}}""" + suffix
+    VenueR.where(_.legacyid eqs 1).modify(_.venuename setTo "fshq").and(_.mayor_count setTo 3).and(_.mayor_count inc 1).toString() must_== query + """{"$inc": {"mayor_count": 1}, "$set": {"mayor_count": {"$numberLong": "3"}, "venuename": "fshq"}}""" + suffix
     VenueR.where(_.legacyid eqs 1).modify(_.popularity addToSet 3).and(_.tags addToSet List("a", "b")).toString() must_== query + """{"$addToSet": {"tags": {"$each": ["a", "b"]}, "popularity": {"$numberLong": "3"}}}""" + suffix
 
     // Noop query
@@ -360,7 +362,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testProduceACorrectSignatureString {
+  def testProduceACorrectSignatureString: Unit = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
     val oid = tag[Venue](new ObjectId)
@@ -441,7 +443,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testFindAndModifyQueryShouldProduceACorrectJSONQueryString {
+  def testFindAndModifyQueryShouldProduceACorrectJSONQueryString: Unit = {
     VenueR.where(_.legacyid eqs 1).findAndModify(_.venuename setTo "fshq").toString().must_==(
       """db.venues.findAndModify({ query: {"legId": {"$numberLong": "1"}}, update: {"$set": {"venuename": "fshq"}}, new: false, upsert: false })""")
     VenueR.where(_.legacyid eqs 1).orderAsc(_.popularity).findAndModify(_.venuename setTo "fshq").toString().must_==(
@@ -451,7 +453,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testOrQueryShouldProduceACorrectJSONQueryString {
+  def testOrQueryShouldProduceACorrectJSONQueryString: Unit = {
     // Simple $or
     VenueR.or(
       _.where(_.legacyid eqs 1),
@@ -510,7 +512,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testHints {
+  def testHints: Unit = {
     VenueR.where(_.legacyid eqs 1).hint(VenueR.idIdx).toString() must_== """db.venues.find({"legId": {"$numberLong": "1"}}).hint({"_id": 1})"""
     VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdx).toString() must_== """db.venues.find({"legId": {"$numberLong": "1"}}).hint({"legId": -1})"""
     VenueR.where(_.legacyid eqs 1).hint(VenueR.legIdIdx).toString() must_== """db.venues.find({"legId": {"$numberLong": "1"}}).hint({"legId": 1, "_id": -1})"""
@@ -525,7 +527,7 @@ class MacroQueryTest extends JUnitMustMatchers {
   }
 
   @Test
-  def testDollarSelector {
+  def testDollarSelector: Unit = {
 
     VenueR.where(_.legacyid eqs 1)
       .and(_.claims.subfield(_.uid) contains 2)
@@ -613,7 +615,7 @@ class MacroQueryTest extends JUnitMustMatchers {
 
         @Test
         def testCommonSuperclassForPhantomTypes {
-          def maybeLimit(legid: Long, limitOpt: Option[Int]) = {
+          def maybeLimit(legid: Long, limitOpt: Option[Int]):Unit = {
             limitOpt match {
               case Some(limit) => VenueR.where(_.legacyid eqs legid).limit(limit)
               case None => VenueR.where(_.legacyid eqs legid)

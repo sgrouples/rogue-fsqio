@@ -15,6 +15,7 @@ import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
 import scala.util.matching.Regex
+import scala.collection.Seq
 
 object CondOps extends Enumeration {
   type Op = Value
@@ -100,12 +101,12 @@ object MongoType extends Enumeration {
  */
 abstract class AbstractQueryField[F, V, DB, M](val field: Field[F, M]) {
   def valueToDB(v: V): DB
-  def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB)
+  def valuesToDB(vs: Iterable[V]) = vs.map(valueToDB)
 
   def eqs(v: V) = EqClause(field.name, valueToDB(v))
   def neqs(v: V) = new NeQueryClause(field.name, valueToDB(v))
-  def in[L <% Traversable[V]](vs: L) = QueryHelpers.inListClause(field.name, valuesToDB(vs))
-  def nin[L <% Traversable[V]](vs: L) = new NinQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
+  def in[L <% Iterable[V]](vs: L) = QueryHelpers.inListClause(field.name, valuesToDB(vs))
+  def nin[L <% Iterable[V]](vs: L) = new NinQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
   def lt(v: V) = new LtQueryClause(field.name, valueToDB(v))
   def gt(v: V) = new GtQueryClause(field.name, valueToDB(v))
@@ -258,12 +259,12 @@ class ForeignObjectIdQueryField[F <: ObjectId, M, T](
 
   // The implicit parameter is solely to get around the fact that because of
   // erasure, this method and the method in AbstractQueryField look the same.
-  def in(objs: Traversable[T])(implicit ev: T =:= T) =
+  def in(objs: Iterable[T])(implicit ev: T =:= T) =
     QueryHelpers.inListClause(field.name, objs.map(getId))
 
   // The implicit parameter is solely to get around the fact that because of
   // erasure, this method and the method in AbstractQueryField look the same.
-  def nin(objs: Traversable[T])(implicit ev: T =:= T) =
+  def nin(objs: Iterable[T])(implicit ev: T =:= T) =
     new NinQueryClause(field.name, QueryHelpers.validatedList(objs.map(getId)))
 }
 
@@ -314,13 +315,13 @@ class BsonRecordQueryField[M, B](field: Field[B, M], asDBObject: B => DBObject, 
 abstract class AbstractSeqQueryField[F, V, DB, M, CC[_] <: Seq[_]](field: Field[CC[F], M])
   extends AbstractQueryField[CC[F], V, DB, M](field) {
 
-  def all(vs: Traversable[V]) =
+  def all(vs: Iterable[V]) =
     QueryHelpers.allListClause(field.name, valuesToDB(vs))
 
-  def eqs(vs: Traversable[V]) =
+  def eqs(vs: Iterable[V]) =
     EqClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
-  def neqs(vs: Traversable[V]) =
+  def neqs(vs: Iterable[V]) =
     new NeQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
   def size(s: Int) =
@@ -341,13 +342,13 @@ abstract class AbstractSeqQueryField[F, V, DB, M, CC[_] <: Seq[_]](field: Field[
 abstract class AbstractArrayQueryField[F, V, DB, M, X](field: Field[Array[X], M])
   extends AbstractQueryField[Array[X], V, DB, M](field) {
 
-  def all(vs: Traversable[V]) =
+  def all(vs: Iterable[V]) =
     QueryHelpers.allListClause(field.name, valuesToDB(vs))
 
-  def eqs(vs: Traversable[V]) =
+  def eqs(vs: Iterable[V]) =
     EqClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
-  def neqs(vs: Traversable[V]) =
+  def neqs(vs: Iterable[V]) =
     new NeQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
   def size(s: Int) =
@@ -529,9 +530,9 @@ class MapModifyField[V, M](field: Field[Map[String, V], M])
 abstract class AbstractSeqModifyField[V, DB, M, CC[_] <: Seq[_]](val field: Field[CC[V], M]) {
   def valueToDB(v: V): DB
 
-  def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB _)
+  def valuesToDB(vs: Iterable[V]) = vs.map(valueToDB _)
 
-  def setTo(vs: Traversable[V]) =
+  def setTo(vs: Iterable[V]) =
     new ModifyClause(
       ModOps.Set,
       field.name -> QueryHelpers.list(valuesToDB(vs)))
@@ -540,16 +541,16 @@ abstract class AbstractSeqModifyField[V, DB, M, CC[_] <: Seq[_]](val field: Fiel
       ModOps.Push,
       field.name -> valueToDB(v))
 
-  def push(vs: Traversable[V]) =
+  def push(vs: Iterable[V]) =
     new ModifyPushEachClause(field.name, valuesToDB(vs))
 
-  def push(vs: Traversable[V], slice: Int) =
+  def push(vs: Iterable[V], slice: Int) =
     new ModifyPushEachSliceClause(field.name, slice, valuesToDB(vs))
 
-  def push(vs: Traversable[V], slice: Int, position: Int) =
+  def push(vs: Iterable[V], slice: Int, position: Int) =
     new ModifyPushEachSlicePositionClause(field.name, slice, position, valuesToDB(vs))
 
-  def pushAll(vs: Traversable[V]) =
+  def pushAll(vs: Iterable[V]) =
     new ModifyClause(
       ModOps.PushAll,
       field.name -> QueryHelpers.list(valuesToDB(vs)))
@@ -559,7 +560,7 @@ abstract class AbstractSeqModifyField[V, DB, M, CC[_] <: Seq[_]](val field: Fiel
       ModOps.AddToSet,
       field.name -> valueToDB(v))
 
-  def addToSet(vs: Traversable[V]) =
+  def addToSet(vs: Iterable[V]) =
     new ModifyAddEachClause(field.name, valuesToDB(vs))
 
   def popFirst =
@@ -573,7 +574,7 @@ abstract class AbstractSeqModifyField[V, DB, M, CC[_] <: Seq[_]](val field: Fiel
       ModOps.Pull,
       field.name -> valueToDB(v))
 
-  def pullAll(vs: Traversable[V]) =
+  def pullAll(vs: Iterable[V]) =
     new ModifyClause(
       ModOps.PullAll,
       field.name -> QueryHelpers.list(valuesToDB(vs)))
@@ -607,9 +608,9 @@ class CaseClassSeqModifyField[V, M, CC[_] <: Seq[_]](field: Field[CC[V], M], asD
 abstract class AbstractArrayModifyField[V, DB, M](val field: Field[Array[V], M]) {
   def valueToDB(v: V): DB
 
-  def valuesToDB(vs: Traversable[V]) = vs.map(valueToDB _)
+  def valuesToDB(vs: Iterable[V]) = vs.map(valueToDB _)
 
-  def setTo(vs: Traversable[V]) =
+  def setTo(vs: Iterable[V]) =
     new ModifyClause(
       ModOps.Set,
       field.name -> QueryHelpers.list(valuesToDB(vs)))
@@ -618,16 +619,16 @@ abstract class AbstractArrayModifyField[V, DB, M](val field: Field[Array[V], M])
       ModOps.Push,
       field.name -> valueToDB(v))
 
-  def push(vs: Traversable[V]) =
+  def push(vs: Iterable[V]) =
     new ModifyPushEachClause(field.name, valuesToDB(vs))
 
-  def push(vs: Traversable[V], slice: Int) =
+  def push(vs: Iterable[V], slice: Int) =
     new ModifyPushEachSliceClause(field.name, slice, valuesToDB(vs))
 
-  def push(vs: Traversable[V], slice: Int, position: Int) =
+  def push(vs: Iterable[V], slice: Int, position: Int) =
     new ModifyPushEachSlicePositionClause(field.name, slice, position, valuesToDB(vs))
 
-  def pushAll(vs: Traversable[V]) =
+  def pushAll(vs: Iterable[V]) =
     new ModifyClause(
       ModOps.PushAll,
       field.name -> QueryHelpers.list(valuesToDB(vs)))
@@ -637,7 +638,7 @@ abstract class AbstractArrayModifyField[V, DB, M](val field: Field[Array[V], M])
       ModOps.AddToSet,
       field.name -> valueToDB(v))
 
-  def addToSet(vs: Traversable[V]) =
+  def addToSet(vs: Iterable[V]) =
     new ModifyAddEachClause(field.name, valuesToDB(vs))
 
   def popFirst =
@@ -651,7 +652,7 @@ abstract class AbstractArrayModifyField[V, DB, M](val field: Field[Array[V], M])
       ModOps.Pull,
       field.name -> valueToDB(v))
 
-  def pullAll(vs: Traversable[V]) =
+  def pullAll(vs: Iterable[V]) =
     new ModifyClause(
       ModOps.PullAll,
       field.name -> QueryHelpers.list(valuesToDB(vs)))

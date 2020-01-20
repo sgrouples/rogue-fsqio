@@ -15,6 +15,7 @@ import scala.reflect.runtime.universe._
 import scala.reflect.{ ClassTag, api }
 import Debug.DefaultImplicits._
 import me.sgrouples.rogue.map.MapKeyFormat
+import scala.collection.Seq
 
 import scala.concurrent.duration.Duration
 

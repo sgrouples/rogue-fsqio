@@ -13,11 +13,12 @@ import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 
 import scala.concurrent.duration._
 import shapeless.tag
+import scala.collection.Seq
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
-  import Metas._
+  import me.sgrouples.rogue.cc.macros.Metas._
 
   implicit val atMost = PatienceConfig(15 seconds)
 
@@ -261,10 +262,12 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
       .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userId setTo 0L)
       .upsertOneAsync(returnNew = true)
 
-    v2F.onFailure {
-      case f: Throwable =>
+    v2F.onComplete {
+      case scala.util.Failure(f) =>
         println("V2 failed with ")
         f.printStackTrace()
+      case scala.util.Success(_) =>
+        ()
     }
 
     val v2 = v2F.futureValue

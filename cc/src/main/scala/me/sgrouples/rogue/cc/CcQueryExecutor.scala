@@ -4,6 +4,7 @@ import com.mongodb.client.{ MongoCollection, MongoDatabase }
 import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import io.fsq.rogue.{ Query, QueryHelpers }
 import org.bson.BsonDocument
+import scala.collection.Seq
 
 object CcDBCollectionFactory extends BsonDBCollectionFactory[CcMeta[_]] {
   type TCM = CcMeta[_]

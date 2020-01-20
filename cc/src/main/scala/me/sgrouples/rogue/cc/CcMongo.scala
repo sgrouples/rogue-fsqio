@@ -7,6 +7,7 @@ import com.mongodb.client.{ MongoCollection => SyncMongoCollection, MongoDatabas
 import io.fsq.rogue.codecs.{ IntegerPrimitiveCodec, LongPrimitiveCodec }
 import org.bson.BsonDocument
 import org.bson.codecs.configuration.CodecRegistries
+import scala.collection.Seq
 
 /**
  * Replacement of Mongo/MongoAsync from Lift
@@ -92,7 +93,7 @@ object CcMongo {
   }
 
   def closeAll(): Unit = {
-    import scala.collection.JavaConversions._
+    //import scala.collection.JavaConversions._
     dbs.values.foreach {
       case (mngo, _) =>
         mngo.close()
