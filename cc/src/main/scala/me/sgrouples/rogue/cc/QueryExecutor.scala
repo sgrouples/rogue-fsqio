@@ -306,7 +306,7 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
 
   private def drainBufferSeq[A, B](
     from: ListBuffer[A],
-    to: Builder[B, Vector[B]],
+    to: Builder[B, Seq[B]],
     f: Seq[A] => Seq[B],
     size: Int): Unit = {
     // ListBuffer#length is O(1) vs ListBuffer#size is O(N) (true in 2.9.x, fixed in 2.10.x)
@@ -325,7 +325,7 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     ev: ShardingOk[M, State],
     ev2: M !<:< MongoDisallowed, db: MongoDatabase): Seq[T] = {
     val s = readSerializer[M, R](query.meta, query.select)
-    val rv = Vector.newBuilder[T]
+    val rv = Seq.newBuilder[T]
     val buf = new ListBuffer[R]
     val action = new Consumer[BsonDocument] {
       override def accept(t: BsonDocument): Unit = {

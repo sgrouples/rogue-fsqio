@@ -38,7 +38,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "5.1.0",
+    version := "5.1.1-SNAPSHOT",
     organization := "me.sgrouples",
     scalaVersion := "2.13.1",
     crossScalaVersions := Seq("2.12.10", "2.13.1"),
@@ -65,7 +65,7 @@ object RogueSettings {
 
 object RogueDependencies {
   val specsVer = "4.8.1"
-  val mongoVer = "3.12.0"
+  val mongoVer = "3.12.1"
   val mongoReactiveVer = "1.13.0"
 
   val joda = Seq(
