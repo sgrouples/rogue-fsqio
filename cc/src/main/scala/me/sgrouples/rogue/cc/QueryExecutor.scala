@@ -74,6 +74,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     query: Query[M, R, State],
     readPreference: Option[ReadPreference] = None)(implicit ev: ShardingOk[M, State], dba: MongoAsyncDatabase): Future[Seq[R]] = {
     val s = readSerializer[M, R](query.meta, query.select)
+
     adapter.find(query, s, readPreference)
   }
 
