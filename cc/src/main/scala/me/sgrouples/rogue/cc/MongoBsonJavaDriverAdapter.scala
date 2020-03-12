@@ -15,7 +15,6 @@ import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }
-import scala.collection.Seq
 
 trait BsonDBCollectionFactory[MB] {
   def getDBCollection[M <: MB](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[BsonDocument]

@@ -4,7 +4,6 @@ import org.bson.types.ObjectId
 import org.scalatest.{ AsyncFlatSpec, BeforeAndAfterAll, Matchers }
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.cc.CcRogue._
-import scala.collection.Seq
 
 case class Cont(
   _id: ObjectId,

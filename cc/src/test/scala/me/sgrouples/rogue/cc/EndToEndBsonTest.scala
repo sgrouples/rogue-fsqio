@@ -15,7 +15,6 @@ import org.specs2.matcher.JUnitMustMatchers
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Awaitable }
 import CcRogue._
-import scala.collection.Seq
 
 class EndToEndBsonTest extends JUnitMustMatchers {
   import Metas._

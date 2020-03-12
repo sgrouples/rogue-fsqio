@@ -15,7 +15,6 @@ import org.bson.types.ObjectId
 import org.joda.time.DateTime
 
 import scala.util.matching.Regex
-import scala.collection.Seq
 
 object CondOps extends Enumeration {
   type Op = Value

@@ -34,7 +34,6 @@ import java.util.{ Currency, Locale, UUID }
 
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
-import scala.collection.Seq
 
 trait CcRogue {
   def OrQuery[M, R](subqueries: Query[M, R, _]*): Query[M, R, Unordered with Unselected with Unlimited with Unskipped with HasOrClause] = {

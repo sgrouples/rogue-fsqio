@@ -2,7 +2,6 @@ package me.sgrouples.rogue.cc
 
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
-import scala.collection.Seq
 
 /**
  * Created by mar on 24.07.2016.

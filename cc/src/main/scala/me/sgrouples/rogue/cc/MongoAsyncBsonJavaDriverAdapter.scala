@@ -25,7 +25,6 @@ import org.bson.codecs.{ Codec, DecoderContext, EncoderContext, RawBsonDocumentC
 import org.bson.codecs.configuration.{ CodecConfigurationException, CodecRegistries }
 import org.bson.types.ObjectId
 import org.reactivestreams.Publisher
-import scala.collection.Seq
 
 import scala.reflect._
 
@@ -88,7 +87,7 @@ class PromiseArrayListAdapter[R] extends SingleResultCallback[java.util.Collecti
 
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
-    if (t == null) p.success(coll.asScala) //immutable Seq - may be slow
+    if (t == null) p.success(coll.asScala.toSeq) //immutable Seq - may be slow
     else p.failure(t)
   }
 
@@ -217,7 +216,7 @@ class BatchingCallback[R, T](r: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]])(i
         batchCursor.close()
         p.success(resBuilder.result())
       } else {
-        f(docs.asScala.map(r.fromDocument)).andThen {
+        f(docs.asScala.toSeq.map(r.fromDocument)).andThen {
           case Success(resT) =>
             resBuilder ++= resT
             batchCursor.next(this)

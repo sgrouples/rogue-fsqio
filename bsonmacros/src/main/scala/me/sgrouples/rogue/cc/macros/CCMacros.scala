@@ -5,8 +5,6 @@ import scala.language.experimental.macros
 import me.sgrouples.rogue.EnumSerializeValue
 import me.sgrouples.rogue.map.MapKeyFormat
 
-import scala.collection.Seq
-
 class MacroCCGenerator(val c: Context) {
 
   import c.universe._

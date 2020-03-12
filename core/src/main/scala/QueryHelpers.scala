@@ -4,7 +4,6 @@ package io.fsq.rogue
 
 import com.mongodb.WriteConcern
 import io.fsq.rogue.index.UntypedMongoIndex
-import scala.collection.Seq
 
 case class Degrees(value: Double)
 case class Radians(value: Double)
