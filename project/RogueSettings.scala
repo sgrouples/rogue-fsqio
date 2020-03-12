@@ -25,7 +25,7 @@ object RogueSettings {
     ) ++ (
       if (priorTo2_13(scalaVersion.value)) {
         Seq(
-          compilerPlugin(("org.scalamacros" % "paradise" % paradiseVersion).cross(CrossVersion.patch))
+          compilerPlugin(("org.scalamacros" % "paradise" % paradiseVersion).crossSgCcRogue.scala:38:24(CrossVersion.patch))
         )
       } else Nil
       ),
