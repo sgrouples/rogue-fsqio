@@ -170,7 +170,7 @@ trait BaseBsonFormats {
       if (value.isEmpty) defaultValue
       else {
         if ("en" == value) Locale.ENGLISH
-        else SupportedLocales.map.get(value).getOrElse(defaultValue)
+        else SupportedLocales.map.getOrElse(value, defaultValue)
       }
     }
 
@@ -180,7 +180,7 @@ trait BaseBsonFormats {
     override def defaultValue: Locale = Locale.ENGLISH
   }
 
-  private def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
+  protected def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
     new BasicBsonFormat[T @@ Tag] {
       override def read(b: BsonValue): T @@ Tag = tag[Tag][T](tb.read(b))
       override def write(t: T @@ Tag): BsonValue = tb.write(t)
@@ -188,13 +188,13 @@ trait BaseBsonFormats {
     }
   }
 
-  // TODO: this should be split to BsonReader[+T] and BsonWriter[-T] so that we wouldn't have to code all that by hand
-
-  implicit def `@@StringBsonFormat`[Tag] = `@@AnyBsonFormat`[String, Tag]
-  implicit def `@@LongBsonFormat`[Tag] = `@@AnyBsonFormat`[Long, Tag]
-  implicit def `@@IntBsonFormat`[Tag] = `@@AnyBsonFormat`[Int, Tag]
-  implicit def `@@DoubleBsonFormat`[Tag] = `@@AnyBsonFormat`[Double, Tag]
-  implicit def `@@ObjectIdBsonFormat`[Tag] = `@@AnyBsonFormat`[ObjectId, Tag]
+  //  // TODO: this should be split to BsonReader[+T] and BsonWriter[-T] so that we wouldn't have to code all that by hand
+  //
+  implicit def `@@StringBsonFormat`[Tag]: BsonFormat[String @@ Tag] = `@@AnyBsonFormat`[String, Tag]
+  implicit def `@@LongBsonFormat`[Tag]: BsonFormat[Long @@ Tag] = `@@AnyBsonFormat`[Long, Tag]
+  implicit def `@@IntBsonFormat`[Tag]: BsonFormat[Int @@ Tag] = `@@AnyBsonFormat`[Int, Tag]
+  implicit def `@@DoubleBsonFormat`[Tag]: BsonFormat[Double @@ Tag] = `@@AnyBsonFormat`[Double, Tag]
+  implicit def `@@ObjectIdBsonFormat`[Tag]: BsonFormat[ObjectId @@ Tag] = `@@AnyBsonFormat`[ObjectId, Tag]
 
   /**
    * care must be taken - because of different UUID formats.
@@ -208,7 +208,7 @@ trait BaseBsonFormats {
   implicit object UUIDBsonFormat extends BasicBsonFormat[UUID] {
     override def read(bv: BsonValue): UUID = {
       val b = bv.asBinary()
-      val bytes = b.getData()
+      val bytes = b.getData
       val bb = ByteBuffer.wrap(b.getData)
       if (b.getType == BsonBinarySubType.UUID_LEGACY.getValue)
         bb.order(ByteOrder.LITTLE_ENDIAN)
@@ -247,14 +247,6 @@ trait BaseBsonFormats {
     override def read(b: BsonValue): TimeZone = TimeZone.getTimeZone(b.asString().getValue)
     override def write(tz: TimeZone): BsonValue = new BsonString(tz.getID)
     override def defaultValue: TimeZone = TimeZone.getTimeZone("UTC")
-  }
-
-  implicit def objectIdSubtypeFormat[Subtype <: ObjectId]: BasicBsonFormat[Subtype] = {
-    new BasicBsonFormat[Subtype] {
-      override def read(b: BsonValue): Subtype = ObjectIdBsonFormat.read(b).asInstanceOf[Subtype]
-      override def defaultValue: Subtype = new ObjectId().asInstanceOf[Subtype]
-      override def write(t: Subtype): BsonValue = ObjectIdBsonFormat.write(t)
-    }
   }
 
   implicit object BinaryBsonFormat extends BasicBsonFormat[Array[Byte]] {

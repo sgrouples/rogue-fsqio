@@ -25,7 +25,7 @@ object RogueSettings {
     ) ++ (
       if (priorTo2_13(scalaVersion.value)) {
         Seq(
-          compilerPlugin(("org.scalamacros" % "paradise" % paradiseVersion).crossSgCcRogue.scala:38:24(CrossVersion.patch))
+          compilerPlugin(("org.scalamacros" % "paradise" % paradiseVersion).cross(CrossVersion.patch))
         )
       } else Nil
       ),
@@ -38,7 +38,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "5.2.0",
+    version := "5.3.0",
     organization := "me.sgrouples",
     scalaVersion := "2.13.1",
     crossScalaVersions := Seq("2.12.10", "2.13.1"),
