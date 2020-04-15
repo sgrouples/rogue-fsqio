@@ -115,49 +115,49 @@ object EnumAnnotatedFormats {
  */
 trait BaseBsonFormats {
 
-  implicit object BooleanBsonFormat extends BasicBsonFormat[Boolean] {
-    override def read(b: BsonValue): Boolean = b.asBoolean().getValue()
+  implicit val booleanBsonFormat: BasicBsonFormat[Boolean] = new BasicBsonFormat[Boolean] {
+    override def read(b: BsonValue): Boolean = b.asBoolean().getValue
     override def write(t: Boolean): BsonValue = new BsonBoolean(t)
     override def defaultValue: Boolean = false
   }
 
-  implicit object IntBsonFormat extends BasicBsonFormat[Int] {
+  implicit val intBsonFormat: BsonFormat[Int] = new BasicBsonFormat[Int] {
     override def read(b: BsonValue): Int = b.asNumber().intValue()
     override def write(t: Int): BsonValue = new BsonInt32(t)
     override def defaultValue: Int = 0
   }
 
-  implicit object LongBsonFormat extends BasicBsonFormat[Long] {
+  implicit val longBsonFormat: BsonFormat[Long] = new BasicBsonFormat[Long] {
     override def read(b: BsonValue): Long = b.asNumber().longValue()
     override def write(t: Long): BsonValue = new BsonInt64(t)
     override def defaultValue: Long = 0L
   }
 
-  implicit object StringBsonFormat extends BasicBsonFormat[String] {
-    override def read(b: BsonValue): String = b.asString().getValue()
+  implicit val stringBsonFormat: BsonFormat[String] = new BasicBsonFormat[String] {
+    override def read(b: BsonValue): String = b.asString().getValue
     override def write(t: String): BsonValue = new BsonString(t)
     override def defaultValue: String = ""
   }
 
-  implicit object ObjectIdBsonFormat extends BasicBsonFormat[ObjectId] {
-    override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
+  implicit val objectIdBsonFormat: BsonFormat[ObjectId] = new BasicBsonFormat[ObjectId] {
+    override def read(b: BsonValue): ObjectId = b.asObjectId().getValue
     override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
     override def defaultValue: ObjectId = new ObjectId(0, 0, 0.toShort, 0)
   }
 
-  implicit object DoubleBsonFormat extends BasicBsonFormat[Double] {
+  implicit val doubleBsonFormat: BsonFormat[Double] = new BasicBsonFormat[Double] {
     override def read(b: BsonValue): Double = b.asDouble().doubleValue()
     override def write(t: Double): BsonValue = new BsonDouble(t)
     override def defaultValue: Double = 0.0d
   }
 
-  implicit object BigDecimalBsonFormat extends BasicBsonFormat[BigDecimal] {
+  implicit val bigDecimalBsonFormat: BsonFormat[BigDecimal] = new BasicBsonFormat[BigDecimal] {
     override def read(b: BsonValue): BigDecimal = b.asDecimal128().decimal128Value().bigDecimalValue()
     override def write(t: BigDecimal): BsonValue = new BsonDecimal128(new Decimal128(t.bigDecimal))
     override def defaultValue: BigDecimal = BigDecimal(0)
   }
 
-  implicit object CurrencyBsonFormat extends BasicBsonFormat[Currency] {
+  implicit val currencyBsonFormat: BsonFormat[Currency] = new BasicBsonFormat[Currency] {
     override def read(b: BsonValue): Currency = Currency.getInstance(b.asString().getValue)
     override def write(t: Currency): BsonValue = new BsonString(t.getCurrencyCode)
     override def defaultValue: Currency = Currency.getInstance("USD")
@@ -180,7 +180,7 @@ trait BaseBsonFormats {
     override def defaultValue: Locale = Locale.ENGLISH
   }
 
-  protected def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
+  def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
     new BasicBsonFormat[T @@ Tag] {
       override def read(b: BsonValue): T @@ Tag = tag[Tag][T](tb.read(b))
       override def write(t: T @@ Tag): BsonValue = tb.write(t)
@@ -205,7 +205,7 @@ trait BaseBsonFormats {
    * @see [[org.bson.codecs.UuidCodec]]
    * this implementation does not support C_SHARP_LEGACY codec at all
    */
-  implicit object UUIDBsonFormat extends BasicBsonFormat[UUID] {
+  implicit val uuidBsonFormat: BsonFormat[UUID] = new BasicBsonFormat[UUID] {
     override def read(bv: BsonValue): UUID = {
       val b = bv.asBinary()
       val bytes = b.getData
@@ -231,30 +231,27 @@ trait BaseBsonFormats {
     override def defaultValue: UUID = new UUID(0, 0)
   }
 
-  implicit object LocalDateTimeBsonFormat extends BasicBsonFormat[LocalDateTime] {
+  implicit val localDateTimeBsonFormat: BsonFormat[LocalDateTime] = new BasicBsonFormat[LocalDateTime] {
     override def read(b: BsonValue): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
     override def write(t: LocalDateTime): BsonValue = new BsonDateTime(t.toInstant(ZoneOffset.UTC).toEpochMilli)
     override def defaultValue: LocalDateTime = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)
   }
 
-  implicit object InstantBsonFormat extends BasicBsonFormat[Instant] {
+  implicit val instantBsonFormat: BsonFormat[Instant] = new BasicBsonFormat[Instant] {
     override def read(b: BsonValue): Instant = Instant.ofEpochMilli(b.asDateTime().getValue)
     override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
     override def defaultValue: Instant = Instant.ofEpochMilli(0)
   }
 
-  implicit object TimeZoneFormat extends BasicBsonFormat[TimeZone] {
+  implicit val timeZoneBsonFormat: BsonFormat[TimeZone] = new BasicBsonFormat[TimeZone] {
     override def read(b: BsonValue): TimeZone = TimeZone.getTimeZone(b.asString().getValue)
     override def write(tz: TimeZone): BsonValue = new BsonString(tz.getID)
     override def defaultValue: TimeZone = TimeZone.getTimeZone("UTC")
   }
 
-  implicit object BinaryBsonFormat extends BasicBsonFormat[Array[Byte]] {
-
+  implicit val byteArrayBsonFormat: BsonFormat[Array[Byte]] = new BasicBsonFormat[Array[Byte]] {
     override def read(b: BsonValue): Array[Byte] = b.asBinary().getData
-
     override def write(t: Array[Byte]): BsonValue = new BsonBinary(t)
-
     override def defaultValue: Array[Byte] = Array.empty[Byte]
   }
 }
