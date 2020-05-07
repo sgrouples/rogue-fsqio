@@ -38,7 +38,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "5.3.0",
+    version := "5.4.0",
     organization := "me.sgrouples",
     scalaVersion := "2.13.1",
     crossScalaVersions := Seq("2.12.10", "2.13.1"),

@@ -261,7 +261,21 @@ trait BaseBsonFormats {
 
 trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats with MapKeyFormats
 
-object BsonFormats extends StandardBsonFormats with BsonFormats
+object BsonFormats extends StandardBsonFormats with OptionalStandardBsonFormats with BsonFormats
+
+trait OptionalStandardBsonFormats {
+  this: StandardBsonFormats =>
+
+  implicit val optionalBooleanBsonFormat: BsonFormat[Option[Boolean]] = optionFormat
+  implicit val optionalIntBsonFormat: BsonFormat[Option[Int]] = optionFormat
+  implicit val optionalLongBsonFormat: BsonFormat[Option[Long]] = optionFormat
+  implicit val optionalStringBsonFormat: BsonFormat[Option[String]] = optionFormat
+  implicit val optionalCurrencyBsonFormat: BsonFormat[Option[Currency]] = optionFormat
+  implicit val optionalUUIDBsonFormat: BsonFormat[Option[UUID]] = optionFormat
+  implicit val optionalTimeZoneBsonFormat: BsonFormat[Option[TimeZone]] = optionFormat
+  implicit val optionalLocalDateTimeBsonFormat: BsonFormat[Option[LocalDateTime]] = optionFormat
+  implicit val optionalInstantBsonFormat: BsonFormat[Option[Instant]] = optionFormat
+}
 
 trait BsonFormats extends LowPrioBsonFormats {
   this: StandardBsonFormats =>
@@ -390,13 +404,13 @@ trait LowPrioBsonFormats {
 
   implicit def bsonEncoder[T, Repr](implicit
     gen: LabelledGeneric.Aux[T, Repr],
-    sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
+    sg: Cached[WrappedBsonFromat[T, Repr]],
     d: Default.AsRecord[T],
     tpe: Typeable[T]): BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T] {
-    override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
-    override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
+    override def write(t: T): BsonValue = sg.value.write(gen.to(t))
+    override def read(b: BsonValue): T = gen.from(sg.value.read(b))
 
-    override val flds: Map[String, BsonFormat[_]] = sg.value.value.flds
+    override val flds: Map[String, BsonFormat[_]] = sg.value.flds
 
     /**
      * for nested case classes, with default constructors provides a default value
