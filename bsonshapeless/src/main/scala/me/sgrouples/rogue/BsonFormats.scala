@@ -261,11 +261,8 @@ trait BaseBsonFormats {
 
 trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats with MapKeyFormats
 
-object BsonFormats extends StandardBsonFormats with OptionalStandardBsonFormats with BsonFormats
-
-trait OptionalStandardBsonFormats {
-  this: StandardBsonFormats =>
-
+object BsonFormats extends StandardBsonFormats with BsonFormats {
+  // Default BsonFormat[Option[T]] formats
   implicit val optionalBooleanBsonFormat: BsonFormat[Option[Boolean]] = optionFormat
   implicit val optionalIntBsonFormat: BsonFormat[Option[Int]] = optionFormat
   implicit val optionalLongBsonFormat: BsonFormat[Option[Long]] = optionFormat
@@ -275,6 +272,31 @@ trait OptionalStandardBsonFormats {
   implicit val optionalTimeZoneBsonFormat: BsonFormat[Option[TimeZone]] = optionFormat
   implicit val optionalLocalDateTimeBsonFormat: BsonFormat[Option[LocalDateTime]] = optionFormat
   implicit val optionalInstantBsonFormat: BsonFormat[Option[Instant]] = optionFormat
+  implicit val optionalBinaryBsonFormat: BsonFormat[Option[Array[Byte]]] = optionFormat
+  implicit val optionalObjectIdBsonFormat: BsonFormat[Option[ObjectId]] = optionFormat
+
+  // Default BsonFormat[Seq[T]] formats
+  implicit val booleansBsonFormat: BsonFormat[Seq[Boolean]] = seqFormat
+  implicit val intsBsonFormat: BsonFormat[Seq[Int]] = seqFormat
+  implicit val longsBsonFormat: BsonFormat[Seq[Long]] = seqFormat
+  implicit val stringsBsonFormat: BsonFormat[Seq[String]] = seqFormat
+  implicit val currenciesBsonFormat: BsonFormat[Seq[Currency]] = seqFormat
+  implicit val uuidsBsonFormat: BsonFormat[Seq[UUID]] = seqFormat
+  implicit val timeZonesBsonFormat: BsonFormat[Seq[TimeZone]] = seqFormat
+  implicit val localDatesTimeBsonFormat: BsonFormat[Seq[LocalDateTime]] = seqFormat
+  implicit val instantsBsonFormat: BsonFormat[Seq[Instant]] = seqFormat
+  implicit val objectIdsBsonFormat: BsonFormat[Seq[ObjectId]] = seqFormat
+
+  // Default BsonFormat[Seq[T]] formats
+  implicit val optionalBooleansBsonFormat: BsonFormat[Option[Seq[Boolean]]] = optionFormat
+  implicit val optionalIntsBsonFormat: BsonFormat[Option[Seq[Int]]] = optionFormat
+  implicit val optionalLongsBsonFormat: BsonFormat[Option[Seq[Long]]] = optionFormat
+  implicit val optionalStringsBsonFormat: BsonFormat[Option[Seq[String]]] = optionFormat
+  implicit val optionalUUIDsBsonFormat: BsonFormat[Option[Seq[UUID]]] = optionFormat
+  implicit val optionalTimeZonesBsonFormat: BsonFormat[Option[Seq[TimeZone]]] = optionFormat
+  implicit val optionalLocalDatesTimeBsonFormat: BsonFormat[Option[Seq[LocalDateTime]]] = optionFormat
+  implicit val optionalInstantsBsonFormat: BsonFormat[Option[Seq[Instant]]] = optionFormat
+  implicit val optionalObjectIdsBsonFormat: BsonFormat[Option[Seq[ObjectId]]] = optionFormat
 }
 
 trait BsonFormats extends LowPrioBsonFormats {
