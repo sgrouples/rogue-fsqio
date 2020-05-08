@@ -31,6 +31,25 @@ trait BsonCollectionFormats extends TraversableLikeFormats {
     override def defaultValue: Set[T] = Set.empty[T]
   }
 
+  implicit def seqFormat[T: BsonFormat]: BsonFormat[Seq[T]] = new BsonFormat[Seq[T]] with BsonArrayReader[Seq[T]] {
+
+    private[this] implicit val f = implicitly[BsonFormat[T]]
+
+    def write(in: Seq[T]): BsonArray = {
+      new BsonArray(in.map(f.write).asJava)
+    }
+
+    def read(value: BsonValue): Seq[T] = {
+      val list: Seq[BsonValue] = if (value.isNull) Seq.empty[BsonValue]
+      else value.asArray().asScala.toSeq
+      list.map(f.read)
+    }
+
+    override def flds: Map[String, BsonFormat[_]] = f.flds
+
+    override def defaultValue: Seq[T] = Seq.empty[T]
+  }
+
   implicit def arrayFormat[T: BsonFormat: ClassTag] = new BsonFormat[Array[T]] with BsonArrayReader[Array[T]] {
     implicit val f = implicitly[BsonFormat[T]]
     def write(array: Array[T]) = {
