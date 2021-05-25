@@ -4,13 +4,13 @@ import me.sgrouples.rogue.{ BsonArrayReader, BsonFormat }
 import org.bson.{ BsonArray, BsonValue }
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
-import scala.collection.TraversableLike
+import scala.collection.IterableLike
 import scala.collection.generic.CanBuildFrom
 
-trait TraversableLikeFormats {
-  implicit def traversableLikeFormat[L[_], T: BsonFormat](
+trait IterableLikeFormats {
+  implicit def IterableLikeFormat[L[_], T: BsonFormat](
     implicit
-    ev: L[T] <:< TraversableLike[T, L[T]],
+    ev: L[T] <:< IterableLike[T, L[T]],
     cb: CanBuildFrom[List[BsonValue], T, L[T]]): BsonFormat[L[T]] = {
 
     new BsonFormat[L[T]] with BsonArrayReader[L[T]] {

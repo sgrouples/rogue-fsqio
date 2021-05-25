@@ -2,6 +2,10 @@
 
 package io.fsq
 
+import org.bson.types.ObjectId
+
+import java.nio.ByteBuffer
+
 package object rogue {
 
   type InitialState = Unordered with Unselected with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified
@@ -15,7 +19,7 @@ package object rogue {
   trait ShardKey[V] {
     def name: String
     def eqs(v: V) = new EqClause(this.name, v) with ShardKeyClause
-    def in[L <% Iterable[V]](vs: L) = new InQueryClause(this.name, QueryHelpers.validatedList(vs.toSet)) with ShardKeyClause
+    def in[L](vs: L)(implicit ev: L => Iterable[V]) = new InQueryClause(this.name, QueryHelpers.validatedList(vs.toSet)) with ShardKeyClause
   }
 
   /**
@@ -35,4 +39,5 @@ package object rogue {
     case object EOF extends Event[Nothing]
   }
 
+  val ObjectIdZero = new ObjectId(ByteBuffer.wrap(new Array[Byte](12)))
 }

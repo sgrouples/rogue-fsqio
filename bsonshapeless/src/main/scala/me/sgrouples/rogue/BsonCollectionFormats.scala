@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.language.{ higherKinds, implicitConversions }
 
-trait BsonCollectionFormats extends TraversableLikeFormats {
+trait BsonCollectionFormats extends IterableLikeFormats {
   requires: MapKeyFormats =>
   import scala.jdk.CollectionConverters._
 

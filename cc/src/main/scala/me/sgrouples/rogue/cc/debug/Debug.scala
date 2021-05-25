@@ -28,7 +28,7 @@ object Debug {
         s"${implicitly[Debug[A]].show(t._1)}: ${implicitly[Debug[B]].show(t._2)}"
     }
 
-    implicit def debugTraversable[T, W[_]](
+    implicit def debugIterable[T, W[_]](
       implicit
       sh: Debug[T],
       ev: W[T] <:< Iterable[T]): Debug[W[T]] = {

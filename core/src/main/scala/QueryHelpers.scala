@@ -15,18 +15,18 @@ object QueryHelpers {
     def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long): Unit
     def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T
     def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T
-    def logIndexMismatch(query: Query[_, _, _], msg: => String)
-    def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex)
+    def logIndexMismatch(query: Query[_, _, _], msg: => String):Unit
+    def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex):Unit
     def warn(query: Query[_, _, _], msg: => String): Unit
   }
 
   class DefaultQueryLogger extends QueryLogger {
-    override def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long) {}
+    override def log(query: Query[_, _, _], instanceName: String, msg: => String, timeMillis: Long):Unit =  {}
     override def onExecuteQuery[T](query: Query[_, _, _], instanceName: String, msg: => String, func: => T): T = func
     override def onExecuteWriteCommand[T](operationName: String, collectionName: String, instanceName: String, msg: => String, func: => T): T = func
-    override def logIndexMismatch(query: Query[_, _, _], msg: => String) {}
-    override def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex) {}
-    override def warn(query: Query[_, _, _], msg: => String) {}
+    override def logIndexMismatch(query: Query[_, _, _], msg: => String):Unit = {}
+    override def logIndexHit(query: Query[_, _, _], index: UntypedMongoIndex):Unit = {}
+    override def warn(query: Query[_, _, _], msg: => String):Unit = {}
   }
 
   object NoopQueryLogger extends DefaultQueryLogger
@@ -34,7 +34,7 @@ object QueryHelpers {
   var logger: QueryLogger = NoopQueryLogger
 
   trait QueryValidator {
-    def validateList[T](xs: Traversable[T]): Unit
+    def validateList[T](xs: Iterable[T]): Unit
     def validateRadius(d: Degrees): Degrees
     def validateQuery[M](query: Query[M, _, _], indexes: Option[Seq[UntypedMongoIndex]]): Unit
     def validateModify[M](modify: ModifyQuery[M, _], indexes: Option[Seq[UntypedMongoIndex]]): Unit
@@ -42,11 +42,11 @@ object QueryHelpers {
   }
 
   class DefaultQueryValidator extends QueryValidator {
-    override def validateList[T](xs: Traversable[T]) {}
-    override def validateRadius(d: Degrees) = d
-    override def validateQuery[M](query: Query[M, _, _], indexes: Option[Seq[UntypedMongoIndex]]) {}
-    override def validateModify[M](modify: ModifyQuery[M, _], indexes: Option[Seq[UntypedMongoIndex]]) {} // todo possibly validate for update without upsert, yet setOnInsert present -- ktoso
-    override def validateFindAndModify[M, R](modify: FindAndModifyQuery[M, R], indexes: Option[Seq[UntypedMongoIndex]]) {}
+    override def validateList[T](xs: Iterable[T]):Unit = {}
+    override def validateRadius(d: Degrees): Degrees = d
+    override def validateQuery[M](query: Query[M, _, _], indexes: Option[Seq[UntypedMongoIndex]]):Unit = {}
+    override def validateModify[M](modify: ModifyQuery[M, _], indexes: Option[Seq[UntypedMongoIndex]]):Unit =  {} // todo possibly validate for update without upsert, yet setOnInsert present -- ktoso
+    override def validateFindAndModify[M, R](modify: FindAndModifyQuery[M, R], indexes: Option[Seq[UntypedMongoIndex]]):Unit = {}
   }
 
   object NoopQueryValidator extends DefaultQueryValidator
@@ -91,18 +91,18 @@ object QueryHelpers {
 
   var config: QueryConfig = DefaultQueryConfig
 
-  def makeJavaList[T](sl: Traversable[T]): java.util.List[T] = {
+  def makeJavaList[T](sl: Iterable[T]): java.util.List[T] = {
     val list = new java.util.ArrayList[T]()
     for (id <- sl) list.add(id)
     list
   }
 
-  def validatedList[T](vs: Traversable[T]): java.util.List[T] = {
+  def validatedList[T](vs: Iterable[T]): java.util.List[T] = {
     validator.validateList(vs)
     makeJavaList(vs)
   }
 
-  def list[T](vs: Traversable[T]): java.util.List[T] = {
+  def list[T](vs: Iterable[T]): java.util.List[T] = {
     makeJavaList(vs)
   }
 
@@ -118,14 +118,14 @@ object QueryHelpers {
     map
   }
 
-  def inListClause[V](fieldName: String, vs: Traversable[V]) = {
+  def inListClause[V](fieldName: String, vs: Iterable[V]) = {
     if (vs.isEmpty)
       new EmptyQueryClause[java.util.List[V]](fieldName)
     else
       new InQueryClause(fieldName, QueryHelpers.validatedList(vs.toSet))
   }
 
-  def allListClause[V](fieldName: String, vs: Traversable[V]) = {
+  def allListClause[V](fieldName: String, vs: Iterable[V]) = {
     if (vs.isEmpty)
       new EmptyQueryClause[java.util.List[V]](fieldName)
     else

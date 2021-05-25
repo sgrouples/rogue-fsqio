@@ -142,7 +142,7 @@ trait BaseBsonFormats {
   implicit object ObjectIdBsonFormat extends BasicBsonFormat[ObjectId] {
     override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
     override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
-    override def defaultValue: ObjectId = new ObjectId(0, 0, 0.toShort, 0)
+    override def defaultValue: ObjectId = io.fsq.rogue.ObjectIdZero
   }
 
   implicit object DoubleBsonFormat extends BasicBsonFormat[Double] {
