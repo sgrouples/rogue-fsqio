@@ -50,7 +50,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db = dbOpt.getOrElse(throw new UninitializedError)
+  implicit def db = dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()

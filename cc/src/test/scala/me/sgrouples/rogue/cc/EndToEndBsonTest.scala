@@ -49,7 +49,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db = dbOpt.getOrElse(throw new UninitializedError)
+  implicit def db = dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   @Before
   def setupMongoConnection: Unit = {

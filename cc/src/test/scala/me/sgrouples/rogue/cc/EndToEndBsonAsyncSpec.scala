@@ -16,7 +16,7 @@ import shapeless.tag
 class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
   import Metas._
 
-  implicit val atMost = PatienceConfig(15 seconds)
+  implicit val atMost = PatienceConfig(15.seconds)
 
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
@@ -47,7 +47,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db = dbOpt.getOrElse(throw new UninitializedError)
+  implicit def db = dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()

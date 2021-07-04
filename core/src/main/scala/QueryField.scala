@@ -213,17 +213,29 @@ class NumericQueryField[V, M](field: Field[V, M])
 
 class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M])
   extends NumericQueryField(field) {
+
+  private[this] def objId(i:Instant):ObjectId = {
+    // copied from ObjectId.legacyToBytes
+    val timestamp = i.getEpochSecond
+    val bytes = new Array[Byte](12)
+    bytes(0) = (timestamp >> 24).toByte
+    bytes(1) = (timestamp >> 16).toByte
+    bytes(2) = (timestamp >> 8).toByte
+    bytes(3) = timestamp.toByte
+    new ObjectId(bytes)
+  }
+
   def before(d: Instant) =
-    new LtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.getEpochSecond).toInt, 0, 0))
+    new LtQueryClause(field.name, objId(d))
 
   def after(d: Instant) =
-    new GtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.getEpochSecond).toInt, 0, 0))
+    new GtQueryClause(field.name, objId(d))
 
   def between(d1: Instant, d2: Instant) =
-    new StrictBetweenQueryClause(field.name, ObjectId.createFromLegacyFormat((d1.getEpochSecond).toInt, 0, 0), ObjectId.createFromLegacyFormat(d2.getEpochSecond.toInt, 0, 0))
+    new StrictBetweenQueryClause(field.name, objId(d1), objId(d2))
 
   def between(range: (Instant, Instant)) =
-    new StrictBetweenQueryClause(field.name, ObjectId.createFromLegacyFormat((range._1.getEpochSecond).toInt, 0, 0), ObjectId.createFromLegacyFormat((range._2.getEpochSecond).toInt, 0, 0))
+    new StrictBetweenQueryClause(field.name, objId(range._1), objId(range._2))
 
   def before(d: LocalDateTime) =
     new LtQueryClause(field.name, localDateTimeToOid(d))
@@ -238,7 +250,7 @@ class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M])
   def betweenR(range: (LocalDateTime, LocalDateTime)) =
     new StrictBetweenQueryClause(field.name, localDateTimeToOid(range._1), localDateTimeToOid(range._2))
 
-  private def localDateTimeToOid(d: LocalDateTime): ObjectId = ObjectId.createFromLegacyFormat(d.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
+  private def localDateTimeToOid(d: LocalDateTime): ObjectId = objId(d.toInstant(ZoneOffset.UTC))
 }
 
 class ForeignObjectIdQueryField[F <: ObjectId, M, T](
