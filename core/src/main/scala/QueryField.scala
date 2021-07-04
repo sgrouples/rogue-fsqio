@@ -102,8 +102,8 @@ abstract class AbstractQueryField[F, V, DB, M](val field: Field[F, M]) {
 
   def eqs(v: V) = EqClause(field.name, valueToDB(v))
   def neqs(v: V) = new NeQueryClause(field.name, valueToDB(v))
-  def in[L <% Iterable[V]](vs: L) = QueryHelpers.inListClause(field.name, valuesToDB(vs))
-  def nin[L <% Iterable[V]](vs: L) = new NinQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
+  def in[L](vs: L)(implicit ev: L => Iterable[V]) = QueryHelpers.inListClause(field.name, valuesToDB(vs))
+  def nin[L](vs: L)(implicit ev: L => Iterable[V]) = new NinQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
 
   def lt(v: V) = new LtQueryClause(field.name, valueToDB(v))
   def gt(v: V) = new GtQueryClause(field.name, valueToDB(v))

@@ -128,7 +128,11 @@ final class StringMacroBsonFormat[T <: String](default: T = "") extends MacroBas
   }
 }
 
-final class ObjectIdMacroBsonFormat[T <: ObjectId](default: T = new ObjectId(0, 0, 0.toShort, 0).asInstanceOf[T]) extends MacroBaseBsonFormat[T] {
+private object ObjectIdZero {
+  val zero = new ObjectId(Array.fill[Byte](12)(0))
+}
+
+final class ObjectIdMacroBsonFormat[T <: ObjectId](default: T = ObjectIdZero.zero.asInstanceOf[T]) extends MacroBaseBsonFormat[T] {
   override def read(b: BsonValue): T = if (b.isObjectId) b.asObjectId().getValue.asInstanceOf[T] else default
   override def write(t: T): BsonValue = new BsonObjectId(t)
   override def defaultValue: T = default

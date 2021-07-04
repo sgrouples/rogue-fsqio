@@ -1,6 +1,6 @@
 package me.sgrouples.rogue
 
-import org.bson.{ BsonArray, BsonValue }
+import org.bson.{BsonArray, BsonValue}
 
 import scala.collection.compat.Factory
 import scala.collection.mutable.ArrayBuffer

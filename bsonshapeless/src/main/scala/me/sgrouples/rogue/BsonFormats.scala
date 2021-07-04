@@ -114,6 +114,7 @@ object EnumAnnotatedFormats {
  * Basic bson serializers
  */
 trait BaseBsonFormats {
+  private[this] val objectIdZero = new ObjectId(Array.fill[Byte](12)(0))
 
   implicit object BooleanBsonFormat extends BasicBsonFormat[Boolean] {
     override def read(b: BsonValue): Boolean = b.asBoolean().getValue()
@@ -142,7 +143,7 @@ trait BaseBsonFormats {
   implicit object ObjectIdBsonFormat extends BasicBsonFormat[ObjectId] {
     override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
     override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
-    override def defaultValue: ObjectId = new ObjectId(0, 0, 0.toShort, 0)
+    override def defaultValue: ObjectId = objectIdZero
   }
 
   implicit object DoubleBsonFormat extends BasicBsonFormat[Double] {
