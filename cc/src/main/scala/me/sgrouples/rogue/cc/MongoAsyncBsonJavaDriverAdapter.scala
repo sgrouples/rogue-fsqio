@@ -14,7 +14,6 @@ import io.fsq.rogue.QueryHelpers._
 import io.fsq.rogue.index.UntypedMongoIndex
 import org.bson.{ BsonDocument, BsonReader, BsonWriter }
 import org.bson.conversions.Bson
-import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.reflect.ClassTag

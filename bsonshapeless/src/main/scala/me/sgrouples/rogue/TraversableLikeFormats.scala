@@ -2,7 +2,7 @@ package me.sgrouples.rogue
 
 import org.bson.{BsonArray, BsonValue}
 
-import scala.collection.compat.Factory
+import scala.collection.Factory
 import scala.collection.mutable.ArrayBuffer
 import scala.jdk.CollectionConverters._
 

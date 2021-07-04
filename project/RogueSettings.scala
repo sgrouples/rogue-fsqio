@@ -41,7 +41,8 @@ object RogueSettings {
     Test / logBuffered := false,
     Test / parallelExecution := false,
     resolvers ++= Seq(nexusReleases, nexusSnapshots),
-    scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos", "-P:semanticdb:synthetics:on"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
+    scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"), //, "-Ymacro-debug-lite"),
+    //, "-P:semanticdb:synthetics:on"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
     scalacOptions ++= Seq("-feature", "-language:_"),
     semanticdbVersion := scalafixSemanticdb.revision,
     scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
@@ -75,9 +76,9 @@ object RogueDependencies {
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.7"
 
-  val collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4"
+  //val collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4"
 
   val coreDeps = mongoDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless, collectionCompat)  ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(shapeless)  ++ testDeps
 }

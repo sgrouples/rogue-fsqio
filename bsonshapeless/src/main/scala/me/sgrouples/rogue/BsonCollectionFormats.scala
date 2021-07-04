@@ -3,7 +3,6 @@ package me.sgrouples.rogue
 import me.sgrouples.rogue.map.{ MapKeyFormat, MapKeyFormats }
 import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
 
-import scala.collection.compat._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.language.{ higherKinds, implicitConversions }

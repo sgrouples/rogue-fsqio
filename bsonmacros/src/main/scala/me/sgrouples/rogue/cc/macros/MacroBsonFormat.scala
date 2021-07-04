@@ -8,9 +8,8 @@ import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{ BaseBsonFormat, BsonFormat, SupportedLocales }
 import org.bson._
 import org.bson.types.{ Decimal128, ObjectId }
-
+import scala.collection.Factory
 import scala.annotation.implicitNotFound
-import scala.collection.compat._
 import scala.reflect.ClassTag
 
 @implicitNotFound("MacroGen can't generate for ${T}")

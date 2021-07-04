@@ -11,7 +11,6 @@ import org.bson.BsonDocument
 import org.bson.conversions.Bson
 
 import scala.collection.mutable.ListBuffer
-import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }

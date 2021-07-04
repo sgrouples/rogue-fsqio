@@ -243,7 +243,7 @@ class MacroCCGenerator(val c: Context) {
            ..$bsonFormats
            override val flds = Map(..$fldsMap) ++ Seq(..$subFieldsAdd).flatten
                   override def validNames():Vector[String] = ${zipNames}
-                  override def defaultValue(): $tpe = {
+                  override def defaultValue: $tpe = {
                     $defImpl
                   }
                   override def read(b: _root_.org.bson.BsonValue): $tpe = {
@@ -251,7 +251,7 @@ class MacroCCGenerator(val c: Context) {
                      val doc = b.asDocument()
                      new $tpe(..$reads)
                    } else {
-                      defaultValue()
+                      defaultValue
                    }
                   }
                   override def write(t: $tpe): _root_.org.bson.BsonValue = {
