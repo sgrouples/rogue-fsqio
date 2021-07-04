@@ -36,5 +36,4 @@ package object rogue {
     case class Error(e: Throwable) extends Event[Nothing]
     case object EOF extends Event[Nothing]
   }
-
 }
