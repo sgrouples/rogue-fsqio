@@ -24,14 +24,14 @@ object CcMongo {
   /**
    * Define a Mongo db using a MongoClient instance.
    */
-  def defineDb(connId: String, mngo: MongoClient, dbName: String) {
+  def defineDb(connId: String, mngo: MongoClient, dbName: String): Unit = {
     dba.put(connId, (mngo, dbName))
   }
 
   /**
    * Define a Mongo db using a MongoClient instance.
    */
-  def defineDbSync(connId: String, mngo: SyncMongoClient, dbName: String) {
+  def defineDbSync(connId: String, mngo: SyncMongoClient, dbName: String): Unit = {
     dbs.put(connId, (mngo, dbName))
   }
 

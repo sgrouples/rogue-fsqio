@@ -409,7 +409,7 @@ class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T]) extends Macro
   override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
 class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit kf: MapKeyFormat[K]) extends MacroBsonFormat[Map[K, T]] {
-  import scala.collection.JavaConverters._
+  import scala.jdk.CollectionConverters._
   private def appendVals(writer: BsonWriter, v: Map[K, T]): Unit = {
     v.foreach {
       case (k, v) =>

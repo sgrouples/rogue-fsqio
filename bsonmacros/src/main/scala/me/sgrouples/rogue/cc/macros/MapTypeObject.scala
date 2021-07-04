@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc.macros
-import scala.reflect.macros.blackbox.Context
 import scala.language.experimental.macros
+import scala.reflect.macros.blackbox.Context
 
 class MapTypeObject(val c: Context) {
   import c.universe._

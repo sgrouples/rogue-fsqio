@@ -9,7 +9,7 @@ import org.bson.types.ObjectId
 import shapeless.tag
 import shapeless.tag._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
 import scala.reflect.{ ClassTag, api }

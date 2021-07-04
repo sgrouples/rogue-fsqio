@@ -17,7 +17,7 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(imp
   extends QueryFieldHelpers[OwnerType] with CcMeta[RecordType] with MacroNamesResolver[RecordType] {
   requires: OwnerType =>
   def this(
-    namingStrategy: NamingStrategy = LowerCase)(implicit macroGen: MacroBsonFormat[RecordType], classTag: ClassTag[RecordType]) {
+    namingStrategy: NamingStrategy = LowerCase)(implicit macroGen: MacroBsonFormat[RecordType], classTag: ClassTag[RecordType]) = {
     this(namingStrategy[RecordType])(macroGen)
   }
 

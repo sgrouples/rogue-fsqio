@@ -4,7 +4,7 @@ package io.fsq.rogue.indexchecker
 
 import io.fsq.rogue.{ DocumentScan, Index, IndexScan, MongoHelpers, PartialIndexScan, Query, QueryClause, QueryHelpers }
 import io.fsq.rogue.index.UntypedMongoIndex
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait IndexChecker {
   /**

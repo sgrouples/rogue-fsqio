@@ -16,7 +16,6 @@ import org.bson.{ BsonDocument, BsonReader, BsonWriter }
 import org.bson.conversions.Bson
 import scala.collection.compat._
 import scala.jdk.CollectionConverters._
-//import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }
@@ -48,7 +47,7 @@ trait HasFuture[T] {
 }
 
 class UnitCallback[T] extends SingleResultCallback[T] with HasFuture[Unit] {
-  private[this] val promise = Promise[Unit]
+  private[this] val promise = Promise[Unit]()
 
   override def onResult(result: T, t: Throwable): Unit = {
     if (t == null) promise.success(())
@@ -83,7 +82,7 @@ class PromiseLongBooleanCallbackBridge extends SingleResultCallback[java.lang.Lo
 
 class PromiseArrayListAdapter[R] extends SingleResultCallback[java.util.Collection[R]] {
   val coll = new util.ArrayList[R]()
-  private[this] val p = Promise[Seq[R]]
+  private[this] val p = Promise[Seq[R]]()
 
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
@@ -96,7 +95,7 @@ class PromiseArrayListAdapter[R] extends SingleResultCallback[java.util.Collecti
 
 class PromiseSingleResultAdapter[R] extends SingleResultCallback[java.util.Collection[R]] {
   val coll = new util.ArrayList[R](1)
-  private[this] val p = Promise[Option[R]]
+  private[this] val p = Promise[Option[R]]()
 
   //coll == result - by contract
   override def onResult(result: util.Collection[R], t: Throwable): Unit = {
@@ -108,7 +107,7 @@ class PromiseSingleResultAdapter[R] extends SingleResultCallback[java.util.Colle
 }
 
 class PromiseSingleValueAdapter[V] extends SingleResultCallback[V] {
-  private[this] val p = Promise[V]
+  private[this] val p = Promise[V]()
   override def onResult(result: V, t: Throwable): Unit = {
     if (t == null) p.success(result)
     else p.failure(t)
@@ -117,7 +116,7 @@ class PromiseSingleValueAdapter[V] extends SingleResultCallback[V] {
 }
 
 class UpdateResultCallback extends SingleResultCallback[UpdateResult] with HasFuture[Unit] {
-  private[this] val p = Promise[Unit]
+  private[this] val p = Promise[Unit]()
 
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
     if (t == null) p.success(())
@@ -128,7 +127,7 @@ class UpdateResultCallback extends SingleResultCallback[UpdateResult] with HasFu
 }
 
 class UpdateResultCallbackReturning extends SingleResultCallback[UpdateResult] with HasFuture[UpdateResult] {
-  private[this] val p = Promise[UpdateResult]
+  private[this] val p = Promise[UpdateResult]()
 
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
     if (t == null) p.success(result)
@@ -138,7 +137,7 @@ class UpdateResultCallbackReturning extends SingleResultCallback[UpdateResult] w
 }
 
 class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] => Unit) extends SingleResultCallback[UpdateResult] with HasFuture[Unit] {
-  private[this] val p = Promise[Unit]
+  private[this] val p = Promise[Unit]()
   @volatile private[this] var retried = false
 
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
@@ -155,7 +154,7 @@ class UpdateResultCallbackWithRetry(retry: SingleResultCallback[UpdateResult] =>
 }
 
 class UpdateResultCallbackWithRetryReturning(retry: SingleResultCallback[UpdateResult] => Unit) extends SingleResultCallback[UpdateResult] with HasFuture[UpdateResult] {
-  private[this] val p = Promise[UpdateResult]
+  private[this] val p = Promise[UpdateResult]()
   @volatile private[this] var retried = false
 
   override def onResult(result: UpdateResult, t: Throwable): Unit = {
@@ -172,7 +171,7 @@ class UpdateResultCallbackWithRetryReturning(retry: SingleResultCallback[UpdateR
 }
 
 class SingleDocumentOptCallback[R](f: BsonDocument => Option[R]) extends SingleResultCallback[BsonDocument] with HasFuture[Option[R]] {
-  private[this] val p = Promise[Option[R]]
+  private[this] val p = Promise[Option[R]]()
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
     if (t == null) {
@@ -187,7 +186,7 @@ class SingleDocumentOptCallback[R](f: BsonDocument => Option[R]) extends SingleR
 //upsert only
 class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument => Option[R])(retry: SingleDocumentOptCallbackWithRetry[R] => Unit) extends SingleResultCallback[BsonDocument] with HasFuture[Option[R]] {
   private[this] var retried = false
-  val p = Promise[Option[R]]
+  val p = Promise[Option[R]]()
 
   override def onResult(result: BsonDocument, t: Throwable): Unit = {
     t match {
@@ -204,7 +203,7 @@ class SingleDocumentOptCallbackWithRetry[R](f: BsonDocument => Option[R])(retry:
 }
 
 class BatchingCallback[R, T](r: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]])(implicit ec: ExecutionContext) extends SingleResultCallback[AsyncBatchCursor[BsonDocument]] with HasFuture[Seq[T]] {
-  private val p = Promise[Seq[T]]
+  private val p = Promise[Seq[T]]()
   private val resBuilder = Seq.newBuilder[T]
 
   class ResultListCallback(batchCursor: AsyncBatchCursor[BsonDocument]) extends SingleResultCallback[java.util.List[BsonDocument]] {
@@ -315,7 +314,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
     val rClass = ct.runtimeClass.asInstanceOf[Class[R]]
     //a dummy, but result needs it
     val arr = new util.ArrayList[R]
-    val p = Promise[Long]
+    val p = Promise[Long]()
     val pa = new SingleResultCallback[java.util.Collection[R]]() {
       override def onResult(result: java.util.Collection[R], t: Throwable): Unit = {
         if (t == null) p.success(result.size())

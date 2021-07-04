@@ -1,6 +1,8 @@
-//addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
-
 import RogueSettings._
+//ThisBuild / scalafixDependencies += "org.scala-lang.modules" %% "scala-collection-migrations" % "2.4.4"
+ThisBuild / scalafixDependencies += "org.scala-lang" %% "scala-rewrites" % "0.1.3"
+ThisBuild / scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value)
+addCompilerPlugin(scalafixSemanticdb)
 
 Seq(RogueSettings.defaultSettings: _*)
 

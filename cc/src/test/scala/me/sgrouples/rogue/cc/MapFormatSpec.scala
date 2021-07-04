@@ -8,20 +8,19 @@ import shapeless.tag.@@
 import shapeless.tag
 
 case class CustomKey(value: Long) extends AnyVal
+case class StringMap(value: Map[String, Long])
+case class ObjectIdMap(value: Map[ObjectId, Long])
+class StringMapMeta extends RCcMetaExt[StringMap, StringMapMeta]
+
+object MTypes {
+  trait M
+  type ObjectIdSubtype = ObjectId @@ M
+}
+case class ObjectIdSubtypeMap(value: Map[MTypes.ObjectIdSubtype, Long])
+case class CustomKeyMap(value: Map[CustomKey, Long])
 
 class MapFormatSpec extends FlatSpec with Matchers {
 
-  case class StringMap(value: Map[String, Long])
-  case class ObjectIdMap(value: Map[ObjectId, Long])
-
-  trait M
-
-  type ObjectIdSubtype = ObjectId @@ M
-
-  case class ObjectIdSubtypeMap(value: Map[ObjectIdSubtype, Long])
-  case class CustomKeyMap(value: Map[CustomKey, Long])
-
-  class StringMapMeta extends RCcMetaExt[StringMap, StringMapMeta]
 
   "MapFormat" should "write/read string keyed map" in {
 
@@ -47,7 +46,7 @@ class MapFormatSpec extends FlatSpec with Matchers {
   it should "write/read objectId subtype keyed map" in {
 
     val meta = new ObjectIdSubtypeMapMeta
-    val v = ObjectIdSubtypeMap(Map(tag[M](ObjectId.get()) -> 1))
+    val v = ObjectIdSubtypeMap(Map(tag[MTypes.M](ObjectId.get()) -> 1))
     val bson = meta.write(v)
     meta.read(bson) shouldBe v
   }

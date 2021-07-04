@@ -31,7 +31,7 @@ trait CcMeta[T] extends CcMetaLike[T] {
 
 class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] {
 
-  def this(namingStrategy: NamingStrategy = LowerCase)(implicit f: BsonFormat[T], classTag: ClassTag[T]) {
+  def this(namingStrategy: NamingStrategy = LowerCase)(implicit f: BsonFormat[T], classTag: ClassTag[T]) = {
     this(namingStrategy[T])
   }
 
@@ -166,7 +166,7 @@ class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](collName: String)
   with RuntimeNameResolver[OwnerType] { requires: OwnerType =>
 
   def this(
-    namingStrategy: NamingStrategy = LowerCase)(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType]) {
+    namingStrategy: NamingStrategy = LowerCase)(implicit formats: BsonFormat[RecordType], classTag: ClassTag[RecordType]) = {
     this(namingStrategy[RecordType])(formats)
   }
 }

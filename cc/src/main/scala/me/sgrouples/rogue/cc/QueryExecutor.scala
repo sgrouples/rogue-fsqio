@@ -278,7 +278,7 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     // ListBuffer#length is O(1) vs ListBuffer#size is O(N) (true in 2.9.x, fixed in 2.10.x)
     if (from.length >= size) {
       to ++= f(from.toList)
-      from.clear
+      from.clear()
     }
   }
 
@@ -312,7 +312,7 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     // ListBuffer#length is O(1) vs ListBuffer#size is O(N) (true in 2.9.x, fixed in 2.10.x)
     if (from.length >= size) {
       to ++= f(from.toList)
-      from.clear
+      from.clear()
     }
   }
 
@@ -335,7 +335,7 @@ trait BsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     }
     adapter.findIterable(query, Some(batchSize), readPreference).forEach(action)
     drainBufferSeq(buf, rv, f, 1)
-    rv.result
+    rv.result()
   }
 
   def bulkDelete_!![M <: MB, State](

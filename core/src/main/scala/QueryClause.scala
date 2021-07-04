@@ -4,9 +4,10 @@ package io.fsq.rogue
 
 import com.mongodb.BasicDBObjectBuilder
 import java.util.regex.Pattern
+import scala.Iterable
 
 abstract class QueryClause[V](val fieldName: String, val actualIndexBehavior: MaybeIndexed, val conditions: (CondOps.Value, V)*) {
-  def extend(q: BasicDBObjectBuilder, signature: Boolean) {
+  def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
     conditions foreach { case (op, v) => q.add(op.toString, if (signature) 0 else v) }
   }
   var negated: Boolean = false
@@ -60,7 +61,7 @@ case class NearQueryClause[V](override val fieldName: String, v: V)
 
 case class NearSphereQueryClause[V](override val fieldName: String, lat: Double, lng: Double, radians: Radians)
   extends IndexableQueryClause[V, PartialIndexScan](fieldName, PartialIndexScan) {
-  override def extend(q: BasicDBObjectBuilder, signature: Boolean) {
+  override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
     q.add(CondOps.NearSphere.toString, if (signature) 0 else QueryHelpers.list(List(lat, lng)))
     q.add(CondOps.MaxDistance.toString, if (signature) 0 else radians.value)
   }
@@ -105,7 +106,7 @@ case class RegexQueryClause[Ind <: MaybeIndexed](override val fieldName: String,
     } yield char).mkString
   }
 
-  override def extend(q: BasicDBObjectBuilder, signature: Boolean) {
+  override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
     q.add("$regex", if (signature) 0 else p.toString)
     q.add("$options", if (signature) 0 else flagsToString(p.flags))
   }
@@ -114,14 +115,14 @@ case class RegexQueryClause[Ind <: MaybeIndexed](override val fieldName: String,
 
 case class RawQueryClause(f: BasicDBObjectBuilder => Unit)
   extends IndexableQueryClause("raw", DocumentScan) {
-  override def extend(q: BasicDBObjectBuilder, signature: Boolean) {
+  override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
     f(q)
   }
 }
 
 case class EmptyQueryClause[V](override val fieldName: String)
   extends IndexableQueryClause[V, Index](fieldName, Index) {
-  override def extend(q: BasicDBObjectBuilder, signature: Boolean) {}
+  override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {}
 }
 
 case class EqClause[V, Ind <: MaybeIndexed](override val fieldName: String, value: V)
@@ -165,28 +166,28 @@ class ModifyClause(val operator: ModOps.Value, fields: (String, _)*) {
   }
 }
 
-class ModifyAddEachClause(fieldName: String, values: Traversable[_])
+class ModifyAddEachClause(fieldName: String, values: Iterable[_])
   extends ModifyClause(ModOps.AddToSet) {
   override def extend(q: BasicDBObjectBuilder): Unit = {
     q.push(fieldName).add("$each", QueryHelpers.list(values)).pop
   }
 }
 
-class ModifyPushEachClause(fieldName: String, values: Traversable[_])
+class ModifyPushEachClause(fieldName: String, values: Iterable[_])
   extends ModifyClause(ModOps.Push) {
   override def extend(q: BasicDBObjectBuilder): Unit = {
     q.push(fieldName).add("$each", QueryHelpers.list(values)).pop
   }
 }
 
-class ModifyPushEachSliceClause(fieldName: String, slice: Int, values: Traversable[_])
+class ModifyPushEachSliceClause(fieldName: String, slice: Int, values: Iterable[_])
   extends ModifyClause(ModOps.Push) {
   override def extend(q: BasicDBObjectBuilder): Unit = {
     q.push(fieldName).add("$each", QueryHelpers.list(values)).add("$slice", slice).pop
   }
 }
 
-class ModifyPushEachSlicePositionClause(fieldName: String, slice: Int, position: Int, values: Traversable[_])
+class ModifyPushEachSlicePositionClause(fieldName: String, slice: Int, position: Int, values: Iterable[_])
   extends ModifyClause(ModOps.Push) {
   override def extend(q: BasicDBObjectBuilder): Unit = {
     q.push(fieldName).add("$each", QueryHelpers.list(values)).add("$slice", slice).add("$position", position).pop

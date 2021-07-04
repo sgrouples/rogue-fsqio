@@ -40,6 +40,9 @@ trait TestQueryTraitB[OwnerType] {
 
 }
 
+case class AnotherValue(a: String)
+case class DifferentValue(a: String)
+
 class TestDomainObjectMeta extends RCcMetaExt[TestDomainObject, TestDomainObjectMeta]
   with TestQueryTraitA[TestDomainObjectMeta]
   with TestQueryTraitB[TestDomainObjectMeta] {
@@ -169,7 +172,6 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
 
   }
 
-  case class AnotherValue(a: String)
 
   class AnotherTestMeta extends RCcMetaExt[AnotherValue, AnotherTestMeta] {
     val a = StringField
@@ -189,7 +191,6 @@ class QueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures 
     Try(new AnotherTestMeta).toString mustBe "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)"
   }
 
-  case class DifferentValue(a: String)
 
   class DifferentTestMeta extends RCcMetaExt[DifferentValue, DifferentTestMeta] {
     val a = StringField
