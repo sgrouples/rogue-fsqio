@@ -55,11 +55,6 @@ object RogueDependencies {
   val mongoVer = "3.12.1"
   val mongoReactiveVer = "1.13.0"
 
-  val joda = Seq(
-    "joda-time"                % "joda-time"           % "2.10.1"        % Compile,
-    "org.joda"                 % "joda-convert"        % "2.2.0"        % Compile
-  )
-
   val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
 
   val mongoDeps = Seq(
@@ -82,7 +77,7 @@ object RogueDependencies {
 
   val collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4"
 
-  val coreDeps = mongoDeps ++ joda
+  val coreDeps = mongoDeps
 
   val ccDeps = mongoDeps ++ Seq(shapeless, collectionCompat)  ++ testDeps
 }

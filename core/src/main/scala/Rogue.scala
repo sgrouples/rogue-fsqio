@@ -6,7 +6,6 @@ import com.mongodb.DBObject
 import io.fsq.field.{ Field => RField, OptionalField => ROptionalField, RequiredField => RRequiredField }
 import java.util.Date
 import org.bson.types.ObjectId
-import org.joda.time.DateTime
 
 /**
  * A utility trait containing typing shorthands, and a collection of implicit conversions that make query
@@ -31,7 +30,6 @@ trait Rogue {
   implicit def rstringFieldToStringQueryField[F <: String, M](f: RField[F, M]): StringQueryField[F, M] = new StringQueryField(f)
   implicit def robjectIdFieldToObjectIdQueryField[F <: ObjectId, M](f: RField[F, M]): ObjectIdQueryField[F, M] = new ObjectIdQueryField[F, M](f)
   implicit def rdateFieldToDateQueryField[M](f: RField[Date, M]): DateQueryField[M] = new DateQueryField(f)
-  implicit def rdatetimeFieldToDateQueryField[M](f: RField[DateTime, M]): DateTimeQueryField[M] = new DateTimeQueryField(f)
   implicit def rdbobjectFieldToQueryField[M](f: RField[DBObject, M]): QueryField[DBObject, M] = new QueryField(f)
 
   implicit def renumNameFieldToEnumNameQueryField[M, F <: Enumeration#Value](f: RField[F, M]): EnumNameQueryField[M, F] = new EnumNameQueryField(f)
@@ -61,7 +59,6 @@ trait Rogue {
   implicit def stringRFieldToModifyField[M, F <: String](f: RField[F, M]): ModifyField[F, M] = new ModifyField(f)
   implicit def objectidRFieldToModifyField[M, F <: ObjectId](f: RField[F, M]): ModifyField[F, M] = new ModifyField(f)
   implicit def dateRFieldToDateModifyField[M](f: RField[Date, M]): DateModifyField[M] = new DateModifyField(f)
-  implicit def datetimeRFieldToDateModifyField[M](f: RField[DateTime, M]): DateTimeModifyField[M] = new DateTimeModifyField(f)
 
   implicit def renumerationFieldToEnumerationModifyField[M, F <: Enumeration#Value](f: RField[F, M]): EnumerationModifyField[M, F] =
     new EnumerationModifyField(f)

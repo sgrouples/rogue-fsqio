@@ -28,7 +28,7 @@ class MacroCCGenerator(val c: Context) {
   }
   //copied from https://github.com/lihaoyi/upickle/blob/master/upickle/src/upickle/internal/Macros.scala
   def getArgSyms(tpe: c.Type) = {
-    companionTree(tpe).right.flatMap { companion =>
+    companionTree(tpe).flatMap { companion =>
       //tickle the companion members -- Not doing this leads to unexpected runtime behavior
       //I wonder if there is an SI related to this?
       companion.tpe.members.foreach(_ => ())

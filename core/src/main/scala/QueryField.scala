@@ -8,11 +8,9 @@ import com.mongodb.DBObject
 import io.fsq.field.{ Field, OptionalField, RequiredField }
 import java.util.Date
 import java.util.regex.Pattern
-
-import org.bson
+import java.time.Instant
 import org.bson.BsonNull
 import org.bson.types.ObjectId
-import org.joda.time.DateTime
 
 import scala.util.matching.Regex
 
@@ -142,8 +140,8 @@ class QueryField[V: BSONType, M](field: Field[V, M])
 }
 
 class DateQueryField[M](field: Field[Date, M])
-  extends AbstractQueryField[Date, DateTime, Date, M](field) {
-  override def valueToDB(d: DateTime) = d.toDate
+  extends AbstractQueryField[Date, Instant, Date, M](field) {
+  override def valueToDB(d: Instant) = new Date(d.toEpochMilli)
 
   def eqs(d: Date) = EqClause(field.name, d)
   def neqs(d: Date) = new NeQueryClause(field.name, d)
@@ -156,20 +154,20 @@ class DateQueryField[M](field: Field[Date, M])
   def onOrBefore(d: Date) = new LtEqQueryClause(field.name, d)
   def onOrAfter(d: Date) = new GtEqQueryClause(field.name, d)
 
-  def before(d: DateTime) = new LtQueryClause(field.name, d.toDate)
-  def after(d: DateTime) = new GtQueryClause(field.name, d.toDate)
-  def onOrBefore(d: DateTime) = new LtEqQueryClause(field.name, d.toDate)
-  def onOrAfter(d: DateTime) = new GtEqQueryClause(field.name, d.toDate)
+  def before(d: Instant) = new LtQueryClause(field.name, new Date(d.toEpochMilli))
+  def after(d: Instant) = new GtQueryClause(field.name, new Date(d.toEpochMilli))
+  def onOrBefore(d: Instant) = new LtEqQueryClause(field.name, new Date(d.toEpochMilli))
+  def onOrAfter(d: Instant) = new GtEqQueryClause(field.name, new Date(d.toEpochMilli))
 }
 
-class DateTimeQueryField[M](field: Field[DateTime, M])
-  extends AbstractQueryField[DateTime, DateTime, Date, M](field) {
-  override def valueToDB(d: DateTime) = d.toDate
+class DateTimeQueryField[M](field: Field[Instant, M])
+  extends AbstractQueryField[Instant, Instant, Date, M](field) {
+  override def valueToDB(d: Instant) = new Date(d.toEpochMilli)
 
-  def before(d: DateTime) = new LtQueryClause(field.name, d.toDate)
-  def after(d: DateTime) = new GtQueryClause(field.name, d.toDate)
-  def onOrBefore(d: DateTime) = new LtEqQueryClause(field.name, d.toDate)
-  def onOrAfter(d: DateTime) = new GtEqQueryClause(field.name, d.toDate)
+  def before(d: Instant) = new LtQueryClause(field.name, new Date(d.toEpochMilli))
+  def after(d: Instant) = new GtQueryClause(field.name, new Date(d.toEpochMilli))
+  def onOrBefore(d: Instant) = new LtEqQueryClause(field.name, new Date(d.toEpochMilli))
+  def onOrAfter(d: Instant) = new GtEqQueryClause(field.name, new Date(d.toEpochMilli))
 }
 
 class EnumNameQueryField[M, E <: Enumeration#Value](field: Field[E, M])
@@ -215,17 +213,17 @@ class NumericQueryField[V, M](field: Field[V, M])
 
 class ObjectIdQueryField[F <: ObjectId, M](override val field: Field[F, M])
   extends NumericQueryField(field) {
-  def before(d: DateTime) =
-    new LtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.toDate.getTime / 1000).toInt, 0, 0))
+  def before(d: Instant) =
+    new LtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.getEpochSecond).toInt, 0, 0))
 
-  def after(d: DateTime) =
-    new GtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.toDate.getTime / 1000).toInt, 0, 0))
+  def after(d: Instant) =
+    new GtQueryClause(field.name, ObjectId.createFromLegacyFormat((d.getEpochSecond).toInt, 0, 0))
 
-  def between(d1: DateTime, d2: DateTime) =
-    new StrictBetweenQueryClause(field.name, ObjectId.createFromLegacyFormat((d1.toDate.getTime / 1000).toInt, 0, 0), ObjectId.createFromLegacyFormat((d2.toDate.getTime / 1000).toInt, 0, 0))
+  def between(d1: Instant, d2: Instant) =
+    new StrictBetweenQueryClause(field.name, ObjectId.createFromLegacyFormat((d1.getEpochSecond).toInt, 0, 0), ObjectId.createFromLegacyFormat(d2.getEpochSecond.toInt, 0, 0))
 
-  def between(range: (DateTime, DateTime)) =
-    new StrictBetweenQueryClause(field.name, ObjectId.createFromLegacyFormat((range._1.toDate.getTime / 1000).toInt, 0, 0), ObjectId.createFromLegacyFormat((range._2.toDate.getTime / 1000).toInt, 0, 0))
+  def between(range: (Instant, Instant)) =
+    new StrictBetweenQueryClause(field.name, ObjectId.createFromLegacyFormat((range._1.getEpochSecond).toInt, 0, 0), ObjectId.createFromLegacyFormat((range._2.getEpochSecond).toInt, 0, 0))
 
   def before(d: LocalDateTime) =
     new LtQueryClause(field.name, localDateTimeToOid(d))
@@ -470,17 +468,17 @@ class DateModifyField[M](field: Field[Date, M])
   extends AbstractModifyField[Date, Date, M](field) {
   override def valueToDB(d: Date) = d
 
-  def setTo(d: DateTime) = new ModifyClause(ModOps.Set, field.name -> d.toDate)
-  def setOnInsertTo(d: DateTime): ModifyClause = new ModifyClause(ModOps.SetOnInsert, field.name -> d.toDate)
-  def min(d: DateTime) = new ModifyClause(ModOps.Min, field.name -> d.toDate)
-  def max(d: DateTime) = new ModifyClause(ModOps.Max, field.name -> d.toDate)
+  def setTo(d: Instant) = new ModifyClause(ModOps.Set, field.name -> new Date(d.toEpochMilli))
+  def setOnInsertTo(d: Instant): ModifyClause = new ModifyClause(ModOps.SetOnInsert, field.name -> new Date(d.toEpochMilli))
+  def min(d: Instant) = new ModifyClause(ModOps.Min, field.name -> new Date(d.toEpochMilli))
+  def max(d: Instant) = new ModifyClause(ModOps.Max, field.name -> new Date(d.toEpochMilli))
 
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
 
-class DateTimeModifyField[M](field: Field[DateTime, M])
-  extends AbstractModifyField[DateTime, Date, M](field) {
-  override def valueToDB(d: DateTime) = d.toDate
+class DateTimeModifyField[M](field: Field[Instant, M])
+  extends AbstractModifyField[Instant, Date, M](field) {
+  override def valueToDB(d: Instant) = new Date(d.toEpochMilli)
 
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
