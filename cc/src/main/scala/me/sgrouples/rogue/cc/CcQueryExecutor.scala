@@ -1,18 +1,17 @@
 package me.sgrouples.rogue.cc
 
-import com.mongodb.client.{ MongoCollection, MongoDatabase }
+import org.mongodb.scala._
 import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
 import io.fsq.rogue.{ Query, QueryHelpers }
-import org.bson.BsonDocument
 
 object CcDBCollectionFactory extends BsonDBCollectionFactory[CcMeta[_]] {
   type TCM = CcMeta[_]
-  val bsonDocClass = classOf[BsonDocument]
+  //val bsonDocClass = classOf[BsonDocument]
 
   //temorary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
   //[M <: MongoRecord[_] with MongoMetaRecord[_]
-  override def getDBCollection[M <: TCM](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[BsonDocument] = {
-    db.getCollection(query.collectionName, bsonDocClass)
+  override def getDBCollection[M <: TCM](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[Document] = {
+    db.getCollection[Document](query.collectionName)
   }
 
   override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[BsonDocument] = {

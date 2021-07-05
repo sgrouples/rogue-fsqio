@@ -18,17 +18,9 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
           transformer(null)
         case Some(MongoSelect(fields, transformer, _, _)) =>
           //TODO - optimze - extract readers for fields up, before using read serializer. this is super -ineffective
-          //LiftQueryExecutorHelpers.setInstanceFieldFromDoc(inst, dbo, "_id")
-          //println(s"Whole DBO ${dbo} ${dbo.getClass}")
           val values =
             fields.map(fld => {
               val (bsonV, readArray) = readBsonVal(dbo, fld.field.name)
-              //.get(fld.field.name)
-              /*  println(s"BsonV is ${bsonV}")
-              println(s"field name is ${fld.field.name}")
-              println(s"Field  is ${fld}")
-              println(s"Field.field is ${fld.field}")
-            */
               val reader = meta.reader(fld.field)
               //TODO - does not in case reader is for non-array, and subselect returns array
               //if fld is optional, readOpt will read Option[Option[T]] this is handled (poorly) inside fld.valueOrDefault
@@ -96,13 +88,10 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
           } else {
             d = d.asDocument().get(key)
           }
-          //println(s"Getting ${parts(i)} from ${d}")
-          //println(s"Got ${d}")
           i = i + 1
         }
       }
     }
-    //println(s"Returning ${d} ${d.getBsonType}")
     (d, needArray)
   }
 

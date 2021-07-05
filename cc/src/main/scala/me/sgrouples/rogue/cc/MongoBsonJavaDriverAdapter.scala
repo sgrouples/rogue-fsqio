@@ -1,13 +1,10 @@
 package me.sgrouples.rogue.cc
 
-import com.mongodb._
 import io.fsq.rogue.Iter._
 import io.fsq.rogue.index.UntypedMongoIndex
 
-import com.mongodb.client._
-import com.mongodb.client.model._
+import org.mongodb.scala._
 import io.fsq.rogue.{ FindAndModifyQuery, ModifyQuery, Query, RogueException }
-import org.bson.BsonDocument
 import org.bson.conversions.Bson
 
 import scala.collection.mutable.ListBuffer
@@ -16,9 +13,9 @@ import scala.reflect.ClassTag
 import scala.util.{ Failure, Success, Try }
 
 trait BsonDBCollectionFactory[MB] {
-  def getDBCollection[M <: MB](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[BsonDocument]
+  def getDBCollection[M <: MB](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[Document]
 
-  def getPrimaryDBCollection[M <: MB](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[BsonDocument]
+  def getPrimaryDBCollection[M <: MB](query: Query[M, _, _])(implicit db: MongoDatabase): MongoCollection[Document]
 
   //def getPrimaryDBCollection(record: RB): MongoCollection[BsonDocument]
 
@@ -32,8 +29,8 @@ trait BsonDBCollectionFactory[MB] {
 }
 
 class MongoBsonJavaDriverAdapter[MB](
-  dbCollectionFactory: BsonDBCollectionFactory[MB],
-  decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY) {
+  dbCollectionFactory: BsonDBCollectionFactory[MB]/*,
+  decoderFactoryFunc: (MB) => DBDecoderFactory = (m: MB) => DefaultDBDecoder.FACTORY */) {
 
   import io.fsq.rogue.MongoHelpers.MongoBuilder._
   import io.fsq.rogue.QueryHelpers._
@@ -61,7 +58,7 @@ class MongoBsonJavaDriverAdapter[MB](
 
   private def getDBCollection[M <: MB, R](
     query: Query[M, _, _],
-    readPreference: Option[ReadPreference])(implicit db: MongoDatabase): MongoCollection[BsonDocument] = {
+    readPreference: Option[ReadPreference])(implicit db: MongoDatabase): MongoCollection[Document] = {
     val c = dbCollectionFactory.getDBCollection(query)
     (readPreference.toSeq ++ query.readPreference.toSeq).headOption.fold(c)(c.withReadPreference)
   }
