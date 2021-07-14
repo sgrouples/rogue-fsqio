@@ -1,17 +1,17 @@
 package me.sgrouples.rogue.cc
 
 import java.util.function.Consumer
-
 import org.mongodb.scala._
 import io.fsq.field.Field
-import io.fsq.rogue.MongoHelpers.{ MongoModify, MongoSelect }
+import io.fsq.rogue.MongoHelpers.{MongoModify, MongoSelect}
 import io.fsq.rogue._
 import io.fsq.spindle.types.MongoDisallowed
+import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import org.reactivestreams.Publisher
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import scala.collection.mutable.{ Builder, ListBuffer }
+import scala.collection.mutable.{Builder, ListBuffer}
 
 trait RogueBsonRead[R] {
   def fromDocument(dbo: Document): R
@@ -101,13 +101,13 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     query: Query[M, _, State],
     writeConcern: WriteConcern = defaultWriteConcern)(implicit
     ev1: Required[State, Unselected with Unlimited with Unskipped],
-    ev2: ShardingOk[M, State], dba: MongoDatabase): Future[Unit] = {
+    ev2: ShardingOk[M, State], dba: MongoDatabase): Future[DeleteResult] = {
     adapter.delete(query, writeConcern)
   }
 
   def updateOne[M <: MB, State](
     query: ModifyQuery[M, State],
-    writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[Unit] = {
+    writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] = {
     adapter.modify(query, upsert = false, multi = false, writeConcern = writeConcern)
   }
 
@@ -119,7 +119,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
 
   def upsertOne[M <: MB, State](
     query: ModifyQuery[M, State],
-    writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[Unit] = {
+    writeConcern: WriteConcern = defaultWriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] = {
     adapter.modify(query, upsert = true, multi = false, writeConcern = writeConcern)
   }
 
@@ -131,7 +131,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
 
   def updateMulti[M <: MB, State](
     query: ModifyQuery[M, State],
-    writeConcern: WriteConcern = defaultWriteConcern)(implicit dba: MongoDatabase): Future[Unit] = {
+    writeConcern: WriteConcern = defaultWriteConcern)(implicit dba: MongoDatabase): Future[UpdateResult] = {
     adapter.modify(query, upsert = false, multi = true, writeConcern = writeConcern)
   }
 
@@ -147,7 +147,7 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     returnNew: Boolean = false,
     writeConcern: WriteConcern = defaultWriteConcern)(implicit dba: MongoDatabase): Future[Option[R]] = {
     val s = readSerializer[M, R](query.query.meta, query.query.select)
-    adapter.findAndModify(query, returnNew, upsert = false, remove = false)(s.fromDocumentOpt _)
+    adapter.findAndModify(query, returnNew, upsert = false, remove = false, writeConcern)(s.fromDocumentOpt _)
   }
 
   def findAndUpsertOne[M <: MB, R](
