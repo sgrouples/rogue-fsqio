@@ -96,10 +96,8 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
   }
 
   override protected def writeSerializer[M <: CcMeta[_], R](meta: M): RogueBsonWrite[R] = {
-    new RogueBsonWrite[R] {
-      override def toDocument(record: R): BsonDocument = {
-        meta.writeAnyRef(record.asInstanceOf[AnyRef]).asDocument()
-      }
+    (record: R) => {
+      meta.writeAnyRef(record.asInstanceOf[AnyRef]).asDocument()
     }
   }
 }

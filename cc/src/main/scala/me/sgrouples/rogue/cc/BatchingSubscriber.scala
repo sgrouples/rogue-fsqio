@@ -4,9 +4,8 @@ import org.bson.BsonDocument
 import org.reactivestreams.{Subscriber, Subscription}
 
 import scala.concurrent.Future
-import org.mongodb.scala.Document
 
-//TODO -
+//TODO - doesn't work at all now, maybe not needed, as Source /publisher is better anyways
 class BatchingSubscriber[T, R](batchSize: Int,
                                serializer: RogueBsonRead[R],
                                f: Seq[R] => Future[Seq[T]]) extends Subscriber[BsonDocument] {
