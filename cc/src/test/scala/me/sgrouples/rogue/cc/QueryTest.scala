@@ -11,6 +11,7 @@ import CcRogue._
 import java.util.regex.Pattern
 import javax.xml.crypto.dsig.Transform
 
+
 import com.mongodb.util.{ JSON, JSONSerializers }
 import io.fsq.field.Field
 import me.sgrouples.rogue.CClassListField
