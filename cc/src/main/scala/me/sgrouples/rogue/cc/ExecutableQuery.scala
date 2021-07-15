@@ -4,59 +4,62 @@ package me.sgrouples.rogue.cc
 // Copyright 2016 Sgrouples Inc. All Rights Reserved.
 
 import io.fsq.field.Field
-import io.fsq.rogue.{ AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _ }
+import io.fsq.rogue.{AddLimit, FindAndModifyQuery, Iter, ModifyQuery, Query, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import org.mongodb.scala._
-import com.mongodb.client.result.UpdateResult
+import com.mongodb.client.result.{InsertManyResult, UpdateResult}
+import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult}
 import org.reactivestreams.Publisher
 
-import scala.collection.mutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 import scala.reflect.ClassTag
+
+
 
 case class ExecutableQuery[MB, M <: MB, R, State](
   query: Query[M, R, State],
   ex: BsonExecutors[MB])(implicit ev: ShardingOk[M, State]) {
+  import Waiter._
 
   /**
    * Gets the size of the query result. This should only be called on queries that do not
    * have limits or skips.
    */
-  def count()(implicit db: MongoDatabase): Long =
-    ex.sync.count(query)
+  def count()(implicit db: MongoDatabase): Long = waitForFuture(countAsync())
+
 
   /**
    * Returns the number of distinct values returned by a query. The query must not have
    * limit or skip clauses.
    */
-  def countDistinct[V](field: M => Field[V, _], readPreference: Option[ReadPreference] = None)(implicit ct: ClassTag[V], db: MongoDatabase): Long =
-    ex.sync.countDistinct(query, readPreference, ct)(field.asInstanceOf[M => Field[V, M]])
+  def countDistinct[V](field: M => Field[V, _], readPreference: Option[ReadPreference] = None)(implicit ct: ClassTag[V], db: MongoDatabase): Long = {
+    waitForFuture(countDistinctAsync(field, readPreference))
+  }
 
-  def countDistinctAsync[V](field: M => Field[V, _])(implicit ct: ClassTag[V], db: MongoDatabase): Future[Long] =
-    ex.async.countDistinct(query)(field.asInstanceOf[M => Field[V, M]])
-
-  /**
-   * Returns a list of distinct values returned by a query. The query must not have
-   * limit or skip clauses.
-   */
-
-  def distinct[V](field: M => Field[V, _], readPreference: Option[ReadPreference] = None)(implicit ct: ClassTag[V], db: MongoDatabase): Seq[V] =
-    ex.sync.distinct(query, readPreference, ct)(field.asInstanceOf[M => Field[V, M]]).toSeq
+  def countDistinctAsync[V](field: M => Field[V, _], readPreference: Option[ReadPreference] = None)(implicit ct: ClassTag[V], db: MongoDatabase): Future[Long] =
+    ex.async.countDistinct(query, readPreference)(field.asInstanceOf[M => Field[V, M]])
 
   /**
    * Returns a list of distinct values returned by a query. The query must not have
    * limit or skip clauses.
    */
-  def distinctAsync[V](field: M => Field[V, _])(implicit ct: ClassTag[V], db: MongoDatabase): Future[Seq[V]] = {
-    ex.async.distinct(query, ct)(field.asInstanceOf[M => Field[V, M]])
+
+  def distinct[V: ClassTag](field: M => Field[V, _], readPreference: Option[ReadPreference] = None)(implicit db: MongoDatabase): Seq[V] =
+    waitForFuture(distinctAsync(field, readPreference))
+
+  /**
+   * Returns a list of distinct values returned by a query. The query must not have
+   * limit or skip clauses.
+   */
+  def distinctAsync[V: ClassTag](field: M => Field[V, _], readPreference: Option[ReadPreference] = None)(implicit db: MongoDatabase): Future[Seq[V]] = {
+    ex.async.distinct(query, readPreference)(field.asInstanceOf[M => Field[V, M]])
   }
 
   /**
    * Checks if there are any records that match this query.
    */
   def exists()(implicit ev: State <:< Unlimited with Unskipped, db: MongoDatabase): Boolean = {
-    val q = query.copy(select = Some(MongoSelect[M, Null](IndexedSeq.empty, _ => null, true, query.select.flatMap(_.scoreName))))
-    ex.sync.fetch(q.limit(1)).size > 0
+    waitForFuture(existsAsync())
   }
 
   /**
@@ -66,40 +69,25 @@ case class ExecutableQuery[MB, M <: MB, R, State](
    */
 
   def foreach(f: R => Unit)(implicit db: MongoDatabase): Unit =
-    ex.sync.foreach(query)(f)
+    waitForFuture(foreachAsync(f))
 
   /**
    * Execute the query, returning all of the records that match the query.
    * @return a list containing the records that match the query
    */
 
-  def fetch()(implicit db: MongoDatabase): List[R] =
-    ex.sync.fetchList(query)
-
-  /**
-   * Execute a query, returning no more than a specified number of result records. The
-   * query must not have a limit clause.
-   * @param limit the maximum number of records to return.
-   */
-
-  def fetch[S2](limit: Int)(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], db: MongoDatabase): List[R] =
-    ex.sync.fetchList(query.limit(limit))
-
-  /**
-   * fetch a batch of results, and execute a function on each element of the list.
-   * @param f the function to invoke on the records that match the query.
-   * @return a list containing the results of invoking the function on each record.
-   */
-  def fetchBatch[T](batchSize: Int)(f: Seq[R] => Seq[T])(implicit db: MongoDatabase): Seq[T] =
-    ex.sync.fetchBatch(query, batchSize)(f)
+  def fetch()(implicit db: MongoDatabase): Seq[R] = {
+    waitForFuture(fetchAsync())
+  }
 
   /**
    * Fetches the first record that matches the query. The query must not contain a "limited" clause.
    * @return an option record containing either the first result that matches the
    *         query, or None if there are no records that match.
    */
-  def get[S2]()(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], db: MongoDatabase): Option[R] =
-    ex.sync.fetchOne(query)
+  def get[S2]()(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], db: MongoDatabase): Option[R] = {
+    waitForFuture(getAsync())
+  }
 
   /**
    * Delete all of the records that match the query. The query must not contain any "skip",
@@ -107,28 +95,23 @@ case class ExecutableQuery[MB, M <: MB, R, State](
    * <em>not</em> wait for the delete to be finished.
    */
   def bulkDelete_!!!()(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], db: MongoDatabase): Unit =
-    ex.sync.bulkDelete_!!(query)
+    waitForFuture(bulkDeleteAsync_!!!())
 
   /**
    * Delete all of the records that match the query. The query must not contain any "skip",
    * "limit", or "select" clauses. Sends the delete operation to mongo, and waits for the
    * delete operation to complete before returning to the caller.
    */
-  def bulkDelete_!!(concern: WriteConcern)(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], db: MongoDatabase): Unit =
-    ex.sync.bulkDelete_!!(query, concern)
+  def bulkDelete_!!(concern: WriteConcern)(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], db: MongoDatabase): Unit = {
+    waitForFuture(bulkDeleteAsync_!!(concern))
+  }
 
   /**
    * Finds the first record that matches the query (if any), fetches it, and then deletes it.
    * A copy of the deleted record is returned to the caller.
    */
   def findAndDeleteOne()(implicit ev: RequireShardKey[M, State], db: MongoDatabase): Option[R] =
-    ex.sync.findAndDeleteOne(query)
-
-  def iterate[S](state: S)(handler: (S, Iter.Event[R]) => Iter.Command[S])(implicit db: MongoDatabase): S =
-    ex.sync.iterate(query, state)(handler)
-
-  def iterateBatch[S](batchSize: Int, state: S)(handler: (S, Iter.Event[Seq[R]]) => Iter.Command[S])(implicit db: MongoDatabase): S =
-    ex.sync.iterateBatch(query, batchSize, state)(handler)
+    waitForFuture(findAndDeleteOneAsync())
 
   // async ops
   def countAsync()(implicit dba: MongoDatabase): Future[Long] = ex.async.count(query)
@@ -143,72 +126,68 @@ case class ExecutableQuery[MB, M <: MB, R, State](
 
   def getAsync[S2]()(implicit ev1: AddLimit[State, S2], ev2: ShardingOk[M, S2], dba: MongoDatabase): Future[Option[R]] = ex.async.fetchOne(query)
 
-  /*def paginateAsync(countPerPage: Int)
-                   (implicit ev1: Required[State, Unlimited with Unskipped],
-                    ev2: ShardingOk[M, State]) = {
-    new PaginatedQuery(ev1(query),  dba, countPerPage)
-  }
-*/
-  def existsAsync(implicit ev: State <:< Unlimited with Unskipped, dba: MongoDatabase): Future[Boolean] = {
+  def existsAsync()(implicit ev: State <:< Unlimited with Unskipped, dba: MongoDatabase): Future[Boolean] = {
     val q = query.copy(select = Some(MongoSelect[M, Null](IndexedSeq.empty, _ => null, true, query.select.flatMap(_.scoreName))))
     ex.async.exists(q.limit(1))
   }
 
-  def bulkDeleteAsync_!!!()(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], dba: MongoDatabase): Future[Unit] = ex.async.bulkDelete_!!(query)
+  def bulkDeleteAsync_!!!()(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], dba: MongoDatabase): Future[DeleteResult] = ex.async.bulkDelete_!!(query)
 
-  def bulkDeleteAsync_!!(concern: WriteConcern)(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], dba: MongoDatabase): Future[Unit] = ex.async.bulkDelete_!!(query, concern)
+  def bulkDeleteAsync_!!(concern: WriteConcern)(implicit ev1: Required[State, Unselected with Unlimited with Unskipped], dba: MongoDatabase): Future[DeleteResult] = ex.async.bulkDelete_!!(query, concern)
 
   def findAndDeleteOneAsync()(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[Option[R]] = ex.async.findAndDeleteOne(query)
 
-  def batchAsync[T](f: Seq[R] => Future[Seq[T]], batchSize: Int = 100, readPreference: Option[ReadPreference] = None)(implicit dba: MongoDatabase, ec: ExecutionContext): Future[Seq[T]] =
-    ex.async.batch(query, f, batchSize, readPreference)
+  //def batchAsync[T](f: Seq[R] => Future[Seq[T]], batchSize: Int = 100, readPreference: Option[ReadPreference] = None)(implicit dba: MongoDatabase, ec: ExecutionContext): Future[Seq[T]] =
+  //  ex.async.batch(query, f, batchSize, readPreference)
 
 }
 
 case class ExecutableModifyQuery[MB, M <: MB, State](
   query: ModifyQuery[M, State],
   ex: BsonExecutors[MB]) {
+  import Waiter._
+
   def updateMulti()(implicit db: MongoDatabase): Unit =
-    ex.sync.updateMulti(query)
+    waitForFuture(updateMultiAsync())
 
   def updateOne()(implicit ev: RequireShardKey[M, State], db: MongoDatabase): Unit =
-    ex.sync.updateOne(query)
+    waitForFuture(updateOneAsync())
 
   def upsertOne()(implicit ev: RequireShardKey[M, State], db: MongoDatabase): Unit =
-    ex.sync.upsertOne(query)
+      waitForFuture(updateOneAsync())
 
   def updateMulti(writeConcern: WriteConcern)(implicit db: MongoDatabase): Unit =
-    ex.sync.updateMulti(query, writeConcern)
+    waitForFuture(updateMultiAsync(writeConcern))
 
   def updateOne(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], db: MongoDatabase): Unit =
-    ex.sync.updateOne(query, writeConcern)
+    waitForFuture(updateOneAsync(writeConcern))
 
   def upsertOne(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], db: MongoDatabase): Unit =
-    ex.sync.upsertOne(query, writeConcern)
+    waitForFuture(upsertOneAsync(writeConcern))
 
   //async ops
-  def updateMultiAsync()(implicit dba: MongoDatabase): Future[Unit] =
+  def updateMultiAsync()(implicit dba: MongoDatabase): Future[UpdateResult] =
     ex.async.updateMulti(query)
 
-  def updateOneAsync()(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[Unit] =
+  def updateOneAsync()(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] =
     ex.async.updateOne(query)
 
-  def upsertOneAsync()(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[Unit] =
+  def upsertOneAsync()(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] =
     ex.async.upsertOne(query)
 
-  def updateMultiAsync(writeConcern: WriteConcern)(implicit dba: MongoDatabase): Future[Unit] =
+  def updateMultiAsync(writeConcern: WriteConcern)(implicit dba: MongoDatabase): Future[UpdateResult] =
     ex.async.updateMulti(query, writeConcern)
 
   def updateMultiAsyncRet(writeConcern: WriteConcern)(implicit dba: MongoDatabase): Future[UpdateResult] =
     ex.async.updateMultiRet(query, writeConcern)
 
-  def updateOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[Unit] =
+  def updateOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] =
     ex.async.updateOne(query, writeConcern)
 
   def updateOneAsyncRet(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] =
     ex.async.updateOneRet(query, writeConcern)
 
-  def upsertOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[Unit] =
+  def upsertOneAsync(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] =
     ex.async.upsertOne(query, writeConcern)
 
   def upsertOneAsyncRet(writeConcern: WriteConcern)(implicit ev: RequireShardKey[M, State], dba: MongoDatabase): Future[UpdateResult] =
@@ -219,11 +198,13 @@ case class ExecutableModifyQuery[MB, M <: MB, State](
 case class ExecutableFindAndModifyQuery[MB, M <: MB, R](
   query: FindAndModifyQuery[M, R],
   ex: BsonExecutors[MB]) {
+  import Waiter._
+
   def updateOne(returnNew: Boolean = false)(implicit db: MongoDatabase): Option[R] =
-    ex.sync.findAndUpdateOne(query, returnNew)
+    waitForFuture(updateOneAsync(returnNew))
 
   def upsertOne(returnNew: Boolean = false)(implicit db: MongoDatabase): Option[R] =
-    ex.sync.findAndUpsertOne(query, returnNew)
+    waitForFuture(upsertOneAsync(returnNew))
 
   def updateOneAsync(returnNew: Boolean = false)(implicit dba: MongoDatabase): Future[Option[R]] =
     ex.async.findAndUpdateOne(query, returnNew)
@@ -236,15 +217,16 @@ case class ExecutableFindAndModifyQuery[MB, M <: MB, R](
 case class InsertableQuery[MB, M <: MB, R, State](
   query: Query[M, R, State],
   ex: BsonExecutors[MB]) {
+  import Waiter._
 
-  def insertOneAsync(t: R)(implicit dba: MongoDatabase): Future[Unit] = {
+  def insertOneAsync(t: R)(implicit dba: MongoDatabase): Future[InsertOneResult] = {
     ex.async.insertOne(query, t)
   }
-  def insertManyAsync(ts: Seq[R])(implicit dba: MongoDatabase): Future[Unit] = {
+  def insertManyAsync(ts: Seq[R])(implicit dba: MongoDatabase): Future[InsertManyResult] = {
     if (ts.nonEmpty)
       ex.async.insertMany(query, ts)
     else
-      Future.unit
+      Future.successful(InsertManyResult.unacknowledged())
   }
 
   /**
@@ -254,14 +236,16 @@ case class InsertableQuery[MB, M <: MB, R, State](
    * @param upsert boolean parameter
    * @param dba Database connection
    */
-  def replaceOneAsync(t: R, upsert: Boolean = true)(implicit dba: MongoDatabase): Future[Unit] = ex.async.replaceOne(query, t, upsert)
+  def replaceOneAsync(t: R, upsert: Boolean = true)(implicit dba: MongoDatabase): Future[UpdateResult] =
+    ex.async.replaceOne(query, t, upsert)
 
-  def insertOne(t: R)(implicit db: MongoDatabase): Unit = ex.sync.insertOne(query, t)
+  def insertOne(t: R)(implicit db: MongoDatabase): Unit =
+    waitForFuture(insertOneAsync(t))
 
-  def insertMany(ts: Seq[R])(implicit db: MongoDatabase): Unit = {
-    if (ts.nonEmpty)
-      ex.sync.insertMany(query, ts)
-  }
+  def insertMany(ts: Seq[R])(implicit db: MongoDatabase): Unit =
+    if (ts.nonEmpty) {
+      waitForFuture(insertManyAsync(ts))
+    }
 
   /**
    * *
@@ -270,6 +254,7 @@ case class InsertableQuery[MB, M <: MB, R, State](
    * @param upsert boolean parameter
    * @param db Database connection
    */
-  def replaceOne(t: R, upsert: Boolean = true)(implicit db: MongoDatabase): Unit = ex.sync.replaceOne(query, t, upsert)
+  def replaceOne(t: R, upsert: Boolean = true)(implicit db: MongoDatabase): Unit =
+    waitForFuture(replaceOneAsync(t, upsert))
 
 }

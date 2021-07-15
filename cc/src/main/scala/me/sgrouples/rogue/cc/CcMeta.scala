@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.IndexOptions
+import org.mongodb.scala._
+import org.mongodb.scala.model.IndexOptions
 import io.fsq.field.Field
 import io.fsq.rogue.index.MongoIndex
 import me.sgrouples.rogue.BsonFormat
@@ -34,6 +34,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   def this(namingStrategy: NamingStrategy = LowerCase)(implicit f: BsonFormat[T], classTag: ClassTag[T]) = {
     this(namingStrategy[T])
   }
+  import Waiter._
 
   override def collectionName: String = collName
 
@@ -70,7 +71,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   def createIndex(indexTuples: Seq[(String, Int)], opts: IndexOptions)(implicit dbs: MongoDatabase): String = {
     val keys = new BsonDocument()
     indexTuples.foreach { case (k, v) => keys.append(k, new BsonInt32(v)) }
-    dbs.getCollection(collectionName).createIndex(keys, opts)
+    waitForFuture(dbs.getCollection(collectionName).createIndex(keys, opts).toFuture())
   }
 
   /**
@@ -79,12 +80,10 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
    * @return  - index name
    */
   @deprecated("Use `MongoIndex` version instead", "2019/02/15")
-  def createIndexAsync(indexTuples: Seq[(String, Int)], opts: IndexOptions)(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
-    val cb = new PromiseSingleValueAdapter[String]
+  def createIndexAsync(indexTuples: Seq[(String, Int)], opts: IndexOptions)(implicit dba: MongoDatabase): Future[String] = {
     val keys = new BsonDocument()
     indexTuples.foreach { case (k, v) => keys.append(k, new BsonInt32(v)) }
-    dba.getCollection(collectionName).createIndex(keys, opts, cb)
-    cb.future
+    dba.getCollection(collectionName).createIndex(keys, opts).toFuture()
   }
 
   /**
@@ -97,14 +96,14 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
     createIndex(Seq(indexTuple), opts)
 
   @deprecated("Use `MongoIndex` version instead", "2019/02/15")
-  def createIndexAsync(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions())(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] =
+  def createIndexAsync(indexTuple: (String, Int), opts: IndexOptions = new IndexOptions())(implicit dba: MongoDatabase): Future[String] =
     createIndexAsync(Seq(indexTuple), opts)
 
   @deprecated("Use `MongoIndex` version instead", "2019/02/15")
   def createIndex(indexTuples: Seq[(String, Int)])(implicit dbs: MongoDatabase): String = createIndex(indexTuples, new IndexOptions())
 
   @deprecated("Use `MongoIndex` version instead", "2019/02/15")
-  def createIndexAsync(indexTuples: Seq[(String, Int)])(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] =
+  def createIndexAsync(indexTuples: Seq[(String, Int)])(implicit dba: MongoDatabase): Future[String] =
     createIndexAsync(indexTuples, new IndexOptions())
 
   /**
@@ -115,7 +114,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
    */
   def createIndexUnsafe[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions = new IndexOptions())(implicit dbs: MongoDatabase): String = {
     val indexBson = index.asBsonDocument
-    dbs.getCollection(collectionName).createIndex(indexBson, opts)
+    waitForFuture(dbs.getCollection(collectionName).createIndex(indexBson, opts).toFuture())
   }
 
   /**
@@ -124,11 +123,9 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
    * @param opts IndexOptions- from mongo
    * @return  - index name
    */
-  def createIndexUnsafeAsync[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions = new IndexOptions())(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+  def createIndexUnsafeAsync[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions = new IndexOptions())(implicit dba: MongoDatabase): Future[String] = {
     val indexBson = index.asBsonDocument
-    val cb = new PromiseSingleValueAdapter[String]
-    dba.getCollection(collectionName).createIndex(indexBson, opts, cb)
-    cb.future
+    dba.getCollection(collectionName).createIndex(indexBson, opts).toFuture()
   }
 
   /**
@@ -142,10 +139,10 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T]) extends CcMeta[T] 
   /**
    * "Safe" version of index creation - it forces index to be created in the background
    */
-  def createIndexAsync[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions)(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+  def createIndexAsync[M <: CcMeta[T]](index: MongoIndex[M], opts: IndexOptions)(implicit dba: MongoDatabase): Future[String] = {
     createIndexUnsafeAsync(index, opts.background(true))
   }
-  def createIndexAsync[M <: CcMeta[T]](index: MongoIndex[M])(implicit dba: com.mongodb.async.client.MongoDatabase): Future[String] = {
+  def createIndexAsync[M <: CcMeta[T]](index: MongoIndex[M])(implicit dba: MongoDatabase): Future[String] = {
     createIndexAsync(index, new IndexOptions())
   }
 

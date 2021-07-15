@@ -1,27 +1,17 @@
 package me.sgrouples.rogue.cc
 
-import io.fsq.rogue.index.{ IndexedRecord, UntypedMongoIndex }
+import io.fsq.rogue.index.{IndexedRecord, UntypedMongoIndex}
 import org.mongodb.scala._
-import com.mongodb.reactivestreams.client.{ MongoClients => ReactiveMongoClients, MongoCollection => ReactiveMongoCollection }
-import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
 import io.fsq.rogue._
-import org.bson.codecs.configuration.CodecRegistries
+import org.mongodb.scala.bson.BsonDocument
 
-import scala.util.Try
 
 object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]] {
   type TCM = CcMeta[_]
-  val bsonDocClass = classOf[BsonDocument]
-  //temorary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
+  //temporary codec registry until all needed machinery converted from BasicDBObject to BsonDocument
   //[M <: MongoRecord[_] with MongoMetaRecord[_]
   override def getDBCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument] = {
-    dba.getCollection(query.collectionName, bsonDocClass)
-  }
-
-  override def getReactiveCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): ReactiveMongoCollection[BsonDocument] = {
-
-    val wrappedDb = new ReactiveDbWrapper(dba).wrap
-    wrappedDb.getCollection(query.collectionName, bsonDocClass)
+    dba.getCollection[BsonDocument](query.collectionName)
   }
 
   override def getPrimaryDBCollection[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): MongoCollection[BsonDocument] = {
@@ -29,20 +19,13 @@ object CcAsyncDBCollectionFactory extends AsyncBsonDBCollectionFactory[CcMeta[_]
   }
 
   protected def getPrimaryDBCollection(meta: CcMeta[_], collectionName: String)(implicit dba: MongoDatabase): MongoCollection[BsonDocument] = {
-    dba.getCollection(collectionName, bsonDocClass)
+    dba.getCollection[BsonDocument](collectionName).withReadPreference(ReadPreference.primary())
   }
-
-  /*override def getPrimaryDBCollection(record: MongoRecord[_]): MongoCollection[BsonDocument] = {
-    getPrimaryDBCollection(record.meta, record.meta.collectionName)
-  }*/
 
   override def getInstanceName[M <: TCM](query: Query[M, _, _])(implicit dba: MongoDatabase): String = {
-    dba.getName
+    dba.name
   }
 
-  /*override def getInstanceName(record: MongoRecord[_]): String =
-    record.meta.connectionIdentifier.toString
-*/
   /**
    * Retrieves the list of indexes declared for the record type associated with a
    * query. If the record type doesn't declare any indexes, then returns None.

@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 
 import io.fsq.rogue.MongoHelpers.MongoSelect
-import org.bson.{ BsonArray, BsonDocument, BsonNull, BsonValue }
+import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
 
 /**
  * Created by mar on 24.07.2016.
