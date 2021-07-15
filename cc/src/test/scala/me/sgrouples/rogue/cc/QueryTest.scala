@@ -12,7 +12,7 @@ import java.util.regex.Pattern
 import javax.xml.crypto.dsig.Transform
 
 
-import com.mongodb.util.{ JSON, JSONSerializers }
+//import com.mongodb.util.{ JSON, JSONSerializers }
 import io.fsq.field.Field
 import me.sgrouples.rogue.CClassListField
 import me.sgrouples.rogue.cc.Metas._
@@ -26,20 +26,24 @@ import shapeless.tag.@@
 class QueryTest extends JUnitMustMatchers {
   // to make queries printable
 
-  BSON.addEncodingHook(classOf[BsonDocument], new Transformer() {
+  /*BSON.addEncodingHook(classOf[BsonDocument], new Transformer() {
     override def transform(o: scala.Any): AnyRef = {
       val js = o.asInstanceOf[BsonDocument].toJson
       //println(js)
       JSON.parse(js)
     }
-  })
+  })*/
+
+  def oidFromLocalDateTime(d:LocalDateTime): ObjectId = {
+    CcMongo.oidFromInstant(d.toInstant(ZoneOffset.UTC))
+  }
 
   @Test
   def testProduceACorrectJSONQueryString: Unit = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
-    val oid1 = ObjectId.createFromLegacyFormat(d1.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
-    val oid2 = ObjectId.createFromLegacyFormat(d2.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
+    val oid1 = oidFromLocalDateTime(d1)
+    val oid2 = oidFromLocalDateTime(d2)
     val oid = new ObjectId
     case class Ven1(id: ObjectId @@ Venue)
     val ven1 = Ven1(tag[Venue](oid1))

@@ -53,7 +53,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
   @Before
   def setupMongoConnection: Unit = {
-    val m = MongoTestConn.connectToMongo
+    val m = MongoTestConn.connectToMongo()
     dbOpt = Some(m.getDatabase("e2e-sync"))
   }
 
@@ -70,7 +70,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
     //Like.allShards.bulkDelete_!!!()
     dbOpt.foreach(_.drop())
     dbOpt = None
-    MongoTestConn.disconnectFromMongo
+    MongoTestConn.disconnectFromMongo()
   }
 
   @Test

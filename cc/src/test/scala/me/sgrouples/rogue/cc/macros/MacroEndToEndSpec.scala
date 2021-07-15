@@ -54,7 +54,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    val m = MongoTestConn.connectToMongo
+    val m = MongoTestConn.connectToMongo()
     dbOpt = Some(m.getDatabase("rogue-test-async"))
   }
 

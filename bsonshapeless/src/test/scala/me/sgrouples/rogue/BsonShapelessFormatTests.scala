@@ -1,7 +1,6 @@
 package me.sgrouples.rogue
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.EnumNameFormats._
-import me.sgrouples.rogue.cc.{ClaimStatus, VenueStatus}
 import org.bson.BsonDocument
 import org.bson.types.ObjectId
 import org.junit.Test
@@ -10,6 +9,14 @@ import org.specs2.matcher.JUnitMustMatchers
 import java.util.{Locale, TimeZone}
 import scala.language.{higherKinds, implicitConversions}
 
+object VenueStatus extends Enumeration {
+  val open = Value("Open")
+  val closed = Value("Closed")
+}
+object ClaimStatus extends Enumeration {
+  val pending = Value("Pending approval")
+  val approved = Value("Approved")
+}
 case class OidTypedCC(_id: ObjectId, name: String, value: Int)
 
 case class OptCC(_id: Long, name: Option[String], hashes: List[String], map: Map[String, Int])
@@ -22,7 +29,7 @@ case class TwoEnums(one: String, en: VenueStatus.Value, x: ClaimStatus.Value)
 case class W(a: Int = 1)
 case class B(w: W = W(1), x: String = "a")
 
-class BsonFormatsTests extends JUnitMustMatchers {
+class BsonShapelessFormatTests extends JUnitMustMatchers {
 
   @Test
   def basicSerializeTest(): Unit = {

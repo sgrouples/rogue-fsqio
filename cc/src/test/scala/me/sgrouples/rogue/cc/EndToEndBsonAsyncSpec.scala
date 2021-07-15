@@ -51,7 +51,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    dbOpt = Some(MongoTestConn.connectToMongo.getDatabase("e2e-async"))
+    dbOpt = Some(MongoTestConn.connectToMongo().getDatabase("e2e-async"))
   }
 
   override protected def afterEach(): Unit = {
@@ -65,7 +65,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     //Like.allShards.bulkDeleteAsync_!!!())
     dbOpt.foreach(_.drop())
-    MongoTestConn.disconnectFromMongo
+    MongoTestConn.disconnectFromMongo()
     dbOpt = None
 
   }
@@ -456,7 +456,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     Locales.where(_.locale eqs Locale.CANADA_FRENCH).modify(_.locale setTo Locale.CHINESE).updateOneAsync()
 
-    Locales.where(_.locale eqs Locale.CHINESE).existsAsync.futureValue mustBe true
+    Locales.where(_.locale eqs Locale.CHINESE).existsAsync().futureValue mustBe true
 
   }
 

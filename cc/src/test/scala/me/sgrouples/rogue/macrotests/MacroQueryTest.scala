@@ -1,17 +1,15 @@
 package me.sgrouples.rogue.macrotests
 
 import org.specs2.matcher.JUnitMustMatchers
-import java.time.{ Instant, LocalDateTime, ZoneOffset }
-import java.util.UUID
 
+import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.util.UUID
 import io.fsq.rogue._
 import me.sgrouples.rogue.cc.CcRogue._
-import java.util.regex.Pattern
-import me.sgrouples.rogue.cc.{ V1, V2, V3, V4, V5, V6, VenueClaimBson, SourceBson }
 
-import com.mongodb.util.{ JSON }
-import me.sgrouples.rogue.cc.{ ClaimStatus, ConsumerPrivilege, Venue }
-import org.bson.{ BSON, BsonDocument, Transformer }
+import java.util.regex.Pattern
+import me.sgrouples.rogue.cc.{CcMongo, ClaimStatus, ConsumerPrivilege, SourceBson, V1, V2, V3, V4, V5, V6, Venue, VenueClaimBson}
+import org.bson.{BSON, BsonDocument, Transformer}
 import org.bson.types._
 import org.junit._
 import org.specs2.matcher.JUnitMustMatchers
@@ -24,20 +22,20 @@ class MacroQueryTest extends JUnitMustMatchers {
   // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
   // to make queries printable
 
-  BSON.addEncodingHook(classOf[BsonDocument], new Transformer() {
+  /*BSON.addEncodingHook(classOf[BsonDocument], new Transformer() {
     override def transform(o: scala.Any): AnyRef = {
       val js = o.asInstanceOf[BsonDocument].toJson
       //println(js)
       JSON.parse(js)
     }
-  })
+  })*/
 
   @Test
   def testProduceACorrectJSONQueryString: Unit = {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
-    val oid1 = ObjectId.createFromLegacyFormat(d1.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
-    val oid2 = ObjectId.createFromLegacyFormat(d2.toEpochSecond(ZoneOffset.UTC).toInt, 0, 0)
+    val oid1 = CcMongo.oidFromInstant(d1.toInstant(ZoneOffset.UTC))
+    val oid2 = CcMongo.oidFromInstant(d2.toInstant(ZoneOffset.UTC))
     val oid = new ObjectId
     case class Ven1(id: ObjectId @@ Venue)
     val ven1 = Ven1(tag[Venue](oid1))

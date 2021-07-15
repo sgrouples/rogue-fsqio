@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder, Text}
 import me.sgrouples.rogue.BsonFormats._
+import me.sgrouples.rogue.EnumNameFormats._
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId

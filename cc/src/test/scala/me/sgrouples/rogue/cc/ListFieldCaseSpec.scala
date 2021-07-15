@@ -18,12 +18,12 @@ class ListFieldCaseSpec extends AsyncFlatSpec with Matchers with BeforeAndAfterA
 
   override def beforeAll() = {
     super.beforeAll()
-    val m = MongoTestConn.connectToMongo
+    val m = MongoTestConn.connectToMongo()
   }
 
   override def afterAll() = {
     super.afterAll()
-    val m = MongoTestConn.disconnectFromMongo
+    val m = MongoTestConn.disconnectFromMongo()
   }
 
   "inner list in select" should "work" in {
