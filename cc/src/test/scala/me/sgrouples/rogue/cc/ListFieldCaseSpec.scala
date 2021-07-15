@@ -27,7 +27,7 @@ class ListFieldCaseSpec extends AsyncFlatSpec with Matchers with BeforeAndAfterA
   }
 
   "inner list in select" should "work" in {
-    implicit val db = MongoTestConn.client.get.getDatabase("conttest")
+    implicit val db = MongoTestConn.client.get.getDatabase("conttest").withCodecRegistry(CcMongo.codecRegistry)
     val me = new M
     for {
       _ <- me.insertManyAsync(Seq(Cont(new ObjectId, List(new ObjectId, new ObjectId)), Cont(new ObjectId(), List(new ObjectId(), new ObjectId()))))

@@ -152,11 +152,6 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     returnNew: Boolean = false,
     writeConcern: WriteConcern = defaultWriteConcern)(implicit dba: MongoDatabase): Future[Option[R]] = {
     val s = readSerializer[M, R](query.query.meta, query.query.select)
-    val ss = { dbo: BsonDocument =>
-      val x = s.fromDocumentOpt(dbo)
-      //println(s"Find and upsert one from ${dbo}, got ${x}")
-      x
-    }
     adapter.findAndModify(query, returnNew, upsert = true, remove = false, writeConcern)(s.fromDocumentOpt _)
   }
 

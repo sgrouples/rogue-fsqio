@@ -299,7 +299,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](dbCollectionFactory: AsyncBsonDBCollec
         coll.findOneAndUpdate(cnd, m, opts)
       }
       val p = Promise[Option[R]]()
-      updater.map(f).subscribe(r => p.success(r), err => p.failure(err), () => ())
+      updater.map(f).subscribe(r => p.success(r), err => p.failure(err), () => p.trySuccess(None))
       p.future
     } else Future.successful(None)
   }

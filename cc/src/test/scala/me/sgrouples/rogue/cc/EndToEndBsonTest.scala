@@ -54,7 +54,7 @@ class EndToEndBsonTest extends JUnitMustMatchers {
   @Before
   def setupMongoConnection: Unit = {
     val m = MongoTestConn.connectToMongo()
-    dbOpt = Some(m.getDatabase("e2e-sync"))
+    dbOpt = Some(m.getDatabase("e2e-sync").withCodecRegistry(CcMongo.codecRegistry))
   }
 
   @After

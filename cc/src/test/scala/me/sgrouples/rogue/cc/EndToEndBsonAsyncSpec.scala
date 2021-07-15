@@ -51,7 +51,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    dbOpt = Some(MongoTestConn.connectToMongo().getDatabase("e2e-async"))
+    dbOpt = Some(MongoTestConn.connectToMongo().getDatabase("e2e-async").withCodecRegistry(CcMongo.codecRegistry))
   }
 
   override protected def afterEach(): Unit = {
