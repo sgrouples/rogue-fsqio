@@ -3,7 +3,7 @@ package me.sgrouples.rogue.cc
 import java.time.LocalDateTime
 import java.util.regex.Pattern
 
-import com.mongodb.client.MongoDatabase
+import org.mongodb.scala._
 import io.fsq.rogue._
 import me.sgrouples.rogue.LongField
 //import io.fsq.rogue.test.TrivialORMTests
@@ -53,10 +53,8 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
   @Before
   def setupMongoConnection: Unit = {
-    val m = MongoTestConn.connectToMongoSync
-    CcMongo.defineDbSync("default", m, "rogue-test-")
-    CcMongo.defineDbSync("lift", m, "rogue-test-")
-    dbOpt = CcMongo.getDbSync("lift")
+    val m = MongoTestConn.connectToMongo
+    dbOpt = Some(m.getDatabase("e2e-sync"))
   }
 
   @After
@@ -70,8 +68,9 @@ class EndToEndBsonTest extends JUnitMustMatchers {
 
     OptValCCR.bulkDelete_!!!()
     //Like.allShards.bulkDelete_!!!()
-
-    MongoTestConn.disconnectFromMongoSync
+    dbOpt.foreach(_.drop())
+    dbOpt = None
+    MongoTestConn.disconnectFromMongo
   }
 
   @Test

@@ -3,8 +3,8 @@ package me.sgrouples.rogue.cc
 import java.time.LocalDateTime
 import java.util.{ Currency, Locale }
 import java.util.regex.Pattern
+import org.mongodb.scala._
 
-import com.mongodb.async.client.MongoDatabase
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
 import org.scalatest.concurrent.ScalaFutures
@@ -51,9 +51,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    val m = MongoTestConn.connectToMongo
-    CcMongo.defineDb("lift", m, "rogue-test-async")
-    dbOpt = CcMongo.getDb("lift")
+    dbOpt = Some(MongoTestConn.connectToMongo.getDatabase("e2e-async"))
   }
 
   override protected def afterEach(): Unit = {
@@ -66,8 +64,10 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     VenueClaimR.countAsync().futureValue mustBe 0L
 
     //Like.allShards.bulkDeleteAsync_!!!())
-
+    dbOpt.foreach(_.drop())
     MongoTestConn.disconnectFromMongo
+    dbOpt = None
+
   }
 
   "Eqs test" should "work as expected" in {
@@ -98,7 +98,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
     // VenueClaim has status approved.
     val h = VenueR.where(_.mayor_count neqs 5).fetchAsync()
-    VenueR.where(_.mayor_count neqs 5).maxTime(1 second).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
+    VenueR.where(_.mayor_count neqs 5).maxTime(1.second).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
     VenueR.where(_.mayor_count < 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
     VenueR.where(_.mayor_count lt 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
     VenueR.where(_.mayor_count <= 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)

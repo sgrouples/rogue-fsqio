@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.{ Currency, Locale }
 import java.util.regex.Pattern
 
-import com.mongodb.async.client.MongoDatabase
+import org.mongodb.scala._
 import me.sgrouples.rogue.cc.CcRogue._
 import me.sgrouples.rogue.cc._
 import org.bson.types.ObjectId
@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
   import me.sgrouples.rogue.cc.macros.Metas._
 
-  implicit val atMost = PatienceConfig(15 seconds)
+  implicit val atMost = PatienceConfig(15.seconds)
 
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
@@ -55,8 +55,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     val m = MongoTestConn.connectToMongo
-    CcMongo.defineDb("lift", m, "rogue-test-async")
-    dbOpt = CcMongo.getDb("lift")
+    dbOpt = Some(m.getDatabase("rogue-test-async"))
   }
 
   override protected def afterEach(): Unit = {
@@ -69,8 +68,9 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
     VenueClaimR.countAsync().futureValue mustBe 0L
 
     //Like.allShards.bulkDeleteAsync_!!!())
-
-    MongoTestConn.disconnectFromMongo
+    dbOpt.foreach(_.drop())
+    dbOpt = None
+    MongoTestConn.disconnectFromMongo()
   }
 
   "Eqs test" should "work as expected" in {
