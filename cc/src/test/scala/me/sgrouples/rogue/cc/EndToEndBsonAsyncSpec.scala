@@ -7,16 +7,15 @@ import org.mongodb.scala._
 
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 
+import munit.FunSuite
 import scala.concurrent.duration._
 import shapeless.tag
 
-class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
+class EndToEndBsonAsyncSpec extends FunSuite {
   import Metas._
 
-  implicit val atMost = PatienceConfig(15.seconds)
+  //implicit val atMost = PatienceConfig(15.seconds)
 
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
@@ -49,32 +48,37 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
   private var dbOpt: Option[MongoDatabase] = None
   implicit def db = dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    dbOpt = Some(MongoTestConn.connectToMongo().getDatabase("e2e-async").withCodecRegistry(CcMongo.codecRegistry))
+  override def beforeEach(context: BeforeEach): Unit = {
   }
 
-  override protected def afterEach(): Unit = {
-    super.afterEach()
-
-    VenueR.bulkDeleteAsync_!!!().futureValue
-    VenueR.countAsync().futureValue mustBe 0L
-
-    VenueClaimR.bulkDeleteAsync_!!!().futureValue
-    VenueClaimR.countAsync().futureValue mustBe 0L
-
-    //Like.allShards.bulkDeleteAsync_!!!())
+  //TODO - awaits?
+  override def afterAll():Unit = {
     dbOpt.foreach(_.drop())
     MongoTestConn.disconnectFromMongo()
     dbOpt = None
-
   }
 
-  "Eqs test" should "work as expected" in {
+  override def beforeAll(): Unit = {
+    dbOpt = Some(MongoTestConn.connectToMongo().getDatabase("e2e-async").withCodecRegistry(CcMongo.codecRegistry))
+  }
+
+  override protected def afterEach(context: AfterEach): Unit = {
+    for {_ <- VenueR.bulkDeleteAsync_!!!()
+         _ <- VenueClaimR.bulkDeleteAsync_!!!()
+         venueRCnt <- VenueR.countAsync() //.futureValue mustBe 0L
+         venueClaimCnt <- VenueClaimR.countAsync()
+         } yield {
+      assert(venueRCnt == 0L, s"venueR left after tests ${context.test.name}")
+      assert(venueClaimCnt == 0L, "venueCLam left after test  ${context.test.name}")
+    }
+  }
+
+  test("Eqs test") {
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
-    val vc = baseTestVenueClaim(v._id)
-    VenueClaimR.insertOneAsync(vc).futureValue
+    for {
+     _ <- VenueR.insertOneAsync(v)
+     vc = baseTestVenueClaim(v._id)
+      _ <- VenueClaimR.insertOneAsync(vc)
 
     ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync().futureValue.map(_._id) mustBe Seq(v._id)
     VenueR.where(_.mayor eqs v.mayor).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
@@ -87,9 +91,10 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
     VenueClaimR.where(_.status eqs ClaimStatus.approved).fetchAsync().futureValue.map(_._id) mustBe List(vc._id)
     VenueClaimR.where(_.venueid eqs v._id).fetchAsync().futureValue.map(_._id) mustBe List(vc._id)
+        }
   }
 
-  "Inequality queries" should "work as expected" in {
+  test("Inequality queries") {
     val v = baseTestVenue()
     VenueR.insertOneAsync(v).futureValue
     val vc = baseTestVenueClaim(v._id)
@@ -112,7 +117,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     VenueClaimR.where(_.status neqs ClaimStatus.pending).fetchAsync().futureValue.map(_._id) mustBe List(vc._id)
   }
 
-  "Select queries" should "work as expected" in {
+  test("Select queries") {
     val v = baseTestVenue()
     VenueR.insertOneAsync(v).futureValue
 
@@ -129,13 +134,13 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "Enum select" should "work as expected" in {
+  test("Enum select") {
     val v = baseTestVenue()
     VenueR.insertOneAsync(v).futureValue
     VenueR.where(_.id eqs v._id).select(_.status).fetchAsync().futureValue mustBe List(VenueStatus.open)
   }
 
-  "Select case queries" should "work as expected" in {
+  test("Select case queries") {
     val v = baseTestVenue()
     VenueR.insertOneAsync(v).futureValue
 
@@ -149,7 +154,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "Select subfield queries" should "work as expected" in {
+  test("Select subfield queries") {
     val v = baseTestVenue()
     VenueR.insertOneAsync(v).futureValue
     val t = baseTestTip()
@@ -241,7 +246,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
    */
 
-  "Find and modify" should "work as expected" in {
+  test("Find and modify") {
 
     val v1 = VenueR.where(_.venuename eqs "v1")
       .findAndModify(_.userId setTo 5) //all required fields have to be set, because they are required in CC
@@ -271,7 +276,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     v4.map(_.userId) mustBe Some(7)
   }
 
-  "Regex query" should "work as expected" in {
+  test("Regex query") {
     val v = baseTestVenue()
     VenueR.insertOneAsync(v).futureValue
     VenueR.where(_.id eqs v._id).and(_.venuename startsWith "test v").countAsync().futureValue mustBe 1
@@ -284,14 +289,14 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "Limit and batch" should "work as expected" in {
+  test("Limit and batch") {
     (1 to 50).foreach(_ => VenueR.insertOneAsync(baseTestVenue()).futureValue)
     val q = VenueR.select(_.id)
     q.limit(10).fetchAsync().futureValue.length mustBe 10
     q.limit(-10).fetchAsync().futureValue.length mustBe 10
   }
 
-  "Count" should "work as expected" in {
+  test("Count") {
     (1 to 10).foreach(_ => VenueR.insertOneAsync(baseTestVenue()).futureValue)
     val q = VenueR.select(_.id)
     q.countAsync().futureValue mustBe 10
@@ -305,7 +310,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   // distincts need codecs for Long, and probably Int in db
 
-  "Distinct" should "work as expected" in {
+  test("Distinct") {
     (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 1L)).futureValue)
     (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 2L)).futureValue)
     (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 3L)).futureValue)
@@ -313,7 +318,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     VenueR.where(_.mayor eqs 789L).countDistinctAsync(_.userId).futureValue mustBe 3
   }
 
-  "Slice" should "work as expected" in {
+  test("Slice") {
     val v = baseTestVenue().copy(tags = List("1", "2", "3", "4"))
     VenueR.insertOneAsync(v).futureValue
     VenueR.select(_.tags.slice(2)).getAsync().futureValue mustBe Some(List("1", "2"))
@@ -321,7 +326,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     VenueR.select(_.tags.slice(1, 2)).getAsync().futureValue mustBe Some(List("2", "3"))
   }
 
-  "Select cc" should "work as expected" in {
+  test("Select case class") {
 
     val v = baseTestVenue()
     VenueR.insertOneAsync(v).futureValue
@@ -347,7 +352,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "ReplaceOne" should "replace value" in {
+  test("ReplaceOne") {
     val v1 = OptValCC(maybes = Some("bef"), realString = "ore")
     val v2 = v1.copy(maybes = None)
     OptValCCR.insertOneAsync(v1).futureValue
@@ -357,7 +362,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     vr.realString must ===("ore")
   }
 
-  "Currency and BigDecimal fields" should "just work" in {
+  test("Currency and BigDecimal fields") {
 
     val USD = Currency.getInstance("USD")
     val EUR = Currency.getInstance("EUR")
@@ -395,7 +400,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "Map[K, V] field" should "just work" in {
+  test("Map[K, V] field") {
 
     val counts = Map(ObjectId.get -> 100L)
 
@@ -414,7 +419,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     result mustBe counts
   }
 
-  "Map[K <: ObjectId, V] field" should "just work" in {
+  test("Map[K <: ObjectId, V] field") {
 
     val counts: Map[CounterId, Long] = Map(tag[Counter](ObjectId.get) -> 100L)
 
@@ -433,7 +438,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
     result mustBe counts
   }
 
-  "BinaryBsonFormat" should "just work" in {
+  test("BinaryBsonFormat") {
 
     val sample = BinaryData("War, war never changes".getBytes)
 
@@ -444,7 +449,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "LocaleBsonFormat & LocaleField" should "just work" in {
+  test("LocaleBsonFormat & LocaleField") {
 
     val sample = LocaleData(Locale.CANADA_FRENCH)
 
@@ -460,7 +465,7 @@ class EndToEndBsonAsyncSpec extends FlatSpec with MustMatchers with ScalaFutures
 
   }
 
-  "reactive fetch" should "work" in {
+  test("reactive fetch") {
 
     val sub = new TestSubscriber()
 
