@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc
 
-import org.scalatest.{ FlatSpec, Matchers }
+import munit.FunSuite
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.EnumNameFormats._
 
@@ -19,7 +19,7 @@ object ExampleEnum extends Enumeration {
   val two = Value
 }
 
-class RCcMetaExtSpec extends FlatSpec with Matchers {
+class RCcMetaExtSpec extends FunSuite {
 
   final val suffix = "_with_custom_name"
 
@@ -174,9 +174,9 @@ class RCcMetaExtSpec extends FlatSpec with Matchers {
 
   private val CaseClasses1 = new CaseClass1Meta
 
-  "RCcMetaExt fields" should "be properly initialized" in {
+  test("RCcMetaExt fields should be properly initialized") {
 
-    CaseClasses1.fieldNamesSorted shouldBe Seq(
+    assertEquals(CaseClasses1.fieldNamesSorted, Seq(
       "intField",
       "intField_with_custom_name",
       "optIntField",
@@ -270,7 +270,7 @@ class RCcMetaExtSpec extends FlatSpec with Matchers {
       "mapField",
       "mapField_with_custom_name",
       "optMapField",
-      "optMapField_with_custom_name")
+      "optMapField_with_custom_name"))
   }
 
   private class SubtypedMeta extends RCcMetaExt[SubtypedClass, SubtypedMeta]() {
@@ -278,6 +278,6 @@ class RCcMetaExtSpec extends FlatSpec with Matchers {
     val idField_named = IntField(s"idField$suffix")
   }
   private val subtypedMeta = new SubtypedMeta
-  subtypedMeta.fieldNamesSorted shouldBe Seq("id", "idField_with_custom_name")
+  assertEquals(subtypedMeta.fieldNamesSorted, Seq("id", "idField_with_custom_name"))
 
 }

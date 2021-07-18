@@ -4,14 +4,13 @@ import me.sgrouples.rogue.cc.CustomKey
 import me.sgrouples.rogue.cc.macros._
 import me.sgrouples.rogue.macrotests.Domain.StrLongMapT
 import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, Matchers }
 import shapeless.tag
 import shapeless.tag.@@
-
+import munit.FunSuite
 object Domain {
   type StrLongMapT = Map[String, Long]
 }
-class MacroMapFormatSpec extends FlatSpec with Matchers {
+class MacroMapFormatSpec extends FunSuite {
 
   case class StringMap(value: Map[String, Long])
   case class ObjectIdMap(value: Map[ObjectId, Long])
@@ -27,33 +26,30 @@ class MacroMapFormatSpec extends FlatSpec with Matchers {
 
   class StringMapMeta extends MCcMeta[StringMap, StringMapMeta]("smm")
 
-  "MapFormat" should "write/read string keyed map" in {
-
+  test("MapFormat should write/read string keyed map") {
     val meta = new StringMapMeta
     val v = StringMap(Map("Hi" -> 1))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
-
+    assertEquals(meta.read(bson), v)
   }
 
   class ObjectIdMapMeta extends MCcMeta[ObjectIdMap, ObjectIdMapMeta]("oidm")
 
-  it should "write/read objectId keyed map" in {
-
+  test("write/read objectId keyed map") {
     val meta = new ObjectIdMapMeta
     val v = ObjectIdMap(Map(ObjectId.get() -> 1))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+    assertEquals(meta.read(bson),v)
   }
 
   class ObjectIdSubtypeMapMeta extends MCcMeta[ObjectIdSubtypeMap, ObjectIdSubtypeMapMeta]("oidsub")
 
-  it should "write/read objectId subtype keyed map" in {
+  test("write/read objectId subtype keyed map"){
 
     val meta = new ObjectIdSubtypeMapMeta
     val v = ObjectIdSubtypeMap(Map(tag[M](ObjectId.get()) -> 1))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+    assertEquals(meta.read(bson), v)
   }
 
   //TODO - no support for custom map key formats at the moment
@@ -73,20 +69,20 @@ class MacroMapFormatSpec extends FlatSpec with Matchers {
   class OptMapMeta extends MCcMeta[OptMapStrLong, OptMapMeta]("omm") {
     @f val value = OptMapField[Long]
   }
-  it should "deal with type aliases inside options" in {
+  test("deal with type aliases inside options") {
     val meta = new OptMapMeta
     val v = OptMapStrLong(Some(Map("ab" -> 4L)), Some(Map("xy" -> 2L)))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+    assertEquals(meta.read(bson), v)
   }
 
   class MapMeta extends MCcMeta[MapStrLong, MapMeta]("omm") {
     val value = MapField("value")(StringMapKeyFormat)
   }
-  it should "deal with type aliases" in {
+  test("deal with type aliases") {
     val meta = new MapMeta
     val v = MapStrLong(Map("ab" -> 4L), Map("xy" -> 2L))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+    assertEquals(meta.read(bson), v)
   }
 }

@@ -4,11 +4,9 @@ import me.sgrouples.rogue.EnumNameFormats._
 import me.sgrouples.rogue.cc.{ClaimStatus, VenueStatus}
 import org.bson.BsonDocument
 import org.bson.types.ObjectId
-import org.junit.Test
-import org.specs2.matcher.JUnitMustMatchers
-
+import munit.FunSuite
 import java.util.{Locale, TimeZone}
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 
 case class OidTypedCC(_id: ObjectId, name: String, value: Int)
 
@@ -22,74 +20,65 @@ case class TwoEnums(one: String, en: VenueStatus.Value, x: ClaimStatus.Value)
 case class W(a: Int = 1)
 case class B(w: W = W(1), x: String = "a")
 
-class BsonFormatsTests extends JUnitMustMatchers {
+class BsonFormatsTests extends FunSuite {
 
-  @Test
-  def basicSerializeTest(): Unit = {
+
+  test("basicSerializeTest") {
     val o = new ObjectId()
     val cc = OidTypedCC(o, "Ala", 10)
     val f = LazyBsonFormat[OidTypedCC]
     val bson = f.write(cc)
-    //println(bson)
     val deserialized = f.read(bson)
-    //println(s"DES s${deserialized}")
-    cc must_== deserialized
+    assertEquals(cc, deserialized)
   }
 
-  @Test
-  def optionalSerializeTest(): Unit = {
+  test("optionalSerializeTest") {
     val opt = OptCC(1L, Some("opt"), List("one1", "two", "three"), Map("four" -> 4, "five" -> 5))
     val f = LazyBsonFormat[OptCC]
     val bson = f.write(opt)
     //println(s"bson ${bson}")
     val d = f.read(bson)
-    opt must_== d
+    assertEquals(opt,d)
   }
 
-  @Test
-  def nestedCCTest(): Unit = {
+  test("nestedCCTest") {
     val r = RootC(1, Nest("nest"))
     val f = LazyBsonFormat[RootC]
     val bson = f.write(r)
-    //  println(s"Bson root ${bson}")
-    f.read(bson) must_== r
+    assertEquals(f.read(bson),r)
   }
 
-  @Test
-  def enumerationValueTest(): Unit = {
+  test("enumerationValueTest") {
     implicit val ev = VenueStatus
     val r = OneEnum("a", VenueStatus.open)
     val f = LazyBsonFormat[OneEnum]
     val bson = f.write(r)
     //  println(s"Bson root ${bson}")
-    f.read(bson) must_== r
+    assertEquals(f.read(bson),  r)
   }
 
-  @Test
-  def twoEnumTest: Unit = {
+  test("twoEnumTest") {
     implicit val ev = VenueStatus
     implicit val ev2 = ClaimStatus
     val r = TwoEnums("a", VenueStatus.open, ClaimStatus.approved)
     val f = LazyBsonFormat[TwoEnums]
     val bson = f.write(r)
     //println(s"Bson root ${bson}")
-    f.read(bson) must_== r
+    assertEquals(f.read(bson), r)
   }
 
-  @Test
-  def defaultCaseClass: Unit = {
+  test("defaultCaseClass") {
     val f = LazyBsonFormat[B]
     val b = f.read(new BsonDocument)
     //println(s"B ${b}")
     //really want that
     //b must_== B()
     //but don't know how to provide default values in case class field parameters
-    b must_== B(W(1), "")
-    assert(true)
+    assertEquals(b, B(W(1), ""))
+    //assert(true)
   }
 
-  @Test
-  def localeTest(): Unit = {
+  test("localeTest") {
     val f = LazyBsonFormat[Locale]
 
     val locales = Locale.getAvailableLocales
@@ -98,24 +87,21 @@ class BsonFormatsTests extends JUnitMustMatchers {
       val serialized = f.write(locale)
       val deserialized = f.read(serialized)
       if (locale.toString.isEmpty) {
-        deserialized mustEqual LocaleBsonFormat.defaultValue
+        assertEquals(deserialized, LocaleBsonFormat.defaultValue)
       } else {
-        deserialized mustEqual locale
+        assertEquals(deserialized, locale)
       }
     }
   }
 
-  @Test
-  def timeZoneTest(): Unit = {
+  test("timeZoneTest") {
     val f = LazyBsonFormat[TimeZone]
     val timezones = TimeZone.getAvailableIDs
-
     timezones.foreach { tzId =>
       val timeZone = TimeZone.getTimeZone(tzId)
       val serialized = f.write(timeZone)
       val deserialized = f.read(serialized)
-
-      deserialized mustEqual timeZone
+      assertEquals(deserialized, timeZone)
     }
   }
 

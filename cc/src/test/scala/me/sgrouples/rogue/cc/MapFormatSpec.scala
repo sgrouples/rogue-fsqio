@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc
 
-import org.scalatest.{ FlatSpec, Matchers }
+import munit.FunSuite
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.types.ObjectId
@@ -19,36 +19,36 @@ object MTypes {
 case class ObjectIdSubtypeMap(value: Map[MTypes.ObjectIdSubtype, Long])
 case class CustomKeyMap(value: Map[CustomKey, Long])
 
-class MapFormatSpec extends FlatSpec with Matchers {
+class MapFormatSpec extends FunSuite {
 
 
-  "MapFormat" should "write/read string keyed map" in {
+  test("MapFormat should write/read string keyed map") {
 
     val meta = new StringMapMeta
     val v = StringMap(Map("Hi" -> 1))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+assertEquals(    meta.read(bson), v)
 
   }
 
   class ObjectIdMapMeta extends RCcMetaExt[ObjectIdMap, ObjectIdMapMeta]
 
-  it should "write/read objectId keyed map" in {
+  test("it should write/read objectId keyed map") {
 
     val meta = new ObjectIdMapMeta
     val v = ObjectIdMap(Map(ObjectId.get() -> 1))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+assertEquals(    meta.read(bson), v)
   }
 
   class ObjectIdSubtypeMapMeta extends RCcMetaExt[ObjectIdSubtypeMap, ObjectIdSubtypeMapMeta]
 
-  it should "write/read objectId subtype keyed map" in {
+  test("it should write/read objectId subtype keyed map" ) {
 
     val meta = new ObjectIdSubtypeMapMeta
     val v = ObjectIdSubtypeMap(Map(tag[MTypes.M](ObjectId.get()) -> 1))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+assertEquals(    meta.read(bson), v)
   }
 
   implicit val customKeyMapFormat: MapKeyFormat[CustomKey] =
@@ -56,11 +56,11 @@ class MapFormatSpec extends FlatSpec with Matchers {
 
   class CustomKeyMapMeta extends RCcMetaExt[CustomKeyMap, CustomKeyMapMeta]
 
-  it should "write/read custom keyed map" in {
+  test("it should write/read custom keyed map"){
 
     val meta = new CustomKeyMapMeta
     val v = CustomKeyMap(Map(CustomKey(1L) -> 1L))
     val bson = meta.write(v)
-    meta.read(bson) shouldBe v
+assertEquals(    meta.read(bson), v)
   }
 }

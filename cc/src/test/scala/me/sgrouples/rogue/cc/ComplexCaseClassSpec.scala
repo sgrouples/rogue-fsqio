@@ -1,11 +1,11 @@
 package me.sgrouples.rogue.cc
 
 import java.time.Instant
-import java.time.temporal.{ ChronoUnit, TemporalUnit }
-import java.util.concurrent.TimeUnit
+import java.time.temporal.{ ChronoUnit }
+
 
 import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, Matchers }
+import munit.FunSuite
 import shapeless.tag.@@
 import shapeless.tag
 import me.sgrouples.rogue.BsonFormats._
@@ -81,7 +81,7 @@ case class Group(
   createdAt: Instant,
   teamId: Option[Team.Id])
 
-class ComplexCaseClassSpec extends FlatSpec with Matchers {
+class ComplexCaseClassSpec extends FunSuite {
 
   class GroupMeta extends RCcMetaExt[Group, GroupMeta] {
 
@@ -89,7 +89,7 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
 
   val Groups = new GroupMeta
 
-  "RCcMeta of a complex case class" should "properly read/write the given instance" in {
+  test("RCcMeta of a complex case class should properly read/write the given instance"){
 
     val now = Instant.now.truncatedTo(ChronoUnit.MILLIS)
 
@@ -127,6 +127,6 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
 
     val bson = Groups.write(group)
 
-    Groups.read(bson) shouldBe group
+    assertEquals(Groups.read(bson), group)
   }
 }

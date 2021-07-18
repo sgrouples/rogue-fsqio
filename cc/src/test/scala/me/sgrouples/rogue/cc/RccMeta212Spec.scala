@@ -4,8 +4,7 @@ import java.time.Instant
 
 import me.sgrouples.rogue.BsonFormats._
 import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, Matchers }
-
+import munit.FunSuite
 trait QueryById[M] {
   requires: QueryFieldHelpers[M] =>
 
@@ -32,9 +31,9 @@ class UserBlockMeta(name: String = "userblocks") extends RCcMetaExt[UserBlock, U
 /**
  * Created by mar on 02/06/2017.
  */
-class RccMeta212Spec extends FlatSpec with Matchers {
+class RccMeta212Spec extends FunSuite {
 
-  "UserBlockMeta" should "be creatable" in {
+  test("UserBlockMeta should be creatable") {
     val UserBlock = new UserBlockMeta()
     // println(s"User block ${UserBlock}")
     assert(UserBlock != null)

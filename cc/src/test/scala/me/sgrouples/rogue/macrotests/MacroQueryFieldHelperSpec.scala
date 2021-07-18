@@ -2,10 +2,7 @@ package me.sgrouples.rogue.macrotests
 
 import me.sgrouples.rogue.cc.{ QueryFieldHelpers, TestDomainObject }
 import me.sgrouples.rogue.cc.macros._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{ Seconds, Span }
-import org.scalatest.{ FlatSpec, MustMatchers }
-
+import munit.FunSuite
 import scala.concurrent.Future
 import scala.util.Try
 trait TestQueryTraitA[OwnerType] {
@@ -85,68 +82,66 @@ trait X {
 
 }
 
-class MacroQueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFutures with X {
+class MacroQueryFieldHelperSpec extends FunSuite with X {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  implicit val patience = PatienceConfig(scaled(Span(13, Seconds)))
-
   val TestDomainObjects = new TestDomainObjectMeta
 
-  "QueryFieldHelper" should "auto-resolve field names" in {
+  test("QueryFieldHelper auto-resolve field names") {
 
-    TestDomainObjects.int.name mustBe "int"
-    TestDomainObjects.int_named.name mustBe "int_custom_name"
+    assertEquals(TestDomainObjects.int.name, "int")
+assertEquals(    TestDomainObjects.int_named.name, "int_custom_name")
 
-    TestDomainObjects.optInt.name mustBe "optInt"
-    TestDomainObjects.optInt_named.name mustBe "optInt_custom_name"
-    TestDomainObjects.string.name mustBe "string"
-    TestDomainObjects.string_named.name mustBe "string_custom_name"
+assertEquals(    TestDomainObjects.optInt.name, "optInt")
+assertEquals(    TestDomainObjects.optInt_named.name, "optInt_custom_name")
+assertEquals(    TestDomainObjects.string.name, "string")
+assertEquals(    TestDomainObjects.string_named.name, "string_custom_name")
 
-    TestDomainObjects.optString.name mustBe "optString"
-    TestDomainObjects.optString_named.name mustBe "optString_custom_name"
+assertEquals(    TestDomainObjects.optString.name, "optString")
+assertEquals(    TestDomainObjects.optString_named.name, "optString_custom_name")
 
-    TestDomainObjects.long.name mustBe "long"
-    TestDomainObjects.long_named.name mustBe "long_custom_name"
+assertEquals(    TestDomainObjects.long.name, "long")
+assertEquals(    TestDomainObjects.long_named.name, "long_custom_name")
 
-    TestDomainObjects.optLong.name mustBe "optLong"
-    TestDomainObjects.optLong_named.name mustBe "optLong_custom_name"
+assertEquals(    TestDomainObjects.optLong.name, "optLong")
+assertEquals(    TestDomainObjects.optLong_named.name, "optLong_custom_name")
 
-    TestDomainObjects.double.name mustBe "double"
-    TestDomainObjects.double_named.name mustBe "double_custom_name"
+assertEquals(    TestDomainObjects.double.name, "double")
+assertEquals(    TestDomainObjects.double_named.name, "double_custom_name")
 
-    TestDomainObjects.optDouble.name mustBe "optDouble"
-    TestDomainObjects.optDouble_named.name mustBe "optDouble_custom_name"
+assertEquals(    TestDomainObjects.optDouble.name, "optDouble")
+assertEquals(    TestDomainObjects.optDouble_named.name, "optDouble_custom_name")
 
-    TestDomainObjects.objectId.name mustBe "objectId"
-    TestDomainObjects.objectId_named.name mustBe "objectId_custom_name"
+assertEquals(    TestDomainObjects.objectId.name, "objectId")
+assertEquals(    TestDomainObjects.objectId_named.name, "objectId_custom_name")
 
-    TestDomainObjects.optObjectId.name mustBe "optObjectId"
-    TestDomainObjects.optObjectId_named.name mustBe "optObjectId_custom_name"
+assertEquals(    TestDomainObjects.optObjectId.name, "optObjectId")
+assertEquals(    TestDomainObjects.optObjectId_named.name, "optObjectId_custom_name")
 
-    TestDomainObjects.uuid.name mustBe "uuid"
-    TestDomainObjects.uuid_named.name mustBe "uuid_custom_name"
+assertEquals(    TestDomainObjects.uuid.name, "uuid")
+assertEquals(    TestDomainObjects.uuid_named.name, "uuid_custom_name")
 
-    TestDomainObjects.optUUID.name mustBe "optUUID"
-    TestDomainObjects.optUUID_named.name mustBe "optUUID_custom_name"
+assertEquals(    TestDomainObjects.optUUID.name, "optUUID")
+assertEquals(    TestDomainObjects.optUUID_named.name, "optUUID_custom_name")
 
-    TestDomainObjects.localDateTime.name mustBe "localDateTime"
-    TestDomainObjects.localDateTime_named.name mustBe "localDateTime_custom_name"
+assertEquals(    TestDomainObjects.localDateTime.name, "localDateTime")
+assertEquals(    TestDomainObjects.localDateTime_named.name, "localDateTime_custom_name")
 
-    TestDomainObjects.optLocalDateTime.name mustBe "optLocalDateTime"
-    TestDomainObjects.optLocalDateTime_named.name mustBe "optLocalDateTime_custom_name"
+assertEquals(    TestDomainObjects.optLocalDateTime.name, "optLocalDateTime")
+assertEquals(    TestDomainObjects.optLocalDateTime_named.name, "optLocalDateTime_custom_name")
 
-    TestDomainObjects.instant.name mustBe "instant"
-    TestDomainObjects.instant_named.name mustBe "instant_custom_name"
+assertEquals(    TestDomainObjects.instant.name, "instant")
+assertEquals(    TestDomainObjects.instant_named.name, "instant_custom_name")
 
-    TestDomainObjects.optInstant.name mustBe "optInstant"
-    TestDomainObjects.optInstant_named.name mustBe "optInstant_custom_name"
+assertEquals(    TestDomainObjects.optInstant.name, "optInstant")
+assertEquals(    TestDomainObjects.optInstant_named.name, "optInstant_custom_name")
 
-    TestDomainObjects.boolean.name mustBe "boolean"
-    TestDomainObjects.boolean_named.name mustBe "boolean_custom_name"
+assertEquals(    TestDomainObjects.boolean.name, "boolean")
+assertEquals(    TestDomainObjects.boolean_named.name, "boolean_custom_name")
 
-    TestDomainObjects.optBoolean.name mustBe "optBoolean"
-    TestDomainObjects.optBoolean_named.name mustBe "optBoolean_custom_name"
+assertEquals(    TestDomainObjects.optBoolean.name, "optBoolean")
+assertEquals(    TestDomainObjects.optBoolean_named.name, "optBoolean_custom_name")
 
   }
 
@@ -166,8 +161,8 @@ class MacroQueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFut
     @f val f = StringField
   }
 
-  it should "fail when name is duplicated" in {
-    Try(new AnotherTestMeta).toString mustBe "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)"
+  test("it should fail when name is duplicated") {
+    assertEquals(    Try(new AnotherTestMeta).toString, "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)")
   }
 
   case class DifferentValue(a: String)
@@ -176,15 +171,15 @@ class MacroQueryFieldHelperSpec extends FlatSpec with MustMatchers with ScalaFut
     @f val a = StringField
   }
 
-  it should "not fail when resolving an inner meta class" in {
-    (new DifferentTestMeta).a.name mustBe "a"
+  test("not fail when resolving an inner meta class"){
+assertEquals(    (new DifferentTestMeta).a.name, "a")
   }
 
-  it should "not fail in multi threaded env" in {
+  test("not fail in multi threaded env") {
 
     Future.sequence {
       for (_ <- 1 to 1000) yield Future(new MultiThreadedTestMeta)
-    }.futureValue
+    }
   }
 
 }
