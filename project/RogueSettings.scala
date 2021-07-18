@@ -58,8 +58,6 @@ object RogueDependencies {
   val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
 
   val mongoDeps = Seq(
-    "org.mongodb"              % "mongodb-driver-sync"       % mongoVer     % Compile,
-    //"org.mongodb"              % "mongodb-driver-async" % mongoVer    % Compile,
     "org.mongodb.scala"        %% "mongo-scala-driver" % mongoVer    % Compile
   )
 
