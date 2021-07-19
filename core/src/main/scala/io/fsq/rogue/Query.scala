@@ -690,4 +690,6 @@ case class FindAndModifyQuery[M, R](
     addClauseOpt(opt)(clause)
 
   override def toString: String = MongoBuilder.buildFindAndModifyString(query.collectionName, this, false, false, false)
+  //TODO {query:, update:}
+  def asDBObject = (this.query.asDBObject, MongoBuilder.buildModify(this.mod))
 }

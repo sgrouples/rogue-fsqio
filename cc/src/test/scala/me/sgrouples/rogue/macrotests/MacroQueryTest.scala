@@ -4,8 +4,9 @@ import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 import io.fsq.rogue._
 import me.sgrouples.rogue.cc.CcRogue._
+
 import java.util.regex.Pattern
-import me.sgrouples.rogue.cc.{CcMongo, ClaimStatus, ConsumerPrivilege, SourceBson, V1, V2, V3, V4, V5, V6, Venue, VenueClaimBson}
+import me.sgrouples.rogue.cc.{CcMongo, ClaimStatus, ConsumerPrivilege, SourceBson, V1, V2, V3, V4, V5, V6, Venue, VenueClaimBson, VenueStatus}
 import me.sgrouples.rogue.QueryParser._
 import org.bson.types._
 import munit.FunSuite
@@ -526,9 +527,9 @@ assertEquals(    VenueR.where(_.legacyid eqs 1).hintOpt(None).q, pq("""db.venues
       .select(_.tags.$$).q,
       pq("""db.venues.find({"legId": {"$numberLong": "1"}, "tags": "sometag"}, {"tags.$": 1, "_id": 0})"""))
   }
-  /*
-        @Test
-        def testWhereOpt {
+
+
+        test("WhereOpt") {
           val someId = Some(1L)
           val noId: Option[Long] = None
           val someList = Some(List(1L, 2L))
@@ -551,10 +552,10 @@ assertEquals(          VenueR.whereOpt(someEnum)(_.status eqs _).q, pq("""db.ven
 assertEquals(          VenueR.whereOpt(noEnum)(_.status eqs _).q, pq("""db.venues.find({})"""))
 
           // whereOpt: date
-          val someDate = Some(new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC))
-          val noDate: Option[DateTime] = None
-assertEquals(          VenueR.whereOpt(someDate)(_.last_updated after _).q, pq("""db.venues.find({"last_updated": {"$gt": {"$date": "2010-05-01T00:00:00.000Z"}}})"""))
-assertEquals(          VenueR.whereOpt(noDate)(_.last_updated after _).q, pq("""db.venues.find({})"""))
+          //val someDate = Some(new DateTime(2010, 5, 1, 0, 0, 0, 0, DateTimeZone.UTC))
+          //val noDate: Option[DateTime] = None
+//assertEquals(          VenueR.whereOpt(someDate)(_.last_updated after _).q, pq("""db.venues.find({"last_updated": {"$gt": {"$date": "2010-05-01T00:00:00.000Z"}}})"""))
+//assertEquals(          VenueR.whereOpt(noDate)(_.last_updated after _).q, pq("""db.venues.find({})"""))
 
           // andOpt
 assertEquals(          VenueR.where(_.mayor eqs 2).andOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"mayor": 2 , "legid": 1})"""))
@@ -583,8 +584,8 @@ assertEquals(          q.modifyOpt(someEnum)(_.status setTo _).q, pq(prefix + ""
 assertEquals(          q.modifyOpt(noEnum)(_.status setTo _).q, pq(prefix + """{}""" + suffix))
      }
 
-        @Test
-        def testShardKey {
+
+       /* test("ShardKey") {
 assertEquals(          LikeR.where(_.checkin eqs 123).q, pq("""db.likes.find({"checkin": 123})"""))
 assertEquals(          LikeR.where(_.userid eqs 123).q, pq("""db.likes.find({"userid": 123})"""))
 assertEquals(          LikeR.where(_.userid eqs 123).allShards.q, pq("""db.likes.find({"userid": 123})"""))
@@ -593,11 +594,11 @@ assertEquals(          LikeR.withShardKey(_.userid eqs 123).q, pq("""db.likes.fi
 assertEquals(          LikeR.withShardKey(_.userid in List(123L, 456L)).q, pq("""db.likes.find({"userid": {"$in": [ 123 , 456]}})"""))
 assertEquals(          LikeR.withShardKey(_.userid eqs 123).and(_.checkin eqs 1).q, pq("""db.likes.find({"userid": 123 , "checkin": 1})"""))
 assertEquals(          LikeR.where(_.checkin eqs 1).withShardKey(_.userid eqs 123).q, pq("""db.likes.find({"checkin": 1, "userid": 123})"""))
-     }
+     }*/
 
-        @Test
-        def testCommonSuperclassForPhantomTypes {
-          def maybeLimit(legid: Long, limitOpt: Option[Int]):Unit = {
+
+        test("CommonSuperclassForPhantomTypes") {
+          def maybeLimit(legid: Long, limitOpt: Option[Int]) = {
             limitOpt match {
               case Some(limit) => VenueR.where(_.legacyid eqs legid).limit(limit)
               case None => VenueR.where(_.legacyid eqs legid)
@@ -608,7 +609,7 @@ assertEquals(          maybeLimit(1, None).q, pq("""db.venues.find({"legId": 1})
 assertEquals(          maybeLimit(1, Some(5)).q, pq("""db.venues.find({"legId": 1}).limit(5)"""))
      }
 
-        @Test
+        /*@Test
         def testSetReadPreference: Unit = {
           type Q = Query[Venue, Venue, _]
 

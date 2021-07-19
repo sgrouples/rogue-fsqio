@@ -1,6 +1,6 @@
 package me.sgrouples.rogue
 import com.mongodb.BasicDBObject
-import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
+import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, MongoHelpers, Query}
 import munit.FunSuite
 import org.bson.{BsonInt64, Document}
 import org.mongodb.scala.bson.BsonDocument
@@ -66,12 +66,14 @@ object QueryParser {
   }
   implicit class ModifyQueryWrapper[M, +State](val query:ModifyQuery[M, State]) extends AnyVal {
     def q:ParsedQuery = {
-      ???
+      val (q,m) = query.asDBObject
+      ParsedQuery(query.query.collectionName, "update", List(q.asInstanceOf[BasicDBObject].toBsonDocument(),m.toBsonDocument()))
     }
   }
   implicit class FindAndModifyQueryWrapper[M, State](val query:FindAndModifyQuery[M, State]) extends AnyVal {
     def q:ParsedQuery = {
-      ???
+      val (q,m) = query.asDBObject
+      ParsedQuery(query.query.collectionName, "findAndModify", List(q.asInstanceOf[BasicDBObject].toBsonDocument(),m.toBsonDocument()))
     }
   }
 }
