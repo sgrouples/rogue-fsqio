@@ -1,7 +1,10 @@
 package me.sgrouples.rogue
+import com.mongodb.BasicDBObject
+import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, Query}
 import munit.FunSuite
 import org.bson.{BsonInt64, Document}
 import org.mongodb.scala.bson.BsonDocument
+//TODO - hints support
 case class ParsedQuery(
                         collection: String,
                         command: String,
@@ -55,7 +58,25 @@ object QueryParser {
         ParsedQuery(collection, command, args.result())
       }
     }
+  implicit class QueryWrapper[M, R, +State](val query:Query[M, R, State]) extends AnyVal {
+    def q:ParsedQuery = {
+      val ob = query.asDBObject.asInstanceOf[BasicDBObject].toBsonDocument()
+      ParsedQuery(query.collectionName, "find", List(ob))
+    }
+  }
+  implicit class ModifyQueryWrapper[M, +State](val query:ModifyQuery[M, State]) extends AnyVal {
+    def q:ParsedQuery = {
+      ???
+    }
+  }
+  implicit class FindAndModifyQueryWrapper[M, State](val query:FindAndModifyQuery[M, State]) extends AnyVal {
+    def q:ParsedQuery = {
+      ???
+    }
+  }
 }
+
+
 class QueryParserTest extends FunSuite {
   test("base parsing") {
     val parsed = QueryParser.pq("""db.venues.find({"mayor_count": {"$gte": {"$numberLong": "3"}, "$lte": {"$numberLong": "5"}}})""")
