@@ -6,17 +6,17 @@ import java.time.temporal.ChronoUnit
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros._
 import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, Matchers }
+import munit.FunSuite
 import shapeless._
 
-class MacroComplexCaseClassSpec extends FlatSpec with Matchers {
+class MacroComplexCaseClassSpec extends FunSuite {
 
   class GroupMeta extends MCcMeta[Group, GroupMeta]("") {
   }
 
   val Groups = new GroupMeta
 
-  "RCcMeta of a complex case class" should "properly read/write the given instance" in {
+  test("RCcMeta of a complex case class should properly read/write the given instance")  {
 
     val now = Instant.now.truncatedTo(ChronoUnit.MILLIS)
     val id = new ObjectId()
@@ -53,7 +53,7 @@ class MacroComplexCaseClassSpec extends FlatSpec with Matchers {
 
     val bson = Groups.write(group)
 
-    Groups.read(bson) shouldBe group
+    assertEquals(Groups.read(bson), group)
   }
 
 }

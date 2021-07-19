@@ -74,8 +74,6 @@ object RogueDependencies {
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.7"
 
-  //val collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4"
-
   val coreDeps = mongoDeps
 
   val ccDeps = mongoDeps ++ Seq(shapeless)  ++ testDeps

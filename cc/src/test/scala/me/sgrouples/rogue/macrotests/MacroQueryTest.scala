@@ -16,6 +16,8 @@ import org.specs2.matcher.JUnitMustMatchers
 import shapeless.tag
 import shapeless.tag.@@
 
+import scala.language.postfixOps
+
 class MacroQueryTest extends JUnitMustMatchers {
   import me.sgrouples.rogue.cc.macros.Metas._
 
