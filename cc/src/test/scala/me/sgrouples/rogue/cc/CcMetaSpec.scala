@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc
 
 import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, MustMatchers }
 import munit.FunSuite
 import shapeless.tag._
 
