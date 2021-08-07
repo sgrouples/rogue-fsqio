@@ -99,7 +99,8 @@ assertEquals(    VenueR.where(_.venuename regexWarningNotIndexed p1).q, pq("""db
 assertEquals(    VenueR.where(_.venuename matches p1).q, pq("""db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""))
     val p2 = Pattern.compile("Star.*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
 assertEquals(    VenueR.where(_.venuename matches p2).q, pq("""db.venues.find({"venuename": {"$regex": "Star.*", "$options": "mi"}})"""))
-assertEquals(    VenueR.where(_.venuename matches p2).and(_.venuename nin List("a", "b")).q, pq("""db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "mi"}})"""))
+//FIXME both regex AND nin
+    assertEquals(    VenueR.where(_.venuename matches p2).and(_.venuename nin List("a", "b")).q, pq("""db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "mi"}})"""))
 
     // all, in, size, contains, at
 assertEquals(    VenueR.where(_.tags eqs List("db", "ka")).q, pq("""db.venues.find({"tags": ["db", "ka"]})"""))

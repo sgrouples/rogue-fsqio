@@ -1,12 +1,14 @@
 package me.sgrouples.rogue
 import com.mongodb.{BasicDBObject, BasicDBObjectBuilder}
+import io.fsq.rogue.MongoHelpers.MongoBuilder
 import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, MongoHelpers, PartialIndexScan, Query, RegexQueryClause}
 import me.sgrouples.rogue.QueryParser.pq
 import munit.FunSuite
-import org.bson.{BsonInt64, BsonRegularExpression, Document}
+import org.bson.{BsonBoolean, BsonInt64, BsonRegularExpression, Document}
 import org.mongodb.scala.bson.{BsonDocument, BsonValue}
 
 import java.util.regex.Pattern
+import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 //TODO - hints support
 case class ParsedQuery(
@@ -64,6 +66,9 @@ object QueryParser {
             if(in.substring(idx).startsWith(".hint")) {
               prevStart = idx + 6
               idx = idx + 6
+            } else if(in.substring(idx).startsWith(".sort")) {
+              prevStart = idx + 6
+              idx = idx + 6
             }
           case _ =>
         }
@@ -75,13 +80,14 @@ object QueryParser {
     }
 
   def regexReplace(in:BsonDocument):BsonValue = {
-    in
-    /*if(in.containsKey("$regex") && in.containsKey("$options")) {
+    if(in.containsKey("$regex") && in.containsKey("$options")) {
       val r = in.get("$regex").asString().getValue
       val o = in.get("$options").asString().getValue
       val re = new BsonRegularExpression(r, o)
       in.remove("$regex")
-      in.remove("options")
+      in.remove("$options")
+      //in.put("$regularExpression", re)
+      new BsonRegularExpression(r,o)
     } else {
       val it = in.entrySet().iterator()
       while (it.hasNext) {
@@ -89,17 +95,26 @@ object QueryParser {
         val k = e.getKey
         val v = e.getValue
         if (v.isDocument) {
-          in.put(k, regexReplace(v.asDocument()))
+          val replacement = regexReplace(v.asDocument())
+          if(replacement.isRegularExpression) {
+            if(v.asDocument().isEmpty) {
+              in.put(k, replacement)
+            } else {
+              println(s"PANIC NOT EMPTY DOC AFTER REGEX REMOVAL - remaining keys ${v.asDocument().keySet()}")
+            }
+          }
         }
       }
       in
-    }*/
+    }
   }
 
   implicit class QueryWrapper[M, R, +State](val query:Query[M, R, State]) extends AnyVal {
     def q:ParsedQuery = {
-      val ob = regexReplace(query.asDBObject.asInstanceOf[BasicDBObject].toBsonDocument()).asDocument()
-      ParsedQuery(query.collectionName, "find", List(ob))
+      val args = new ListBuffer[BsonDocument]
+      args.addOne(regexReplace(query.asDBObject.asInstanceOf[BasicDBObject].toBsonDocument()).asDocument())
+      query.select.foreach(s => args.addOne(regexReplace(MongoBuilder.buildSelect(s).toBsonDocument()).asDocument()))
+      ParsedQuery(query.collectionName, "find", args.result())
     }
   }
   implicit class ModifyQueryWrapper[M, +State](val query:ModifyQuery[M, State]) extends AnyVal {
@@ -110,11 +125,19 @@ object QueryParser {
           regexReplace(m.toBsonDocument()).asDocument()))
     }
   }
+
   implicit class FindAndModifyQueryWrapper[M, State](val query:FindAndModifyQuery[M, State]) extends AnyVal {
     def q:ParsedQuery = {
-      val (q,m) = query.asDBObject
-      val res = new BasicDBObject("query", regexReplace(q.asInstanceOf[BasicDBObject].toBsonDocument()).asDocument())
-        .append("update", regexReplace(m.toBsonDocument())).toBsonDocument()
+      val q = query.query.asDBObject
+      val m = MongoBuilder.buildModify(query.mod)
+      val res = {
+        val tmp = new BasicDBObject("query", regexReplace(q.asInstanceOf[BasicDBObject].toBsonDocument()).asDocument())
+        query.query.order.foreach(o => tmp.append("sort",MongoBuilder.buildOrder(o)))
+        tmp.append("update", regexReplace(m.toBsonDocument())).append("new", false)
+        query.query.select.foreach(s => tmp.append("fields", MongoBuilder.buildSelect(s)))
+        tmp
+      }.toBsonDocument()
+        .append("upsert", BsonBoolean.FALSE)
       ParsedQuery(query.query.collectionName, "findAndModify", List(res))
     }
   }
