@@ -535,14 +535,13 @@ assertEquals(    VenueR.where(_.legacyid eqs 1).hintOpt(None).q, pq("""db.venues
           val someList = Some(List(1L, 2L))
           val noList: Option[List[Long]] = None
 
-          // whereOpt
-assertEquals(          VenueR.whereOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"legId": 1})"""))
+assertEquals(          VenueR.whereOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}})"""))
 assertEquals(          VenueR.whereOpt(noId)(_.legacyid eqs _).q, pq("""db.venues.find({})"""))
-assertEquals(          VenueR.whereOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"legId": 1, "mayor": 2})"""))
-assertEquals(          VenueR.whereOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"mayor": 2})"""))
+assertEquals(          VenueR.whereOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}, "mayor": {"$numberLong":"2"}})"""))
+assertEquals(          VenueR.whereOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"mayor": {"$numberLong":"2"}})"""))
 
           // whereOpt: lists
-assertEquals(          VenueR.whereOpt(someList)(_.legacyid in _).q, pq("""db.venues.find({"legId": {"$in": [ 1, 2]}})"""))
+assertEquals(          VenueR.whereOpt(someList)(_.legacyid in _).q, pq("""db.venues.find({"legId": {"$in": [ {"$numberLong":"1"}, {"$numberLong":"2"}]}})"""))
 assertEquals(          VenueR.whereOpt(noList)(_.legacyid in _).q, pq("""db.venues.find({})"""))
 
           // whereOpt: enum
@@ -558,27 +557,27 @@ assertEquals(          VenueR.whereOpt(noEnum)(_.status eqs _).q, pq("""db.venue
 //assertEquals(          VenueR.whereOpt(noDate)(_.last_updated after _).q, pq("""db.venues.find({})"""))
 
           // andOpt
-assertEquals(          VenueR.where(_.mayor eqs 2).andOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"mayor": 2 , "legid": 1})"""))
-assertEquals(          VenueR.where(_.mayor eqs 2).andOpt(noId)(_.legacyid eqs _).q, pq("""db.venues.find({"mayor": 2})"""))
+          assertEquals(          VenueR.where(_.mayor eqs 2).andOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"mayor": {"$numberLong":"2"} , "legId": {"$numberLong":"1"}})"""))
+assertEquals(          VenueR.where(_.mayor eqs 2).andOpt(noId)(_.legacyid eqs _).q, pq("""db.venues.find({"mayor": {"$numberLong":"2"}})"""))
 
           // scanOpt
-assertEquals(          VenueR.scanOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"legId": 1})"""))
+assertEquals(          VenueR.scanOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}})"""))
 assertEquals(          VenueR.scanOpt(noId)(_.legacyid eqs _).q, pq("""db.venues.find({})"""))
-assertEquals(          VenueR.scanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"legId": 1, "mayor": 2})"""))
-assertEquals(          VenueR.scanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"mayor": 2})"""))
+assertEquals(          VenueR.scanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}, "mayor": {"$numberLong":"2"}})"""))
+assertEquals(          VenueR.scanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"mayor": {"$numberLong":"2"}})"""))
 
           // iscanOpt
-assertEquals(          VenueR.iscanOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"legId": 1})"""))
+assertEquals(          VenueR.iscanOpt(someId)(_.legacyid eqs _).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}})"""))
 assertEquals(          VenueR.iscanOpt(noId)(_.legacyid eqs _).q, pq("""db.venues.find({})"""))
-assertEquals(          VenueR.iscanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"legId": 1, "mayor": 2})"""))
-assertEquals(          VenueR.iscanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"mayor": 2})"""))
+assertEquals(          VenueR.iscanOpt(someId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}, "mayor": {"$numberLong":"2"}})"""))
+assertEquals(          VenueR.iscanOpt(noId)(_.legacyid eqs _).and(_.mayor eqs 2).q, pq("""db.venues.find({"mayor": {"$numberLong":"2"}})"""))
 
           // modify
           val q = VenueR.where(_.legacyid eqs 1)
-          val prefix = """db.venues.update({"legid": 1}, """
+          val prefix = """db.venues.update({"legId": {"$numberLong":"1"}}, """
           val suffix = ", false, false)"
 
-assertEquals(          q.modifyOpt(someId)(_.legacyid setTo _).q, pq(prefix + """{"$set": {"legid": 1}}""" + suffix))
+assertEquals(          q.modifyOpt(someId)(_.legacyid setTo _).q, pq(prefix + """{"$set": {"legId": {"$numberLong":"1"}}}""" + suffix))
 assertEquals(          q.modifyOpt(noId)(_.legacyid setTo _).q, pq(prefix + """{}""" + suffix))
 assertEquals(          q.modifyOpt(someEnum)(_.status setTo _).q, pq(prefix + """{"$set": {"status": "Open"}}""" + suffix))
 assertEquals(          q.modifyOpt(noEnum)(_.status setTo _).q, pq(prefix + """{}""" + suffix))
@@ -605,8 +604,8 @@ assertEquals(          LikeR.where(_.checkin eqs 1).withShardKey(_.userid eqs 12
          }
        }
 
-assertEquals(          maybeLimit(1, None).q, pq("""db.venues.find({"legId": 1})"""))
-assertEquals(          maybeLimit(1, Some(5)).q, pq("""db.venues.find({"legId": 1}).limit(5)"""))
+assertEquals(          maybeLimit(1, None).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}})"""))
+assertEquals(          maybeLimit(1, Some(5)).q, pq("""db.venues.find({"legId": {"$numberLong":"1"}}).limit(5)"""))
      }
 
         /*@Test

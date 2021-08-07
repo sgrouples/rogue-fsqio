@@ -14,7 +14,8 @@ import scala.util.matching.Regex
 case class ParsedQuery(
                         collection: String,
                         command: String,
-                        args: Seq[BsonDocument]) {
+                        args: Seq[BsonDocument],
+                        limit:Option[Int]=None) {
 }
 object QueryParser {
   //parses string to mongo query
@@ -43,6 +44,7 @@ object QueryParser {
       var level = 0
       var inParens = false
       val args = Seq.newBuilder[BsonDocument]
+      var limitOpt:Option[Int] = None
       while(idx < in.length) {
         in(idx) match {
           case '{' if prev !='\\' && !inParens =>
@@ -69,13 +71,22 @@ object QueryParser {
             } else if(in.substring(idx).startsWith(".sort")) {
               prevStart = idx + 6
               idx = idx + 6
+            } else if(in.substring(idx).startsWith(".limit")) {
+              idx = idx + 7
+              prevStart = idx
+              while(in(idx).isDigit) {
+                idx = idx + 1
+              }
+              limitOpt=Some(in.substring(prevStart, idx).toInt)
+              println(s"Limit opt set to ${limitOpt}")
+              prevStart = idx
             }
           case _ =>
         }
         prev = in(idx)
         idx = idx + 1
         }
-        ParsedQuery(collection, command, args.result())
+        ParsedQuery(collection, command, args.result(), limitOpt)
       }
     }
 
@@ -114,7 +125,7 @@ object QueryParser {
       val args = new ListBuffer[BsonDocument]
       args.addOne(regexReplace(query.asDBObject.asInstanceOf[BasicDBObject].toBsonDocument()).asDocument())
       query.select.foreach(s => args.addOne(regexReplace(MongoBuilder.buildSelect(s).toBsonDocument()).asDocument()))
-      ParsedQuery(query.collectionName, "find", args.result())
+      ParsedQuery(query.collectionName, "find", args.result(), query.lim)
     }
   }
   implicit class ModifyQueryWrapper[M, +State](val query:ModifyQuery[M, State]) extends AnyVal {
