@@ -1,6 +1,5 @@
 package me.sgrouples.rogue.cc
 
-import org.bson.BsonDocument
 import org.reactivestreams.{Subscriber, Subscription}
 
 import scala.collection.mutable.ListBuffer

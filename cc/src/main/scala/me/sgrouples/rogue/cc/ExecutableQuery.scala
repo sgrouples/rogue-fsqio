@@ -7,7 +7,6 @@ import io.fsq.field.Field
 import io.fsq.rogue.{
   AddLimit,
   FindAndModifyQuery,
-  Iter,
   ModifyQuery,
   Query,
   RequireShardKey,
@@ -108,6 +107,24 @@ case class ExecutableQuery[MB, M <: MB, R, State](
 
   def fetch()(implicit db: MongoDatabase): Seq[R] = {
     waitForFuture(fetchAsync())
+  }
+
+  /** fetch a batch of results, and execute a function on each element of the
+    * list.
+    * @param f
+    *   the function to invoke on the records that match the query.
+    * @return
+    *   a list containing the results of invoking the function on each record.
+    */
+  def fetchBatch[T](batchSize: Int)(f: Seq[R] => Seq[T])(implicit
+      db: MongoDatabase,
+      ct: ClassTag[R],
+      ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  ): Seq[T] = {
+    def adaptedF(in: Seq[R]): Future[Seq[T]] = {
+      Future.successful(f(in))
+    }
+    waitForFuture(batchAsync(adaptedF, batchSize))
   }
 
   /** Fetches the first record that matches the query. The query must not
