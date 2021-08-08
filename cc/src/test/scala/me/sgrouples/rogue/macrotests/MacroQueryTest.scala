@@ -15,8 +15,6 @@ import shapeless.tag.@@
 import org.bson.types._
 
 //TODO - drop signature()
-import org.junit._
-import org.specs2.matcher.JUnitMustMatchers
 
 import scala.language.postfixOps
 

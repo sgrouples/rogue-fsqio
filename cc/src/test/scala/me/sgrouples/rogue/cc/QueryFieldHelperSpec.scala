@@ -204,6 +204,6 @@ assertEquals(    (new DifferentTestMeta).a.name, "a")
   }
 
   test("it should print out debug info for given field") {
-    println((new TestDomainObjectMeta).debugInfo(0))
+   assert((new TestDomainObjectMeta).debugInfo(0).nonEmpty)
   }
 }

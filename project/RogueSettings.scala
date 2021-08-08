@@ -26,7 +26,6 @@ object RogueSettings {
     version := "5.9.9-SNAPSHOT",
     organization := "me.sgrouples",
     scalaVersion := "2.13.6",
-    //crossScalaVersions := Seq("2.12.10", "2.13.1"),
     isSnapshot := true,
     publishMavenStyle := true,
     Test / publishArtifact := false,
