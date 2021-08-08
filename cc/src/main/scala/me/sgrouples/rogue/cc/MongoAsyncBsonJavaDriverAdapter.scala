@@ -450,41 +450,17 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       .toFuture()
   }
 
-  /*private def queryToFindObservable[M <: MB, R](query: Query[M, R, _], readPreference: Option[ReadPreference])(implicit dba: MongoDatabase): FindObservable[Document] = {
-    val cnd: Bson = buildCondition(query.condition)
-    val coll = getDBCollection(query, readPreference)
-    val sel: Bson = query.select.map(buildSelect).getOrElse(BasicDBObjectBuilder.start.get.asInstanceOf[BasicDBObject])
-    val ord = query.order.map(buildOrder)
-    val cursor = coll.find(cnd).projection(sel)
-    //mongo driver has side-effecting fuctions for limit, skip, hint
-    query.lim.foreach(cursor.limit _)
-    query.sk.foreach(cursor.skip _)
-    query.hint.foreach(h => cursor.hint(buildHint(h)))
-    ord.foreach(cursor.sort _)
-    cursor
-  } */
-
-  /*def batch[M <: MB, R, T](query: Query[M, R, _], serializer: RogueBsonRead[R], f: Seq[R] => Future[Seq[T]], batchSize: Int,
-    readPreference: Option[ReadPreference])(implicit dba: MongoDatabase, ec: ExecutionContext): Future[Seq[T]] = {
-    val p = Promise[Seq[T]]()
-    var currentBatch = scala.collection.mutable.Buffer[R]()
-    def nextDoc(d: Document): T = {
-      val r = serializer.fromDocument(d)
-      currentBatch += r
-      if(currentBatch.size == batchSize) {
-        f(currentBatch.toSeq)
-      }
-    }
-    def finish():Unit = {
-      ???
-    }
-    val fi = queryToFindObservable(query, readPreference).batchSize(batchSize).subscribe(
-      new BatchSubscriber(batchSize,serializer, f)
-      r => nextDoc(r), err => p.failure(err), () => finish())
-    p.future
-    val batchCB = new BatchingCallback(serializer, f)
-    //fi.batchSize(batchSize).batchCursor(batchCB)
-    batchCB.future
-  }*/
+  def batch[M <: MB, R: ClassTag, T](
+      query: Query[M, R, _],
+      serializer: RogueBsonRead[R],
+      f: Seq[R] => Future[Seq[T]],
+      batchSize: Int,
+      readPreference: Option[ReadPreference]
+  )(implicit dba: MongoDatabase, ec: ExecutionContext): Future[Seq[T]] = {
+    val publisher = findPublisher(query, serializer, batchSize, readPreference)
+    val batchSubscriber = new BatchingSubscriber(batchSize, f)
+    publisher.subscribe(batchSubscriber)
+    batchSubscriber.toFuture()
+  }
 
 }

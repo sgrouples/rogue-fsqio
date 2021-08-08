@@ -4,9 +4,7 @@ import java.time.LocalDateTime
 import java.util.regex.Pattern
 import org.mongodb.scala._
 import io.fsq.rogue._
-import me.sgrouples.rogue.LongField
 import munit.FunSuite
-//import io.fsq.rogue.test.TrivialORMTests
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
 

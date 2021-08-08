@@ -18,7 +18,7 @@ object MongoTestConn {
     cl
   }
 
-  def disconnectFromMongo() = {
+  def disconnectFromMongo(): Unit = {
     client.foreach(_.close())
     client = None
   }

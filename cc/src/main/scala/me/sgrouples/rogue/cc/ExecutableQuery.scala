@@ -28,7 +28,7 @@ import org.mongodb.scala.result.{
 }
 import org.reactivestreams.Publisher
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, R, State](
@@ -214,8 +214,16 @@ case class ExecutableQuery[MB, M <: MB, R, State](
       dba: MongoDatabase
   ): Future[Option[R]] = ex.async.findAndDeleteOne(query)
 
-  //def batchAsync[T](f: Seq[R] => Future[Seq[T]], batchSize: Int = 100, readPreference: Option[ReadPreference] = None)(implicit dba: MongoDatabase, ec: ExecutionContext): Future[Seq[T]] =
-  //  ex.async.batch(query, f, batchSize, readPreference)
+  def batchAsync[T](
+      f: Seq[R] => Future[Seq[T]],
+      batchSize: Int = 100,
+      readPreference: Option[ReadPreference] = None
+  )(implicit
+      dba: MongoDatabase,
+      ec: ExecutionContext,
+      ct: ClassTag[R]
+  ): Future[Seq[T]] =
+    ex.async.batch(query, f, batchSize, readPreference)
 
 }
 
