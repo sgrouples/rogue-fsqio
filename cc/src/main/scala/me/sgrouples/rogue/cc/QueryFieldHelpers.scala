@@ -73,6 +73,8 @@ trait NamesResolver {
   protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker
 }
 
+
+
 trait RuntimeNameResolver[Meta] extends NamesResolver {
 
   private[this] val names: ConcurrentHashMap[Int, String] = new ConcurrentHashMap
@@ -104,9 +106,10 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     })
   }
 
-  private[this] def nextNameId = nameId.incrementAndGet()
+  private[this] def nextNameId: Int = nameId.incrementAndGet()
 
   private[this] def resolve(): Unit = synchronized {
+    if(!resolved.get()) {
 
     /*
       The idea of automatic name resolution is taken from Scala's Enumeration,
@@ -189,7 +192,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 
     for ((k, v) <- values.zipWithIndex.map(_.swap)) names.put(k, v)
     resolved.set(true)
-  }
+  } }
 
   /*
     This weird tagging by Marker trait is here because we need to filter out fields declared
@@ -204,7 +207,8 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 
     val id = nextNameId
 
-    val name: String = Option(names.get(id)).getOrElse(resolveError(id))
+    val name: String =
+      Option(names.get(id)).getOrElse(resolveError(id))
 
     val field = func(name)
     if (fields.containsKey(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")

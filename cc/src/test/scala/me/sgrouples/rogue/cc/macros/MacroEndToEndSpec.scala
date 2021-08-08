@@ -1,25 +1,22 @@
 package me.sgrouples.rogue.cc.macros
 
 import java.time.LocalDateTime
-import java.util.{ Currency, Locale }
+import java.util.{Currency, Locale}
 import java.util.regex.Pattern
-
 import org.mongodb.scala._
 import me.sgrouples.rogue.cc.CcRogue._
 import me.sgrouples.rogue.cc._
+import munit.FunSuite
 import org.bson.types.ObjectId
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, MustMatchers }
 
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import shapeless.tag
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures with BeforeAndAfterEach {
+class MacroEndToEndSpec extends FunSuite {
   import me.sgrouples.rogue.cc.macros.Metas._
-
-  implicit val atMost = PatienceConfig(15.seconds)
 
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
@@ -52,148 +49,158 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
   private var dbOpt: Option[MongoDatabase] = None
   implicit def db = dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    val m = MongoTestConn.connectToMongo()
-    dbOpt = Some(m.getDatabase("rogue-test-async").withCodecRegistry(CcMongo.codecRegistry))
+  override def beforeAll():Unit = {
+    dbOpt = Some(MongoTestConn.connectToMongo().getDatabase("e2e-macro-async").withCodecRegistry(CcMongo.codecRegistry))
   }
 
-  override protected def afterEach(): Unit = {
-    super.afterEach()
-
-    VenueR.bulkDeleteAsync_!!!().futureValue
-    VenueR.countAsync().futureValue mustBe 0L
-
-    VenueClaimR.bulkDeleteAsync_!!!().futureValue
-    VenueClaimR.countAsync().futureValue mustBe 0L
-
-    //Like.allShards.bulkDeleteAsync_!!!())
+  override def afterAll(): Unit = {
     dbOpt.foreach(_.drop())
-    dbOpt = None
     MongoTestConn.disconnectFromMongo()
+    dbOpt = None
+  }
+  override def beforeEach(context: BeforeEach): Unit = {
+
   }
 
-  "Eqs test" should "work as expected" in {
+  override def afterEach(context: AfterEach): Unit = {
+    Await.ready(for {
+      _ <- VenueR.bulkDeleteAsync_!!!()
+      v <- VenueR.countAsync()
+      _ <- VenueClaimR.bulkDeleteAsync_!!!()
+      vc <- VenueClaimR.countAsync()
+    } yield {
+      assert(v == 0L)
+      assert(vc == 0L)
+    }, 60.seconds)
+  }
+
+  test("Eqs test should work as expected") {
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
     val vc = baseTestVenueClaim(v._id)
-    VenueClaimR.insertOneAsync(vc).futureValue
 
-    ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync().futureValue.map(_._id) mustBe Seq(v._id)
-    VenueR.where(_.mayor eqs v.mayor).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.mayor eqs v.mayor).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.venuename eqs v.venuename).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.closed eqs false).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
+    for {
+    _ <- VenueR.insertOneAsync(v)
+    _ <- VenueClaimR.insertOneAsync(vc)
+    _ <- ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync().map{res => assertEquals(res.map(_._id), Seq(v._id))}
+    _ <- VenueR.where(_.mayor eqs v.mayor).fetchAsync().map{res => assertEquals(res.map(_._id), List(v._id))}
+    _ <- VenueR.where(_.mayor eqs v.mayor).fetchAsync().map{res => assertEquals(res.map(_._id), List(v._id))}
+    _ <-VenueR.where(_.venuename eqs v.venuename).fetchAsync().map{res => assertEquals(res.map(_._id), List(v._id))}
+    _ <-VenueR.where(_.closed eqs false).fetchAsync().map{res => assertEquals(res.map(_._id), List(v._id))}
 
-    VenueR.where(_.mayor eqs 432432).fetchAsync().futureValue.map(_._id) mustBe Nil
-    VenueR.where(_.closed eqs true).fetchAsync().futureValue.map(_._id) mustBe Nil
+    _ <-VenueR.where(_.mayor eqs 432432).fetchAsync().map{res => assertEquals(res.map(_._id), Nil)}
+    _ <-VenueR.where(_.closed eqs true).fetchAsync().map{res => assertEquals(res.map(_._id), Nil)}
 
-    VenueClaimR.where(_.status eqs ClaimStatus.approved).fetchAsync().futureValue.map(_._id) mustBe List(vc._id)
-    VenueClaimR.where(_.venueid eqs v._id).fetchAsync().futureValue.map(_._id) mustBe List(vc._id)
+    _ <-VenueClaimR.where(_.status eqs ClaimStatus.approved).fetchAsync().map{res => assertEquals(res.map(_._id), List(vc._id))}
+    _ <-VenueClaimR.where(_.venueid eqs v._id).fetchAsync().map{res => assertEquals(res.map(_._id), List(vc._id))}
+  } yield ()
   }
 
-  "Inequality queries" should "work as expected" in {
+  test("Inequality queries should work as expected") {
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
     val vc = baseTestVenueClaim(v._id)
-    VenueClaimR.insertOneAsync(vc).futureValue
 
-    // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
-    // VenueClaim has status approved.
-    val h = VenueR.where(_.mayor_count neqs 5).fetchAsync()
-    VenueR.where(_.mayor_count neqs 5).maxTime(1 second).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.mayor_count < 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.mayor_count lt 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.mayor_count <= 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.mayor_count lte 5).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueR.where(_.mayor_count > 5).fetchAsync().futureValue.map(_._id) mustBe Nil
-    VenueR.where(_.mayor_count gt 5).fetchAsync().futureValue.map(_._id) mustBe Nil
-    VenueR.where(_.mayor_count >= 5).fetchAsync().futureValue.map(_._id) mustBe Nil
-    VenueR.where(_.mayor_count gte 5).fetchAsync().futureValue.map(_._id) mustBe Nil
-    VenueR.where(_.mayor_count between (3, 5)).fetchAsync().futureValue.map(_._id) mustBe List(v._id)
-    VenueClaimR.where(_.status neqs ClaimStatus.approved).fetchAsync().futureValue.map(_._id) mustBe Nil
-    VenueClaimR.where(_.status neqs ClaimStatus.pending).fetchAsync().futureValue.map(_._id) mustBe List(vc._id)
+    for {
+      _ <- VenueR.insertOneAsync(v)
+      _ <- VenueClaimR.insertOneAsync(vc)
+      // neq,lt,gt, where the lone Venue has mayor_count=3, and the only
+      // VenueClaim has status approved.
+      h <- VenueR.where(_.mayor_count neqs 5).fetchAsync()
+      _ <- VenueR.where(_.mayor_count neqs 5).maxTime(1.seconds).fetchAsync().map { res => assertEquals(res.map(_._id), List(v._id)) }
+      _ <- VenueR.where(_.mayor_count < 5).fetchAsync().map { res => assertEquals(res.map(_._id), List(v._id)) }
+      _ <- VenueR.where(_.mayor_count lt 5).fetchAsync().map { res => assertEquals(res.map(_._id), List(v._id)) }
+      _ <- VenueR.where(_.mayor_count <= 5).fetchAsync().map { res => assertEquals(res.map(_._id), List(v._id)) }
+      _ <- VenueR.where(_.mayor_count lte 5).fetchAsync().map { res => assertEquals(res.map(_._id), List(v._id)) }
+      _ <- VenueR.where(_.mayor_count > 5).fetchAsync().map { res => assertEquals(res.map(_._id), Nil) }
+      _ <- VenueR.where(_.mayor_count gt 5).fetchAsync().map { res => assertEquals(res.map(_._id), Nil) }
+      _ <- VenueR.where(_.mayor_count >= 5).fetchAsync().map { res => assertEquals(res.map(_._id), Nil) }
+      _ <- VenueR.where(_.mayor_count gte 5).fetchAsync().map { res => assertEquals(res.map(_._id), Nil) }
+      _ <- VenueR.where(_.mayor_count between(3, 5)).fetchAsync().map { res => assertEquals(res.map(_._id), List(v._id)) }
+      _ <- VenueClaimR.where(_.status neqs ClaimStatus.approved).fetchAsync().map { res => assertEquals(res.map(_._id), Nil) }
+      _ <- VenueClaimR.where(_.status neqs ClaimStatus.pending).fetchAsync().map { res => assertEquals(res.map(_._id), List(vc._id)) }
+    } yield ()
   }
-
-  "Select queries" should "work as expected" in {
+  test("Select queries should work as expected") {
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
-
     val base = VenueR.where(_.id eqs v._id)
+    
+    for { _ <- VenueR.insertOneAsync(v)
+
     //val f = mandatoryFieldToSelectField(VenueR.legacyid)
 
-    base.select(_.legacyid).fetchAsync().futureValue mustBe List(v.legId)
+          _ <- base.select(_.legacyid).fetchAsync().map{res => assertEquals(res, List(v.legId))}
 
-    base.select(_.legacyid, _.userId).fetchAsync().futureValue mustBe List((v.legId, v.userId))
-    base.select(_.legacyid, _.userId, _.mayor).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor))
-    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count))
-    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
-    base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync().futureValue mustBe List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
+          _ <-base.select(_.legacyid, _.userId).fetchAsync().map{res => assertEquals(res, List((v.legId, v.userId)))}
+          _ <-base.select(_.legacyid, _.userId, _.mayor).fetchAsync().map{res => assertEquals(res, List((v.legId, v.userId, v.mayor)))}
+          _ <-base.select(_.legacyid, _.userId, _.mayor, _.mayor_count).fetchAsync().map{res => assertEquals(res, List((v.legId, v.userId, v.mayor, v.mayor_count)))}
+          _ <-base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed).fetchAsync().map{res => assertEquals(res, List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed)))}
+          _ <-base.select(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags).fetchAsync().map{res => assertEquals(res, List((v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags)))}
 
+  } yield () }
+
+  test("Enum select should work as expected") {
+    val v = baseTestVenue()
+    for {_ <- VenueR.insertOneAsync(v)
+         _ <- VenueR.where(_.id eqs v._id).select(_.status).fetchAsync().map { res => assertEquals(res, List(VenueStatus.open)) }
+         } yield ()
   }
 
-  "Enum select" should "work as expected" in {
+  test("Select case queries should work as expected") {
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
-    VenueR.where(_.id eqs v._id).select(_.status).fetchAsync().futureValue mustBe List(VenueStatus.open)
-  }
+    for { _ <- VenueR.insertOneAsync(v)
 
-  "Select case queries" should "work as expected" in {
+     base = VenueR.where(_.id eqs v._id)
+          _ <-base.selectCase(_.legacyid, V1).fetchAsync().map{res => assertEquals(res, List(V1(v.legId)))}
+          _ <-base.selectCase(_.legacyid, _.userId, V2).fetchAsync().map{res => assertEquals(res, List(V2(v.legId, v.userId)))}
+          _ <-base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetchAsync().map{res => assertEquals(res, List(V3(v.legId, v.userId, v.mayor)))}
+          _ <-base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4).fetchAsync().map{res => assertEquals(res, List(V4(v.legId, v.userId, v.mayor, v.mayor_count)))}
+          _ <-base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5).fetchAsync().map{res => assertEquals(res, List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed)))}
+          _ <-base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync().map{res => assertEquals(res, List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags)))}
+  } yield () }
+
+  test("Select subfield queries should work as expected") {
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
-
-    val base = VenueR.where(_.id eqs v._id)
-    base.selectCase(_.legacyid, V1).fetchAsync().futureValue mustBe List(V1(v.legId))
-    base.selectCase(_.legacyid, _.userId, V2).fetchAsync().futureValue mustBe List(V2(v.legId, v.userId))
-    base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetchAsync().futureValue mustBe List(V3(v.legId, v.userId, v.mayor))
-    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4).fetchAsync().futureValue mustBe List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
-    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5).fetchAsync().futureValue mustBe List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
-    base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, _.tags, V6).fetchAsync().futureValue mustBe List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))
-
-  }
-
-  "Select subfield queries" should "work as expected" in {
-    val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
     val t = baseTestTip()
-    TipR.insertOneAsync(t).futureValue
+    for { _ <- VenueR.insertOneAsync(v)
+     _ <- TipR.insertOneAsync(t)
 
     //TODO - no support for querying map fields now
     // select subfields
-    val q3 = TipR.where(_.id eqs t._id).select(_.counts at "foo")
+     q3 = TipR.where(_.id eqs t._id).select(_.counts at "foo")
     //println(s"Q ${q.query}")
-    q3.fetchAsync().futureValue mustBe Seq(Some(1L))
+     _ <- q3.fetchAsync().map{res => assertEquals(res, Seq(Some(1L)))}
 
     //todo - no unsafe fields now
     //VenueR.where(_.id eqs v._id).select(_.geolatlng.unsafeField[Double]("lat")).fetchAsync()) mustBe List(Some(40.73))
-    val subuserids: Seq[Option[List[Long]]] = VenueR.where(_.id eqs v._id)
+    subuserids: Seq[Option[List[Long]]] <- VenueR.where(_.id eqs v._id)
       .select(_.claims.subselect(_.uid))
       .fetchAsync()
-      .futureValue
     //println(s"Sub user ids ${subuserids}")
-    subuserids mustBe List(Some(List(1234, 5678)))
 
-    val q = VenueR.where(_.claims.subfield(_.uid) eqs 1234).select(_.claims.$$)
-    val subclaims: Seq[Seq[VenueClaimBson]] = q.fetchAsync().futureValue
-    subclaims.size mustBe 1
-    subclaims.head.size mustBe 1
-    subclaims.head.head.uid mustBe 1234
-    subclaims.head.head.status mustBe ClaimStatus.pending
+     q = VenueR.where(_.claims.subfield(_.uid) eqs 1234).select(_.claims.$$)
+     subclaims: Seq[Seq[VenueClaimBson]] <- q.fetchAsync()
+
+
 
     // selecting a claims.userid when there is no top-level claims list should
     // have one element in the List for the one Venue, but an Empty for that
     // Venue since there's no list of claims there.
-    VenueR.where(_.id eqs v._id).modify(_.claims unset).and(_.lastClaim unset).updateOneAsync().futureValue
+      _ <- VenueR.where(_.id eqs v._id).modify(_.claims.unset).and(_.lastClaim.unset).updateOneAsync()
     //val x =caseClassFieldToQueryField(VenueR.lastClaim).subfield(_.uid)
 
     //val d = VenueR.select(_.lastClaim.subfield(_.uid))
     //val f= roptionalFieldToSelectField(ccMetaToQueryBuilder(VenueR).select(_.lastClaim.subfield(_.uid)))
     //val q = VenueR.where(_.id eqs v._id).select(_.lastClaim.subfield(_.uid))
 
-    VenueR.where(_.id eqs v._id).select(_.lastClaim.subfield(_.uid)).fetchAsync().futureValue mustBe List(None)
-    VenueR.where(_.id eqs v._id).select(_.lastClaim.subselect(_.uid)).fetchAsync().futureValue mustBe List(None)
-    VenueR.where(_.id eqs v._id).select(_.claims.subselect(_.uid)).fetchAsync().futureValue mustBe List(None)
-  }
+    _ <- VenueR.where(_.id eqs v._id).select(_.lastClaim.subfield(_.uid)).fetchAsync().map{res => assertEquals(res, List(None))}
+    _ <- VenueR.where(_.id eqs v._id).select(_.lastClaim.subselect(_.uid)).fetchAsync().map{res => assertEquals(res, List(None))}
+     _ <- VenueR.where(_.id eqs v._id).select(_.claims.subselect(_.uid)).fetchAsync().map{res => assertEquals(res, List(None))}
+  } yield {
+      assertEquals(subuserids, Seq(Some(List(1234L, 5678L))))
+      assertEquals(subclaims.size, 1)
+      assertEquals(subclaims.head.size,1)
+      assertEquals(subclaims.head.head.uid, 1234L)
+      assertEquals(subclaims.head.head.status, ClaimStatus.pending)
+    } }
   /*
   @Ignore("These tests are broken because DummyField doesn't know how to convert a String to an Enum")
   def testSelectEnumSubfield: Unit = {
@@ -244,132 +251,129 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
    */
 
-  "Find and modify" should "work as expected" in {
+  test("Find and modify should work as expected") {
 
-    val v1 = VenueR.where(_.venuename eqs "v1")
+    for {v1 <- VenueR.where(_.venuename eqs "v1")
       .findAndModify(_.userId setTo 5) //all required fields have to be set, because they are required in CC
       .and(_.legacyid setTo 0L).and(_.venuename setTo "").and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
       .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L)
-      .upsertOneAsync(returnNew = false).futureValue
+      .upsertOneAsync(returnNew = false)
 
-    v1 mustBe None
-    val v2F = VenueR.where(_.venuename eqs "v2")
+
+    v2 <- VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userId setTo 5)
       .and(_.legacyid setTo 0L).and(_.mayor_count setTo 0L)
       .and(_.closed setTo false).and(_.last_updated setTo LocalDateTime.now())
       .and(_.status setTo VenueStatus.open).and(_.mayor setTo 0L).and(_.userId setTo 0L)
       .upsertOneAsync(returnNew = true)
 
-    v2F.onComplete {
-      case scala.util.Failure(f) =>
-        println("V2 failed with ")
-        f.printStackTrace()
-      case scala.util.Success(_) =>
-        ()
-    }
-
-    val v2 = v2F.futureValue
-    v2.map(_.userId) mustBe Some(5)
-
-    val v3 = VenueR.where(_.venuename eqs "v2")
+    v3 <- VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userId setTo 6)
-      .upsertOneAsync(returnNew = false).futureValue
-    v3.map(_.userId) mustBe Some(5)
+      .upsertOneAsync(returnNew = false)
 
-    val v4 = VenueR.where(_.venuename eqs "v2")
+
+     v4 <- VenueR.where(_.venuename eqs "v2")
       .findAndModify(_.userId setTo 7)
-      .upsertOneAsync(returnNew = true).futureValue
-    v4.map(_.userId) mustBe Some(7)
-  }
+      .upsertOneAsync(returnNew = true)
 
-  "Regex query" should "work as expected" in {
+  } yield {
+      assertEquals(v1,None)
+      assertEquals(v2.map(_.userId), Some(5L))
+      assertEquals(v3.map(_.userId), Some(5L))
+      assertEquals(v4.map(_.userId), Some(7L))
+    }}
+
+  test("Regex query should work as expected") {
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
-    VenueR.where(_.id eqs v._id).and(_.venuename startsWith "test v").countAsync().futureValue mustBe 1
-    VenueR.where(_.id eqs v._id).and(_.venuename matches ".es. v".r).countAsync().futureValue mustBe 1
-    VenueR.where(_.id eqs v._id).and(_.venuename matches "Tes. v".r).countAsync().futureValue mustBe 0
-    VenueR.where(_.id eqs v._id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE)).countAsync().futureValue mustBe 1
-    VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legId)).countAsync().futureValue mustBe 1
-    VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legId)).countAsync().futureValue mustBe 0
-    VenueR.where(_.tags matches """some\s.*""".r).countAsync().futureValue mustBe 1
+    for { _ <- VenueR.insertOneAsync(v)
+          _ <-VenueR.where(_.id eqs v._id).and(_.venuename startsWith "test v").countAsync().map{res => assertEquals(res, 1L)}
+          _ <-VenueR.where(_.id eqs v._id).and(_.venuename matches ".es. v".r).countAsync().map{res => assertEquals(res, 1L)}
+          _ <-VenueR.where(_.id eqs v._id).and(_.venuename matches "Tes. v".r).countAsync().map{res => assertEquals(res, 0L)}
+          _ <-VenueR.where(_.id eqs v._id).and(_.venuename matches Pattern.compile("Tes. v", Pattern.CASE_INSENSITIVE)).countAsync().map{res => assertEquals(res, 1L)}
+          _ <-VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid in List(v.legId)).countAsync().map{res => assertEquals(res, 1L)}
+          _ <-VenueR.where(_.id eqs v._id).and(_.venuename matches "test .*".r).and(_.legacyid nin List(v.legId)).countAsync().map{res => assertEquals(res, 0L)}
+          _ <-VenueR.where(_.tags matches """some\s.*""".r).countAsync().map{res => assertEquals(res, 1L)}
 
-  }
+  } yield () }
 
-  "Limit and batch" should "work as expected" in {
-    (1 to 50).foreach(_ => VenueR.insertOneAsync(baseTestVenue()).futureValue)
+  test("Limit and batch should work as expected") {
     val q = VenueR.select(_.id)
-    q.limit(10).fetchAsync().futureValue.length mustBe 10
-    q.limit(-10).fetchAsync().futureValue.length mustBe 10
+    for {
+      _ <- Future.traverse(1 to 50)(_ => VenueR.insertOneAsync(baseTestVenue()))
+      _ <- q.limit(10).fetchAsync().map(res => assertEquals(res.length, 10))
+      _ <- q.limit(-10).fetchAsync().map(res => assertEquals(res.length, 10))
+    } yield ()
   }
 
-  "Count" should "work as expected" in {
-    (1 to 10).foreach(_ => VenueR.insertOneAsync(baseTestVenue()).futureValue)
-    val q = VenueR.select(_.id)
-    q.countAsync().futureValue mustBe 10
-    q.limit(3).countAsync().futureValue mustBe 3
-    q.limit(15).countAsync().futureValue mustBe 10
-    q.skip(5).countAsync().futureValue mustBe 5
-    q.skip(12).countAsync().futureValue mustBe 0
-    q.skip(3).limit(5).countAsync().futureValue mustBe 5
-    q.skip(8).limit(4).countAsync().futureValue mustBe 2
-  }
+  test("Count should work as expected") {
+    for { _ <- Future.sequence((1 to 10).map(_ => VenueR.insertOneAsync(baseTestVenue())))
+     q = VenueR.select(_.id)
+          _ <-q.countAsync().map{res => assertEquals(res, 10L)}
+          _ <-q.limit(3).countAsync().map{res => assertEquals(res, 3L)}
+          _ <-q.limit(15).countAsync().map{res => assertEquals(res, 10L)}
+          _ <-q.skip(5).countAsync().map{res => assertEquals(res, 5L)}
+          _ <-q.skip(12).countAsync().map{res => assertEquals(res, 0L)}
+          _ <-q.skip(3).limit(5).countAsync().map{res => assertEquals(res, 5L)}
+          _ <-q.skip(8).limit(4).countAsync().map{res => assertEquals(res, 2L)}
+  } yield () }
 
   // distincts need codecs for Long, and probably Int in db
 
-  "Distinct" should "work as expected" in {
-    (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 1L)).futureValue)
-    (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 2L)).futureValue)
-    (1 to 5).foreach(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 3L)).futureValue)
-    VenueR.where(_.mayor eqs 789L).distinctAsync(_.userId).futureValue.length mustBe 3
-    VenueR.where(_.mayor eqs 789L).countDistinctAsync(_.userId).futureValue mustBe 3
+  test("Distinct should work as expected") {
+    for {
+      _ <- Future.sequence((1 to 5).map(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 1L))))
+      _ <- Future.sequence((1 to 5).map(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 2L))))
+      _ <- Future.sequence((1 to 5).map(_ => VenueR.insertOneAsync(baseTestVenue().copy(userId = 3L))))
+      _ <- VenueR.where(_.mayor eqs 789L).distinctAsync(_.userId).map{res => assertEquals(res.length, 3)}
+      _ <- VenueR.where(_.mayor eqs 789L).countDistinctAsync(_.userId).map(assertEquals(_, 3L))
+    } yield ()
   }
 
-  "Slice" should "work as expected" in {
+  test("Slice should work as expected") {
     val v = baseTestVenue().copy(tags = List("1", "2", "3", "4"))
-    VenueR.insertOneAsync(v).futureValue
-    VenueR.select(_.tags.slice(2)).getAsync().futureValue mustBe Some(List("1", "2"))
-    VenueR.select(_.tags.slice(-2)).getAsync().futureValue mustBe Some(List("3", "4"))
-    VenueR.select(_.tags.slice(1, 2)).getAsync().futureValue mustBe Some(List("2", "3"))
+    for {
+      _ <- VenueR.insertOneAsync(v)
+      _ <- VenueR.select(_.tags.slice(2)).getAsync().map(assertEquals(_, Some(List("1", "2"))))
+      _ <- VenueR.select(_.tags.slice(-2)).getAsync().map(assertEquals(_, Some(List("3", "4"))))
+      _ <- VenueR.select(_.tags.slice(1, 2)).getAsync().map(assertEquals(_, Some(List("2", "3"))))
+    } yield ()
   }
 
-  "Select cc" should "work as expected" in {
+  test("Select cc should work as expected") {
 
     val v = baseTestVenue()
-    VenueR.insertOneAsync(v).futureValue
-
-    VenueR.select(_.lastClaim).fetchAsync()
-      .futureValue.flatten must contain(lastClaim)
-
-    VenueR.select(_.firstClaim).fetchAsync()
-      .futureValue must contain(VenueClaimBson.default)
-
-    VenueR.select(_.userId, _.firstClaim).fetchAsync()
-      .futureValue must contain(456L -> VenueClaimBson.default)
-
     val yetAnotherClaim = VenueClaimBson.default.copy(uid = 1L)
-
-    VenueR.findAndModify(_.firstClaim setTo yetAnotherClaim)
-      .upsertOneAsync(returnNew = true)
-      .futureValue.map(_.firstClaim) mustBe Some(yetAnotherClaim)
-
-    VenueR.findAndModify(_.lastClaim setTo yetAnotherClaim)
-      .upsertOneAsync(returnNew = true)
-      .futureValue.flatMap(_.lastClaim) mustBe Some(yetAnotherClaim)
+    for {
+      _ <- VenueR.insertOneAsync(v)
+      _ <- VenueR.select(_.lastClaim).fetchAsync().map(res => assert(res.flatten.contains(lastClaim)))
+      _ <- VenueR.select(_.firstClaim).fetchAsync().map(res => assert(res.contains(VenueClaimBson.default)))
+      _ <- VenueR.select(_.userId, _.firstClaim).fetchAsync().map(res => assert(res.contains(456L -> VenueClaimBson.default)))
+      updatedClaim <- VenueR.findAndModify(_.firstClaim setTo yetAnotherClaim)
+        .upsertOneAsync(returnNew = true)
+      _ = assertEquals(updatedClaim.map(_.firstClaim), Some(yetAnotherClaim))
+      _ <- VenueR.findAndModify(_.lastClaim setTo yetAnotherClaim)
+        .upsertOneAsync(returnNew = true).map { res =>
+        assertEquals(res.flatMap(_.lastClaim), Some(yetAnotherClaim))
+      }
+    } yield ()
 
   }
 
-  "ReplaceOne" should "replace value" in {
+  test("ReplaceOne should replace value") {
     val v1 = OptValCC(maybes = Some("bef"), realString = "ore")
     val v2 = v1.copy(maybes = None)
-    OptValCCR.insertOneAsync(v1).futureValue
-    OptValCCR.replaceOneAsync(v2).futureValue
-    val vr = OptValCCR.where(_.id eqs v1._id).getAsync().futureValue.get
-    vr.maybes mustBe None
-    vr.realString must ===("ore")
+    for {
+      _ <- OptValCCR.insertOneAsync(v1)
+      _ <- OptValCCR.replaceOneAsync(v2)
+      vr <- OptValCCR.where(_.id eqs v1._id).getAsync().map(_.get)
+    } yield {
+      assertEquals(vr.maybes, None)
+      assertEquals(vr.realString, "ore")
+    }
   }
 
-  "Currency and BigDecimal fields" should "just work" in {
+  test("Currency and BigDecimal fields should just work") {
 
     val USD = Currency.getInstance("USD")
     val EUR = Currency.getInstance("EUR")
@@ -381,112 +385,94 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
 
     val invoices = Seq(invoice1, invoice2, invoice3, invoice4)
 
-    for (invoice <- invoices) {
-      Invoices.insertOneAsync(invoice).futureValue
-    }
-
-    Invoices.where(_.total.subfield(_.amount) eqs BigDecimal(12.34)).fetchAsync().futureValue must contain allElementsOf (Seq(invoice1))
-
-    Invoices.where(_.id eqs 2L).modify(_.total setTo Money(59.12, USD)).updateOneAsync().futureValue
-
-    Invoices.where(_.id eqs 2L)
-      .fetchAsync().futureValue must contain allElementsOf (Seq(Invoice(2L, "Invoice no. 2", Money(59.12, USD))))
-
-    Invoices.where(_.total.subfield(_.currency) eqs EUR)
-      .fetchAsync().futureValue must contain allElementsOf (Seq(invoice4))
-
-    Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.currency) setTo EUR).updateOneAsync().futureValue
-
-    Invoices.where(_.id eqs 2L)
-      .fetchAsync().futureValue must contain allElementsOf (Seq(Invoice(2L, "Invoice no. 2", Money(59.12, EUR))))
-
-    Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.amount) setTo 1352.98).updateOneAsync().futureValue
-
-    Invoices.where(_.id eqs 2L)
-      .fetchAsync().futureValue must contain allElementsOf (Seq(Invoice(2L, "Invoice no. 2", Money(1352.98, EUR))))
+    for {
+      _ <- Future.traverse(invoices)(invoice => Invoices.insertOneAsync(invoice))
+      _ <-Invoices.where(_.total.subfield(_.amount) eqs BigDecimal(12.34)).fetchAsync().map(assertEquals(_, Seq(invoice1)))
+      _ <- Invoices.where(_.id eqs 2L).modify(_.total setTo Money(59.12, USD)).updateOneAsync()
+      _ <- Invoices.where(_.id eqs 2L).fetchAsync().map(assertEquals(_, Seq(Invoice(2L, "Invoice no. 2", Money(59.12, USD)))))
+      _ <-Invoices.where(_.total.subfield(_.currency) eqs EUR).fetchAsync().map(assertEquals(_, Seq(invoice4)))
+      _ <- Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.currency) setTo EUR).updateOneAsync()
+      _ <-Invoices.where(_.id eqs 2L).fetchAsync().map(assertEquals(_, Seq(Invoice(2L, "Invoice no. 2", Money(59.12, EUR)))))
+      _ <- Invoices.where(_.id eqs 2L).modify(_.total.subfield(_.amount) setTo 1352.98).updateOneAsync()
+      _ <- Invoices.where(_.id eqs 2L).fetchAsync().map(assertEquals(_, Seq(Invoice(2L, "Invoice no. 2", Money(1352.98, EUR)))))
+    } yield ()
 
   }
 
-  "Map[K, V] field" should "just work" in {
+  test("Map[K, V] field should just work") {
 
     val counts = Map(ObjectId.get -> 100L)
 
     val counter = MCounter(counts = counts)
 
-    Counters.insertOneAsync(counter).futureValue
+    for {_ <- Counters.insertOneAsync(counter)
 
-    val countsOpt = Counters
-      .where(_.id eqs counter._id)
-      .select(_.counts)
-      .getAsync()
-      .futureValue
-
-    val result: Map[ObjectId, Long] = countsOpt.get
-
-    result mustBe counts
+         countsOpt <- Counters
+           .where(_.id eqs counter._id)
+           .select(_.counts)
+           .getAsync()
+         } yield {
+      val result: Map[ObjectId, Long] = countsOpt.get
+      assertEquals(result, counts)
+    }
   }
 
-  "Map[K <: ObjectId, V] field" should "just work" in {
+  test("Map[K <: ObjectId, V] field should just work") {
 
     val counts: Map[CounterId, Long] = Map(tag[MCounter](ObjectId.get) -> 100L)
 
     val counter = TypedCounter(counts = counts)
 
-    TypedCounters.insertOneAsync(counter).futureValue
+    for {_ <- TypedCounters.insertOneAsync(counter)
 
-    val countsOpt = TypedCounters
-      .where(_.id eqs counter._id)
-      .select(_.counts)
-      .getAsync()
-      .futureValue
-
-    val result: Map[CounterId, Long] = countsOpt.get
-
-    result mustBe counts
+         countsOpt <- TypedCounters
+           .where(_.id eqs counter._id)
+           .select(_.counts)
+           .getAsync()
+         } yield {
+      val result: Map[CounterId, Long] = countsOpt.get
+      assertEquals(result, counts)
+    }
   }
 
-  "BinaryBsonFormat" should "just work" in {
+  test("BinaryBsonFormat should just work") {
 
     val sample = BinaryData("War, war never changes".getBytes)
 
-    Binaries.insertOneAsync(sample).futureValue
-
-    val seq: Seq[BinaryData] = Binaries.fetchAsync().futureValue
-    seq.map(d => new String(d.data)) must contain("War, war never changes")
-
+    for {_ <- Binaries.insertOneAsync(sample)
+         seq: Seq[BinaryData] <- Binaries.fetchAsync()
+         } yield {
+      assert(seq.map(d => new String(d.data)).contains("War, war never changes"))
+    }
   }
 
-  "LocaleBsonFormat & LocaleField" should "contain at least all MeWe supported locales" in {
+  test("LocaleBsonFormat & LocaleField should contain at least all MeWe supported locales") {
 
     val samples = Seq(Locale.CANADA_FRENCH, new Locale("pt", "BR"), new Locale("zh", "CN")) ++
       Seq("ar", "cs", "da", "de", "el", "es", "fi", "fr", "he", "it", "ja", "ko", "nb", "nl", "pl", "sv").map(l => new Locale(l))
 
     // samples.foreach { sample => Locales.insertOneAsync(LocaleData(sample)).futureValue }
-    Locales.insertManyAsync(samples.map(LocaleData)).futureValue
-
-    val seq: Seq[Locale] = Locales.where(_.locale in samples)
-      .select(_.locale).fetchAsync().futureValue
-
-    samples.foreach { sample =>
-      seq must contain(sample)
+    for { _ <- Locales.insertManyAsync(samples.map(LocaleData))
+     seq <- Locales.where(_.locale in samples).select(_.locale).fetchAsync()
+    _ <- Locales.where(_.locale eqs Locale.CANADA_FRENCH).modify(_.locale setTo Locale.CHINESE).updateOneAsync()
+    _ <- Locales.where(_.locale eqs Locale.CHINESE).existsAsync().map{res => assertEquals(res, true)}
+  } yield {
+      samples.foreach { sample =>
+        assert(seq.contains(sample))
+      }
     }
-
-    Locales.where(_.locale eqs Locale.CANADA_FRENCH).modify(_.locale setTo Locale.CHINESE).updateOneAsync()
-
-    Locales.where(_.locale eqs Locale.CHINESE).existsAsync.futureValue mustBe true
-
   }
 
-  "receive fetch" should "work with MCc" in {
+  test("receive fetch should work with MCc") {
     val sub = new TestSubscriber()
-    VenueR.insertManyAsync(Seq(baseTestVenue(), baseTestVenue(), baseTestVenue())).futureValue
+    Await.ready(VenueR.insertManyAsync(Seq(baseTestVenue(), baseTestVenue(), baseTestVenue())), 60.seconds)
 
     val pub = VenueR.where(_.closed neqs true).select(_.venuename).fetchPublisher(2)
     val s = pub.subscribe(sub)
     sub.waitForAll()
     val rcv = sub.getRecieved()
-    rcv.length mustEqual 3
-    rcv mustEqual List("test venue", "test venue", "test venue")
+    assertEquals(rcv.length, 3)
+    assertEquals(rcv, List("test venue", "test venue", "test venue"))
 
     val sub2 = new TestSubscriber()
     //special case - objectIds
@@ -494,7 +480,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
     val s2 = pub.subscribe(sub2)
     sub2.waitForAll()
     val rcv2 = sub2.getRecieved()
-    rcv2.length mustEqual 3
+    assertEquals(rcv2.length, 3)
 
     val sub3 = new TestSubscriber()
     //special case - objectIds
@@ -502,7 +488,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
     val s3 = pub.subscribe(sub3)
     sub3.waitForAll()
     val rcv3 = sub3.getRecieved()
-    rcv3.length mustEqual 3
+    assertEquals(rcv3.length, 3)
 
     val sub4 = new TestSubscriber()
     //special case - objectIds
@@ -510,7 +496,7 @@ class MacroEndToEndSpec extends FlatSpec with MustMatchers with ScalaFutures wit
     val s4 = pub.subscribe(sub4)
     sub4.waitForAll()
     val rcv4 = sub4.getRecieved()
-    rcv4.length mustEqual 3
+    assertEquals(rcv4.length, 3)
   }
 }
 

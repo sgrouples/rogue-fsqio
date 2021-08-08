@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 import shapeless.tag
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 
 class EndToEndBsonAsyncSpec extends FunSuite {
   import Metas._
@@ -63,6 +63,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   override def afterEach(context: AfterEach): Unit = {
+    Await.ready(
     for {_ <- VenueR.bulkDeleteAsync_!!!()
          _ <- VenueClaimR.bulkDeleteAsync_!!!()
          venueRCnt <- VenueR.countAsync() //.futureValue mustBe 0L
@@ -70,7 +71,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
          } yield {
       assert(venueRCnt == 0L, s"venueR left after tests ${context.test.name}")
       assert(venueClaimCnt == 0L, "venueCLam left after test  ${context.test.name}")
-    }
+    }, 60.seconds)
   }
 
   test("Eqs test") {
