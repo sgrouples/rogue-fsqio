@@ -28,8 +28,11 @@ trait TypedObjectId[RecordType, TagType] {
     def apply(text: String): Id = tag[TagType][ObjectId](new ObjectId(text))
 
     object Extract {
-      def unapply(in: String): Option[Id] = try { Some(apply(in)) } catch { case e: IllegalArgumentException => None }
-      def unapply(inOpt: Option[String]): Option[Option[Id]] = try { Some(inOpt.map(apply)) } catch { case e: IllegalArgumentException => None }
+      def unapply(in: String): Option[Id] = try { Some(apply(in)) }
+      catch { case e: IllegalArgumentException => None }
+      def unapply(inOpt: Option[String]): Option[Option[Id]] = try {
+        Some(inOpt.map(apply))
+      } catch { case e: IllegalArgumentException => None }
     }
 
   }
@@ -53,7 +56,11 @@ class ObjectIdSubtypeSpec extends FunSuite {
     val id = ObjectIdSubtypeField[A.Id]("_id")
   }
   val X = new MetaA
-  val t: Query[MetaA, cc.A.Id, Unordered with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified with SelectedOne] = X.select(_.id)
+  val t: Query[
+    MetaA,
+    cc.A.Id,
+    Unordered with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified with SelectedOne
+  ] = X.select(_.id)
 
   test("t should compile") {
     //should compile ..
@@ -76,8 +83,11 @@ trait TypedStringId[RecordType, TagType] {
       tag[TagType][String](text)
 
     object Extract {
-      def unapply(in: String): Option[Id] = try { Some(apply(in)) } catch { case e: IllegalArgumentException => None }
-      def unapply(inOpt: Option[String]): Option[Option[Id]] = try { Some(inOpt.map(apply)) } catch { case e: IllegalArgumentException => None }
+      def unapply(in: String): Option[Id] = try { Some(apply(in)) }
+      catch { case e: IllegalArgumentException => None }
+      def unapply(inOpt: Option[String]): Option[Option[Id]] = try {
+        Some(inOpt.map(apply))
+      } catch { case e: IllegalArgumentException => None }
     }
   }
 
@@ -105,6 +115,7 @@ class StringTaggedSpec extends FunSuite {
   val t: Query[MetaB, cc.B.Id, _] = X.select(_.id).where(_.id eqs id)
 
   test("t should compile") {
-    val t: Query[_, me.sgrouples.rogue.cc.B.Id, _] = X.select(_.id).where(_.id eqs id)
+    val t: Query[_, me.sgrouples.rogue.cc.B.Id, _] =
+      X.select(_.id).where(_.id eqs id)
   }
 }

@@ -2,4 +2,5 @@
 
 package io.fsq.rogue
 
-class RogueException(message: String, cause: Throwable) extends RuntimeException(message, cause)
+class RogueException(message: String, cause: Throwable)
+    extends RuntimeException(message, cause)

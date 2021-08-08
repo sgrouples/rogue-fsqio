@@ -7,10 +7,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.jdk.CollectionConverters._
 
 trait TraversableLikeFormats {
-  implicit def traversableLikeFormat[L[_], T: BsonFormat](
-    implicit
-    ev: L[T] <:< Iterable[T],
-    cb: Factory[T, L[T]]): BsonFormat[L[T]] = {
+  implicit def traversableLikeFormat[L[_], T: BsonFormat](implicit
+      ev: L[T] <:< Iterable[T],
+      cb: Factory[T, L[T]]
+  ): BsonFormat[L[T]] = {
 
     new BsonFormat[L[T]] with BsonArrayReader[L[T]] {
 

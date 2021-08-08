@@ -3,15 +3,19 @@ package me.sgrouples.rogue.cc
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
 
-/**
- * Created by mar on 24.07.2016.
- */
-trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB] {
+/** Created by mar on 24.07.2016.
+  */
+trait BsonReadWriteSerializers[MB <: CcMeta[_]]
+    extends ReadWriteSerializers[MB] {
 
-  override protected def readSerializer[M <: CcMeta[_], R](meta: M, select: Option[MongoSelect[M, R]]): RogueBsonRead[R] = {
+  override protected def readSerializer[M <: CcMeta[_], R](
+      meta: M,
+      select: Option[MongoSelect[M, R]]
+  ): RogueBsonRead[R] = {
     new RogueBsonRead[R] {
       override def fromDocument(dbo: BsonDocument): R = select match {
-        case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
+        case Some(MongoSelect(fields, transformer, true, _))
+            if fields.isEmpty =>
           // A MongoSelect clause exists, but has empty fields. Return null.
           // This is used for .exists(), where we just want to check the number
           // of returned results is > 0.
@@ -24,12 +28,11 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
               val reader = meta.reader(fld.field)
               //TODO - does not in case reader is for non-array, and subselect returns array
               //if fld is optional, readOpt will read Option[Option[T]] this is handled (poorly) inside fld.valueOrDefault
-              fld.valueOrDefault(
-                if (readArray) {
-                  readOptArr(reader.readArray, bsonV.asArray())
-                } else {
-                  readOpt(reader.read, bsonV)
-                })
+              fld.valueOrDefault(if (readArray) {
+                readOptArr(reader.readArray, bsonV.asArray())
+              } else {
+                readOpt(reader.read, bsonV)
+              })
             })
           transformer(values)
 
@@ -39,29 +42,44 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
       }
 
       //same thing, but opt
-      override def fromDocumentOpt(dbo: BsonDocument): Option[R] = select match {
-        case Some(MongoSelect(fields, transformer, true, _)) if fields.isEmpty =>
-          throw new RuntimeException("empty transformer for fromDocumentOpt not implemented, fields subset return in findAndModify not yet implemented")
-        case Some(MongoSelect(fields, transformer, _, _)) =>
-          throw new RuntimeException("fromDocumentOpt with fields subset return in findAndModify not yet implemented")
-        case None => {
-          //println(s"fromDocumentOpt: ${dbo} ")
-          readOpt(meta.read, dbo).asInstanceOf[Option[R]]
+      override def fromDocumentOpt(dbo: BsonDocument): Option[R] =
+        select match {
+          case Some(MongoSelect(fields, transformer, true, _))
+              if fields.isEmpty =>
+            throw new RuntimeException(
+              "empty transformer for fromDocumentOpt not implemented, fields subset return in findAndModify not yet implemented"
+            )
+          case Some(MongoSelect(fields, transformer, _, _)) =>
+            throw new RuntimeException(
+              "fromDocumentOpt with fields subset return in findAndModify not yet implemented"
+            )
+          case None => {
+            //println(s"fromDocumentOpt: ${dbo} ")
+            readOpt(meta.read, dbo).asInstanceOf[Option[R]]
+          }
         }
-      }
     }
   }
-  private[this] def readOpt[T](reader: BsonValue => T, v: BsonValue): Option[T] = {
+  private[this] def readOpt[T](
+      reader: BsonValue => T,
+      v: BsonValue
+  ): Option[T] = {
     if (v == null || v.isNull) None
     else Option(reader(v))
   }
 
-  private[this] def readOptArr[T](reader: BsonArray => Seq[T], v: BsonArray): Option[Seq[T]] = {
+  private[this] def readOptArr[T](
+      reader: BsonArray => Seq[T],
+      v: BsonArray
+  ): Option[Seq[T]] = {
     if (v == null || v.isNull) None
     else Option(reader(v))
   }
 
-  private[this] def readBsonVal(dbo: BsonDocument, fldName: String): (BsonValue, Boolean) = {
+  private[this] def readBsonVal(
+      dbo: BsonDocument,
+      fldName: String
+  ): (BsonValue, Boolean) = {
     val parts = fldName.split('.')
     //println(s"parts fldName ${fldName} len ${parts.length} ${parts}")
     var i = 0
@@ -95,8 +113,10 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]] extends ReadWriteSerializers[MB]
     (d, needArray)
   }
 
-  override protected def writeSerializer[M <: CcMeta[_], R](meta: M): RogueBsonWrite[R] = {
-    (record: R) => {
+  override protected def writeSerializer[M <: CcMeta[_], R](
+      meta: M
+  ): RogueBsonWrite[R] = { (record: R) =>
+    {
       meta.writeAnyRef(record.asInstanceOf[AnyRef]).asDocument()
     }
   }

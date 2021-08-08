@@ -37,84 +37,127 @@ sealed trait ShardKeyNotSpecified
 sealed trait ShardAware
 sealed trait ShardKeySpecified extends ShardAware
 sealed trait AllShardsOk extends ShardAware
-sealed trait Sh extends ShardKeyNotSpecified with ShardKeySpecified with AllShardsOk
+sealed trait Sh
+    extends ShardKeyNotSpecified
+    with ShardKeySpecified
+    with AllShardsOk
 
 @implicitNotFound(msg = "Query must be Unordered, but it's actually ${In}")
 trait AddNaturalOrder[-In, +Out] extends Required[In, Unordered]
 object AddNaturalOrder {
-  implicit def addOrder[Rest >: Sel with Lim with Sk with Or with Sh]: AddNaturalOrder[Rest with Unordered, Rest with Ordered] = null
+  implicit def addOrder[Rest >: Sel with Lim with Sk with Or with Sh]
+      : AddNaturalOrder[Rest with Unordered, Rest with Ordered] = null
 }
 
 @implicitNotFound(msg = "Query must be Unordered, but it's actually ${In}")
 trait AddOrder[-In, +Out] extends Required[In, Unordered]
 object AddOrder {
-  implicit def addOrder[Rest >: Sel with Lim with Sk with Or with Hn with Sh]: AddOrder[Rest with Unordered, Rest with Ordered] = null
+  implicit def addOrder[Rest >: Sel with Lim with Sk with Or with Hn with Sh]
+      : AddOrder[Rest with Unordered, Rest with Ordered] = null
 }
 
 @implicitNotFound(msg = "Query must be Unselected, but it's actually ${In}")
 trait AddSelect[-In, +Out, +One] extends Required[In, Unselected]
 object AddSelect {
-  implicit def addSelect[Rest >: Ord with Lim with Sk with Or with Hn with Sh]: AddSelect[Rest with Unselected, Rest with Selected, Rest with SelectedOne] = null
+  implicit def addSelect[Rest >: Ord with Lim with Sk with Or with Hn with Sh]
+      : AddSelect[
+        Rest with Unselected,
+        Rest with Selected,
+        Rest with SelectedOne
+      ] = null
 }
 
 @implicitNotFound(msg = "Query must be Unlimited, but it's actually ${In}")
 trait AddLimit[-In, +Out] extends Required[In, Unlimited]
 object AddLimit {
-  implicit def addLimit[Rest >: Ord with Sel with Sk with Or with Hn with Sh]: AddLimit[Rest with Unlimited, Rest with Limited] = null
+  implicit def addLimit[Rest >: Ord with Sel with Sk with Or with Hn with Sh]
+      : AddLimit[Rest with Unlimited, Rest with Limited] = null
 }
 
 @implicitNotFound(msg = "Query must be Unskipped, but it's actually ${In}")
 trait AddSkip[-In, +Out] extends Required[In, Unskipped]
 object AddSkip {
-  implicit def addSkip[Rest >: Ord with Sel with Lim with Or with Hn with Sh]: AddSkip[Rest with Unskipped, Rest with Skipped] = null
+  implicit def addSkip[Rest >: Ord with Sel with Lim with Or with Hn with Sh]
+      : AddSkip[Rest with Unskipped, Rest with Skipped] = null
 }
 
 @implicitNotFound(msg = "Query must be HasNoOrClause, but it's actually ${In}")
 trait AddOrClause[-In, +Out] extends Required[In, HasNoOrClause]
 object AddOrClause {
-  implicit def addOrClause[Rest >: Ord with Sel with Lim with Sk with Hn with Sh]: AddOrClause[Rest with HasNoOrClause, Rest with HasOrClause] = null
+  implicit def addOrClause[
+      Rest >: Ord with Sel with Lim with Sk with Hn with Sh
+  ]: AddOrClause[Rest with HasNoOrClause, Rest with HasOrClause] = null
 }
 
 @implicitNotFound(msg = "Query must be Unhinted, but it's actually ${In}")
 trait AddHint[-In, +Out] extends Required[In, Unhinted]
 object AddHint {
-  implicit def addHint[Rest >: Ord with Sel with Lim with Or with Sk with Sh]: AddHint[Rest with Unhinted, Rest with Hinted] = null
+  implicit def addHint[Rest >: Ord with Sel with Lim with Or with Sk with Sh]
+      : AddHint[Rest with Unhinted, Rest with Hinted] = null
 }
 
-trait AddShardAware[-In, +Specified, +AllOk] extends Required[In, ShardKeyNotSpecified]
+trait AddShardAware[-In, +Specified, +AllOk]
+    extends Required[In, ShardKeyNotSpecified]
 object AddShardAware {
-  implicit def addShardAware[Rest >: Ord with Sel with Lim with Sk with Or with Hn]: AddShardAware[Rest with ShardKeyNotSpecified, Rest with ShardKeySpecified, Rest with AllShardsOk] = null
+  implicit def addShardAware[
+      Rest >: Ord with Sel with Lim with Sk with Or with Hn
+  ]: AddShardAware[
+    Rest with ShardKeyNotSpecified,
+    Rest with ShardKeySpecified,
+    Rest with AllShardsOk
+  ] = null
 }
 
-@implicitNotFound(msg = "In order to call this method, ${A} must NOT be a subclass of ${B}.")
+@implicitNotFound(
+  msg = "In order to call this method, ${A} must NOT be a subclass of ${B}."
+)
 sealed trait !<:<[A, B]
 object !<:< {
   implicit def any[A, B]: A !<:< B = null
-  implicit def intentionallyAmbiguousImplicitForNotSubclassTypeConstraint[A, B >: A]: A !<:< B = null
-  implicit def intentionallyAmbiguousImplicitForNotSubclassTypeConstraint2[A, B >: A]: A !<:< B = null
+  implicit def intentionallyAmbiguousImplicitForNotSubclassTypeConstraint[
+      A,
+      B >: A
+  ]: A !<:< B = null
+  implicit def intentionallyAmbiguousImplicitForNotSubclassTypeConstraint2[
+      A,
+      B >: A
+  ]: A !<:< B = null
 }
 
 @implicitNotFound(msg = "Cannot prove that ${A} <: ${B}")
 class Required[-A, +B] {
-  def apply[M, R](q: Query[M, R, A]): Query[M, R, B] = q.asInstanceOf[Query[M, R, B]]
+  def apply[M, R](q: Query[M, R, A]): Query[M, R, B] =
+    q.asInstanceOf[Query[M, R, B]]
 }
 object Required {
   val default = new Required[Any, Any]
-  implicit def conforms[A]: Required[A, A] = default.asInstanceOf[Required[A, A]]
+  implicit def conforms[A]: Required[A, A] =
+    default.asInstanceOf[Required[A, A]]
 }
 
-@implicitNotFound(msg = "${M} is a sharded collection but the shard key is not specified. Either specify the shard key or add `.allShards` to the query.")
+@implicitNotFound(
+  msg =
+    "${M} is a sharded collection but the shard key is not specified. Either specify the shard key or add `.allShards` to the query."
+)
 trait ShardingOk[M, -S]
 object ShardingOk {
   implicit def sharded[M <: Sharded, Sh <: ShardAware]: ShardingOk[M, Sh] = null
-  implicit def unsharded[M, State](implicit ev: M !<:< Sharded): ShardingOk[M, State] = null
+  implicit def unsharded[M, State](implicit
+      ev: M !<:< Sharded
+  ): ShardingOk[M, State] = null
 }
 
-@implicitNotFound(msg = "${M} is a sharded collection. Either specify the shard key or use `.updateMulti()`.")
+@implicitNotFound(
+  msg =
+    "${M} is a sharded collection. Either specify the shard key or use `.updateMulti()`."
+)
 trait RequireShardKey[M, -S]
 object RequireShardKey {
-  implicit def sharded[M <: Sharded, Sh <: ShardKeySpecified]: RequireShardKey[M, Sh] = null
-  implicit def unsharded[M, State](implicit ev: M !<:< Sharded): RequireShardKey[M, State] = null
+  implicit def sharded[M <: Sharded, Sh <: ShardKeySpecified]
+      : RequireShardKey[M, Sh] = null
+  implicit def unsharded[M, State](implicit
+      ev: M !<:< Sharded
+  ): RequireShardKey[M, State] = null
 }
 
 sealed trait MaybeIndexed

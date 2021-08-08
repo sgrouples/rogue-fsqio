@@ -5,9 +5,9 @@ package io.fsq.rogue
 class QueryOptimizer {
   def isEmptyClause(clause: QueryClause[_]): Boolean = clause match {
     case AllQueryClause(_, vs) => vs.isEmpty
-    case InQueryClause(_, vs) => vs.isEmpty
-    case EmptyQueryClause(_) => true
-    case _ => false
+    case InQueryClause(_, vs)  => vs.isEmpty
+    case EmptyQueryClause(_)   => true
+    case _                     => false
   }
 
   def isEmptyQuery(query: Query[_, _, _]): Boolean = {

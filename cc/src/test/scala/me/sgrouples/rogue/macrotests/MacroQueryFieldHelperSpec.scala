@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.macrotests
 
-import me.sgrouples.rogue.cc.{ QueryFieldHelpers, TestDomainObject }
+import me.sgrouples.rogue.cc.{QueryFieldHelpers, TestDomainObject}
 import me.sgrouples.rogue.cc.macros._
 import munit.FunSuite
 import scala.concurrent.Future
@@ -20,9 +20,10 @@ trait TestQueryTraitB[OwnerType] {
 
 trait X {
 
-  class TestDomainObjectMeta extends MCcMeta[TestDomainObject, TestDomainObjectMeta]("abc")
-    with TestQueryTraitA[TestDomainObjectMeta]
-    with TestQueryTraitB[TestDomainObjectMeta] {
+  class TestDomainObjectMeta
+      extends MCcMeta[TestDomainObject, TestDomainObjectMeta]("abc")
+      with TestQueryTraitA[TestDomainObjectMeta]
+      with TestQueryTraitB[TestDomainObjectMeta] {
 
     @f val claims = ListField[String]
 
@@ -64,7 +65,9 @@ trait X {
     @f val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
 
     @f val optLocalDateTime = OptLocalDateTimeField
-    @f val optLocalDateTime_named = OptLocalDateTimeField("optLocalDateTime_custom_name")
+    @f val optLocalDateTime_named = OptLocalDateTimeField(
+      "optLocalDateTime_custom_name"
+    )
 
     @f val instant = InstantField
     @f val instant_named = InstantField("instant_custom_name")
@@ -91,57 +94,78 @@ class MacroQueryFieldHelperSpec extends FunSuite with X {
   test("QueryFieldHelper auto-resolve field names") {
 
     assertEquals(TestDomainObjects.int.name, "int")
-assertEquals(    TestDomainObjects.int_named.name, "int_custom_name")
+    assertEquals(TestDomainObjects.int_named.name, "int_custom_name")
 
-assertEquals(    TestDomainObjects.optInt.name, "optInt")
-assertEquals(    TestDomainObjects.optInt_named.name, "optInt_custom_name")
-assertEquals(    TestDomainObjects.string.name, "string")
-assertEquals(    TestDomainObjects.string_named.name, "string_custom_name")
+    assertEquals(TestDomainObjects.optInt.name, "optInt")
+    assertEquals(TestDomainObjects.optInt_named.name, "optInt_custom_name")
+    assertEquals(TestDomainObjects.string.name, "string")
+    assertEquals(TestDomainObjects.string_named.name, "string_custom_name")
 
-assertEquals(    TestDomainObjects.optString.name, "optString")
-assertEquals(    TestDomainObjects.optString_named.name, "optString_custom_name")
+    assertEquals(TestDomainObjects.optString.name, "optString")
+    assertEquals(
+      TestDomainObjects.optString_named.name,
+      "optString_custom_name"
+    )
 
-assertEquals(    TestDomainObjects.long.name, "long")
-assertEquals(    TestDomainObjects.long_named.name, "long_custom_name")
+    assertEquals(TestDomainObjects.long.name, "long")
+    assertEquals(TestDomainObjects.long_named.name, "long_custom_name")
 
-assertEquals(    TestDomainObjects.optLong.name, "optLong")
-assertEquals(    TestDomainObjects.optLong_named.name, "optLong_custom_name")
+    assertEquals(TestDomainObjects.optLong.name, "optLong")
+    assertEquals(TestDomainObjects.optLong_named.name, "optLong_custom_name")
 
-assertEquals(    TestDomainObjects.double.name, "double")
-assertEquals(    TestDomainObjects.double_named.name, "double_custom_name")
+    assertEquals(TestDomainObjects.double.name, "double")
+    assertEquals(TestDomainObjects.double_named.name, "double_custom_name")
 
-assertEquals(    TestDomainObjects.optDouble.name, "optDouble")
-assertEquals(    TestDomainObjects.optDouble_named.name, "optDouble_custom_name")
+    assertEquals(TestDomainObjects.optDouble.name, "optDouble")
+    assertEquals(
+      TestDomainObjects.optDouble_named.name,
+      "optDouble_custom_name"
+    )
 
-assertEquals(    TestDomainObjects.objectId.name, "objectId")
-assertEquals(    TestDomainObjects.objectId_named.name, "objectId_custom_name")
+    assertEquals(TestDomainObjects.objectId.name, "objectId")
+    assertEquals(TestDomainObjects.objectId_named.name, "objectId_custom_name")
 
-assertEquals(    TestDomainObjects.optObjectId.name, "optObjectId")
-assertEquals(    TestDomainObjects.optObjectId_named.name, "optObjectId_custom_name")
+    assertEquals(TestDomainObjects.optObjectId.name, "optObjectId")
+    assertEquals(
+      TestDomainObjects.optObjectId_named.name,
+      "optObjectId_custom_name"
+    )
 
-assertEquals(    TestDomainObjects.uuid.name, "uuid")
-assertEquals(    TestDomainObjects.uuid_named.name, "uuid_custom_name")
+    assertEquals(TestDomainObjects.uuid.name, "uuid")
+    assertEquals(TestDomainObjects.uuid_named.name, "uuid_custom_name")
 
-assertEquals(    TestDomainObjects.optUUID.name, "optUUID")
-assertEquals(    TestDomainObjects.optUUID_named.name, "optUUID_custom_name")
+    assertEquals(TestDomainObjects.optUUID.name, "optUUID")
+    assertEquals(TestDomainObjects.optUUID_named.name, "optUUID_custom_name")
 
-assertEquals(    TestDomainObjects.localDateTime.name, "localDateTime")
-assertEquals(    TestDomainObjects.localDateTime_named.name, "localDateTime_custom_name")
+    assertEquals(TestDomainObjects.localDateTime.name, "localDateTime")
+    assertEquals(
+      TestDomainObjects.localDateTime_named.name,
+      "localDateTime_custom_name"
+    )
 
-assertEquals(    TestDomainObjects.optLocalDateTime.name, "optLocalDateTime")
-assertEquals(    TestDomainObjects.optLocalDateTime_named.name, "optLocalDateTime_custom_name")
+    assertEquals(TestDomainObjects.optLocalDateTime.name, "optLocalDateTime")
+    assertEquals(
+      TestDomainObjects.optLocalDateTime_named.name,
+      "optLocalDateTime_custom_name"
+    )
 
-assertEquals(    TestDomainObjects.instant.name, "instant")
-assertEquals(    TestDomainObjects.instant_named.name, "instant_custom_name")
+    assertEquals(TestDomainObjects.instant.name, "instant")
+    assertEquals(TestDomainObjects.instant_named.name, "instant_custom_name")
 
-assertEquals(    TestDomainObjects.optInstant.name, "optInstant")
-assertEquals(    TestDomainObjects.optInstant_named.name, "optInstant_custom_name")
+    assertEquals(TestDomainObjects.optInstant.name, "optInstant")
+    assertEquals(
+      TestDomainObjects.optInstant_named.name,
+      "optInstant_custom_name"
+    )
 
-assertEquals(    TestDomainObjects.boolean.name, "boolean")
-assertEquals(    TestDomainObjects.boolean_named.name, "boolean_custom_name")
+    assertEquals(TestDomainObjects.boolean.name, "boolean")
+    assertEquals(TestDomainObjects.boolean_named.name, "boolean_custom_name")
 
-assertEquals(    TestDomainObjects.optBoolean.name, "optBoolean")
-assertEquals(    TestDomainObjects.optBoolean_named.name, "optBoolean_custom_name")
+    assertEquals(TestDomainObjects.optBoolean.name, "optBoolean")
+    assertEquals(
+      TestDomainObjects.optBoolean_named.name,
+      "optBoolean_custom_name"
+    )
 
   }
 
@@ -152,7 +176,8 @@ assertEquals(    TestDomainObjects.optBoolean_named.name, "optBoolean_custom_nam
     @f val b = StringField("a")
   }
 
-  class MultiThreadedTestMeta extends MCcMeta[AnotherValue, MultiThreadedTestMeta] {
+  class MultiThreadedTestMeta
+      extends MCcMeta[AnotherValue, MultiThreadedTestMeta] {
     @f val a = StringField
     @f val b = StringField
     @f val c = StringField
@@ -162,7 +187,10 @@ assertEquals(    TestDomainObjects.optBoolean_named.name, "optBoolean_custom_nam
   }
 
   test("it should fail when name is duplicated") {
-    assertEquals(    Try(new AnotherTestMeta).toString, "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)")
+    assertEquals(
+      Try(new AnotherTestMeta).toString,
+      "Failure(java.lang.IllegalArgumentException: Field with name a is already defined)"
+    )
   }
 
   case class DifferentValue(a: String)
@@ -171,8 +199,8 @@ assertEquals(    TestDomainObjects.optBoolean_named.name, "optBoolean_custom_nam
     @f val a = StringField
   }
 
-  test("not fail when resolving an inner meta class"){
-assertEquals(    (new DifferentTestMeta).a.name, "a")
+  test("not fail when resolving an inner meta class") {
+    assertEquals((new DifferentTestMeta).a.name, "a")
   }
 
   test("not fail in multi threaded env") {
@@ -183,4 +211,3 @@ assertEquals(    (new DifferentTestMeta).a.name, "a")
   }
 
 }
-

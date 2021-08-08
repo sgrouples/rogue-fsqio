@@ -14,7 +14,10 @@ class MacroMapFormatSpec extends FunSuite {
 
   case class StringMap(value: Map[String, Long])
   case class ObjectIdMap(value: Map[ObjectId, Long])
-  case class OptMapStrLong(expanded: Option[Map[String, Long]], aliased: Option[StrLongMapT])
+  case class OptMapStrLong(
+      expanded: Option[Map[String, Long]],
+      aliased: Option[StrLongMapT]
+  )
   case class MapStrLong(expanded: Map[String, Long], aliased: StrLongMapT)
 
   trait M
@@ -39,12 +42,13 @@ class MacroMapFormatSpec extends FunSuite {
     val meta = new ObjectIdMapMeta
     val v = ObjectIdMap(Map(ObjectId.get() -> 1))
     val bson = meta.write(v)
-    assertEquals(meta.read(bson),v)
+    assertEquals(meta.read(bson), v)
   }
 
-  class ObjectIdSubtypeMapMeta extends MCcMeta[ObjectIdSubtypeMap, ObjectIdSubtypeMapMeta]("oidsub")
+  class ObjectIdSubtypeMapMeta
+      extends MCcMeta[ObjectIdSubtypeMap, ObjectIdSubtypeMapMeta]("oidsub")
 
-  test("write/read objectId subtype keyed map"){
+  test("write/read objectId subtype keyed map") {
 
     val meta = new ObjectIdSubtypeMapMeta
     val v = ObjectIdSubtypeMap(Map(tag[M](ObjectId.get()) -> 1))

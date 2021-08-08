@@ -15,7 +15,7 @@ class AsyncBatchSpec extends FunSuite {
     @f val id = IntField("_id")
   }
 
- /* "batch async" should "batch with slice size and function" in {
+  /* "batch async" should "batch with slice size and function" in {
     implicit val mongo = MongoTestConn.connectToMongo.getDatabase("nummodel")
 
     def reader(s: Iterable[Int]): Future[Seq[Seq[Int]]] = {
@@ -70,5 +70,5 @@ class AsyncBatchSpec extends FunSuite {
     super.afterAll()
     MongoTestConn.disconnectFromMongo
   }
-  */
+   */
 }

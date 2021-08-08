@@ -13,24 +13,26 @@ trait QueryById[M] {
 }
 
 case class UserBlock(
-  _id: ObjectId = new ObjectId,
-  userPk: ObjectId,
-  blocked: ObjectId,
-  createdAt: Instant,
-  isNotIndexed: Option[Boolean] = None) {
+    _id: ObjectId = new ObjectId,
+    userPk: ObjectId,
+    blocked: ObjectId,
+    createdAt: Instant,
+    isNotIndexed: Option[Boolean] = None
+) {
   def userId: ObjectId = userPk
   def id: ObjectId = _id
 }
 
-class UserBlockMeta(name: String = "userblocks") extends RCcMetaExt[UserBlock, UserBlockMeta](name)
-  with QueryById[UserBlockMeta] {
+class UserBlockMeta(name: String = "userblocks")
+    extends RCcMetaExt[UserBlock, UserBlockMeta](name)
+    with QueryById[UserBlockMeta] {
 
   val thisIsWhatWorks = ObjectIdTaggedField[User]
   val createdAt = InstantField
 }
-/**
- * Created by mar on 02/06/2017.
- */
+
+/** Created by mar on 02/06/2017.
+  */
 class RccMeta212Spec extends FunSuite {
 
   test("UserBlockMeta should be creatable") {

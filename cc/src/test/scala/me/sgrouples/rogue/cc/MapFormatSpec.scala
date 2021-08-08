@@ -21,13 +21,12 @@ case class CustomKeyMap(value: Map[CustomKey, Long])
 
 class MapFormatSpec extends FunSuite {
 
-
   test("MapFormat should write/read string keyed map") {
 
     val meta = new StringMapMeta
     val v = StringMap(Map("Hi" -> 1))
     val bson = meta.write(v)
-assertEquals(    meta.read(bson), v)
+    assertEquals(meta.read(bson), v)
 
   }
 
@@ -38,17 +37,18 @@ assertEquals(    meta.read(bson), v)
     val meta = new ObjectIdMapMeta
     val v = ObjectIdMap(Map(ObjectId.get() -> 1))
     val bson = meta.write(v)
-assertEquals(    meta.read(bson), v)
+    assertEquals(meta.read(bson), v)
   }
 
-  class ObjectIdSubtypeMapMeta extends RCcMetaExt[ObjectIdSubtypeMap, ObjectIdSubtypeMapMeta]
+  class ObjectIdSubtypeMapMeta
+      extends RCcMetaExt[ObjectIdSubtypeMap, ObjectIdSubtypeMapMeta]
 
-  test("it should write/read objectId subtype keyed map" ) {
+  test("it should write/read objectId subtype keyed map") {
 
     val meta = new ObjectIdSubtypeMapMeta
     val v = ObjectIdSubtypeMap(Map(tag[MTypes.M](ObjectId.get()) -> 1))
     val bson = meta.write(v)
-assertEquals(    meta.read(bson), v)
+    assertEquals(meta.read(bson), v)
   }
 
   implicit val customKeyMapFormat: MapKeyFormat[CustomKey] =
@@ -56,11 +56,11 @@ assertEquals(    meta.read(bson), v)
 
   class CustomKeyMapMeta extends RCcMetaExt[CustomKeyMap, CustomKeyMapMeta]
 
-  test("it should write/read custom keyed map"){
+  test("it should write/read custom keyed map") {
 
     val meta = new CustomKeyMapMeta
     val v = CustomKeyMap(Map(CustomKey(1L) -> 1L))
     val bson = meta.write(v)
-assertEquals(    meta.read(bson), v)
+    assertEquals(meta.read(bson), v)
   }
 }

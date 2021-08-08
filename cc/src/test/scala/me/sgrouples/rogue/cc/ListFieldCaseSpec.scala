@@ -5,9 +5,7 @@ import munit.FunSuite
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.cc.CcRogue._
 import scala.concurrent.ExecutionContext.Implicits.global
-case class Cont(
-  _id: ObjectId,
-  lst: Seq[ObjectId])
+case class Cont(_id: ObjectId, lst: Seq[ObjectId])
 
 class M extends RCcMetaExt[Cont, M]("cont") {
   val id = ObjectIdField("_id")
@@ -27,16 +25,23 @@ class ListFieldCaseSpec extends FunSuite {
   }
 
   test("inner list in select should work") {
-    implicit val db = MongoTestConn.client.get.getDatabase("conttest").withCodecRegistry(CcMongo.codecRegistry)
+    implicit val db = MongoTestConn.client.get
+      .getDatabase("conttest")
+      .withCodecRegistry(CcMongo.codecRegistry)
     val me = new M
     for {
-      _ <- me.insertManyAsync(Seq(Cont(new ObjectId, List(new ObjectId, new ObjectId)), Cont(new ObjectId(), List(new ObjectId(), new ObjectId()))))
+      _ <- me.insertManyAsync(
+        Seq(
+          Cont(new ObjectId, List(new ObjectId, new ObjectId)),
+          Cont(new ObjectId(), List(new ObjectId(), new ObjectId()))
+        )
+      )
       res <- me.select(_.id, _.lst).fetchAsync()
     } yield {
       //noException should be thrownBy {
-        res.map {
-          case (id, lst) => lst
-        }
+      res.map { case (id, lst) =>
+        lst
+      }
       //}
       assert(res.nonEmpty, "res ok")
     }

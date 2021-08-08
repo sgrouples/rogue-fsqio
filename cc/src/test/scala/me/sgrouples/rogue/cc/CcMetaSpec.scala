@@ -30,14 +30,11 @@ class CcMetaSpec extends FunSuite {
 
     type TaggedObjectId = ObjectId @@ Tag
 
-    case class A(
-      id: TaggedObjectId,
-      name: String @@ Tag,
-      age: Long @@ Tag)
+    case class A(id: TaggedObjectId, name: String @@ Tag, age: Long @@ Tag)
 
     val _ = new RCcMeta[A]
 
-    assert(true,"compiled, so all is good fine")
+    assert(true, "compiled, so all is good fine")
   }
 
 }

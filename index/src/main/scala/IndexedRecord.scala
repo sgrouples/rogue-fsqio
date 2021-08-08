@@ -2,10 +2,9 @@
 
 package io.fsq.rogue.index
 
-/**
- * A trait that represents the fact that a record type includes a list
- * of the indexes that exist in MongoDB for that type.
- */
+/** A trait that represents the fact that a record type includes a list of the
+  * indexes that exist in MongoDB for that type.
+  */
 trait IndexedRecord[M] {
   val mongoIndexList: Seq[MongoIndex[_]] = Vector.empty
   val mongoTextIndex: Option[MongoTextIndex[_]] = None

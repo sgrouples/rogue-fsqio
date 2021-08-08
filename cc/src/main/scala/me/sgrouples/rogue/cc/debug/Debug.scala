@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc.debug
 
-import scala.collection.{ Iterable, mutable }
+import scala.collection.{Iterable, mutable}
 import scala.language.higherKinds
 
 trait Debug[T] {
@@ -28,10 +28,10 @@ object Debug {
         s"${implicitly[Debug[A]].show(t._1)}: ${implicitly[Debug[B]].show(t._2)}"
     }
 
-    implicit def debugTraversable[T, W[_]](
-      implicit
-      sh: Debug[T],
-      ev: W[T] <:< Iterable[T]): Debug[W[T]] = {
+    implicit def debugTraversable[T, W[_]](implicit
+        sh: Debug[T],
+        ev: W[T] <:< Iterable[T]
+    ): Debug[W[T]] = {
       new Debug[W[T]] {
         override def show(t: W[T]): String = {
           val buffer: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty
@@ -42,4 +42,3 @@ object Debug {
     }
   }
 }
-

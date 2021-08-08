@@ -17,7 +17,12 @@ object ClaimStatus extends Enumeration {
 }
 case class OidTypedCC(_id: ObjectId, name: String, value: Int)
 
-case class OptCC(_id: Long, name: Option[String], hashes: List[String], map: Map[String, Int])
+case class OptCC(
+    _id: Long,
+    name: Option[String],
+    hashes: List[String],
+    map: Map[String, Int]
+)
 
 case class RootC(id: Int, nest: Nest)
 case class Nest(name: String)
@@ -29,7 +34,6 @@ case class B(w: W = W(1), x: String = "a")
 
 class BsonShapelessFormatTests extends FunSuite {
 
-  
   test("basicSerializeTest") {
     val o = new ObjectId()
     val cc = OidTypedCC(o, "Ala", 10)
@@ -38,16 +42,21 @@ class BsonShapelessFormatTests extends FunSuite {
     //println(bson)
     val deserialized = f.read(bson)
     //println(s"DES s${deserialized}")
-assertEquals(    cc, deserialized)
+    assertEquals(cc, deserialized)
   }
 
   test("optionalSerializeTest") {
-    val opt = OptCC(1L, Some("opt"), List("one1", "two", "three"), Map("four" -> 4, "five" -> 5))
+    val opt = OptCC(
+      1L,
+      Some("opt"),
+      List("one1", "two", "three"),
+      Map("four" -> 4, "five" -> 5)
+    )
     val f = LazyBsonFormat[OptCC]
     val bson = f.write(opt)
     //println(s"bson ${bson}")
     val d = f.read(bson)
-assertEquals(    opt, d)
+    assertEquals(opt, d)
   }
 
   test("nestedCCTest") {
@@ -55,7 +64,7 @@ assertEquals(    opt, d)
     val f = LazyBsonFormat[RootC]
     val bson = f.write(r)
     //  println(s"Bson root ${bson}")
-assertEquals(    f.read(bson), r)
+    assertEquals(f.read(bson), r)
   }
 
   test("enumerationValueTest") {
@@ -64,7 +73,7 @@ assertEquals(    f.read(bson), r)
     val f = LazyBsonFormat[OneEnum]
     val bson = f.write(r)
     //  println(s"Bson root ${bson}")
-assertEquals(    f.read(bson), r)
+    assertEquals(f.read(bson), r)
   }
 
   test("twoEnumTest") {
@@ -74,7 +83,7 @@ assertEquals(    f.read(bson), r)
     val f = LazyBsonFormat[TwoEnums]
     val bson = f.write(r)
     //println(s"Bson root ${bson}")
-assertEquals(    f.read(bson), r)
+    assertEquals(f.read(bson), r)
   }
 
   test("defaultCaseClass") {
@@ -83,7 +92,7 @@ assertEquals(    f.read(bson), r)
     //println(s"B ${b}")
     //really want that
     //but don't know how to provide default values in case class field parameters
-assertEquals(    b, B(W(1), ""))
+    assertEquals(b, B(W(1), ""))
     //assert(true)
   }
 
@@ -117,4 +126,3 @@ assertEquals(    b, B(W(1), ""))
   }
 
 }
-

@@ -35,49 +35,77 @@ case class V3(legacyid: Long, userid: Long, mayor: Long)
 
 case class V4(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long)
 
-case class V5(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean)
+case class V5(
+    legacyid: Long,
+    userid: Long,
+    mayor: Long,
+    mayor_count: Long,
+    closed: Boolean
+)
 
-case class V6(legacyid: Long, userid: Long, mayor: Long, mayor_count: Long, closed: Boolean, tags: List[String])
+case class V6(
+    legacyid: Long,
+    userid: Long,
+    mayor: Long,
+    mayor_count: Long,
+    closed: Boolean,
+    tags: List[String]
+)
 
 case class SourceBson(name: String, url: String)
 
 object VenueClaimBson {
-  val default = VenueClaimBson(
-    -1L, ClaimStatus.pending)
+  val default = VenueClaimBson(-1L, ClaimStatus.pending)
 }
 
-case class VenueClaimBson(uid: Long = -1L, status: ClaimStatus.Value = ClaimStatus.pending, source: Option[SourceBson] = None,
-  date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+case class VenueClaimBson(
+    uid: Long = -1L,
+    status: ClaimStatus.Value = ClaimStatus.pending,
+    source: Option[SourceBson] = None,
+    date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
+)
 
 object VenueClaim {
   def newId = tag[VenueClaim](new ObjectId())
 }
 
-case class VenueClaim(_id: ObjectId @@ VenueClaim, vid: ObjectId, uid: Long, status: ClaimStatus.Value,
-  reason: Option[RejectReason.Value] = None, date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+case class VenueClaim(
+    _id: ObjectId @@ VenueClaim,
+    vid: ObjectId,
+    uid: Long,
+    status: ClaimStatus.Value,
+    reason: Option[RejectReason.Value] = None,
+    date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
+)
 
 object Venue {
   def newId = tag[Venue](new ObjectId())
 }
 
 case class Venue(
-  _id: ObjectId @@ Venue,
-  legId: Long,
-  userId: Long,
-  venuename: String,
-  mayor: Long,
-  mayor_count: Long,
-  closed: Boolean,
-  tags: List[String],
-  popularity: List[Long],
-  categories: List[ObjectId],
-  last_updated: LocalDateTime,
-  status: VenueStatus.Value,
-  claims: List[VenueClaimBson],
-  lastClaim: Option[VenueClaimBson],
-  firstClaim: VenueClaimBson = VenueClaimBson.default)
+    _id: ObjectId @@ Venue,
+    legId: Long,
+    userId: Long,
+    venuename: String,
+    mayor: Long,
+    mayor_count: Long,
+    closed: Boolean,
+    tags: List[String],
+    popularity: List[Long],
+    categories: List[ObjectId],
+    last_updated: LocalDateTime,
+    status: VenueStatus.Value,
+    claims: List[VenueClaimBson],
+    lastClaim: Option[VenueClaimBson],
+    firstClaim: VenueClaimBson = VenueClaimBson.default
+)
 
-case class Tip(_id: ObjectId, legid: Long, counts: Map[String, Long], userId: Option[Long] = None)
+case class Tip(
+    _id: ObjectId,
+    legid: Long,
+    counts: Map[String, Long],
+    userId: Option[Long] = None
+)
 
 case class OneComment(timestamp: String, userid: Long, comment: String)
 
@@ -89,7 +117,12 @@ object ConsumerPrivilege extends Enumeration {
 
 case class OAuthConsumer(privileges: List[ConsumerPrivilege.Value])
 
-case class OptValCC(_id: ObjectId = new ObjectId(), maybes: Option[String] = None, maybeid: Option[ObjectId] = None, realString: String)
+case class OptValCC(
+    _id: ObjectId = new ObjectId(),
+    maybes: Option[String] = None,
+    maybeid: Option[ObjectId] = None,
+    realString: String
+)
 
 object Metas {
 
@@ -98,11 +131,14 @@ object Metas {
     val url = new StringField("url", this)
   }
 
-  class VenueClaimBsonRMeta extends RCcMeta[VenueClaimBson]("_") with QueryFieldHelpers[VenueClaimBsonRMeta]
-    with RuntimeNameResolver[VenueClaimBsonRMeta] {
+  class VenueClaimBsonRMeta
+      extends RCcMeta[VenueClaimBson]("_")
+      with QueryFieldHelpers[VenueClaimBsonRMeta]
+      with RuntimeNameResolver[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
     val status = EnumField("status", ClaimStatus)
-    val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
+    val source =
+      OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
     val date = LocalDateTimeField("date")
   }
 
@@ -115,7 +151,9 @@ object Metas {
       VenueR.where(_.legacyid eqs 1).hint(VenueR.geoCustomIdx).toString() must_== """db.venues.find({ "legId" : 1 }).hint({ "latlng" : "custom", "tags" : 1 })"""
 
    */
-  class VenueRMeta extends RCcMetaExt[Venue, VenueRMeta](PluralLowerCase) with IndexBuilder[VenueRMeta] {
+  class VenueRMeta
+      extends RCcMetaExt[Venue, VenueRMeta](PluralLowerCase)
+      with IndexBuilder[VenueRMeta] {
 
     val id = ObjectIdTaggedField[Venue]("_id")
     val mayor = LongField
@@ -127,8 +165,10 @@ object Metas {
     val userId = LongField
     val tags = ListField[String]
 
-    val claims = ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
-    val lastClaim = OptClassField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
+    val claims =
+      ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
+    val lastClaim =
+      OptClassField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
     val firstClaim = ClassRequiredField(VenueClaimBsonR, VenueClaimBson.default)
 
     val last_updated = LocalDateTimeField
@@ -143,9 +183,10 @@ object Metas {
 
   val VenueR = new VenueRMeta
 
-  class VenueClaimRMeta extends RCcMeta[VenueClaim]("venueclaims")
-    with QueryFieldHelpers[VenueClaimRMeta]
-    with RuntimeNameResolver[VenueClaimRMeta] {
+  class VenueClaimRMeta
+      extends RCcMeta[VenueClaim]("venueclaims")
+      with QueryFieldHelpers[VenueClaimRMeta]
+      with RuntimeNameResolver[VenueClaimRMeta] {
     val venueid = ObjectIdTaggedField[Venue]("vid")
     val status = EnumField[ClaimStatus.type]
     val reason = OptEnumField[RejectReason.type]
@@ -162,11 +203,16 @@ object Metas {
   }
 
   object OAuthConsumerR extends RCcMeta[OAuthConsumer]("oauthconsumers") {
-    val privileges = new ListField[ConsumerPrivilege.Value, OAuthConsumerR.type]("privileges", this)
+    val privileges =
+      new ListField[ConsumerPrivilege.Value, OAuthConsumerR.type](
+        "privileges",
+        this
+      )
   }
 
   object CommentR extends RCcMeta[Comment]("comments") {
-    val comments = new ListField[OneComment.type, CommentR.type]("comments", this)
+    val comments =
+      new ListField[OneComment.type, CommentR.type]("comments", this)
   }
 
   object OptValCCR extends RCcMeta[OptValCC]("optvalcc") {
@@ -200,7 +246,10 @@ object Metas {
 
   val Invoices = new InvoiceMeta
 
-  case class Counter(_id: ObjectId = ObjectId.get(), counts: Map[ObjectId, Long])
+  case class Counter(
+      _id: ObjectId = ObjectId.get(),
+      counts: Map[ObjectId, Long]
+  )
 
   class CounterMeta extends RCcMetaExt[Counter, CounterMeta] {
     val id = ObjectIdField("_id")
@@ -211,7 +260,10 @@ object Metas {
 
   type CounterId = ObjectId @@ Counter
 
-  case class TypedCounter(_id: ObjectId = ObjectId.get(), counts: Map[CounterId, Long])
+  case class TypedCounter(
+      _id: ObjectId = ObjectId.get(),
+      counts: Map[CounterId, Long]
+  )
 
   class TypedCounterMeta extends RCcMetaExt[TypedCounter, TypedCounterMeta] {
     val id = ObjectIdField("_id")
@@ -234,4 +286,3 @@ object Metas {
 
   val Locales = new LocaleDataMeta
 }
-

@@ -1,9 +1,9 @@
 package me.sgrouples.rogue.cc.macros
 
 import java.time.Instant
-import java.util.{ Currency, Locale, UUID }
+import java.util.{Currency, Locale, UUID}
 
-import io.fsq.rogue.index.{ Asc, Desc, IndexBuilder }
+import io.fsq.rogue.index.{Asc, Desc, IndexBuilder}
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
@@ -19,7 +19,8 @@ object Metas {
   }
   val SourceBsonR = new SourceBsonMeta
 
-  class VenueClaimBsonRMeta extends MCcMeta[VenueClaimBson, VenueClaimBsonRMeta]("_") {
+  class VenueClaimBsonRMeta
+      extends MCcMeta[VenueClaimBson, VenueClaimBsonRMeta]("_") {
     @f val uid = LongField
     @f val status = EnumField(ClaimStatus)
     @f val source = OptClassField[SourceBson, SourceBsonMeta](SourceBsonR)
@@ -28,7 +29,9 @@ object Metas {
 
   val VenueClaimBsonR = new VenueClaimBsonRMeta
 
-  class VenueRMeta extends MCcMeta[Venue, VenueRMeta](PluralLowerCase) with IndexBuilder[VenueRMeta] {
+  class VenueRMeta
+      extends MCcMeta[Venue, VenueRMeta](PluralLowerCase)
+      with IndexBuilder[VenueRMeta] {
     val id = ObjectIdTaggedField[Venue]("_id")
     @f val mayor = LongField
     @f val venuename = StringField
@@ -39,9 +42,12 @@ object Metas {
     @f val userId = LongField
     @f val tags = ListField[String]
 
-    @f val claims = ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
-    @f val lastClaim = OptClassField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
-    @f val firstClaim = ClassRequiredField(VenueClaimBsonR, VenueClaimBson.default)
+    @f val claims =
+      ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
+    @f val lastClaim =
+      OptClassField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
+    @f val firstClaim =
+      ClassRequiredField(VenueClaimBsonR, VenueClaimBson.default)
 
     @f val last_updated = LocalDateTimeField
     @f val popularity = ListField[Long]
@@ -53,7 +59,8 @@ object Metas {
   }
 
   val VenueR = new VenueRMeta
-  class VenueClaimRMeta extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
+  class VenueClaimRMeta
+      extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
     @f val venueid = ObjectIdTaggedField[Venue]("vid")
     @f val status = EnumField[ClaimStatus.type]
     @f val reason = OptEnumField[RejectReason.type]
@@ -71,7 +78,8 @@ object Metas {
 
   val TipR = new TipMeta
 
-  class OAuthConsumerMeta extends MCcMeta[OAuthConsumer, OAuthConsumerMeta]("oauthconsumers") {
+  class OAuthConsumerMeta
+      extends MCcMeta[OAuthConsumer, OAuthConsumerMeta]("oauthconsumers") {
     @f val privileges = ListField[ConsumerPrivilege.Value]
   }
 
@@ -115,7 +123,10 @@ object Metas {
 
   val Invoices = new InvoiceMeta
 
-  case class MCounter(_id: ObjectId = ObjectId.get(), counts: Map[ObjectId, Long])
+  case class MCounter(
+      _id: ObjectId = ObjectId.get(),
+      counts: Map[ObjectId, Long]
+  )
 
   class CounterMeta extends MCcMeta[MCounter, CounterMeta] {
     @f val id = ObjectIdField("_id")
@@ -126,7 +137,10 @@ object Metas {
 
   type CounterId = ObjectId @@ MCounter
 
-  case class TypedCounter(_id: ObjectId = ObjectId.get(), counts: Map[CounterId, Long])
+  case class TypedCounter(
+      _id: ObjectId = ObjectId.get(),
+      counts: Map[CounterId, Long]
+  )
 
   class TypedCounterMeta extends MCcMeta[TypedCounter, TypedCounterMeta] {
     @f val id = ObjectIdField("_id")
@@ -149,4 +163,3 @@ object Metas {
 
   val Locales = new LocaleDataMeta
 }
-

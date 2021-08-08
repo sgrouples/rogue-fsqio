@@ -2,10 +2,10 @@
 
 package io.fsq.rogue
 
-import java.time.{ Instant, LocalDateTime, ZoneOffset }
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 import com.mongodb.DBObject
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 import java.util.regex.Pattern
 
 import org.bson.types.ObjectId
@@ -43,7 +43,8 @@ object BSONType {
   }
   //Ugly hack - until mongo learns proper JDK8 types
   implicit object LocalDateTimeIsBSONType extends BSONType[LocalDateTime] {
-    override def asBSONObject(v: LocalDateTime): AnyRef = Date.from(v.toInstant(ZoneOffset.UTC))
+    override def asBSONObject(v: LocalDateTime): AnyRef =
+      Date.from(v.toInstant(ZoneOffset.UTC))
   }
   //Ugly hack - until mongo learns proper JDK8 types
   implicit object InstantIsBSONType extends BSONType[Instant] {
@@ -90,7 +91,8 @@ object BSONType {
     }
   }
 
-  implicit def ListsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[List[T]] = new ListsOfBSONTypesAreBSONTypes[T]
+  implicit def ListsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[List[T]] =
+    new ListsOfBSONTypesAreBSONTypes[T]
 
   class SeqsOfBSONTypesAreBSONTypes[T: BSONType] extends BSONType[Seq[T]] {
     override def asBSONObject(v: Seq[T]): AnyRef = {
@@ -103,5 +105,6 @@ object BSONType {
     }
   }
 
-  implicit def SeqsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[Seq[T]] = new SeqsOfBSONTypesAreBSONTypes[T]
+  implicit def SeqsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[Seq[T]] =
+    new SeqsOfBSONTypesAreBSONTypes[T]
 }
