@@ -1,3 +1,3 @@
 libraryDependencies ++= Seq(
-  "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "2.2.0"
+  "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "3.0.0"
 )

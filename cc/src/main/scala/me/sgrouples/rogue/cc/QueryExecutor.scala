@@ -303,4 +303,5 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     val s = readSerializer[M, R](query.meta, query.select)
     adapter.batch(query, s, f, batchSize, readPreference)
   }
+
 }
