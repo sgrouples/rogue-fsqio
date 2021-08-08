@@ -1,17 +1,16 @@
 package me.sgrouples.rogue
 
 import java.util.concurrent.atomic.AtomicInteger
-
-import me.sgrouples.rogue.cc.{ MongoTestConn }
-import org.scalatest.{ AsyncFlatSpec, BeforeAndAfterAll, FlatSpec, Matchers }
+import me.sgrouples.rogue.cc.MongoTestConn
 import me.sgrouples.rogue.cc.macros._
 import me.sgrouples.rogue.cc.CcRogue._
+import munit.FunSuite
 
 import scala.concurrent.Future
 
 case class NumModel(_id: Int, bla: String)
 
-class AsyncBatchSpec extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
+class AsyncBatchSpec extends FunSuite {
   class NumModelMeta extends MCcMeta[NumModel, NumModelMeta]("nummodel") {
     @f val id = IntField("_id")
   }

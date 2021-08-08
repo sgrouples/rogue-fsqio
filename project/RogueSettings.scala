@@ -61,12 +61,6 @@ object RogueDependencies {
   )
 
   val testDeps = Seq(
-    "junit"                    % "junit"               % "4.5"        % Test,
-    "org.specs2"              %% "specs2-core"              % specsVer % Test,
-    "org.specs2"              %% "specs2-matcher"              % specsVer % Test,
-    "org.specs2"              %% "specs2-junit"              % specsVer % Test,
-    "org.scalatest" %% "scalatest" % "3.0.8" % Test,
-    "com.novocode" % "junit-interface" % "0.11" % Test,
     "org.slf4j" % "slf4j-simple" % "1.7.30" % Test,
     "org.scalameta" %% "munit" % "0.7.27" % Test
   )

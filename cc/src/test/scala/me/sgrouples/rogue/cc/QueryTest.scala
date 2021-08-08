@@ -19,8 +19,6 @@ import me.sgrouples.rogue.CClassListField
 import me.sgrouples.rogue.cc.Metas._
 import org.bson.{ BSON, BsonDateTime, BsonDocument, Transformer }
 import org.bson.types._
-import org.junit._
-import org.specs2.matcher.JUnitMustMatchers
 import shapeless.tag
 import shapeless.tag.@@
 import me.sgrouples.rogue.QueryParser._
