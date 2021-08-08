@@ -4,20 +4,16 @@ package me.sgrouples.rogue.cc
 
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
-import com.mongodb.ReadPreference
 import io.fsq.rogue._
 import CcRogue._
 import munit.FunSuite
 
 import java.util.regex.Pattern
-import javax.xml.crypto.dsig.Transform
 
 
-//import com.mongodb.util.{ JSON, JSONSerializers }
 import io.fsq.field.Field
 import me.sgrouples.rogue.CClassListField
 import me.sgrouples.rogue.cc.Metas._
-import org.bson.{ BSON, BsonDateTime, BsonDocument, Transformer }
 import org.bson.types._
 import shapeless.tag
 import shapeless.tag.@@
@@ -96,9 +92,9 @@ assertEquals(    VenueR.where(_.venuename startsWith "Starbucks").q, pq("""db.ve
 assertEquals(    VenueR.where(_.venuename regexWarningNotIndexed p1).q, pq("""db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""))
 assertEquals(    VenueR.where(_.venuename matches p1).q, pq("""db.venues.find({"venuename": {"$regex": "Star.*", "$options": ""}})"""))
     val p2 = Pattern.compile("Star.*", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
-assertEquals(    VenueR.where(_.venuename matches p2).q, pq("""db.venues.find({"venuename": {"$regex": "Star.*", "$options": "mi"}})"""))
+assertEquals(    VenueR.where(_.venuename matches p2).q, pq("""db.venues.find({"venuename": {"$regex": "Star.*", "$options": "im"}})"""))
 //FIXME both regex AND nin
-    assertEquals(    VenueR.where(_.venuename matches p2).and(_.venuename nin List("a", "b")).q, pq("""db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "mi"}})"""))
+    assertEquals(    VenueR.where(_.venuename matches p2).and(_.venuename nin List("a", "b")).q, pq("""db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "im"}})"""))
 
     // all, in, size, contains, at
 assertEquals(    VenueR.where(_.tags eqs List("db", "ka")).q, pq("""db.venues.find({"tags": ["db", "ka"]})"""))

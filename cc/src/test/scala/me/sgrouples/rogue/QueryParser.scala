@@ -5,7 +5,7 @@ import io.fsq.rogue.{FindAndModifyQuery, ModifyQuery, MongoHelpers, PartialIndex
 import me.sgrouples.rogue.QueryParser.pq
 import munit.FunSuite
 import org.bson.{BsonBoolean, BsonInt64, BsonRegularExpression, Document}
-import org.mongodb.scala.bson.{BsonDocument, BsonValue}
+import org.mongodb.scala.bson.{BsonDocument, BsonString, BsonValue}
 
 import java.util.regex.Pattern
 import scala.collection.mutable.ListBuffer
@@ -78,7 +78,6 @@ object QueryParser {
                 idx = idx + 1
               }
               limitOpt=Some(in.substring(prevStart, idx).toInt)
-              println(s"Limit opt set to ${limitOpt}")
               prevStart = idx
             }
           case _ =>
@@ -97,8 +96,13 @@ object QueryParser {
       val re = new BsonRegularExpression(r, o)
       in.remove("$regex")
       in.remove("$options")
-      //in.put("$regularExpression", re)
-      new BsonRegularExpression(r,o)
+      if (in.keySet().isEmpty) {
+        re
+      } else {
+        in.put("$regex", BsonString(re.getPattern))
+        in.put("$options", BsonString(re.getOptions))
+        in
+      }
     } else {
       val it = in.entrySet().iterator()
       while (it.hasNext) {
@@ -110,8 +114,6 @@ object QueryParser {
           if(replacement.isRegularExpression) {
             if(v.asDocument().isEmpty) {
               in.put(k, replacement)
-            } else {
-              println(s"PANIC NOT EMPTY DOC AFTER REGEX REMOVAL - remaining keys ${v.asDocument().keySet()}")
             }
           }
         }
@@ -190,13 +192,5 @@ class QueryParserTest extends FunSuite {
     val replaced = QueryParser.regexReplace(doc)
     assertEquals(before,"""{"some key": {"$regex": "^\\QStarbucks\\E", "$options": ""}}""")
     assertEquals(replaced.toString, """{"some key": {"$regularExpression": {"pattern": "^\\QStarbucks\\E", "options": ""}}}""")
-  }
-
-  test("regex2") {
-    val q =pq("""db.venues.find({"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "mi"}})""")
-    val p = BasicDBObject.parse("""{"venuename": {"$nin": ["a", "b"], "$regex": "Star.*", "$options": "mi"}}""")
-    println(s"p ${p}\n ${p.toBsonDocument()}")
-    println(q.args.head.toString)
-    assertEquals(q.args.head.toString, "bla")
   }
 }

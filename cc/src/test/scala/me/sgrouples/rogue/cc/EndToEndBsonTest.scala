@@ -88,7 +88,6 @@ assertEquals(    VenueR.where(_.closed eqs false).fetch().map(_._id), List(v._id
 assertEquals(    VenueR.where(_.mayor eqs 432432).fetch().map(_._id), Nil)
 assertEquals(    VenueR.where(_.closed eqs true).fetch().map(_._id), Nil)
 
-    VenueClaimR.fetch().map(println)
 assertEquals(    VenueClaimR.where(_.status eqs ClaimStatus.approved).fetch().map(_._id), List(vc._id))
 assertEquals(    VenueClaimR.where(_.venueid eqs v._id).fetch().map(_._id), List(vc._id))
   }
