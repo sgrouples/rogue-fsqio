@@ -3,28 +3,12 @@ package me.sgrouples.rogue.cc
 // Copyright 2012 Foursquare Labs Inc. All Rights Reserved.
 // Copyright 2016 Sgrouples Inc. All Rights Reserved.
 
+import com.mongodb.client.result.InsertManyResult
 import io.fsq.field.Field
-import io.fsq.rogue.{
-  AddLimit,
-  FindAndModifyQuery,
-  ModifyQuery,
-  Query,
-  RequireShardKey,
-  Required,
-  ShardingOk,
-  Unlimited,
-  Unselected,
-  Unskipped,
-  _
-}
+import io.fsq.rogue.{AddLimit, FindAndModifyQuery, ModifyQuery, Query, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import org.mongodb.scala._
-import com.mongodb.client.result.{InsertManyResult, UpdateResult}
-import org.mongodb.scala.result.{
-  DeleteResult,
-  InsertManyResult,
-  InsertOneResult
-}
+import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult}
 import org.reactivestreams.Publisher
 
 import scala.concurrent.{ExecutionContext, Future}

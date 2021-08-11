@@ -7,32 +7,17 @@ package me.sgrouples.rogue.cc
 //
 
 import java.time.{Instant, LocalDateTime}
-
 import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
-import io.fsq.rogue.{
-  FindAndModifyQuery,
-  MandatorySelectField,
-  ModifyQuery,
-  OptionalSelectField,
-  Query,
-  QueryField,
-  QueryHelpers,
-  Rogue,
-  RogueException,
-  SelectField,
-  ShardingOk,
-  Unlimited,
-  Unordered,
-  Unselected,
-  Unskipped,
-  _
-}
+import io.fsq.rogue.{FindAndModifyQuery, MandatorySelectField, ModifyQuery, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SelectField, ShardingOk, Unlimited, Unordered, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.AndCondition
-import io.fsq.rogue.index.IndexBuilder
-import java.util.{Currency, Locale, UUID}
 
+import java.util.{Currency, Locale, UUID}
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
+import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult}
+
+import scala.concurrent.Future
+import scala.language.implicitConversions
 
 trait CcRogue {
   def OrQuery[M, R](subqueries: Query[M, R, _]*): Query[
@@ -318,6 +303,14 @@ trait CcRogue {
       f: RField[Array[Byte], M]
   ): BinaryModifyField[M] = new BinaryModifyField(f)
 
+  implicit def updateResultToVoid(i: Future[UpdateResult]): Future[Unit] =
+    i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
+  implicit def deleteResultToVoid(i: Future[com.mongodb.client.result.DeleteResult]): Future[Unit] =
+    i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
+  implicit def insertManyResultToVoid(i: Future[InsertManyResult]): Future[Unit] =
+    i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
+  implicit def insertOneResultToVoid(i: Future[InsertOneResult]): Future[Unit] =
+    i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
 }
 
 object CcRogue extends Rogue with CcRogue

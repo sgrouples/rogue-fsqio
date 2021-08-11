@@ -1,5 +1,5 @@
 package me.sgrouples.rogue.cc
-
+import scala.language.implicitConversions
 import java.time.LocalDateTime
 import java.util.{Currency, Locale}
 import java.util.regex.Pattern
@@ -7,6 +7,7 @@ import org.mongodb.scala._
 import me.sgrouples.rogue.cc.CcRogue._
 import org.bson.types.ObjectId
 import munit.FunSuite
+import org.mongodb.scala.result.DeleteResult
 
 import scala.concurrent.duration._
 import shapeless.tag
