@@ -18,6 +18,7 @@ import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult
 
 import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.reflect.ClassTag
 
 trait CcRogue {
   def OrQuery[M, R](subqueries: Query[M, R, _]*): Query[
@@ -110,6 +111,9 @@ trait CcRogue {
   ): ExecutableFindAndModifyQuery[CcMeta[_], M, R] = {
     ExecutableFindAndModifyQuery(query, CcBsonExecutors)
   }
+
+  implicit def ccMetaToAggregateQuery[MB <: CcMeta[_], M <: MB, State](meta: M): AggregateQuery[MB, M,InitialState] =
+    AggregateQuery(meta.collectionName, CcBsonExecutors)
 
   implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](
       meta: M

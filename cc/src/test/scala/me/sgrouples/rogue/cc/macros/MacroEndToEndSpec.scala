@@ -8,6 +8,7 @@ import me.sgrouples.rogue.cc.CcRogue._
 import me.sgrouples.rogue.cc._
 import munit.FunSuite
 import org.bson.types.ObjectId
+import org.mongodb.scala.model.Filters
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
@@ -813,5 +814,29 @@ class MacroEndToEndSpec extends FunSuite {
     sub4.waitForAll()
     val rcv4 = sub4.getRecieved()
     assertEquals(rcv4.length, 3)
+  }
+
+  test("aggregatesTest") {
+    case class Ures(u: Long, t:Int)
+    import org.mongodb.scala.model.Aggregates._
+    import org.mongodb.scala.model.Accumulators._
+    for {
+      _ <- Future.sequence(
+        (0 to 9).map { i =>
+          VenueR.insertOneAsync(baseTestVenue().copy(userId = i.toLong / 2))
+        }
+      )
+      aggregatedSeq <- VenueR.aggregateSeq(Seq(group("$userId",sum("total", 1))), doc =>
+        Ures(doc.getLong("_id"), doc.getInteger("total"))
+      )
+      aggregatedFold <- VenueR.aggregateFoldLeft(Seq(group("$userId",sum("total", 1))),
+        Map.empty[Long, Int],
+        (acc: Map[Long, Int], doc) => acc.updated(doc.getLong("_id").longValue(), doc.getInteger("total").intValue())
+      )
+    } yield {
+      assert(aggregatedSeq.length == 5)
+      assert(aggregatedSeq.map(_.t).forall(_.intValue() == 2))
+      assert(aggregatedFold.keySet == Set(0L, 1L, 2L, 3L, 4L))
+    }
   }
 }

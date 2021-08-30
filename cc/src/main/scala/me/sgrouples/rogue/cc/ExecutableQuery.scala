@@ -8,6 +8,7 @@ import io.fsq.field.Field
 import io.fsq.rogue.{AddLimit, FindAndModifyQuery, ModifyQuery, Query, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import org.mongodb.scala._
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult}
 import org.reactivestreams.Publisher
 
@@ -400,4 +401,26 @@ case class InsertableQuery[MB, M <: MB, R, State](
   ): Unit =
     waitForFuture(replaceOneAsync(t, upsert))
 
+}
+
+case class AggregateQuery[MB, M <: MB,  State](collectionName:String, ex: BsonExecutors[_]) {
+  def aggregateSeq[R : ClassTag](pipeline: Seq[Bson], mapper:Document => R, readPreference: ReadPreference = ReadPreference.primaryPreferred(),
+                                 allowDiskUse: Boolean = false)(implicit db:MongoDatabase):Future[Seq[R]] = {
+    getCollection(db, collectionName, readPreference)
+      .aggregate(pipeline)
+      .allowDiskUse(allowDiskUse)
+      .map(mapper)
+      .collect[R]().toFuture()
+  }
+  def aggregateFoldLeft[R : ClassTag](pipeline: Seq[Bson], zero:R, acc: (R, Document) => R, readPreference: ReadPreference = ReadPreference.primaryPreferred(),
+                                      allowDiskUse: Boolean = false)(implicit db: MongoDatabase): Future[R] = {
+    getCollection(db, collectionName, readPreference)
+      .aggregate(pipeline)
+      .allowDiskUse(allowDiskUse)
+      .foldLeft(zero)(acc)
+      .toFuture()
+  }
+
+  private[this] def getCollection(db:MongoDatabase, collectionName:String, readPreference: ReadPreference) =
+    db.getCollection(collectionName).withReadPreference(readPreference)
 }
