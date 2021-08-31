@@ -1,8 +1,8 @@
 package me.sgrouples.rogue.cc
 
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
-import org.reactivestreams.{ Subscriber, Subscription }
+import org.reactivestreams.{Subscriber, Subscription}
 
 import scala.collection.mutable.ListBuffer
 

@@ -28,19 +28,24 @@ class MacroCCGenerator(val c: Context) {
   }
   //copied from https://github.com/lihaoyi/upickle/blob/master/upickle/src/upickle/internal/Macros.scala
   def getArgSyms(tpe: c.Type) = {
-    companionTree(tpe).right.flatMap { companion =>
+    companionTree(tpe).flatMap { companion =>
       //tickle the companion members -- Not doing this leads to unexpected runtime behavior
       //I wonder if there is an SI related to this?
       companion.tpe.members.foreach(_ => ())
-      tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
+      tpe.members.find(x =>
+        x.isMethod && x.asMethod.isPrimaryConstructor
+      ) match {
         case None => Left("Can't find primary constructor of " + tpe)
         case Some(primaryConstructor) =>
           val flattened = primaryConstructor.asMethod.paramLists.flatten
-          Right((
-            companion,
-            tpe.typeSymbol.asClass.typeParams,
-            flattened,
-            flattened.map(_.asTerm.isParamWithDefault)))
+          Right(
+            (
+              companion,
+              tpe.typeSymbol.asClass.typeParams,
+              flattened,
+              flattened.map(_.asTerm.isParamWithDefault)
+            )
+          )
       }
 
     }
@@ -131,10 +136,15 @@ class MacroCCGenerator(val c: Context) {
           val keyT = tp.typeArgs.head
           val apT = appliedType(keyT.typeConstructor, keyT.typeArgs)
           val innerT = tp.typeArgs.tail.head
-          val kf = appliedType(typeOf[me.sgrouples.rogue.map.MapKeyFormat[_]], apT)
-          val inferred = c.inferImplicitValue(kf, false, false, c.enclosingPosition)
+          val kf =
+            appliedType(typeOf[me.sgrouples.rogue.map.MapKeyFormat[_]], apT)
+          val inferred =
+            c.inferImplicitValue(kf, false, false, c.enclosingPosition)
           if (inferred == null) {
-            c.error(c.enclosingPosition, s"Can't find MapKeyFormat for ${keyT} - class ${tpe}")
+            c.error(
+              c.enclosingPosition,
+              s"Can't find MapKeyFormat for ${keyT} - class ${tpe}"
+            )
           }
           q"new _root_.me.sgrouples.rogue.cc.macros.MapMacroFormat[$keyT, $innerT]($inner)($inferred)"
         } else if (at.baseClasses.contains(iterableTypeSymbol)) {
@@ -161,30 +171,32 @@ class MacroCCGenerator(val c: Context) {
       val companion: c.universe.Symbol = tpe.typeSymbol.companion
 
       if (companion == NoSymbol) {
-        c.error(c.enclosingPosition, s"Companion symbol not found for case class ${tpe}. Can't find companion for inner classes")
+        c.error(
+          c.enclosingPosition,
+          s"Companion symbol not found for case class ${tpe}. Can't find companion for inner classes"
+        )
       }
 
       val defaults: Seq[Option[c.universe.Tree]] = getArgSyms(tpe) match {
         case Right((companion, typeParams, argSyms, hasDefaults)) =>
           companion.tpe.member(TermName("apply")).info
-          fields.map(_.asTerm).zipWithIndex.map {
-            case (p, i) =>
-              if (!p.isParamWithDefault) None
-              else {
-                val getterName = TermName("apply$default$" + (i + 1))
-                Some(q"$companion.$getterName")
-              }
+          fields.map(_.asTerm).zipWithIndex.map { case (p, i) =>
+            if (!p.isParamWithDefault) None
+            else {
+              val getterName = TermName("apply$default$" + (i + 1))
+              Some(q"$companion.$getterName")
+            }
           }
         case Left(_) =>
           fields.map(_.asTerm).map(_ => None)
       }
       val df = fields zip defaults
-      val namesFormats = df.map {
-        case (f, dvOpt) =>
-          val name = f.name
-          val formatName = TermName(name.decodedName.toString + "_fmt") // c.freshName()
-          val format = fieldFormat(f, dvOpt)
-          (name.decodedName.toString, formatName, format)
+      val namesFormats = df.map { case (f, dvOpt) =>
+        val name = f.name
+        val formatName =
+          TermName(name.decodedName.toString + "_fmt") // c.freshName()
+        val format = fieldFormat(f, dvOpt)
+        (name.decodedName.toString, formatName, format)
       }
       val terms = members.flatMap { symbol =>
         if (symbol.isTerm) {
@@ -196,37 +208,31 @@ class MacroCCGenerator(val c: Context) {
       }
 
       val zipNames = terms.map { n => s"$n" }.toVector
-      val bsonFormats = namesFormats.map {
-        case (_, formatName, format) =>
-          q"val $formatName = $format"
+      val bsonFormats = namesFormats.map { case (_, formatName, format) =>
+        q"val $formatName = $format"
       }
-      val writers = namesFormats.map {
-        case (fldName, formatName, _) =>
-          val key = Constant(fldName)
-          val accessor = TermName(fldName)
-          q"addNotNull(doc, $key, $formatName.write(t.$accessor))"
+      val writers = namesFormats.map { case (fldName, formatName, _) =>
+        val key = Constant(fldName)
+        val accessor = TermName(fldName)
+        q"addNotNull(doc, $key, $formatName.write(t.$accessor))"
       }
-      val reads = namesFormats.map {
-        case (fldName, formatName, _) =>
-          val key = Constant(fldName)
-          val accessor = TermName(fldName)
-          q"$formatName.readOrDefault(doc.get($key))"
+      val reads = namesFormats.map { case (fldName, formatName, _) =>
+        val key = Constant(fldName)
+        val accessor = TermName(fldName)
+        q"$formatName.readOrDefault(doc.get($key))"
       }
-      val appends = namesFormats.map {
-        case (fldName, formatName, _) =>
-          val key = Constant(fldName)
-          val accessor = TermName(fldName)
-          q"$formatName.append(writer, $key, t.$accessor)"
+      val appends = namesFormats.map { case (fldName, formatName, _) =>
+        val key = Constant(fldName)
+        val accessor = TermName(fldName)
+        q"$formatName.append(writer, $key, t.$accessor)"
       }
-      val fldsMap = namesFormats.map {
-        case (fldName, formatName, _) =>
-          val fn = fldName.toString
-          q"$fn -> $formatName"
+      val fldsMap = namesFormats.map { case (fldName, formatName, _) =>
+        val fn = fldName.toString
+        q"$fn -> $formatName"
       }
-      val subFieldsAdd = namesFormats.map {
-        case (fldName, formatName, _) =>
-          val fn = fldName.toString
-          q"subfields($fn, $formatName)"
+      val subFieldsAdd = namesFormats.map { case (fldName, formatName, _) =>
+        val fn = fldName.toString
+        q"subfields($fn, $formatName)"
       }
 
       val tpC = Constant(tpe.toString)
@@ -243,7 +249,7 @@ class MacroCCGenerator(val c: Context) {
            ..$bsonFormats
            override val flds = Map(..$fldsMap) ++ Seq(..$subFieldsAdd).flatten
                   override def validNames():Vector[String] = ${zipNames}
-                  override def defaultValue(): $tpe = {
+                  override def defaultValue: $tpe = {
                     $defImpl
                   }
                   override def read(b: _root_.org.bson.BsonValue): $tpe = {
@@ -251,7 +257,7 @@ class MacroCCGenerator(val c: Context) {
                      val doc = b.asDocument()
                      new $tpe(..$reads)
                    } else {
-                      defaultValue()
+                      defaultValue
                    }
                   }
                   override def write(t: $tpe): _root_.org.bson.BsonValue = {

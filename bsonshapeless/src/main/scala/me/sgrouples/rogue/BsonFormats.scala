@@ -1,29 +1,29 @@
 package me.sgrouples.rogue
 
-import java.nio.{ ByteBuffer, ByteOrder }
-import java.time.{ Instant, LocalDateTime, ZoneOffset }
-import java.util.{ Currency, Locale, TimeZone, UUID }
+import java.nio.{ByteBuffer, ByteOrder}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.util.{Currency, Locale, TimeZone, UUID}
 
 import me.sgrouples.rogue.enums.ReflectEnumInstance
-import me.sgrouples.rogue.map.{ MapKeyFormat, MapKeyFormats }
+import me.sgrouples.rogue.map.{MapKeyFormat, MapKeyFormats}
 import org.bson._
-import org.bson.types.{ Decimal128, ObjectId }
+import org.bson.types.{Decimal128, ObjectId}
 import shapeless._
-import shapeless.labelled.{ FieldType, field }
+import shapeless.labelled.{FieldType, field}
 
-import scala.language.{ higherKinds, implicitConversions }
+import scala.language.{higherKinds, implicitConversions}
 import shapeless.tag.@@
 
-/**
- * serialize enums as names
- */
+/** serialize enums as names
+  */
 
 trait EnumNameFormats {
 
   import scala.reflect.runtime.universe
   import universe._
 
-  implicit def enumFormat[T <: Enumeration: TypeTag]: BasicBsonFormat[T#Value] = {
+  implicit def enumFormat[T <: Enumeration: TypeTag]
+      : BasicBsonFormat[T#Value] = {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
@@ -34,7 +34,10 @@ trait EnumNameFormats {
           enum.withName(b.asString().getValue)
         } catch {
           case e: IllegalArgumentException =>
-            throw new IllegalArgumentException(s"cannot read enum name ${b.asString()} for enum ${enum.toString()}", e)
+            throw new IllegalArgumentException(
+              s"cannot read enum name ${b.asString()} for enum ${enum.toString()}",
+              e
+            )
         }
       }
 
@@ -46,15 +49,16 @@ trait EnumNameFormats {
 }
 
 object EnumNameFormats extends EnumNameFormats
-/**
- * serialize enums as integers
- */
+
+/** serialize enums as integers
+  */
 trait EnumValueFormats {
 
   import scala.reflect.runtime.universe
   import universe._
 
-  implicit def enumValueFormat[T <: Enumeration: TypeTag]: BasicBsonFormat[T#Value] = {
+  implicit def enumValueFormat[T <: Enumeration: TypeTag]
+      : BasicBsonFormat[T#Value] = {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
@@ -64,7 +68,10 @@ trait EnumValueFormats {
         enum.apply(b.asNumber().intValue())
       } catch {
         case e: IllegalArgumentException =>
-          throw new IllegalArgumentException(s"cannot read enum value ${b.asNumber()}, for enum ${enum.toString()} ", e)
+          throw new IllegalArgumentException(
+            s"cannot read enum value ${b.asNumber()}, for enum ${enum.toString()} ",
+            e
+          )
       }
 
       override def write(t: T#Value): BsonValue = new BsonInt32(t.id)
@@ -77,27 +84,27 @@ trait EnumValueFormats {
 }
 object EnumValueFormats extends EnumValueFormats
 
-/**
- * Sometimes it is necessary to use Enumerations that are serialized to Ints and others that serialize to Strings
- * within the same [[me.sgrouples.rogue.cc.RCcMeta]]. It can be obtained by using [[EnumSerializeValue]] annotation
- * @see EnumAnnotationTest
- * example:
- * {{{
- *   object EName extends Enumeration { val v1 = Value("V1"); val v2 = Value("V2") }
- *   @EnumSerializeValue object EValue extends Enumeration { val v1 = Value("bla1"); val v2 = Value("bla2") }
- *   case class C(e:EName.Value, v: EValue.Value)
- *   import import BsonFormats._ ;import EnumAnnotatedFormats._
- *   implicit val enE = EName
- *   implicit val evE = EValue
- *   val format = BsonFormat[C]
- *   println(format.write(C(EName.v1, EValue.v2)))
- * }}}
- * will produce
- * {{{
- *  { "v" : 1, "e" : "V1" }
- * }}}
- *
- */
+/** Sometimes it is necessary to use Enumerations that are serialized to Ints
+  * and others that serialize to Strings within the same
+  * [[me.sgrouples.rogue.cc.RCcMeta]]. It can be obtained by using
+  * [[EnumSerializeValue]] annotation
+  * @see
+  *   EnumAnnotationTest example:
+  * {{{
+  *   object EName extends Enumeration { val v1 = Value("V1"); val v2 = Value("V2") }
+  *   @EnumSerializeValue object EValue extends Enumeration { val v1 = Value("bla1"); val v2 = Value("bla2") }
+  *   case class C(e:EName.Value, v: EValue.Value)
+  *   import import BsonFormats._ ;import EnumAnnotatedFormats._
+  *   implicit val enE = EName
+  *   implicit val evE = EValue
+  *   val format = BsonFormat[C]
+  *   println(format.write(C(EName.v1, EValue.v2)))
+  * }}}
+  * will produce
+  * {{{
+  * { "v" : 1, "e" : "V1" }
+  * }}}
+  */
 object EnumAnnotatedFormats {
   import scala.reflect.runtime.universe._
   implicit def enumFormat[T <: Enumeration: TypeTag]: BsonFormat[T#Value] = {
@@ -110,10 +117,10 @@ object EnumAnnotatedFormats {
   }
 }
 
-/**
- * Basic bson serializers
- */
+/** Basic bson serializers
+  */
 trait BaseBsonFormats {
+  private[this] val objectIdZero = new ObjectId(Array.fill[Byte](12)(0))
 
   implicit object BooleanBsonFormat extends BasicBsonFormat[Boolean] {
     override def read(b: BsonValue): Boolean = b.asBoolean().getValue()
@@ -142,7 +149,7 @@ trait BaseBsonFormats {
   implicit object ObjectIdBsonFormat extends BasicBsonFormat[ObjectId] {
     override def read(b: BsonValue): ObjectId = b.asObjectId().getValue()
     override def write(t: ObjectId): BsonValue = new BsonObjectId(t)
-    override def defaultValue: ObjectId = new ObjectId(0, 0, 0.toShort, 0)
+    override def defaultValue: ObjectId = objectIdZero
   }
 
   implicit object DoubleBsonFormat extends BasicBsonFormat[Double] {
@@ -152,14 +159,20 @@ trait BaseBsonFormats {
   }
 
   implicit object BigDecimalBsonFormat extends BasicBsonFormat[BigDecimal] {
-    override def read(b: BsonValue): BigDecimal = b.asDecimal128().decimal128Value().bigDecimalValue()
-    override def write(t: BigDecimal): BsonValue = new BsonDecimal128(new Decimal128(t.bigDecimal))
+    override def read(b: BsonValue): BigDecimal =
+      b.asDecimal128().decimal128Value().bigDecimalValue()
+    override def write(t: BigDecimal): BsonValue = new BsonDecimal128(
+      new Decimal128(t.bigDecimal)
+    )
     override def defaultValue: BigDecimal = BigDecimal(0)
   }
 
   implicit object CurrencyBsonFormat extends BasicBsonFormat[Currency] {
-    override def read(b: BsonValue): Currency = Currency.getInstance(b.asString().getValue)
-    override def write(t: Currency): BsonValue = new BsonString(t.getCurrencyCode)
+    override def read(b: BsonValue): Currency =
+      Currency.getInstance(b.asString().getValue)
+    override def write(t: Currency): BsonValue = new BsonString(
+      t.getCurrencyCode
+    )
     override def defaultValue: Currency = Currency.getInstance("USD")
   }
 
@@ -180,7 +193,9 @@ trait BaseBsonFormats {
     override def defaultValue: Locale = Locale.ENGLISH
   }
 
-  protected def `@@AnyBsonFormat`[T, Tag](implicit tb: BsonFormat[T]): BasicBsonFormat[T @@ Tag] = {
+  protected def `@@AnyBsonFormat`[T, Tag](implicit
+      tb: BsonFormat[T]
+  ): BasicBsonFormat[T @@ Tag] = {
     new BasicBsonFormat[T @@ Tag] {
       override def read(b: BsonValue): T @@ Tag = tag[Tag][T](tb.read(b))
       override def write(t: T @@ Tag): BsonValue = tb.write(t)
@@ -190,21 +205,27 @@ trait BaseBsonFormats {
 
   //  // TODO: this should be split to BsonReader[+T] and BsonWriter[-T] so that we wouldn't have to code all that by hand
   //
-  implicit def `@@StringBsonFormat`[Tag]: BsonFormat[String @@ Tag] = `@@AnyBsonFormat`[String, Tag]
-  implicit def `@@LongBsonFormat`[Tag]: BsonFormat[Long @@ Tag] = `@@AnyBsonFormat`[Long, Tag]
-  implicit def `@@IntBsonFormat`[Tag]: BsonFormat[Int @@ Tag] = `@@AnyBsonFormat`[Int, Tag]
-  implicit def `@@DoubleBsonFormat`[Tag]: BsonFormat[Double @@ Tag] = `@@AnyBsonFormat`[Double, Tag]
-  implicit def `@@ObjectIdBsonFormat`[Tag]: BsonFormat[ObjectId @@ Tag] = `@@AnyBsonFormat`[ObjectId, Tag]
+  implicit def `@@StringBsonFormat`[Tag]: BsonFormat[String @@ Tag] =
+    `@@AnyBsonFormat`[String, Tag]
+  implicit def `@@LongBsonFormat`[Tag]: BsonFormat[Long @@ Tag] =
+    `@@AnyBsonFormat`[Long, Tag]
+  implicit def `@@IntBsonFormat`[Tag]: BsonFormat[Int @@ Tag] =
+    `@@AnyBsonFormat`[Int, Tag]
+  implicit def `@@DoubleBsonFormat`[Tag]: BsonFormat[Double @@ Tag] =
+    `@@AnyBsonFormat`[Double, Tag]
+  implicit def `@@ObjectIdBsonFormat`[Tag]: BsonFormat[ObjectId @@ Tag] =
+    `@@AnyBsonFormat`[ObjectId, Tag]
 
-  /**
-   * care must be taken - because of different UUID formats.
-   * by default codec can read any type, but for write - decision must be made
-   * either format 3 - JAVA_LEGACY or format 4 - UUID_STANDARD
-   * recommendation is to use UUID_STANDARD, but java driver uses JAVA_LEGACY by default
-   * @see [https://jira.mongodb.org/browse/JAVA-403] for explanation
-   * @see [[org.bson.codecs.UuidCodec]]
-   * this implementation does not support C_SHARP_LEGACY codec at all
-   */
+  /** care must be taken - because of different UUID formats. by default codec
+    * can read any type, but for write - decision must be made either format 3 -
+    * JAVA_LEGACY or format 4 - UUID_STANDARD recommendation is to use
+    * UUID_STANDARD, but java driver uses JAVA_LEGACY by default
+    * @see
+    *   [https://jira.mongodb.org/browse/JAVA-403] for explanation
+    * @see
+    *   [[org.bson.codecs.UuidCodec]] this implementation does not support
+    *   C_SHARP_LEGACY codec at all
+    */
   implicit object UUIDBsonFormat extends BasicBsonFormat[UUID] {
     override def read(bv: BsonValue): UUID = {
       val b = bv.asBinary()
@@ -231,20 +252,29 @@ trait BaseBsonFormats {
     override def defaultValue: UUID = new UUID(0, 0)
   }
 
-  implicit object LocalDateTimeBsonFormat extends BasicBsonFormat[LocalDateTime] {
-    override def read(b: BsonValue): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(b.asDateTime().getValue), ZoneOffset.UTC)
-    override def write(t: LocalDateTime): BsonValue = new BsonDateTime(t.toInstant(ZoneOffset.UTC).toEpochMilli)
-    override def defaultValue: LocalDateTime = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)
+  implicit object LocalDateTimeBsonFormat
+      extends BasicBsonFormat[LocalDateTime] {
+    override def read(b: BsonValue): LocalDateTime = LocalDateTime.ofInstant(
+      Instant.ofEpochMilli(b.asDateTime().getValue),
+      ZoneOffset.UTC
+    )
+    override def write(t: LocalDateTime): BsonValue = new BsonDateTime(
+      t.toInstant(ZoneOffset.UTC).toEpochMilli
+    )
+    override def defaultValue: LocalDateTime =
+      LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)
   }
 
   implicit object InstantBsonFormat extends BasicBsonFormat[Instant] {
-    override def read(b: BsonValue): Instant = Instant.ofEpochMilli(b.asDateTime().getValue)
+    override def read(b: BsonValue): Instant =
+      Instant.ofEpochMilli(b.asDateTime().getValue)
     override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
     override def defaultValue: Instant = Instant.ofEpochMilli(0)
   }
 
   implicit object TimeZoneFormat extends BasicBsonFormat[TimeZone] {
-    override def read(b: BsonValue): TimeZone = TimeZone.getTimeZone(b.asString().getValue)
+    override def read(b: BsonValue): TimeZone =
+      TimeZone.getTimeZone(b.asString().getValue)
     override def write(tz: TimeZone): BsonValue = new BsonString(tz.getID)
     override def defaultValue: TimeZone = TimeZone.getTimeZone("UTC")
   }
@@ -259,7 +289,10 @@ trait BaseBsonFormats {
   }
 }
 
-trait StandardBsonFormats extends BaseBsonFormats with BsonCollectionFormats with MapKeyFormats
+trait StandardBsonFormats
+    extends BaseBsonFormats
+    with BsonCollectionFormats
+    with MapKeyFormats
 
 object BsonFormats extends StandardBsonFormats with BsonFormats
 
@@ -279,25 +312,29 @@ object FamilyFormats extends DefaultJsonProtocol with FamilyFormats
 trait LowPrioBsonFormats {
   this: BaseBsonFormats with BsonFormats =>
 
-  abstract class WrappedBsonFromat[Wrapped, SubRepr](implicit tpe: Typeable[Wrapped]) {
+  abstract class WrappedBsonFromat[Wrapped, SubRepr](implicit
+      tpe: Typeable[Wrapped]
+  ) {
     def write(v: SubRepr): BsonValue
     def read(b: BsonValue): SubRepr
     def flds: Map[String, BsonFormat[_]]
   }
 
-  implicit def hHilBsonFormat[Wrapped](implicit tpe: Typeable[Wrapped]): WrappedBsonFromat[Wrapped, HNil] = new WrappedBsonFromat[Wrapped, HNil] {
+  implicit def hHilBsonFormat[Wrapped](implicit
+      tpe: Typeable[Wrapped]
+  ): WrappedBsonFromat[Wrapped, HNil] = new WrappedBsonFromat[Wrapped, HNil] {
     override def write(t: HNil): BsonValue = BsonNull.VALUE
     override def read(b: BsonValue) = HNil
     def flds = Map.empty
   }
 
   implicit def hListFormat[Wrapped, Key <: Symbol, Value, Remaining <: HList](
-    implicit
-    t: Typeable[Wrapped],
-    key: Witness.Aux[Key],
-    headSer: Lazy[BsonFormat[Value]],
-    remFormat: WrappedBsonFromat[Wrapped, Remaining] //,
-  //defaults: Default.AsOptions[Wrapped]
+      implicit
+      t: Typeable[Wrapped],
+      key: Witness.Aux[Key],
+      headSer: Lazy[BsonFormat[Value]],
+      remFormat: WrappedBsonFromat[Wrapped, Remaining] //,
+      //defaults: Default.AsOptions[Wrapped]
   ): WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] =
     new WrappedBsonFromat[Wrapped, FieldType[Key, Value] :: Remaining] {
 
@@ -322,33 +359,36 @@ trait LowPrioBsonFormats {
       }
 
       override def read(b: BsonValue): FieldType[Key, Value] :: Remaining = {
-        val resolved: Value = try {
-          val v = b.asDocument().get(fieldName)
-          if (v == null || v.isNull) {
-            //println(s"Read null value of ${fieldName}\n rem is ${remFormat}, ")
-            try {
-              //really - I want to read defaults() here, but don't know how yet
+        val resolved: Value =
+          try {
+            val v = b.asDocument().get(fieldName)
+            if (v == null || v.isNull) {
+              //println(s"Read null value of ${fieldName}\n rem is ${remFormat}, ")
+              try {
+                //really - I want to read defaults() here, but don't know how yet
 
-              hs.defaultValue
-            } catch {
-              case _: Exception =>
-                hs.read(BsonNull.VALUE)
+                hs.defaultValue
+              } catch {
+                case _: Exception =>
+                  hs.read(BsonNull.VALUE)
+              }
+            } else {
+              hs.read(v)
             }
-          } else {
-            hs.read(v)
+          } catch {
+            case e: BsonInvalidOperationException =>
+              //println("BsonInvalid op exception - resort to default")
+              hs.defaultValue
           }
-        } catch {
-          case e: BsonInvalidOperationException =>
-            //println("BsonInvalid op exception - resort to default")
-            hs.defaultValue
-        }
         val remaining = remFormat.read(b)
         field[Key](resolved) :: remaining
 
       }
 
       def flds = {
-        val subfieldFlds = hs.flds.map { case (subfieldName, s) => (fieldName + "." + subfieldName -> s) }
+        val subfieldFlds = hs.flds.map { case (subfieldName, s) =>
+          (fieldName + "." + subfieldName -> s)
+        }
         remFormat.flds ++ subfieldFlds + (fieldName -> hs)
       }
 
@@ -386,42 +426,46 @@ trait LowPrioBsonFormats {
           jft.write(r)
       }
     }
-  */
+   */
 
   implicit def bsonEncoder[T, Repr](implicit
-    gen: LabelledGeneric.Aux[T, Repr],
-    sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
-    d: Default.AsRecord[T],
-    tpe: Typeable[T]): BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T] {
+      gen: LabelledGeneric.Aux[T, Repr],
+      sg: Cached[Strict[WrappedBsonFromat[T, Repr]]],
+      d: Default.AsRecord[T],
+      tpe: Typeable[T]
+  ): BsonFormat[T] = new BsonFormat[T] with BsonArrayReader[T] {
     override def write(t: T): BsonValue = sg.value.value.write(gen.to(t))
     override def read(b: BsonValue): T = gen.from(sg.value.value.read(b))
 
     override val flds: Map[String, BsonFormat[_]] = sg.value.value.flds
 
-    /**
-     * for nested case classes, with default constructors provides a default value
-     * consider
-     * {{{
-     *   case class In(j:Int = 1)
-     *   case class Out(i:In = In(), x: Int = 5)
-     *   val f = BsonFormat[Out]
-     * }}}
-     * in such case default can be provided if 'i' is missing from parameter
-     * as in example
-     * {{{
-     *   f.parse(new BsonDocument) == Out(In(1), 0 )
-     * }}}
-     * value for 'i' will be `In(1)` because In has default non-parameter constructor, but value for x will be 0
-     * this is because currently only full missing values will be constructed - missing partial values will be
-     * filled with type-default values 0 for Int in this example
-     * @return default T
-     */
+    /** for nested case classes, with default constructors provides a default
+      * value consider
+      * {{{
+      *   case class In(j:Int = 1)
+      *   case class Out(i:In = In(), x: Int = 5)
+      *   val f = BsonFormat[Out]
+      * }}}
+      * in such case default can be provided if 'i' is missing from parameter as
+      * in example
+      * {{{
+      *   f.parse(new BsonDocument) == Out(In(1), 0 )
+      * }}}
+      * value for 'i' will be `In(1)` because In has default non-parameter
+      * constructor, but value for x will be 0 this is because currently only
+      * full missing values will be constructed - missing partial values will be
+      * filled with type-default values 0 for Int in this example
+      * @return
+      *   default T
+      */
     override def defaultValue: T = {
       try {
         gen.from(d().asInstanceOf[Repr])
       } catch {
         case _: Exception =>
-          throw new NoDefaultFormatForDerivedException(s"Requested default value for but case class ${tpe.describe} has no default, non-parameter constructor")
+          throw new NoDefaultFormatForDerivedException(
+            s"Requested default value for but case class ${tpe.describe} has no default, non-parameter constructor"
+          )
       }
     }
   }

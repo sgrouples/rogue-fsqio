@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 
-import java.util.concurrent.{ ConcurrentHashMap, ConcurrentLinkedQueue, TimeUnit }
-import java.util.concurrent.atomic.{ AtomicBoolean, AtomicInteger }
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, TimeUnit}
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.cc.debug.Debug
@@ -9,10 +9,10 @@ import org.bson.types.ObjectId
 import shapeless.tag
 import shapeless.tag._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
-import scala.reflect.{ ClassTag, api }
+import scala.reflect.{ClassTag, api}
 import Debug.DefaultImplicits._
 import me.sgrouples.rogue.map.MapKeyFormat
 
@@ -69,25 +69,35 @@ private[cc] object DebugImplicits {
 }
 
 trait NamesResolver {
-  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker
-  protected def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker
+  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(
+      func: String => T
+  ): T @@ Marker
+  protected def named[T <: io.fsq.field.Field[_, _]](
+      func: String => T
+  ): T @@ Marker
 }
 
 trait RuntimeNameResolver[Meta] extends NamesResolver {
 
-  private[this] val names: ConcurrentHashMap[Int, String] = new ConcurrentHashMap
+  private[this] val names: ConcurrentHashMap[Int, String] =
+    new ConcurrentHashMap
 
-  private[this] val fields: ConcurrentHashMap[String, io.fsq.field.Field[_, _]] = new ConcurrentHashMap
+  private[this] val fields
+      : ConcurrentHashMap[String, io.fsq.field.Field[_, _]] =
+    new ConcurrentHashMap
 
   private[this] val resolved = new AtomicBoolean(false)
 
   private[this] val nameId = new AtomicInteger(-1)
 
-  private[this] val visitedClasses: ConcurrentLinkedQueue[VisitedClass] = new ConcurrentLinkedQueue
+  private[this] val visitedClasses: ConcurrentLinkedQueue[VisitedClass] =
+    new ConcurrentLinkedQueue
 
-  private[this] val visitedFields: ConcurrentLinkedQueue[VisitedField] = new ConcurrentLinkedQueue
+  private[this] val visitedFields: ConcurrentLinkedQueue[VisitedField] =
+    new ConcurrentLinkedQueue
 
-  private[this] val ignoredFields: ConcurrentLinkedQueue[IgnoredField] = new ConcurrentLinkedQueue
+  private[this] val ignoredFields: ConcurrentLinkedQueue[IgnoredField] =
+    new ConcurrentLinkedQueue
 
   // This one is hacky, we need to find the type tag from Java's getClass method...
 
@@ -97,98 +107,113 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     val sym = mirror.classSymbol(getClass)
     val tpe = sym.selfType
 
-    TypeTag(mirror, new api.TypeCreator {
-      def apply[U <: api.Universe with Singleton](m: api.Mirror[U]): U#Type =
-        if (m eq mirror) tpe.asInstanceOf[U#Type]
-        else throw new IllegalArgumentException(s"Type tag defined in $mirror cannot be migrated to other mirrors.")
-    })
+    TypeTag(
+      mirror,
+      new api.TypeCreator {
+        def apply[U <: api.Universe with Singleton](m: api.Mirror[U]): U#Type =
+          if (m eq mirror) tpe.asInstanceOf[U#Type]
+          else
+            throw new IllegalArgumentException(
+              s"Type tag defined in $mirror cannot be migrated to other mirrors."
+            )
+      }
+    )
   }
 
-  private[this] def nextNameId = nameId.incrementAndGet()
+  private[this] def nextNameId: Int = nameId.incrementAndGet()
 
   private[this] def resolve(): Unit = synchronized {
+    if (!resolved.get()) {
 
-    /*
+      /*
       The idea of automatic name resolution is taken from Scala's Enumeration,
       but implemented without falling back to Java's reflection api.
-     */
+       */
 
-    val decode: Symbol => String = _.name.decodedName.toString.trim
+      val decode: Symbol => String = _.name.decodedName.toString.trim
 
-    // we are looking for vals accessible from io.fsq.field.Field[_, _] and tagged with Marker
+      // we are looking for vals accessible from io.fsq.field.Field[_, _] and tagged with Marker
 
-    def returnsMarkedField(symbol: Symbol): MarkerInfo = {
+      def returnsMarkedField(symbol: Symbol): MarkerInfo = {
 
-      val typeArgs = Seq(symbol.asMethod.returnType.typeArgs: _*) // copy here
+        val typeArgs = Seq(symbol.asMethod.returnType.typeArgs: _*) // copy here
 
-      val isMarked = typeArgs.exists(_ =:= typeOf[Marker])
-      val isMetaField = symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]]
+        val isMarked = typeArgs.exists(_ =:= typeOf[Marker])
+        val isMetaField =
+          symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]]
 
-      if (!isMarked)
-        ignoredFields add IgnoredField(
-          symbol,
-          s"!typeArgs.exists(_ =:= typeOf[Marker]), " +
-            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}")
+        if (!isMarked)
+          ignoredFields add IgnoredField(
+            symbol,
+            s"!typeArgs.exists(_ =:= typeOf[Marker]), " +
+              s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}"
+          )
 
-      if (!isMetaField)
-        ignoredFields add IgnoredField(
-          symbol,
-          s"!symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]], " +
-            s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}")
+        if (!isMetaField)
+          ignoredFields add IgnoredField(
+            symbol,
+            s"!symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]], " +
+              s"typeArgs: ${typeArgs.mkString("[", ", ", "]")}"
+          )
 
-      MarkerInfo(
-        isMarked &&
-          isMetaField,
-        s"""
+        MarkerInfo(
+          isMarked &&
+            isMetaField,
+          s"""
           | symbol.asMethod.returnType: ${symbol.asMethod.returnType}
           | typeArgs.exists(_ =:= typeOf[Marker]): $isMarked
           | symbol.asMethod.returnType <:< typeOf[io.fsq.field.Field[_, _]]: $isMetaField
-        """.stripMargin)
-    }
+        """.stripMargin
+        )
+      }
 
-    /*
+      /*
       So it seems rewrite of traits encoding in Scala 2.12
       was a good reason to simplify this little piece of code.
       I think this time its self-explanatory.
-    */
+       */
 
-    val valuesOfMarkedFieldTypeOnly: Symbol => Boolean = {
-      case symbol if symbol.isTerm =>
-        symbol.asTerm match {
-          case term if term.isGetter =>
-            term.getter match {
-              case getterSymbol if getterSymbol.isMethod =>
-                val markerInfo = returnsMarkedField(getterSymbol.asMethod)
-                visitedFields.add(VisitedField(getterSymbol, markerInfo))
-                markerInfo.isMarked
-              case s => ignoredFields add IgnoredField(s, "getter is not a method"); false
-            }
-          case s => ignoredFields add IgnoredField(s, "term is not a getter"); false
-        }
-      case s => ignoredFields add IgnoredField(s, "symbol is not a term"); false
-    }
+      val valuesOfMarkedFieldTypeOnly: Symbol => Boolean = {
+        case symbol if symbol.isTerm =>
+          symbol.asTerm match {
+            case term if term.isGetter =>
+              term.getter match {
+                case getterSymbol if getterSymbol.isMethod =>
+                  val markerInfo = returnsMarkedField(getterSymbol.asMethod)
+                  visitedFields.add(VisitedField(getterSymbol, markerInfo))
+                  markerInfo.isMarked
+                case s =>
+                  ignoredFields add IgnoredField(s, "getter is not a method");
+                  false
+              }
+            case s =>
+              ignoredFields add IgnoredField(s, "term is not a getter"); false
+          }
+        case s =>
+          ignoredFields add IgnoredField(s, "symbol is not a term"); false
+      }
 
-    /*
+      /*
       This reverse here is because traits are initialized in opposite order than declared...
-     */
+       */
 
-    val values = typeOf[Meta](typeTag).baseClasses.reverse.flatMap {
-      baseClass =>
+      val values = typeOf[Meta](typeTag).baseClasses.reverse
+        .flatMap { baseClass =>
+          val appType = appliedType(baseClass)
 
-        val appType = appliedType(baseClass)
+          val fields = appType.decls.sorted.filter(valuesOfMarkedFieldTypeOnly)
 
-        val fields = appType.decls
-          .sorted.filter(valuesOfMarkedFieldTypeOnly)
+          visitedClasses add VisitedClass(appType, fields)
 
-        visitedClasses add VisitedClass(appType, fields)
+          fields
+        }
+        .map(decode)
 
-        fields
-    }.map(decode)
+      // name map in order of trait linearization
 
-    // name map in order of trait linearization
-
-    for ((k, v) <- values.zipWithIndex.map(_.swap)) names.put(k, v)
-    resolved.set(true)
+      for ((k, v) <- values.zipWithIndex.map(_.swap)) names.put(k, v)
+      resolved.set(true)
+    }
   }
 
   /*
@@ -199,24 +224,35 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
     Its complicated, I know, meta programming usually is... But Miles Sabin's @@ is awesome, don't you think?
    */
 
-  override def named[T <: io.fsq.field.Field[_, _]](func: String => T): T @@ Marker = synchronized {
+  override def named[T <: io.fsq.field.Field[_, _]](
+      func: String => T
+  ): T @@ Marker = synchronized {
     if (!resolved.get()) resolve() // lets try one more time to find those names
 
     val id = nextNameId
 
-    val name: String = Option(names.get(id)).getOrElse(resolveError(id))
+    val name: String =
+      Option(names.get(id)).getOrElse(resolveError(id))
 
     val field = func(name)
-    if (fields.containsKey(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
+    if (fields.containsKey(name))
+      throw new IllegalArgumentException(
+        s"Field with name $name is already defined"
+      )
     fields.put(name, field)
     tag[Marker][T](field)
   }
 
-  override def named[T <: io.fsq.field.Field[_, _]](name: String)(func: String => T): T @@ Marker = synchronized {
+  override def named[T <: io.fsq.field.Field[_, _]](
+      name: String
+  )(func: String => T): T @@ Marker = synchronized {
     if (!resolved.get()) resolve()
     names.put(nextNameId, name)
     val field = func(name)
-    if (fields.containsKey(name)) throw new IllegalArgumentException(s"Field with name $name is already defined")
+    if (fields.containsKey(name))
+      throw new IllegalArgumentException(
+        s"Field with name $name is already defined"
+      )
     fields.put(name, field)
     tag[Marker][T](field)
   }
@@ -234,11 +270,16 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
        | Fields visited during field resolution:
        |${Debug.debug(visitedFields.asScala).mkIndent}
        | Fields not matching predicates:
-       |${Debug.debug(ignoredFields.asScala.toSeq.distinct).mkIndent}""".stripMargin
+       |${Debug
+      .debug(ignoredFields.asScala.toSeq.distinct)
+      .mkIndent}""".stripMargin
   }
 
-  private[this] def resolveError(id: Int): Nothing = throw new IllegalStateException(debugInfo(id))
-  def fieldNamesSorted: Seq[String] = Seq(names.asScala.toSeq.sortBy(_._1).map(_._2): _*) // making sure its a copy
+  private[this] def resolveError(id: Int): Nothing =
+    throw new IllegalStateException(debugInfo(id))
+  def fieldNamesSorted: Seq[String] = Seq(
+    names.asScala.toSeq.sortBy(_._1).map(_._2): _*
+  ) // making sure its a copy
 
 }
 
@@ -255,219 +296,508 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
 trait QueryFieldHelpers[Meta] extends NamesResolver {
   requires: Meta =>
 
-  protected def IntField: IntField[Meta] @@ Marker = named(new IntField[Meta](_, this))
-  protected def IntField(name: String): IntField[Meta] @@ Marker = named(name)(new IntField[Meta](_, this))
+  protected def IntField: IntField[Meta] @@ Marker = named(
+    new IntField[Meta](_, this)
+  )
+  protected def IntField(name: String): IntField[Meta] @@ Marker =
+    named(name)(new IntField[Meta](_, this))
 
-  protected def OptIntField: OptIntField[Meta] @@ Marker = named(new OptIntField[Meta](_, this))
-  protected def OptIntField(name: String): OptIntField[Meta] @@ Marker = named(name)(new OptIntField[Meta](_, this))
+  protected def OptIntField: OptIntField[Meta] @@ Marker = named(
+    new OptIntField[Meta](_, this)
+  )
+  protected def OptIntField(name: String): OptIntField[Meta] @@ Marker =
+    named(name)(new OptIntField[Meta](_, this))
 
-  protected def IntTaggedField[Tag]: IntTaggedField[Tag, Meta] @@ Marker = named(new IntTaggedField[Tag, Meta](_, this))
-  protected def IntTaggedField[Tag](name: String): IntTaggedField[Tag, Meta] @@ Marker = named(name)(new IntTaggedField[Tag, Meta](_, this))
+  protected def IntTaggedField[Tag]: IntTaggedField[Tag, Meta] @@ Marker =
+    named(new IntTaggedField[Tag, Meta](_, this))
+  protected def IntTaggedField[Tag](
+      name: String
+  ): IntTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new IntTaggedField[Tag, Meta](_, this))
 
-  protected def OptIntTaggedField[Tag]: OptIntTaggedField[Tag, Meta] @@ Marker = named(new OptIntTaggedField[Tag, Meta](_, this))
-  protected def OptIntTaggedField[Tag](name: String): OptIntTaggedField[Tag, Meta] @@ Marker = named(name)(new OptIntTaggedField[Tag, Meta](_, this))
+  protected def OptIntTaggedField[Tag]: OptIntTaggedField[Tag, Meta] @@ Marker =
+    named(new OptIntTaggedField[Tag, Meta](_, this))
+  protected def OptIntTaggedField[Tag](
+      name: String
+  ): OptIntTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new OptIntTaggedField[Tag, Meta](_, this))
 
-  protected def StringField: StringField[Meta] @@ Marker = named(new StringField[Meta](_, this))
-  protected def StringField(name: String): StringField[Meta] @@ Marker = named(name)(new StringField[Meta](_, this))
+  protected def StringField: StringField[Meta] @@ Marker = named(
+    new StringField[Meta](_, this)
+  )
+  protected def StringField(name: String): StringField[Meta] @@ Marker =
+    named(name)(new StringField[Meta](_, this))
 
-  protected def OptStringField: OptStringField[Meta] @@ Marker = named(new OptStringField[Meta](_, this))
-  protected def OptStringField(name: String): OptStringField[Meta] @@ Marker = named(name)(new OptStringField[Meta](_, this))
+  protected def OptStringField: OptStringField[Meta] @@ Marker = named(
+    new OptStringField[Meta](_, this)
+  )
+  protected def OptStringField(name: String): OptStringField[Meta] @@ Marker =
+    named(name)(new OptStringField[Meta](_, this))
 
-  protected def StringTaggedField[Tag]: StringTaggedField[Tag, Meta] @@ Marker = named(new StringTaggedField[Tag, Meta](_, this))
-  protected def StringTaggedField[Tag](name: String): StringTaggedField[Tag, Meta] @@ Marker = named(name)(new StringTaggedField[Tag, Meta](_, this))
+  protected def StringTaggedField[Tag]: StringTaggedField[Tag, Meta] @@ Marker =
+    named(new StringTaggedField[Tag, Meta](_, this))
+  protected def StringTaggedField[Tag](
+      name: String
+  ): StringTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new StringTaggedField[Tag, Meta](_, this))
 
-  protected def OptStringTaggedField[Tag]: OptStringTaggedField[Tag, Meta] @@ Marker = named(new OptStringTaggedField[Tag, Meta](_, this))
-  protected def OptStringTaggedField[Tag](name: String): OptStringTaggedField[Tag, Meta] @@ Marker = named(name)(new OptStringTaggedField[Tag, Meta](_, this))
+  protected def OptStringTaggedField[Tag]
+      : OptStringTaggedField[Tag, Meta] @@ Marker = named(
+    new OptStringTaggedField[Tag, Meta](_, this)
+  )
+  protected def OptStringTaggedField[Tag](
+      name: String
+  ): OptStringTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new OptStringTaggedField[Tag, Meta](_, this))
 
-  protected def LongField: LongField[Meta] @@ Marker = named(new LongField[Meta](_, this))
-  protected def LongField(name: String): LongField[Meta] @@ Marker = named(name)(new LongField[Meta](_, this))
+  protected def LongField: LongField[Meta] @@ Marker = named(
+    new LongField[Meta](_, this)
+  )
+  protected def LongField(name: String): LongField[Meta] @@ Marker =
+    named(name)(new LongField[Meta](_, this))
 
-  protected def OptLongField: OptLongField[Meta] @@ Marker = named(new OptLongField[Meta](_, this))
-  protected def OptLongField(name: String): OptLongField[Meta] @@ Marker = named(name)(new OptLongField[Meta](_, this))
+  protected def OptLongField: OptLongField[Meta] @@ Marker = named(
+    new OptLongField[Meta](_, this)
+  )
+  protected def OptLongField(name: String): OptLongField[Meta] @@ Marker =
+    named(name)(new OptLongField[Meta](_, this))
 
-  protected def BigDecimalField: BigDecimalField[Meta] @@ Marker = named(new BigDecimalField[Meta](_, this))
-  protected def BigDecimalField(name: String): BigDecimalField[Meta] @@ Marker = named(name)(new BigDecimalField[Meta](_, this))
+  protected def BigDecimalField: BigDecimalField[Meta] @@ Marker = named(
+    new BigDecimalField[Meta](_, this)
+  )
+  protected def BigDecimalField(name: String): BigDecimalField[Meta] @@ Marker =
+    named(name)(new BigDecimalField[Meta](_, this))
 
-  protected def OptBigDecimalField: OptBigDecimalField[Meta] @@ Marker = named(new OptBigDecimalField[Meta](_, this))
-  protected def OptBigDecimalField(name: String): OptBigDecimalField[Meta] @@ Marker = named(name)(new OptBigDecimalField[Meta](_, this))
+  protected def OptBigDecimalField: OptBigDecimalField[Meta] @@ Marker = named(
+    new OptBigDecimalField[Meta](_, this)
+  )
+  protected def OptBigDecimalField(
+      name: String
+  ): OptBigDecimalField[Meta] @@ Marker =
+    named(name)(new OptBigDecimalField[Meta](_, this))
 
-  protected def LongTaggedField[Tag]: LongTaggedField[Tag, Meta] @@ Marker = named(new LongTaggedField[Tag, Meta](_, this))
-  protected def LongTaggedField[Tag](name: String): LongTaggedField[Tag, Meta] @@ Marker = named(name)(new LongTaggedField[Tag, Meta](_, this))
+  protected def LongTaggedField[Tag]: LongTaggedField[Tag, Meta] @@ Marker =
+    named(new LongTaggedField[Tag, Meta](_, this))
+  protected def LongTaggedField[Tag](
+      name: String
+  ): LongTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new LongTaggedField[Tag, Meta](_, this))
 
-  protected def OptLongTaggedField[Tag]: OptLongTaggedField[Tag, Meta] @@ Marker = named(new OptLongTaggedField[Tag, Meta](_, this))
-  protected def OptLongTaggedField[Tag](name: String): OptLongTaggedField[Tag, Meta] @@ Marker = named(name)(new OptLongTaggedField[Tag, Meta](_, this))
+  protected def OptLongTaggedField[Tag]
+      : OptLongTaggedField[Tag, Meta] @@ Marker = named(
+    new OptLongTaggedField[Tag, Meta](_, this)
+  )
+  protected def OptLongTaggedField[Tag](
+      name: String
+  ): OptLongTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new OptLongTaggedField[Tag, Meta](_, this))
 
-  protected def DoubleField: DoubleField[Meta] @@ Marker = named(new DoubleField[Meta](_, this))
-  protected def DoubleField(name: String): DoubleField[Meta] @@ Marker = named(name)(new DoubleField[Meta](_, this))
+  protected def DoubleField: DoubleField[Meta] @@ Marker = named(
+    new DoubleField[Meta](_, this)
+  )
+  protected def DoubleField(name: String): DoubleField[Meta] @@ Marker =
+    named(name)(new DoubleField[Meta](_, this))
 
-  protected def OptDoubleField: OptDoubleField[Meta] @@ Marker = named(new OptDoubleField[Meta](_, this))
-  protected def OptDoubleField(name: String): OptDoubleField[Meta] @@ Marker = named(name)(new OptDoubleField[Meta](_, this))
+  protected def OptDoubleField: OptDoubleField[Meta] @@ Marker = named(
+    new OptDoubleField[Meta](_, this)
+  )
+  protected def OptDoubleField(name: String): OptDoubleField[Meta] @@ Marker =
+    named(name)(new OptDoubleField[Meta](_, this))
 
-  protected def ObjectIdField: ObjectIdField[Meta] @@ Marker = named(new ObjectIdField[Meta](_, this))
-  protected def ObjectIdField(name: String): ObjectIdField[Meta] @@ Marker = named(name)(new ObjectIdField[Meta](_, this))
+  protected def ObjectIdField: ObjectIdField[Meta] @@ Marker = named(
+    new ObjectIdField[Meta](_, this)
+  )
+  protected def ObjectIdField(name: String): ObjectIdField[Meta] @@ Marker =
+    named(name)(new ObjectIdField[Meta](_, this))
 
-  protected def OptObjectIdField: OptObjectIdField[Meta] @@ Marker = named(new OptObjectIdField[Meta](_, this))
-  protected def OptObjectIdField(name: String): OptObjectIdField[Meta] @@ Marker = named(name)(new OptObjectIdField[Meta](_, this))
+  protected def OptObjectIdField: OptObjectIdField[Meta] @@ Marker = named(
+    new OptObjectIdField[Meta](_, this)
+  )
+  protected def OptObjectIdField(
+      name: String
+  ): OptObjectIdField[Meta] @@ Marker =
+    named(name)(new OptObjectIdField[Meta](_, this))
 
-  protected def ObjectIdTaggedField[Tag]: ObjectIdTaggedField[Tag, Meta] @@ Marker = named(new ObjectIdTaggedField[Tag, Meta](_, this))
-  protected def ObjectIdTaggedField[Tag](name: String): ObjectIdTaggedField[Tag, Meta] @@ Marker = named(name)(new ObjectIdTaggedField[Tag, Meta](_, this))
+  protected def ObjectIdTaggedField[Tag]
+      : ObjectIdTaggedField[Tag, Meta] @@ Marker = named(
+    new ObjectIdTaggedField[Tag, Meta](_, this)
+  )
+  protected def ObjectIdTaggedField[Tag](
+      name: String
+  ): ObjectIdTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new ObjectIdTaggedField[Tag, Meta](_, this))
 
-  protected def OptObjectIdTaggedField[Tag]: OptObjectIdTaggedField[Tag, Meta] @@ Marker = named(new OptObjectIdTaggedField[Tag, Meta](_, this))
-  protected def OptObjectIdTaggedField[Tag](name: String): OptObjectIdTaggedField[Tag, Meta] @@ Marker = named(name)(new OptObjectIdTaggedField[Tag, Meta](_, this))
+  protected def OptObjectIdTaggedField[Tag]
+      : OptObjectIdTaggedField[Tag, Meta] @@ Marker = named(
+    new OptObjectIdTaggedField[Tag, Meta](_, this)
+  )
+  protected def OptObjectIdTaggedField[Tag](
+      name: String
+  ): OptObjectIdTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new OptObjectIdTaggedField[Tag, Meta](_, this))
 
-  protected def ObjectIdSubtypeField[Subtype <: ObjectId]: ObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(new ObjectIdSubtypeField[Subtype, Meta](_, this))
-  protected def ObjectIdSubtypeField[Subtype <: ObjectId](name: String): ObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(name)(new ObjectIdSubtypeField[Subtype, Meta](_, this))
+  protected def ObjectIdSubtypeField[Subtype <: ObjectId]
+      : ObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(
+    new ObjectIdSubtypeField[Subtype, Meta](_, this)
+  )
+  protected def ObjectIdSubtypeField[Subtype <: ObjectId](
+      name: String
+  ): ObjectIdSubtypeField[Subtype, Meta] @@ Marker =
+    named(name)(new ObjectIdSubtypeField[Subtype, Meta](_, this))
 
-  protected def OptObjectIdSubtypeField[Subtype <: ObjectId]: OptObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(new OptObjectIdSubtypeField[Subtype, Meta](_, this))
-  protected def OptObjectIdSubtypeField[Subtype <: ObjectId](name: String): OptObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(name)(new OptObjectIdSubtypeField[Subtype, Meta](_, this))
+  protected def OptObjectIdSubtypeField[Subtype <: ObjectId]
+      : OptObjectIdSubtypeField[Subtype, Meta] @@ Marker = named(
+    new OptObjectIdSubtypeField[Subtype, Meta](_, this)
+  )
+  protected def OptObjectIdSubtypeField[Subtype <: ObjectId](
+      name: String
+  ): OptObjectIdSubtypeField[Subtype, Meta] @@ Marker =
+    named(name)(new OptObjectIdSubtypeField[Subtype, Meta](_, this))
 
-  protected def UUIdField: UUIDIdField[Meta] @@ Marker = named(new UUIDIdField[Meta](_, this))
-  protected def UUIdField(name: String): UUIDIdField[Meta] @@ Marker = named(name)(new UUIDIdField[Meta](_, this))
+  protected def UUIdField: UUIDIdField[Meta] @@ Marker = named(
+    new UUIDIdField[Meta](_, this)
+  )
+  protected def UUIdField(name: String): UUIDIdField[Meta] @@ Marker =
+    named(name)(new UUIDIdField[Meta](_, this))
 
-  protected def OptUUIdField: OptUUIDIdField[Meta] @@ Marker = named(new OptUUIDIdField[Meta](_, this))
-  protected def OptUUIdField(name: String): OptUUIDIdField[Meta] @@ Marker = named(name)(new OptUUIDIdField[Meta](_, this))
+  protected def OptUUIdField: OptUUIDIdField[Meta] @@ Marker = named(
+    new OptUUIDIdField[Meta](_, this)
+  )
+  protected def OptUUIdField(name: String): OptUUIDIdField[Meta] @@ Marker =
+    named(name)(new OptUUIDIdField[Meta](_, this))
 
-  protected def UUIdTaggedField[Tag]: UUIDIdTaggedField[Tag, Meta] @@ Marker = named(new UUIDIdTaggedField[Tag, Meta](_, this))
-  protected def UUIdTaggedField[Tag](name: String): UUIDIdTaggedField[Tag, Meta] @@ Marker = named(name)(new UUIDIdTaggedField[Tag, Meta](_, this))
+  protected def UUIdTaggedField[Tag]: UUIDIdTaggedField[Tag, Meta] @@ Marker =
+    named(new UUIDIdTaggedField[Tag, Meta](_, this))
+  protected def UUIdTaggedField[Tag](
+      name: String
+  ): UUIDIdTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new UUIDIdTaggedField[Tag, Meta](_, this))
 
-  protected def OptUUIdTaggedField[Tag]: OptUUIDIdTaggedField[Tag, Meta] @@ Marker = named(new OptUUIDIdTaggedField[Tag, Meta](_, this))
-  protected def OptUUIdTaggedField[Tag](name: String): OptUUIDIdTaggedField[Tag, Meta] @@ Marker = named(name)(new OptUUIDIdTaggedField[Tag, Meta](_, this))
+  protected def OptUUIdTaggedField[Tag]
+      : OptUUIDIdTaggedField[Tag, Meta] @@ Marker = named(
+    new OptUUIDIdTaggedField[Tag, Meta](_, this)
+  )
+  protected def OptUUIdTaggedField[Tag](
+      name: String
+  ): OptUUIDIdTaggedField[Tag, Meta] @@ Marker =
+    named(name)(new OptUUIDIdTaggedField[Tag, Meta](_, this))
 
-  protected def LocalDateTimeField: LocalDateTimeField[Meta] @@ Marker = named(new LocalDateTimeField[Meta](_, this))
-  protected def LocalDateTimeField(name: String): LocalDateTimeField[Meta] @@ Marker = named(name)(new LocalDateTimeField[Meta](_, this))
+  protected def LocalDateTimeField: LocalDateTimeField[Meta] @@ Marker = named(
+    new LocalDateTimeField[Meta](_, this)
+  )
+  protected def LocalDateTimeField(
+      name: String
+  ): LocalDateTimeField[Meta] @@ Marker =
+    named(name)(new LocalDateTimeField[Meta](_, this))
 
-  protected def OptLocalDateTimeField: OptLocalDateTimeField[Meta] @@ Marker = named(new OptLocalDateTimeField[Meta](_, this))
-  protected def OptLocalDateTimeField(name: String): OptLocalDateTimeField[Meta] @@ Marker = named(name)(new OptLocalDateTimeField[Meta](_, this))
+  protected def OptLocalDateTimeField: OptLocalDateTimeField[Meta] @@ Marker =
+    named(new OptLocalDateTimeField[Meta](_, this))
+  protected def OptLocalDateTimeField(
+      name: String
+  ): OptLocalDateTimeField[Meta] @@ Marker =
+    named(name)(new OptLocalDateTimeField[Meta](_, this))
 
-  protected def CurrencyField: CurrencyField[Meta] @@ Marker = named(new CurrencyField[Meta](_, this))
-  protected def CurrencyField(name: String): CurrencyField[Meta] @@ Marker = named(name)(new CurrencyField[Meta](_, this))
+  protected def CurrencyField: CurrencyField[Meta] @@ Marker = named(
+    new CurrencyField[Meta](_, this)
+  )
+  protected def CurrencyField(name: String): CurrencyField[Meta] @@ Marker =
+    named(name)(new CurrencyField[Meta](_, this))
 
-  protected def OptCurrencyField: OptCurrencyField[Meta] @@ Marker = named(new OptCurrencyField[Meta](_, this))
-  protected def OptCurrencyField(name: String): OptCurrencyField[Meta] @@ Marker = named(name)(new OptCurrencyField[Meta](_, this))
+  protected def OptCurrencyField: OptCurrencyField[Meta] @@ Marker = named(
+    new OptCurrencyField[Meta](_, this)
+  )
+  protected def OptCurrencyField(
+      name: String
+  ): OptCurrencyField[Meta] @@ Marker =
+    named(name)(new OptCurrencyField[Meta](_, this))
 
-  protected def InstantField: InstantField[Meta] @@ Marker = named(new InstantField[Meta](_, this))
-  protected def InstantField(name: String): InstantField[Meta] @@ Marker = named(name)(new InstantField[Meta](_, this))
+  protected def InstantField: InstantField[Meta] @@ Marker = named(
+    new InstantField[Meta](_, this)
+  )
+  protected def InstantField(name: String): InstantField[Meta] @@ Marker =
+    named(name)(new InstantField[Meta](_, this))
 
-  protected def OptInstantField: OptInstantField[Meta] @@ Marker = named(new OptInstantField[Meta](_, this))
-  protected def OptInstantField(name: String): OptInstantField[Meta] @@ Marker = named(name)(new OptInstantField[Meta](_, this))
+  protected def OptInstantField: OptInstantField[Meta] @@ Marker = named(
+    new OptInstantField[Meta](_, this)
+  )
+  protected def OptInstantField(name: String): OptInstantField[Meta] @@ Marker =
+    named(name)(new OptInstantField[Meta](_, this))
 
-  protected def BooleanField: BooleanField[Meta] @@ Marker = named(new BooleanField[Meta](_, this))
-  protected def BooleanField(name: String): BooleanField[Meta] @@ Marker = named(name)(new BooleanField[Meta](_, this))
+  protected def BooleanField: BooleanField[Meta] @@ Marker = named(
+    new BooleanField[Meta](_, this)
+  )
+  protected def BooleanField(name: String): BooleanField[Meta] @@ Marker =
+    named(name)(new BooleanField[Meta](_, this))
 
-  protected def OptBooleanField: OptBooleanField[Meta] @@ Marker = named(new OptBooleanField[Meta](_, this))
-  protected def OptBooleanField(name: String): OptBooleanField[Meta] @@ Marker = named(name)(new OptBooleanField[Meta](_, this))
+  protected def OptBooleanField: OptBooleanField[Meta] @@ Marker = named(
+    new OptBooleanField[Meta](_, this)
+  )
+  protected def OptBooleanField(name: String): OptBooleanField[Meta] @@ Marker =
+    named(name)(new OptBooleanField[Meta](_, this))
 
-  protected def EnumField[E <: Enumeration: TypeTag]: EnumField[E, Meta] @@ Marker = named(new EnumField[E, Meta](_, this))
-  protected def EnumField[E <: Enumeration: TypeTag](name: String): EnumField[E, Meta] @@ Marker = named(name)(new EnumField[E, Meta](_, this))
+  protected def EnumField[E <: Enumeration: TypeTag]
+      : EnumField[E, Meta] @@ Marker = named(new EnumField[E, Meta](_, this))
+  protected def EnumField[E <: Enumeration: TypeTag](
+      name: String
+  ): EnumField[E, Meta] @@ Marker = named(name)(new EnumField[E, Meta](_, this))
 
-  /**
-   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
-   * So instead of writing val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
-   * @param e
-   * @tparam E
-   * @return
-   */
-  protected def EnumField[E <: Enumeration: TypeTag](e: E): EnumField[E, Meta] @@ Marker = named(new EnumField[E, Meta](_, this))
-  protected def EnumField[E <: Enumeration: TypeTag](name: String, e: E): EnumField[E, Meta] @@ Marker = named(name)(new EnumField[E, Meta](_, this))
+  /** This version of the EnumField method accepts e: E as a param to avoid ugly
+    * type parameters like [MyEnum.type] So instead of writing val myEnum =
+    * EnumField[MyEnum.type, MyMeta] we can simply write val myEnum =
+    * EnumField(MyEnum)
+    * @param e
+    *   @tparam E
+    * @return
+    */
+  protected def EnumField[E <: Enumeration: TypeTag](
+      e: E
+  ): EnumField[E, Meta] @@ Marker = named(new EnumField[E, Meta](_, this))
+  protected def EnumField[E <: Enumeration: TypeTag](
+      name: String,
+      e: E
+  ): EnumField[E, Meta] @@ Marker = named(name)(new EnumField[E, Meta](_, this))
 
-  protected def OptEnumField[E <: Enumeration]: OptEnumField[E, Meta] @@ Marker = named(new OptEnumField[E, Meta](_, this))
-  protected def OptEnumField[E <: Enumeration](name: String): OptEnumField[E, Meta] @@ Marker = named(name)(new OptEnumField[E, Meta](_, this))
+  protected def OptEnumField[E <: Enumeration]
+      : OptEnumField[E, Meta] @@ Marker = named(
+    new OptEnumField[E, Meta](_, this)
+  )
+  protected def OptEnumField[E <: Enumeration](
+      name: String
+  ): OptEnumField[E, Meta] @@ Marker =
+    named(name)(new OptEnumField[E, Meta](_, this))
 
-  /**
-   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
-   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
-   * @param e
-   * @tparam E
-   * @return
-   */
-  protected def OptEnumField[E <: Enumeration](e: E): OptEnumField[E, Meta] @@ Marker = named(new OptEnumField[E, Meta](_, this))
-  protected def OptEnumField[E <: Enumeration](name: String, e: E): OptEnumField[E, Meta] @@ Marker = named(name)(new OptEnumField[E, Meta](_, this))
+  /** This version of the EnumField method accepts e: E as a param to avoid ugly
+    * type parameters like [MyEnum.type] So instead of writting val myEnum =
+    * EnumField[MyEnum.type, MyMeta] we can simply write val myEnum =
+    * EnumField(MyEnum)
+    * @param e
+    *   @tparam E
+    * @return
+    */
+  protected def OptEnumField[E <: Enumeration](
+      e: E
+  ): OptEnumField[E, Meta] @@ Marker = named(new OptEnumField[E, Meta](_, this))
+  protected def OptEnumField[E <: Enumeration](
+      name: String,
+      e: E
+  ): OptEnumField[E, Meta] @@ Marker =
+    named(name)(new OptEnumField[E, Meta](_, this))
 
-  protected def EnumIdField[E <: Enumeration: TypeTag]: EnumIdField[E, Meta] @@ Marker = named(new EnumIdField[E, Meta](_, this))
-  protected def EnumIdField[E <: Enumeration: TypeTag](name: String): EnumIdField[E, Meta] @@ Marker = named(name)(new EnumIdField[E, Meta](_, this))
+  protected def EnumIdField[E <: Enumeration: TypeTag]
+      : EnumIdField[E, Meta] @@ Marker = named(
+    new EnumIdField[E, Meta](_, this)
+  )
+  protected def EnumIdField[E <: Enumeration: TypeTag](
+      name: String
+  ): EnumIdField[E, Meta] @@ Marker =
+    named(name)(new EnumIdField[E, Meta](_, this))
 
-  /**
-   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
-   * So instead of writting val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
-   * @param e
-   * @tparam E
-   * @return
-   */
-  protected def EnumIdField[E <: Enumeration: TypeTag](e: E): EnumIdField[E, Meta] @@ Marker = named(new EnumIdField[E, Meta](_, this))
-  protected def EnumIdField[E <: Enumeration: TypeTag](name: String, e: E): EnumIdField[E, Meta] @@ Marker = named(name)(new EnumIdField[E, Meta](_, this))
+  /** This version of the EnumField method accepts e: E as a param to avoid ugly
+    * type parameters like [MyEnum.type] So instead of writting val myEnum =
+    * EnumField[MyEnum.type, MyMeta] we can simply write val myEnum =
+    * EnumField(MyEnum)
+    * @param e
+    *   @tparam E
+    * @return
+    */
+  protected def EnumIdField[E <: Enumeration: TypeTag](
+      e: E
+  ): EnumIdField[E, Meta] @@ Marker = named(new EnumIdField[E, Meta](_, this))
+  protected def EnumIdField[E <: Enumeration: TypeTag](
+      name: String,
+      e: E
+  ): EnumIdField[E, Meta] @@ Marker =
+    named(name)(new EnumIdField[E, Meta](_, this))
 
-  protected def OptEnumIdField[E <: Enumeration]: OptEnumIdField[E, Meta] @@ Marker = named(new OptEnumIdField[E, Meta](_, this))
-  protected def OptEnumIdField[E <: Enumeration](name: String): OptEnumIdField[E, Meta] @@ Marker = named(name)(new OptEnumIdField[E, Meta](_, this))
+  protected def OptEnumIdField[E <: Enumeration]
+      : OptEnumIdField[E, Meta] @@ Marker = named(
+    new OptEnumIdField[E, Meta](_, this)
+  )
+  protected def OptEnumIdField[E <: Enumeration](
+      name: String
+  ): OptEnumIdField[E, Meta] @@ Marker =
+    named(name)(new OptEnumIdField[E, Meta](_, this))
 
-  /**
-   * This version of the EnumField method accepts e: E as a param to avoid ugly type parameters like [MyEnum.type]
-   * So instead of writing val myEnum = EnumField[MyEnum.type, MyMeta] we can simply write val myEnum = EnumField(MyEnum)
-   * @param e
-   * @tparam E
-   * @return
-   */
-  protected def OptEnumIdField[E <: Enumeration](e: E): OptEnumIdField[E, Meta] @@ Marker = named(new OptEnumIdField[E, Meta](_, this))
-  protected def OptEnumIdField[E <: Enumeration](name: String, e: E): OptEnumIdField[E, Meta] @@ Marker = named(name)(new OptEnumIdField[E, Meta](_, this))
+  /** This version of the EnumField method accepts e: E as a param to avoid ugly
+    * type parameters like [MyEnum.type] So instead of writing val myEnum =
+    * EnumField[MyEnum.type, MyMeta] we can simply write val myEnum =
+    * EnumField(MyEnum)
+    * @param e
+    *   @tparam E
+    * @return
+    */
+  protected def OptEnumIdField[E <: Enumeration](
+      e: E
+  ): OptEnumIdField[E, Meta] @@ Marker = named(
+    new OptEnumIdField[E, Meta](_, this)
+  )
+  protected def OptEnumIdField[E <: Enumeration](
+      name: String,
+      e: E
+  ): OptEnumIdField[E, Meta] @@ Marker =
+    named(name)(new OptEnumIdField[E, Meta](_, this))
 
-  protected def ListField[V]: ListField[V, Meta] @@ Marker = named(new ListField[V, Meta](_, this))
-  protected def ListField[V](name: String): ListField[V, Meta] @@ Marker = named(name)(new ListField[V, Meta](_, this))
+  protected def ListField[V]: ListField[V, Meta] @@ Marker = named(
+    new ListField[V, Meta](_, this)
+  )
+  protected def ListField[V](name: String): ListField[V, Meta] @@ Marker =
+    named(name)(new ListField[V, Meta](_, this))
 
-  protected def OptListField[V]: OptListField[V, Meta] @@ Marker = named(new OptListField[V, Meta](_, this))
-  protected def OptListField[V](name: String): OptListField[V, Meta] @@ Marker = named(name)(new OptListField[V, Meta](_, this))
+  protected def OptListField[V]: OptListField[V, Meta] @@ Marker = named(
+    new OptListField[V, Meta](_, this)
+  )
+  protected def OptListField[V](name: String): OptListField[V, Meta] @@ Marker =
+    named(name)(new OptListField[V, Meta](_, this))
 
-  protected def ArrayField[V: ClassTag]: ArrayField[V, Meta] @@ Marker = named(new ArrayField[V, Meta](_, this))
-  protected def ArrayField[V: ClassTag](name: String): ArrayField[V, Meta] @@ Marker = named(name)(new ArrayField[V, Meta](_, this))
+  protected def ArrayField[V: ClassTag]: ArrayField[V, Meta] @@ Marker = named(
+    new ArrayField[V, Meta](_, this)
+  )
+  protected def ArrayField[V: ClassTag](
+      name: String
+  ): ArrayField[V, Meta] @@ Marker =
+    named(name)(new ArrayField[V, Meta](_, this))
 
-  protected def OptArrayField[V: ClassTag]: OptArrayField[V, Meta] @@ Marker = named(new OptArrayField[V, Meta](_, this))
-  protected def OptArrayField[V: ClassTag](name: String): OptArrayField[V, Meta] @@ Marker = named(name)(new OptArrayField[V, Meta](_, this))
+  protected def OptArrayField[V: ClassTag]: OptArrayField[V, Meta] @@ Marker =
+    named(new OptArrayField[V, Meta](_, this))
+  protected def OptArrayField[V: ClassTag](
+      name: String
+  ): OptArrayField[V, Meta] @@ Marker =
+    named(name)(new OptArrayField[V, Meta](_, this))
 
-  protected def VectorField[V]: VectorField[V, Meta] @@ Marker = named(new VectorField[V, Meta](_, this))
-  protected def VectorField[V](name: String): VectorField[V, Meta] @@ Marker = named(name)(new VectorField[V, Meta](_, this))
+  protected def VectorField[V]: VectorField[V, Meta] @@ Marker = named(
+    new VectorField[V, Meta](_, this)
+  )
+  protected def VectorField[V](name: String): VectorField[V, Meta] @@ Marker =
+    named(name)(new VectorField[V, Meta](_, this))
 
-  protected def OptVectorField[V]: OptVectorField[V, Meta] @@ Marker = named(new OptVectorField[V, Meta](_, this))
-  protected def OptVectorField[V](name: String): OptVectorField[V, Meta] @@ Marker = named(name)(new OptVectorField[V, Meta](_, this))
+  protected def OptVectorField[V]: OptVectorField[V, Meta] @@ Marker = named(
+    new OptVectorField[V, Meta](_, this)
+  )
+  protected def OptVectorField[V](
+      name: String
+  ): OptVectorField[V, Meta] @@ Marker =
+    named(name)(new OptVectorField[V, Meta](_, this))
 
-  protected def SeqField[V]: SeqField[V, Meta] @@ Marker = named(new SeqField[V, Meta](_, this))
-  protected def SeqField[V](name: String): SeqField[V, Meta] @@ Marker = named(name)(new SeqField[V, Meta](_, this))
+  protected def SeqField[V]: SeqField[V, Meta] @@ Marker = named(
+    new SeqField[V, Meta](_, this)
+  )
+  protected def SeqField[V](name: String): SeqField[V, Meta] @@ Marker =
+    named(name)(new SeqField[V, Meta](_, this))
 
-  protected def OptSeqField[V]: OptSeqField[V, Meta] @@ Marker = named(new OptSeqField[V, Meta](_, this))
-  protected def OptSeqField[V](name: String): OptSeqField[V, Meta] @@ Marker = named(name)(new OptSeqField[V, Meta](_, this))
+  protected def OptSeqField[V]: OptSeqField[V, Meta] @@ Marker = named(
+    new OptSeqField[V, Meta](_, this)
+  )
+  protected def OptSeqField[V](name: String): OptSeqField[V, Meta] @@ Marker =
+    named(name)(new OptSeqField[V, Meta](_, this))
 
-  protected def ClassField[C, MC <: CcMeta[C]](mc: MC): CClassField[C, MC, Meta] @@ Marker = named(new CClassField[C, MC, Meta](_, mc, this))
-  protected def ClassField[C, MC <: CcMeta[C]](name: String, mc: MC): CClassField[C, MC, Meta] @@ Marker = named(name)(new CClassField[C, MC, Meta](_, mc, this))
+  protected def ClassField[C, MC <: CcMeta[C]](
+      mc: MC
+  ): CClassField[C, MC, Meta] @@ Marker = named(
+    new CClassField[C, MC, Meta](_, mc, this)
+  )
+  protected def ClassField[C, MC <: CcMeta[C]](
+      name: String,
+      mc: MC
+  ): CClassField[C, MC, Meta] @@ Marker =
+    named(name)(new CClassField[C, MC, Meta](_, mc, this))
 
-  protected def OptClassField[C, MC <: CcMeta[C]](mc: MC): OptCClassField[C, MC, Meta] @@ Marker = named(new OptCClassField[C, MC, Meta](_, mc, this))
-  protected def OptClassField[C, MC <: CcMeta[C]](name: String, mc: MC): OptCClassField[C, MC, Meta] @@ Marker = named(name)(new OptCClassField[C, MC, Meta](_, mc, this))
+  protected def OptClassField[C, MC <: CcMeta[C]](
+      mc: MC
+  ): OptCClassField[C, MC, Meta] @@ Marker = named(
+    new OptCClassField[C, MC, Meta](_, mc, this)
+  )
+  protected def OptClassField[C, MC <: CcMeta[C]](
+      name: String,
+      mc: MC
+  ): OptCClassField[C, MC, Meta] @@ Marker =
+    named(name)(new OptCClassField[C, MC, Meta](_, mc, this))
 
-  protected def ClassRequiredField[C, MC <: CcMeta[C]](mc: MC, default: C): CClassRequiredField[C, MC, Meta] @@ Marker = named(new CClassRequiredField(_, mc, default, this))
-  protected def ClassRequiredField[C, MC <: CcMeta[C]](name: String, mc: MC, default: C): CClassRequiredField[C, MC, Meta] @@ Marker = named(name)(new CClassRequiredField(_, mc, default, this))
+  protected def ClassRequiredField[C, MC <: CcMeta[C]](
+      mc: MC,
+      default: C
+  ): CClassRequiredField[C, MC, Meta] @@ Marker = named(
+    new CClassRequiredField(_, mc, default, this)
+  )
+  protected def ClassRequiredField[C, MC <: CcMeta[C]](
+      name: String,
+      mc: MC,
+      default: C
+  ): CClassRequiredField[C, MC, Meta] @@ Marker =
+    named(name)(new CClassRequiredField(_, mc, default, this))
 
-  protected def ClassListField[C: ClassTag, MC <: CcMeta[C]](mc: MC): CClassListField[C, MC, Meta] @@ Marker = named(new CClassListField[C, MC, Meta](_, mc, this))
-  protected def ClassListField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): CClassListField[C, MC, Meta] @@ Marker = named(name)(new CClassListField[C, MC, Meta](_, mc, this))
+  protected def ClassListField[C: ClassTag, MC <: CcMeta[C]](
+      mc: MC
+  ): CClassListField[C, MC, Meta] @@ Marker = named(
+    new CClassListField[C, MC, Meta](_, mc, this)
+  )
+  protected def ClassListField[C: ClassTag, MC <: CcMeta[C]](
+      name: String,
+      mc: MC
+  ): CClassListField[C, MC, Meta] @@ Marker =
+    named(name)(new CClassListField[C, MC, Meta](_, mc, this))
 
-  protected def OptClassListField[C: ClassTag, MC <: CcMeta[C]](mc: MC): OptCClassListField[C, MC, Meta] @@ Marker = named(new OptCClassListField[C, MC, Meta](_, mc, this))
-  protected def OptClassListField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): OptCClassListField[C, MC, Meta] @@ Marker = named(name)(new OptCClassListField[C, MC, Meta](_, mc, this))
+  protected def OptClassListField[C: ClassTag, MC <: CcMeta[C]](
+      mc: MC
+  ): OptCClassListField[C, MC, Meta] @@ Marker = named(
+    new OptCClassListField[C, MC, Meta](_, mc, this)
+  )
+  protected def OptClassListField[C: ClassTag, MC <: CcMeta[C]](
+      name: String,
+      mc: MC
+  ): OptCClassListField[C, MC, Meta] @@ Marker =
+    named(name)(new OptCClassListField[C, MC, Meta](_, mc, this))
 
-  protected def ClassArrayField[C: ClassTag, MC <: CcMeta[C]](mc: MC): CClassArrayField[C, MC, Meta] @@ Marker = named(new CClassArrayField[C, MC, Meta](_, mc, this))
-  protected def ClassArrayField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): CClassArrayField[C, MC, Meta] @@ Marker = named(name)(new CClassArrayField[C, MC, Meta](_, mc, this))
+  protected def ClassArrayField[C: ClassTag, MC <: CcMeta[C]](
+      mc: MC
+  ): CClassArrayField[C, MC, Meta] @@ Marker = named(
+    new CClassArrayField[C, MC, Meta](_, mc, this)
+  )
+  protected def ClassArrayField[C: ClassTag, MC <: CcMeta[C]](
+      name: String,
+      mc: MC
+  ): CClassArrayField[C, MC, Meta] @@ Marker =
+    named(name)(new CClassArrayField[C, MC, Meta](_, mc, this))
 
-  protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](mc: MC): OptCClassArrayField[C, MC, Meta] @@ Marker = named(new OptCClassArrayField[C, MC, Meta](_, mc, this))
-  protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](name: String, mc: MC): OptCClassArrayField[C, MC, Meta] @@ Marker = named(name)(new OptCClassArrayField[C, MC, Meta](_, mc, this))
+  protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](
+      mc: MC
+  ): OptCClassArrayField[C, MC, Meta] @@ Marker = named(
+    new OptCClassArrayField[C, MC, Meta](_, mc, this)
+  )
+  protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](
+      name: String,
+      mc: MC
+  ): OptCClassArrayField[C, MC, Meta] @@ Marker =
+    named(name)(new OptCClassArrayField[C, MC, Meta](_, mc, this))
 
-  protected def MapField[K: MapKeyFormat, V]: MapField[K, V, Meta] @@ Marker = named(new MapField[K, V, Meta](_, this))
-  protected def MapField[K: MapKeyFormat, V](name: String): MapField[K, V, Meta] @@ Marker = named(name)(new MapField[K, V, Meta](_, this))
+  protected def MapField[K: MapKeyFormat, V]: MapField[K, V, Meta] @@ Marker =
+    named(new MapField[K, V, Meta](_, this))
+  protected def MapField[K: MapKeyFormat, V](
+      name: String
+  ): MapField[K, V, Meta] @@ Marker =
+    named(name)(new MapField[K, V, Meta](_, this))
 
-  protected def OptMapField[V]: OptMapField[V, Meta] @@ Marker = named(new OptMapField[V, Meta](_, this))
-  protected def OptMapField[V](name: String): OptMapField[V, Meta] @@ Marker = named(name)(new OptMapField[V, Meta](_, this))
+  protected def OptMapField[V]: OptMapField[V, Meta] @@ Marker = named(
+    new OptMapField[V, Meta](_, this)
+  )
+  protected def OptMapField[V](name: String): OptMapField[V, Meta] @@ Marker =
+    named(name)(new OptMapField[V, Meta](_, this))
 
-  protected def LocaleField: LocaleField[Meta] @@ Marker = named(new LocaleField[Meta](_, this))
-  protected def LocaleField(name: String): LocaleField[Meta] @@ Marker = named(name)(new LocaleField[Meta](_, this))
+  protected def LocaleField: LocaleField[Meta] @@ Marker = named(
+    new LocaleField[Meta](_, this)
+  )
+  protected def LocaleField(name: String): LocaleField[Meta] @@ Marker =
+    named(name)(new LocaleField[Meta](_, this))
 
-  protected def OptLocaleField: OptLocaleField[Meta] @@ Marker = named(new OptLocaleField[Meta](_, this))
-  protected def OptLocaleField(name: String): OptLocaleField[Meta] @@ Marker = named(name)(new OptLocaleField[Meta](_, this))
+  protected def OptLocaleField: OptLocaleField[Meta] @@ Marker = named(
+    new OptLocaleField[Meta](_, this)
+  )
+  protected def OptLocaleField(name: String): OptLocaleField[Meta] @@ Marker =
+    named(name)(new OptLocaleField[Meta](_, this))
 
 }
 
-trait NamedQueryFieldHelpers[Meta] extends QueryFieldHelpers[Meta] with RuntimeNameResolver[Meta] {
+trait NamedQueryFieldHelpers[Meta]
+    extends QueryFieldHelpers[Meta]
+    with RuntimeNameResolver[Meta] {
   requires: Meta =>
 }

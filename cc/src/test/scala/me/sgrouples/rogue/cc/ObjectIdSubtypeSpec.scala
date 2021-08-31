@@ -6,7 +6,7 @@ import io.fsq.rogue._
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.cc
 import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, Matchers }
+import munit.FunSuite
 import shapeless.tag
 import shapeless.tag.@@
 import me.sgrouples.rogue.cc._
@@ -28,8 +28,11 @@ trait TypedObjectId[RecordType, TagType] {
     def apply(text: String): Id = tag[TagType][ObjectId](new ObjectId(text))
 
     object Extract {
-      def unapply(in: String): Option[Id] = try { Some(apply(in)) } catch { case e: IllegalArgumentException => None }
-      def unapply(inOpt: Option[String]): Option[Option[Id]] = try { Some(inOpt.map(apply)) } catch { case e: IllegalArgumentException => None }
+      def unapply(in: String): Option[Id] = try { Some(apply(in)) }
+      catch { case e: IllegalArgumentException => None }
+      def unapply(inOpt: Option[String]): Option[Option[Id]] = try {
+        Some(inOpt.map(apply))
+      } catch { case e: IllegalArgumentException => None }
     }
 
   }
@@ -47,16 +50,22 @@ case class A(_id: A.Id, b: String)
 
 object A extends TypedObjectId[A, A]
 
-class ObjectIdSubtypeSpec extends FlatSpec with Matchers {
+class ObjectIdSubtypeSpec extends FunSuite {
 
   class MetaA extends RCcMetaExt[A, MetaA]() {
     val id = ObjectIdSubtypeField[A.Id]("_id")
   }
   val X = new MetaA
-  val t: Query[MetaA, cc.A.Id, Unordered with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified with SelectedOne] = X.select(_.id)
+  val t: Query[
+    MetaA,
+    cc.A.Id,
+    Unordered with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified with SelectedOne
+  ] = X.select(_.id)
 
-  "val t: Query[_, me.sgrouples.rogue.cc.A.Id, _] = X.select(_.id)" should compile
-
+  test("t should compile") {
+    //should compile ..
+    val t: Query[_, me.sgrouples.rogue.cc.A.Id, _] = X.select(_.id)
+  }
 }
 
 trait TypedStringId[RecordType, TagType] {
@@ -74,8 +83,11 @@ trait TypedStringId[RecordType, TagType] {
       tag[TagType][String](text)
 
     object Extract {
-      def unapply(in: String): Option[Id] = try { Some(apply(in)) } catch { case e: IllegalArgumentException => None }
-      def unapply(inOpt: Option[String]): Option[Option[Id]] = try { Some(inOpt.map(apply)) } catch { case e: IllegalArgumentException => None }
+      def unapply(in: String): Option[Id] = try { Some(apply(in)) }
+      catch { case e: IllegalArgumentException => None }
+      def unapply(inOpt: Option[String]): Option[Option[Id]] = try {
+        Some(inOpt.map(apply))
+      } catch { case e: IllegalArgumentException => None }
     }
   }
 
@@ -92,7 +104,7 @@ object B extends TypedStringId[B, B]
 
 case class B(id: B.Id)
 
-class StringTaggedSpec extends FlatSpec with Matchers {
+class StringTaggedSpec extends FunSuite {
 
   class MetaB extends RCcMetaExt[B, MetaB]() {
     val id = StringTaggedField[B]("id")
@@ -102,6 +114,8 @@ class StringTaggedSpec extends FlatSpec with Matchers {
   val id: cc.B.Id = cc.B.Id.get()
   val t: Query[MetaB, cc.B.Id, _] = X.select(_.id).where(_.id eqs id)
 
-  "val t: Query[_, me.sgrouples.rogue.cc.B.Id, _] = X.select(_.id).where(_.id eqs id)" should compile
-
+  test("t should compile") {
+    val t: Query[_, me.sgrouples.rogue.cc.B.Id, _] =
+      X.select(_.id).where(_.id eqs id)
+  }
 }

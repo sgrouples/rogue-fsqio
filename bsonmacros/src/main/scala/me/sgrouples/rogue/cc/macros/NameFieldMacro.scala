@@ -60,7 +60,11 @@ object GenFieldName {
         val res = q"$mods val $pat = $expr($fname)"
         //println(s"rewrote to ${res}")
         res
-      case _ => c.abort(c.enclosingPosition, "@f macro can only annotate val in cc meta")
+      case _ =>
+        c.abort(
+          c.enclosingPosition,
+          "@f macro can only annotate val in cc meta"
+        )
     }
     c.Expr[Any](result)
   }

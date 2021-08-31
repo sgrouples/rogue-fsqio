@@ -11,7 +11,8 @@ trait MapKeyFormats {
 
   implicit object IntMapKeyFormat extends DefaultMapKeyFormat(_.toInt)
 
-  implicit object ObjectIdMapKeyFormat extends DefaultMapKeyFormat(new ObjectId(_))
+  implicit object ObjectIdMapKeyFormat
+      extends DefaultMapKeyFormat(new ObjectId(_))
 
   implicit def objectIdSubtypeMapKeyFormat[S <: ObjectId]: MapKeyFormat[S] =
     map.MapKeyFormat[S](ObjectIdMapKeyFormat.read(_).asInstanceOf[S])

@@ -1,11 +1,10 @@
 package me.sgrouples.rogue.cc
 
 import java.time.Instant
-import java.time.temporal.{ ChronoUnit, TemporalUnit }
-import java.util.concurrent.TimeUnit
+import java.time.temporal.{ChronoUnit}
 
 import org.bson.types.ObjectId
-import org.scalatest.{ FlatSpec, Matchers }
+import munit.FunSuite
 import shapeless.tag.@@
 import shapeless.tag
 import me.sgrouples.rogue.BsonFormats._
@@ -50,46 +49,48 @@ object Dependencies {
 import Dependencies._
 
 case class Role(
-  name: RoleName.Value,
-  permissions: Set[Permission.Value],
-  origin: Option[RoleName.Value] = None)
+    name: RoleName.Value,
+    permissions: Set[Permission.Value],
+    origin: Option[RoleName.Value] = None
+)
 
 case class Group(
-  id: ObjectId,
-  name: String,
-  photoId: Option[ObjectId],
-  groupModelType: GroupModelType.Value,
-  groupThematicType: GroupThematicType,
-  ownerId: User.Id,
-  adminIds: List[User.Id],
-  publicUrlId: Option[String],
-  color: String,
-  description: Option[String],
-  groupDefaultRoles: List[Role],
-  membersCount: List[Long],
-  inviteeDefaultRole: Option[Role],
-  publicApplyQuestions: Option[List[String]],
-  mandatoryQuestions: Boolean,
-  showInPublicDirectory: Option[Boolean],
-  showGroupTweets: Boolean,
-  lastGroupTweetsRefresh: Option[Instant],
-  lastPostDate: Option[Instant],
-  reportedAsOffensive: Option[Boolean],
-  bannedAsOffensive: Option[Boolean],
-  searchId: Option[String],
-  pdFeaturedPosition: Option[Int],
-  createdAt: Instant,
-  teamId: Option[Team.Id])
+    id: ObjectId,
+    name: String,
+    photoId: Option[ObjectId],
+    groupModelType: GroupModelType.Value,
+    groupThematicType: GroupThematicType,
+    ownerId: User.Id,
+    adminIds: List[User.Id],
+    publicUrlId: Option[String],
+    color: String,
+    description: Option[String],
+    groupDefaultRoles: List[Role],
+    membersCount: List[Long],
+    inviteeDefaultRole: Option[Role],
+    publicApplyQuestions: Option[List[String]],
+    mandatoryQuestions: Boolean,
+    showInPublicDirectory: Option[Boolean],
+    showGroupTweets: Boolean,
+    lastGroupTweetsRefresh: Option[Instant],
+    lastPostDate: Option[Instant],
+    reportedAsOffensive: Option[Boolean],
+    bannedAsOffensive: Option[Boolean],
+    searchId: Option[String],
+    pdFeaturedPosition: Option[Int],
+    createdAt: Instant,
+    teamId: Option[Team.Id]
+)
 
-class ComplexCaseClassSpec extends FlatSpec with Matchers {
+class ComplexCaseClassSpec extends FunSuite {
 
-  class GroupMeta extends RCcMetaExt[Group, GroupMeta] {
-
-  }
+  class GroupMeta extends RCcMetaExt[Group, GroupMeta] {}
 
   val Groups = new GroupMeta
 
-  "RCcMeta of a complex case class" should "properly read/write the given instance" in {
+  test(
+    "RCcMeta of a complex case class should properly read/write the given instance"
+  ) {
 
     val now = Instant.now.truncatedTo(ChronoUnit.MILLIS)
 
@@ -102,31 +103,32 @@ class ComplexCaseClassSpec extends FlatSpec with Matchers {
       GroupModelType.one,
       tag[AnyTag][String]("Ala"),
       tag[User][ObjectId](id),
-      List(
-        tag[User][ObjectId](id),
-      tag[User][ObjectId](id)),
+      List(tag[User][ObjectId](id), tag[User][ObjectId](id)),
       None,
-      "color", None,
+      "color",
+      None,
       List(
-        Role(
-          RoleName.one,
-          Set(Permission.one, Permission.two),
-          origin = None),
-        Role(
-          RoleName.two,
-          Set(Permission.two),
-          origin = Some(RoleName.one))),
+        Role(RoleName.one, Set(Permission.one, Permission.two), origin = None),
+        Role(RoleName.two, Set(Permission.two), origin = Some(RoleName.one))
+      ),
       List(0L, 1L, 2L),
-      None, None,
-      false, None,
-      false, None,
-      None, None,
-      None, None,
-      None, now,
-      None)
+      None,
+      None,
+      false,
+      None,
+      false,
+      None,
+      None,
+      None,
+      None,
+      None,
+      None,
+      now,
+      None
+    )
 
     val bson = Groups.write(group)
 
-    Groups.read(bson) shouldBe group
+    assertEquals(Groups.read(bson), group)
   }
 }

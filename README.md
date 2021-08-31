@@ -1,19 +1,18 @@
 # Rogue
 
-Rogue is a type-safe internal Scala DSL for constructing and executing find and modify commands against
-MongoDB in the Lift web framework. Originally developed by [Foursquare](http://github.com/foursquare/rogue), then re-published 
-as part of Foursquare [monorepo]((http://github.com/foursquare/fsqio)
+Rogue is a type-safe internal Scala DSL for constructing and executing find and modify commands in
+MongoDB. Originally developed by [Foursquare](http://github.com/foursquare/rogue), then re-published
+as a part of Foursquare [monorepo]((http://github.com/foursquare/fsqio)
 
 #Sgrouples changes to the original
 
-1. Mongo java [driver](http://mongodb.github.io/mongo-java-driver/) updated to version 3.6.x to support MongoDB version 3.2 and up
+1. Mongo scala [driver](http://mongodb.github.io/mongo-java-driver/) - updated to version 4.3.x to support MongoDB version 3.2 and up
 2. Support for non-blocking IO via async functions like `getAsync`, `fetchAsync` etc.
-   Note that for really non-blocking io, you need to use MongoDB version 3.2 and higher, as earlier versions of Mongo don't have non-blocking protocol implemented, and in effect connection pool will be exhausted anyway
-3. Spindle support is not implemented, as we don't use it internally
-4. Build is standard sbt instead of pants
+   Note that for really non-blocking io, using reactive drive
+3. Build is standard sbt instead of pants
 
 #Building and installing
-Standard sbt build, so just `sbt package; sbt publish-local` is enough. 
+Standard sbt build, so just `sbt package; sbt publish-local` is enough.
 
 
 #Usage - shapeless version
@@ -63,7 +62,7 @@ case class Entity(_id: ObjectId, str: String, optInt: Option[Int], list:List[Int
  import scala.concurrent.ExecutionContext.Implicits.global
 
  class MetaUsage extends Metas {
-   implicit val db =  com.mongodb.async.client.MongoClients.create("mongodb://localhost:27001")
+   implicit val db =  org.mongodb.scala.MongoClient("mongodb://localhost:27001")
    val EntityRepo = new EntityMeta
 
    def test() = {

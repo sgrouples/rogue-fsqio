@@ -1,8 +1,8 @@
 package me.sgrouples.rogue
 
-import org.bson.{ BsonArray, BsonValue }
+import org.bson.{BsonArray, BsonValue}
 
-import scala.annotation.{ StaticAnnotation, implicitNotFound }
+import scala.annotation.{StaticAnnotation, implicitNotFound}
 
 @implicitNotFound("implicit BsonFormat not found for ${T}")
 trait BsonFormat[T] {
