@@ -23,10 +23,10 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "5.9.9-SNAPSHOT",
+    version := "6.0.0",
     organization := "me.sgrouples",
     scalaVersion := "2.13.6",
-    isSnapshot := true,
+    isSnapshot := false,
     publishMavenStyle := true,
     Test / publishArtifact := false,
     pomIncludeRepository := { _ => false },
