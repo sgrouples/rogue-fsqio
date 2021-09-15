@@ -444,7 +444,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
     val collection = dbCollectionFactory
       .getPrimaryDBCollection(query)
       .withWriteConcern(writeConcern)
-    val filter = Document(("_id", doc.getObjectId("_id")))
+    val filter = Document(("_id", doc.get("_id")))
     collection
       .replaceOne(filter, doc, new ReplaceOptions().upsert(upsert))
       .toFuture()
