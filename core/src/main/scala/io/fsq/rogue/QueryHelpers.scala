@@ -4,7 +4,7 @@ package io.fsq.rogue
 
 import com.mongodb.WriteConcern
 import io.fsq.rogue.index.UntypedMongoIndex
-import scala.Iterable
+import scala.jdk.CollectionConverters._
 
 case class Degrees(value: Double)
 case class Radians(value: Double)
@@ -72,68 +72,6 @@ object QueryHelpers {
 
   var logger: QueryLogger = NoopQueryLogger
 
-  trait QueryValidator {
-    def validateList[T](xs: Iterable[T]): Unit
-    def validateRadius(d: Degrees): Degrees
-    def validateQuery[M](
-        query: Query[M, _, _],
-        indexes: Option[Seq[UntypedMongoIndex]]
-    ): Unit
-    def validateModify[M](
-        modify: ModifyQuery[M, _],
-        indexes: Option[Seq[UntypedMongoIndex]]
-    ): Unit
-    def validateFindAndModify[M, R](
-        modify: FindAndModifyQuery[M, R],
-        indexes: Option[Seq[UntypedMongoIndex]]
-    ): Unit
-  }
-
-  class DefaultQueryValidator extends QueryValidator {
-    override def validateList[T](xs: Iterable[T]): Unit = {}
-    override def validateRadius(d: Degrees) = d
-    override def validateQuery[M](
-        query: Query[M, _, _],
-        indexes: Option[Seq[UntypedMongoIndex]]
-    ): Unit = {}
-    override def validateModify[M](
-        modify: ModifyQuery[M, _],
-        indexes: Option[Seq[UntypedMongoIndex]]
-    ): Unit = {} // todo possibly validate for update without upsert, yet setOnInsert present -- ktoso
-    override def validateFindAndModify[M, R](
-        modify: FindAndModifyQuery[M, R],
-        indexes: Option[Seq[UntypedMongoIndex]]
-    ): Unit = {}
-  }
-
-  object NoopQueryValidator extends DefaultQueryValidator
-
-  var validator: QueryValidator = NoopQueryValidator
-
-  trait QueryTransformer {
-    def transformQuery[M](query: Query[M, _, _]): Query[M, _, _]
-    def transformModify[M](modify: ModifyQuery[M, _]): ModifyQuery[M, _]
-    def transformFindAndModify[M, R](
-        modify: FindAndModifyQuery[M, R]
-    ): FindAndModifyQuery[M, R]
-  }
-
-  class DefaultQueryTransformer extends QueryTransformer {
-    override def transformQuery[M](query: Query[M, _, _]): Query[M, _, _] = {
-      query
-    }
-    override def transformModify[M](
-        modify: ModifyQuery[M, _]
-    ): ModifyQuery[M, _] = { modify }
-    override def transformFindAndModify[M, R](
-        modify: FindAndModifyQuery[M, R]
-    ): FindAndModifyQuery[M, R] = { modify }
-  }
-
-  object NoopQueryTransformer extends DefaultQueryTransformer
-
-  var transformer: QueryTransformer = NoopQueryTransformer
-
   trait QueryConfig {
     def defaultWriteConcern: WriteConcern
     def cursorBatchSize: Option[Option[Int]]
@@ -156,13 +94,10 @@ object QueryHelpers {
   var config: QueryConfig = DefaultQueryConfig
 
   def makeJavaList[T](sl: Iterable[T]): java.util.List[T] = {
-    val list = new java.util.ArrayList[T]()
-    for (id <- sl) list.add(id)
-    list
+    sl.toList.asJava
   }
 
   def validatedList[T](vs: Iterable[T]): java.util.List[T] = {
-    validator.validateList(vs)
     makeJavaList(vs)
   }
 
@@ -172,14 +107,10 @@ object QueryHelpers {
 
   def list(vs: Double*): java.util.List[Double] = list(vs)
 
-  def radius(d: Degrees) = {
-    validator.validateRadius(d).value
-  }
+  def radius(d: Degrees) = d.value
 
   def makeJavaMap[K, V](m: Map[K, V]): java.util.Map[K, V] = {
-    val map = new java.util.HashMap[K, V]
-    for ((k, v) <- m) map.put(k, v)
-    map
+    m.asJava
   }
 
   def inListClause[V](fieldName: String, vs: Iterable[V]) = {

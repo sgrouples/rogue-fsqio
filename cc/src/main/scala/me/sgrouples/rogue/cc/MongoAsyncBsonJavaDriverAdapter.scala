@@ -71,11 +71,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       query: Query[M, _, _],
       readPreference: Option[ReadPreference]
   )(implicit dba: MongoDatabase): Future[Long] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val condition: Bson = buildCondition(queryClause.condition)
     //we don't care for skip, limit in count - maybe we deviate from original, but it makes no sense anyways
     val coll = getDBCollection(query, readPreference)
@@ -97,11 +93,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       query: Query[M, _, _],
       readPreference: Option[ReadPreference]
   )(implicit dba: MongoDatabase): Future[Boolean] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val condition: Bson = buildCondition(queryClause.condition)
     //we don't care for skip, limit in count - maybe we deviate from original, but it makes no sense anyways
     val coll = getDBCollection(query, readPreference)
@@ -127,11 +119,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       key: String,
       readPreference: Option[ReadPreference]
   )(implicit dba: MongoDatabase): Future[Long] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val cnd: Bson = buildCondition(queryClause.condition)
     val coll = getDBCollection(query, readPreference)
     val p = Promise[Long]()
@@ -151,11 +139,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       key: String,
       readPreference: Option[ReadPreference]
   )(implicit dba: MongoDatabase): Future[Seq[R]] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val cnd: Bson = buildCondition(queryClause.condition)
     val coll = getDBCollection(query, readPreference)
     coll.distinct[R](key, cnd).toFuture()
@@ -166,11 +150,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       serializer: RogueBsonRead[R],
       readPreference: Option[ReadPreference] = None
   )(implicit dba: MongoDatabase): Future[Seq[R]] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val cnd: Bson = buildCondition(queryClause.condition)
     val coll = getDBCollection(query, readPreference)
     val sel: Bson = queryClause.select
@@ -196,7 +176,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       readPreference: Option[ReadPreference] = None
   )(implicit dba: MongoDatabase): Publisher[R] = {
     val classR = classTag[R].runtimeClass.asInstanceOf[Class[R]]
-    val queryClause = transformer.transformQuery(query)
+    val queryClause = query
 
     val cnd: Bson = buildCondition(queryClause.condition)
     val sel: Bson = queryClause.select
@@ -257,11 +237,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       serializer: RogueBsonRead[R],
       readPreference: Option[ReadPreference] = None
   )(implicit dba: MongoDatabase): Future[Option[R]] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val cnd: Bson = buildCondition(queryClause.condition)
     val coll = getDBCollection(query, readPreference)
     val sel: Bson = queryClause.select
@@ -281,11 +257,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       f: BsonDocument => Unit,
       readPreference: Option[ReadPreference] = None
   )(implicit dba: MongoDatabase): Future[Unit] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val cnd: Bson = buildCondition(queryClause.condition)
     val coll = getDBCollection(query, readPreference)
     val cursor = coll.find(cnd)
@@ -298,11 +270,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
   def delete[M <: MB](query: Query[M, _, _], writeConcern: WriteConcern)(
       implicit dba: MongoDatabase
   ): Future[DeleteResult] = {
-    val queryClause = transformer.transformQuery(query)
-    validator.validateQuery(
-      queryClause,
-      dbCollectionFactory.getIndexes(queryClause)
-    )
+    val queryClause = query
     val cnd = buildCondition(queryClause.condition)
     val coll = dbCollectionFactory.getPrimaryDBCollection(query)
     coll.deleteMany(cnd).toFuture()
@@ -314,11 +282,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       multi: Boolean,
       writeConcern: WriteConcern
   )(implicit dba: MongoDatabase): Future[UpdateResult] = {
-    val modClause = transformer.transformModify(mod)
-    validator.validateModify(
-      modClause,
-      dbCollectionFactory.getIndexes(modClause.query)
-    )
+    val modClause = mod
     if (!modClause.mod.clauses.isEmpty) {
       val q: Bson = buildCondition(modClause.query.condition)
       val m: Bson = buildModify(modClause.mod)
@@ -376,11 +340,7 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
   )(
       f: BsonDocument => Option[R]
   )(implicit dba: MongoDatabase): Future[Option[R]] = {
-    val modClause = transformer.transformFindAndModify(mod)
-    validator.validateFindAndModify(
-      modClause,
-      dbCollectionFactory.getIndexes(modClause.query)
-    )
+    val modClause = mod
     if (!modClause.mod.clauses.isEmpty || remove) {
       val query = modClause.query
       val cnd: Bson = buildCondition(query.condition)
