@@ -12,7 +12,7 @@ lazy val index = (project in file("index")).settings(defaultSettings).dependsOn(
 lazy val core = (project in file("core")).settings(defaultSettings).dependsOn(field, index % "compile;test->test;runtime->runtime")
 lazy val indexchecker = (project in file("indexchecker")).settings(defaultSettings).dependsOn(core)
 lazy val bsonmacros = (project in file("bsonmacros")).dependsOn(bsonformats).settings(defaultSettings)
-lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings)
+lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings ++ bsonshapelessSettings)
 lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros, bsonshapeless).settings(defaultSettings)
 lazy val root = (project in file("."))
   .settings(defaultSettings)

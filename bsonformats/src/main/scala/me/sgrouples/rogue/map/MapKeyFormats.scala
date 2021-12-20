@@ -5,14 +5,19 @@ import org.bson.types.ObjectId
 
 trait MapKeyFormats {
 
-  implicit object StringMapKeyFormat extends DefaultMapKeyFormat(identity)
+  object _stringMapKeyFormat extends DefaultMapKeyFormat(identity)
+  implicit def StringMapFormat:MapKeyFormat[String] = _stringMapKeyFormat
 
-  implicit object LongMapKeyFormat extends DefaultMapKeyFormat(_.toLong)
+  object _longMapKeyFormat extends DefaultMapKeyFormat(_.toLong)
+  implicit def LongMapKeyFormat:MapKeyFormat[Long] = _longMapKeyFormat
 
-  implicit object IntMapKeyFormat extends DefaultMapKeyFormat(_.toInt)
+  object _intMapKeyFormat extends DefaultMapKeyFormat(_.toInt)
+  implicit def IntMapKeyFormat:MapKeyFormat[Int] = _intMapKeyFormat
 
-  implicit object ObjectIdMapKeyFormat
+  object _objectIdMapKeyFormat
       extends DefaultMapKeyFormat(new ObjectId(_))
+
+  implicit def ObjectIdMapKeyFormat:MapKeyFormat[ObjectId] = _objectIdMapKeyFormat
 
   implicit def objectIdSubtypeMapKeyFormat[S <: ObjectId]: MapKeyFormat[S] =
     map.MapKeyFormat[S](ObjectIdMapKeyFormat.read(_).asInstanceOf[S])
