@@ -17,7 +17,7 @@ case class EnumIdFieldClass(enum: EnumIdFieldEnum.Value)
 class EnumIdFieldSpecMeta
     extends RCcMetaExt[EnumIdFieldClass, EnumIdFieldSpecMeta] {
 
-  val enum = OptEnumIdField(EnumIdFieldEnum)
+  val `enum` = OptEnumIdField(EnumIdFieldEnum)
 
 }
 
@@ -28,7 +28,7 @@ class EnumIdFieldSpec extends FunSuite {
     val meta = new EnumIdFieldSpecMeta
 
     assertEquals(
-      meta.where(_.enum eqs EnumIdFieldEnum.one).toString,
+      meta.where(_.`enum` eqs EnumIdFieldEnum.one).toString,
       """db.enumidfieldclass.find({"enum": 0})"""
     )
   }

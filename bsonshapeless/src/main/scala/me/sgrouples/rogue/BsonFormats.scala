@@ -11,7 +11,7 @@ import org.bson.types.{Decimal128, ObjectId}
 import shapeless._
 import shapeless.labelled.{FieldType, field}
 
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 import shapeless.tag.@@
 
 /** serialize enums as names
@@ -27,7 +27,7 @@ trait EnumNameFormats {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
-      private val enum = enumeration
+      private val `enum` = enumeration
 
       override def read(b: BsonValue): T#Value = {
         try {
@@ -62,14 +62,14 @@ trait EnumValueFormats {
 
     new BasicBsonFormat[T#Value] with ReflectEnumInstance[T] {
 
-      private val enum = enumeration
+      private val `enum` = enumeration
 
       override def read(b: BsonValue): T#Value = try {
-        enum.apply(b.asNumber().intValue())
+        `enum`.apply(b.asNumber().intValue())
       } catch {
         case e: IllegalArgumentException =>
           throw new IllegalArgumentException(
-            s"cannot read enum value ${b.asNumber()}, for enum ${enum.toString()} ",
+            s"cannot read enum value ${b.asNumber()}, for enum ${`enum`.toString()} ",
             e
           )
       }

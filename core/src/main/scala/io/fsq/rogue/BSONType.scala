@@ -80,8 +80,8 @@ object BSONType {
     override def asBSONObject(v: UUID): AnyRef = v
   }
 
-  class ListsOfBSONTypesAreBSONTypes[T: BSONType] extends BSONType[List[T]] {
-    override def asBSONObject(v: List[T]): AnyRef = {
+  class SeqsOfBSONTypesAreBSONTypes[T: BSONType, S[T]<:Seq[T]] extends BSONType[S[T]] {
+    override def asBSONObject(v: S[T]): AnyRef = {
       val bsonType = BSONType[T]
       val ret = new java.util.ArrayList[AnyRef](v.size)
       for (x <- v) {
@@ -91,20 +91,6 @@ object BSONType {
     }
   }
 
-  implicit def ListsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[List[T]] =
-    new ListsOfBSONTypesAreBSONTypes[T]
-
-  class SeqsOfBSONTypesAreBSONTypes[T: BSONType] extends BSONType[Seq[T]] {
-    override def asBSONObject(v: Seq[T]): AnyRef = {
-      val bsonType = BSONType[T]
-      val ret = new java.util.ArrayList[AnyRef](v.size)
-      for (x <- v) {
-        ret.add(bsonType.asBSONObject(x))
-      }
-      ret
-    }
-  }
-
-  implicit def SeqsOfBSONTypesAreBSONTypes[T: BSONType]: BSONType[Seq[T]] =
-    new SeqsOfBSONTypesAreBSONTypes[T]
+  implicit def SeqsOfBSONTypesAreBSONTypes[T: BSONType,S[T]<:Seq[T]]: BSONType[S[T]] =
+    new SeqsOfBSONTypesAreBSONTypes[T,S]
 }
