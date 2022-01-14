@@ -12,7 +12,7 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult}
 import org.reactivestreams.Publisher
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, R, State](
@@ -107,7 +107,7 @@ case class ExecutableQuery[MB, M <: MB, R, State](
       ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   ): Seq[T] = {
     def adaptedF(in: Seq[R]): Future[Seq[T]] = {
-      Future(f(in))(ec)
+      Future(blocking(f(in)))
     }
     waitForFuture(batchAsync(adaptedF, batchSize))
   }
