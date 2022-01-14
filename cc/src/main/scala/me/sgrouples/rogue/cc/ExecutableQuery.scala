@@ -107,7 +107,7 @@ case class ExecutableQuery[MB, M <: MB, R, State](
       ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   ): Seq[T] = {
     def adaptedF(in: Seq[R]): Future[Seq[T]] = {
-      Future.successful(f(in))
+      Future(f(in))(ec)
     }
     waitForFuture(batchAsync(adaptedF, batchSize))
   }

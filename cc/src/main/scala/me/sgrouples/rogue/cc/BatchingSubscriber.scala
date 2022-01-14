@@ -50,7 +50,7 @@ class BatchingSubscriber[T, R](
 
   private[this] def tryCallF(): Future[Unit] = {
     try {
-      f(buffer.result())
+      Future(f(buffer.result()))(ec).flatten
         .map { result =>
           resultAcc.addAll(result)
           buffer.clear()
