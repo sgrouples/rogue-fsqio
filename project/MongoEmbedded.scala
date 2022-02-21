@@ -3,7 +3,8 @@ import de.flapdoodle.embed.mongo._
 import de.flapdoodle.embed.mongo.MongodStarter
 import de.flapdoodle.embed.mongo.config._
 import de.flapdoodle.embed.mongo.distribution.Version
-import de.flapdoodle.embed.process.config.io.ProcessOutput
+import de.flapdoodle.embed.mongo.packageresolver.Command
+import de.flapdoodle.embed.process.config.process.ProcessOutput
 import de.flapdoodle.embed.process.runtime.Network
 import org.slf4j.LoggerFactory
 
@@ -11,7 +12,7 @@ import org.slf4j.LoggerFactory
 object MongoEmbedded {
   val logger = LoggerFactory.getLogger(getClass().getName())
   val runtimeConfig = Defaults.runtimeConfigFor(Command.MongoD, logger)
-    .processOutput(ProcessOutput.getDefaultInstanceSilent())
+    .processOutput(ProcessOutput.silent())
     .build();
 
   val starter = MongodStarter.getInstance(runtimeConfig)

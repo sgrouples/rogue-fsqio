@@ -23,9 +23,9 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "6.0.6",
+    version := "6.0.7",
     organization := "me.sgrouples",
-    scalaVersion := "2.13.7",
+    scalaVersion := "2.13.8",
     isSnapshot := false,
     publishMavenStyle := true,
     Test / publishArtifact := false,
@@ -51,8 +51,8 @@ object RogueSettings {
 }
 
 object RogueDependencies {
-  val mongoVer = "4.3.1"
-  val nettyVer = "4.1.66.Final"
+  val mongoVer = "4.5.0"
+  val nettyVer = "4.1.74.Final"
 
 
   val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
@@ -69,7 +69,7 @@ object RogueDependencies {
     "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test
   )
 
-  val shapeless = "com.chuusai" %% "shapeless" % "2.3.7"
+  val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
 
   val coreDeps = mongoDeps
 
