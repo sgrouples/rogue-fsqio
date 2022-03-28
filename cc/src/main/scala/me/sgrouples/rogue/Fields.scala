@@ -111,15 +111,15 @@ class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
 class EnumField[T <: Enumeration: TypeTag, O](name: String, o: O)
     extends MCField[T#Value, O](name, o)
     with ReflectEnumInstance[T] {
-  private val enum = enumeration
-  override def defaultValue: T#Value = enum(0)
+  private val _enum = enumeration
+  override def defaultValue: T#Value = _enum(0)
 }
 
 class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O)
     extends MCField[T#Value, O](name, o)
     with ReflectEnumInstance[T] {
-  private val enum = enumeration
-  override def defaultValue: T#Value = enum(0)
+  private val _enum = enumeration
+  override def defaultValue: T#Value = _enum(0)
 }
 
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {

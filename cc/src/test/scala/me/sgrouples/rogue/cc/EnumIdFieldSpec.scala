@@ -12,7 +12,7 @@ object EnumIdFieldEnum extends Enumeration {
   val two: Value = Value
 }
 
-case class EnumIdFieldClass(enum: EnumIdFieldEnum.Value)
+case class EnumIdFieldClass(`enum`: EnumIdFieldEnum.Value)
 
 class EnumIdFieldSpecMeta
     extends RCcMetaExt[EnumIdFieldClass, EnumIdFieldSpecMeta] {
