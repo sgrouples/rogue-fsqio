@@ -4,12 +4,5 @@ import org.bson.types.ObjectId
 
 package object macros {
 /*  implicit def gen[T]: MacroBsonFormat[T] = macro MacroCCGenerator.genImpl[T]
-
-  implicit val StringMapKeyFormat = MapKeyFormats.StringMapKeyFormat
-  implicit val LongMapKeyFormat = MapKeyFormats.LongMapKeyFormat
-  implicit val IntMapKeyFormat = MapKeyFormats.IntMapKeyFormat
-  implicit val ObjectIdMapKeyFormat = MapKeyFormats.ObjectIdMapKeyFormat
-  implicit def objectIdSubtypeMapKeyFormat[S <: ObjectId]: MapKeyFormat[S] =
-    MapKeyFormats.objectIdSubtypeMapKeyFormat[S]
 */
 }

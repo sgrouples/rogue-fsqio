@@ -11,6 +11,7 @@ import org.bson.types.{Decimal128, ObjectId}
 import scala.collection.Factory
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
+import me.sgrouples.rogue.map.MapKeyFormats
 
 trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
   def validNames(): Vector[String]
@@ -445,9 +446,7 @@ class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T])
 
   override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
-class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit
-    kf: MapKeyFormat[K]
-) extends MacroBsonFormat[Map[K, T]] {
+class MapMacroFormat[K, T](inner: MacroBsonFormat[T], kf: MapKeyFormat[K]) extends MacroBsonFormat[Map[K, T]] {
   import scala.jdk.CollectionConverters._
   private def appendVals(writer: BsonWriter, v: Map[K, T]): Unit = {
     v.foreach { case (k, v) =>
@@ -491,7 +490,8 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit
 
 object EnumMacroFormats extends EnumMacroFormats
 
-object MacroBsonFormat /*extends MacroBsonFormatDerivation*/ {
+object MacroBsonFormat: /*extends MacroBsonFormatDerivation*/
+  import MapKeyFormats.{given, *}
   given MacroBsonFormat[Int] = IntMacroBsonFormat(0)
   given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
   given MacroBsonFormat[Double] = DoubleMacroBsonFormat(0d)
@@ -510,8 +510,19 @@ object MacroBsonFormat /*extends MacroBsonFormatDerivation*/ {
     ObjectIdMacroBsonFormat[T]()
 
   implicit def macroBsonFormatForStringSubtype[T <: String]: MacroBsonFormat[T] =
-    StringMacroBsonFormat[T]() 
-
+    StringMacroBsonFormat[T]()
   
+  implicit def optMacroBsonFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Option[T]] =
+    OptMacroBsonFormat[T](tf)
 
-}
+  implicit def seqMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Seq[T]] = 
+    IterableLikeMacroFormat[T, Seq[T]](tf)
+  
+  implicit def listMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[List[T]] = 
+    IterableLikeMacroFormat[T, List[T]](tf)
+
+  implicit def vectorMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Vector[T]] = 
+    IterableLikeMacroFormat[T, Vector[T]](tf)
+
+  implicit def mapMacroFormat[K, T](using tf: MacroBsonFormat[T])(using MapKeyFormat[K]): MacroBsonFormat[Map[K, T]] =
+    MapMacroFormat[K, T](tf, summon[MapKeyFormat[K]])
