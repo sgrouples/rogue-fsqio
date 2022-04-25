@@ -2,10 +2,8 @@ package me.sgrouples.rogue.enums
 
 trait ReflectEnumInstance[T <: Enumeration] {
 
-  import scala.reflect.runtime.universe
-  import universe._
 
-  protected def enumeration(implicit typeTag: TypeTag[T]): T = {
+  /*protected def enumeration(implicit typeTag: TypeTag[T]): T = {
 
     val runtimeClass: ClassSymbol = universe.typeOf[T].typeSymbol.asClass
 
@@ -20,5 +18,5 @@ trait ReflectEnumInstance[T <: Enumeration] {
       .instance
       .asInstanceOf[T]
 
-  }
+  }*/
 }

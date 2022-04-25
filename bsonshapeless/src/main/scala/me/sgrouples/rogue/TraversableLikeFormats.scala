@@ -5,24 +5,19 @@ import org.bson.{BsonArray, BsonValue}
 import scala.collection.Factory
 import scala.collection.mutable.ArrayBuffer
 import scala.jdk.CollectionConverters._
-
 trait TraversableLikeFormats {
-  implicit def traversableLikeFormat[L[_], T: BsonFormat](implicit
-      ev: L[T] <:< Iterable[T],
-      cb: Factory[T, L[T]]
-  ): BsonFormat[L[T]] = {
-
+  implicit def traversableLikeFormat[L[_], T](using
+                                     ev: L[T] <:< Iterable[T],
+                                     cb: Factory[T, L[T]],
+                                     f: BsonFormat[T]
+                                    ): BsonFormat[L[T]] =
     new BsonFormat[L[T]] with BsonArrayReader[L[T]] {
-
-      private[this] implicit val f = implicitly[BsonFormat[T]]
-
-      def write(in: L[T]): BsonArray = {
+      def write(in: L[T]): BsonArray =
         val b = ArrayBuffer[BsonValue]()
         in.foreach(el => b.append(f.write(el)))
         new BsonArray(b.asJava)
-      }
 
-      def read(value: BsonValue): L[T] = {
+      def read(value: BsonValue): L[T] =
         val b = cb.newBuilder
         if (!value.isNull) {
           val arr = value.asArray()
@@ -32,13 +27,10 @@ trait TraversableLikeFormats {
           }
         }
         b.result()
-      }
 
       override def flds: Map[String, BsonFormat[_]] = f.flds
 
-      override def defaultValue: L[T] = {
+      override def defaultValue: L[T] =
         cb.fromSpecific(List.empty[BsonValue].map(f.read))
-      }
     }
-  }
 }

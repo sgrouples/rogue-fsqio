@@ -177,16 +177,16 @@ trait Rogue {
     new Flattened[A, A]
   implicit def enumIsFlattened[A <: Enumeration#Value]: Flattened[A, A] =
     new Flattened[A, A]
-  implicit val stringIsFlattened = new Flattened[String, String]
-  implicit val objectIdIsFlattened = new Flattened[ObjectId, ObjectId]
-  implicit val dateIsFlattened = new Flattened[java.util.Date, java.util.Date]
-  implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]) =
+  implicit val stringIsFlattened:Flattened[String, String] = new Flattened[String, String]
+  implicit val objectIdIsFlattened:Flattened[ObjectId, ObjectId] = new Flattened[ObjectId, ObjectId]
+  implicit val dateIsFlattened:Flattened[java.util.Date, java.util.Date] = new Flattened[java.util.Date, java.util.Date]
+  implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]):Flattened[List[A], B] =
     new Flattened[List[A], B]
-  implicit def recursiveFlattenVector[A, B](implicit ev: Flattened[A, B]) =
+  implicit def recursiveFlattenVector[A, B](implicit ev: Flattened[A, B]):Flattened[Vector[A], B] =
     new Flattened[Vector[A], B]
-  implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]) =
+  implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]):Flattened[Seq[A], B] =
     new Flattened[Seq[A], B]
-  implicit def recursiveFlattenArray[A, B](implicit ev: Flattened[A, B]) =
+  implicit def recursiveFlattenArray[A, B](implicit ev: Flattened[A, B]):Flattened[Array[A], B] =
     new Flattened[Array[A], B]
 
 }

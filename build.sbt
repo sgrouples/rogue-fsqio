@@ -1,6 +1,8 @@
 import RogueSettings._
 Seq(RogueSettings.defaultSettings: _*)
 
+scalaVersion := "3.1.2"
+
 lazy val field = (project in file("field")).settings(defaultSettings)
 lazy val bsonformats = (project in file("bsonformats")).settings(defaultSettings ++ Seq(
   name := "rogue-bsonformats",
@@ -19,20 +21,20 @@ lazy val bsonmacros = (project in file("bsonmacros")).dependsOn(bsonformats).set
   name := "rogue-bson-macros",
   libraryDependencies ++=
     RogueDependencies.mongoDeps ++
-      RogueDependencies.testDeps ++
-      Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+      RogueDependencies.testDeps //++
+      //Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
 ))
 lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings ++ Seq(
   name := "rogue-fsqio-bson-shapeless",
-  libraryDependencies ++= RogueDependencies.ccDeps ++
-    Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  libraryDependencies ++= RogueDependencies.ccDeps// ++
+    //Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
 ))
 lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros, bsonshapeless)
   .settings(defaultSettings ++ Seq(
     name := "rogue-shapeless",
-    libraryDependencies ++= RogueDependencies.ccDeps ++
-      Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+    libraryDependencies ++= RogueDependencies.ccDeps //++
+      //Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   ))
 lazy val root = (project in file("."))
   .settings(defaultSettings)
-  .aggregate(field,core,index,indexchecker,cc,bsonmacros,bsonshapeless,bsonformats)
+  .aggregate(field,core,index,indexchecker,cc,/*bsonmacros,*/bsonshapeless,bsonformats)

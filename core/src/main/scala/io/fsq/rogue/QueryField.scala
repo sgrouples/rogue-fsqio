@@ -101,19 +101,19 @@ object MongoType extends Enumeration {
   */
 abstract class AbstractQueryField[F, V, DB, M](val field: Field[F, M]) {
   def valueToDB(v: V): DB
-  def valuesToDB(vs: Iterable[V]) = vs.map(valueToDB)
+  def valuesToDB(vs: Iterable[V]):Iterable[DB] = vs.map(valueToDB)
 
   def eqs(v: V) = EqClause(field.name, valueToDB(v))
-  def neqs(v: V) = new NeQueryClause(field.name, valueToDB(v))
+  def neqs(v: V) = NeQueryClause(field.name, valueToDB(v))
   def in[L](vs: L)(implicit ev: L => Iterable[V]) =
-    QueryHelpers.inListClause(field.name, valuesToDB(vs))
+    QueryHelpers.inListClause(field.name, valuesToDB(ev(vs)))
   def nin[L](vs: L)(implicit ev: L => Iterable[V]) =
-    new NinQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(vs)))
+     NinQueryClause(field.name, QueryHelpers.validatedList(valuesToDB(ev(vs))))
 
-  def lt(v: V) = new LtQueryClause(field.name, valueToDB(v))
-  def gt(v: V) = new GtQueryClause(field.name, valueToDB(v))
-  def lte(v: V) = new LtEqQueryClause(field.name, valueToDB(v))
-  def gte(v: V) = new GtEqQueryClause(field.name, valueToDB(v))
+  def lt(v: V) = LtQueryClause(field.name, valueToDB(v))
+  def gt(v: V) = GtQueryClause(field.name, valueToDB(v))
+  def lte(v: V) = LtEqQueryClause(field.name, valueToDB(v))
+  def gte(v: V) = GtEqQueryClause(field.name, valueToDB(v))
 
   def <(v: V) = lt(v)
   def <=(v: V) = lte(v)

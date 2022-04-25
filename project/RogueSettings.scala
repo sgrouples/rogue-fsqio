@@ -3,7 +3,7 @@
 
 import sbt._
 import Keys.{scalaVersion, _}
-import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixScalaBinaryVersion, scalafixSemanticdb}
+//import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixScalaBinaryVersion, scalafixSemanticdb}
 
 object RogueSettings {
 
@@ -12,11 +12,11 @@ object RogueSettings {
   val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
 
   lazy val macroSettings: Seq[Setting[_]] = Seq(
-    libraryDependencies ++= Seq(
+    /*libraryDependencies ++= Seq(
       scalaOrganization.value % "scala-compiler" % scalaVersion.value % Provided,
       scalaOrganization.value % "scala-reflect" % scalaVersion.value % Provided
     ),
-    scalacOptions ++= Seq("-Ymacro-annotations")
+    scalacOptions ++= Seq("-Ymacro-annotations")*/
   )
 
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
@@ -25,9 +25,9 @@ object RogueSettings {
     },
     version := "7.0.0-SNAPSHOT",
     organization := "me.sgrouples",
-    scalaVersion := "2.13.8",
+    scalaVersion := "3.1.1", //2.13.8",
     isSnapshot := false,
-    publishMavenStyle := true,
+    //publishMavenStyle := true,
     Test / publishArtifact := false,
     pomIncludeRepository := { _ => false },
     publishTo := version { v =>
@@ -39,12 +39,12 @@ object RogueSettings {
     Test / fork := true,
     Test / logBuffered := false,
     Test / parallelExecution := false,
-    resolvers ++= Seq(nexusReleases, nexusSnapshots),
-    scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"), //, "-Ymacro-debug-lite"),
+    //resolvers ++= Seq(nexusReleases, nexusSnapshots),
+    //scalacOptions ++= Seq("-deprecation", "-unchecked","-language:implicitConversions"), //"-Yrangepos"), , "-Ymacro-debug-lite"),
     //, "-P:semanticdb:synthetics:on"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
-    scalacOptions ++= Seq("-feature", "-language:_", "-Xsource:3"),
-    semanticdbVersion := scalafixSemanticdb.revision,
-    scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
+    //scalacOptions ++= Seq("-feature", "-language:_", "-rewrite", "-source:3.0-migration"),
+    //semanticdbVersion := scalafixSemanticdb.revision,
+    //scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
     credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials") ,
     Test / testOptions ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=> MongoEmbedded.stop))
 	) ++ macroSettings
@@ -54,11 +54,10 @@ object RogueDependencies {
   val mongoVer = "4.5.1"
   val nettyVer = "4.1.74.Final"
 
-
   val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
 
   val mongoDeps = Seq(
-    "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer    % Compile
+    "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer  % Compile cross(CrossVersion.for3Use2_13)
   )
 
   val testDeps = Seq(
@@ -69,7 +68,8 @@ object RogueDependencies {
     "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test
   )
 
-  val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
+  val shapeless = "org.typelevel" %% "shapeless3-deriving" % "3.0.4"
+  //"com.chuusai" %% "shapeless" % "2.3.8"
 
   val coreDeps = mongoDeps
 

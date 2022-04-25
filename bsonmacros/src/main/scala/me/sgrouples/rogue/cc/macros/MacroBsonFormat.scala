@@ -3,16 +3,15 @@ package me.sgrouples.rogue.cc.macros
 import java.nio.{ByteBuffer, ByteOrder}
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.{Currency, Locale, UUID}
-
 import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{BaseBsonFormat, BsonFormat, SupportedLocales}
-import org.bson._
+import org.bson.*
 import org.bson.types.{Decimal128, ObjectId}
+
 import scala.collection.Factory
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 
-@implicitNotFound("MacroGen can't generate for ${T}")
 trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
   def validNames(): Vector[String]
   def append(writer: BsonWriter, k: String, v: T): Unit
@@ -129,7 +128,7 @@ final class BooleanMacroBsonFormat(default: Boolean = false)
   }
 }
 
-final class StringMacroBsonFormat[T <: String](default: T = "")
+final class StringMacroBsonFormat[T <: String](default: T = "".asInstanceOf[T])
     extends MacroBaseBsonFormat[T] {
   override def read(b: BsonValue): T =
     if (b.isString) b.asString().getValue.asInstanceOf[T] else default
@@ -303,7 +302,7 @@ class OptMacroBsonFormat[T](inner: MacroBsonFormat[T])
 
 trait EnumMacroFormats {
 
-  def enumNameMacroFormat[T <: Enumeration](e: T): MacroBsonFormat[T#Value] =
+  /*def enumNameMacroFormat[T <: Enumeration, T#Value](e: T): MacroBsonFormat[T#Value] =
     new MacroBaseBsonFormat[T#Value] {
       override def read(b: BsonValue): T#Value = {
         if (b.isString) e.withName(b.asString().getValue)
@@ -321,8 +320,8 @@ trait EnumMacroFormats {
         writer.writeString(v.toString)
       }
     }
-
-  def enumValueMacroFormat[T <: Enumeration](e: T): MacroBsonFormat[T#Value] =
+*/
+  /*def enumValueMacroFormat[T <: Enumeration](e: T): MacroBsonFormat[T#Value] =
     new MacroBaseBsonFormat[T#Value] {
       override def read(b: BsonValue): T#Value = {
         if (b.isNumber) e.apply(b.asNumber().intValue())
@@ -337,7 +336,7 @@ trait EnumMacroFormats {
       override def append(writer: BsonWriter, v: T#Value): Unit = {
         writer.writeInt32(v.id)
       }
-    }
+    }*/
 
 }
 
@@ -491,3 +490,28 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit
 }
 
 object EnumMacroFormats extends EnumMacroFormats
+
+object MacroBsonFormat /*extends MacroBsonFormatDerivation*/ {
+  given MacroBsonFormat[Int] = IntMacroBsonFormat(0)
+  given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
+  given MacroBsonFormat[Double] = DoubleMacroBsonFormat(0d)
+  given MacroBsonFormat[Boolean] = BooleanMacroBsonFormat(false)
+  given MacroBsonFormat[String] = StringMacroBsonFormat("")
+  given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()
+  given MacroBsonFormat[LocalDateTime] = LocalDateTimeMacroBsonFormat()
+  given MacroBsonFormat[Instant] = InstantMacroBsonFormat()
+  given MacroBsonFormat[Array[Byte]] = BinaryMacroBsonFormat()
+  given MacroBsonFormat[Locale] = LocaleMacroBsonFormat()
+  given MacroBsonFormat[Currency] = CurrencyMacroBsonFormat()
+  given MacroBsonFormat[UUID] = UUIDMacroBsonFormat[UUID]()
+
+  //for all bases, or known subtypes only?
+  implicit def macroBsonFormatForObjectIdSubtype[T <: ObjectId]: MacroBsonFormat[T] =
+    ObjectIdMacroBsonFormat[T]()
+
+  implicit def macroBsonFormatForStringSubtype[T <: String]: MacroBsonFormat[T] =
+    StringMacroBsonFormat[T]() 
+
+  
+
+}

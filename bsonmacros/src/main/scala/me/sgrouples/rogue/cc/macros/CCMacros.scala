@@ -1,12 +1,12 @@
 package me.sgrouples.rogue.cc.macros
 
-import scala.reflect.macros.blackbox.Context
-import scala.language.experimental.macros
+//import scala.reflect.macros.blackbox.Context
+//import scala.language.experimental.macros
 import me.sgrouples.rogue.EnumSerializeValue
 import me.sgrouples.rogue.map.MapKeyFormat
 
-class MacroCCGenerator(val c: Context) {
-
+class MacroCCGenerator(/*val c: Context*/) {
+/*
   import c.universe._
 
   //copied from https://github.com/lihaoyi/upickle/blob/master/upickle/src/upickle/internal/Macros.scala
@@ -307,5 +307,5 @@ class MacroCCGenerator(val c: Context) {
           }
      """
     }
-  }
+  }*/
 }
