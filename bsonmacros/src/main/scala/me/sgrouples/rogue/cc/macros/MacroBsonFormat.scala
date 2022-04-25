@@ -490,7 +490,7 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T], kf: MapKeyFormat[K]) exten
 
 object EnumMacroFormats extends EnumMacroFormats
 
-object MacroBsonFormat: /*extends MacroBsonFormatDerivation*/
+object MacroBsonFormat extends MacroBsonFormatDeriving:
   import MapKeyFormats.{given, *}
   given MacroBsonFormat[Int] = IntMacroBsonFormat(0)
   given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
@@ -523,6 +523,9 @@ object MacroBsonFormat: /*extends MacroBsonFormatDerivation*/
 
   implicit def vectorMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Vector[T]] = 
     IterableLikeMacroFormat[T, Vector[T]](tf)
+
+  implicit def arrayMacroFormat[T: ClassTag](using tf:MacroBsonFormat[T]): MacroBsonFormat[Array[T]] = 
+    ArrayMacroBsonFormat[T](tf)
 
   implicit def mapMacroFormat[K, T](using tf: MacroBsonFormat[T])(using MapKeyFormat[K]): MacroBsonFormat[Map[K, T]] =
     MapMacroFormat[K, T](tf, summon[MapKeyFormat[K]])
