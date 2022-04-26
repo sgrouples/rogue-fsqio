@@ -248,7 +248,7 @@ case class ExecutableModifyQuery[MB, M <: MB, State](
       ev: RequireShardKey[M, State],
       db: MongoDatabase
   ): Unit =
-    waitForFuture(updateOneAsync())
+    waitForFuture(upsertOneAsync())
 
   def updateMulti(writeConcern: WriteConcern)(implicit
       db: MongoDatabase
