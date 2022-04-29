@@ -4,7 +4,7 @@ import scala.compiletime.{erasedValue, summonInline, constValue}
 import scala.reflect.*
 import me.sgrouples.rogue.BsonFormat
 
-object MacroDeriv2 {
+object MacroDerivationInline {
   inline given derived[T](using m: Mirror.Of[T]): MacroBsonFormat[T] =
     val elemInstances = summonAllFormats[m.MirroredElemTypes]           // (1)
     inline m match                                               // (2)
@@ -26,11 +26,14 @@ object MacroDeriv2 {
 
   inline def bsonFormatProduct[T](s: Mirror.ProductOf[T], encoders: List[MacroBsonFormat[_]]): MacroBsonFormat[T] = {
     val elemNames = summonProductElemNames[s.MirroredElemLabels]
+
     new MacroBsonFormat[T] {
       val _validNames = elemNames.toVector
       override def validNames():Vector[String] = _validNames
       val _works = elemNames.zip(encoders)
-      val _flds: Map[String, BsonFormat[?]] = _works.map{case (k,v) => k -> v.asInstanceOf[me.sgrouples.rogue.BsonFormat[?]]}.toMap
+      val _subFieldsAdd = _works.map { case (fn, ff) => ff.subfields(fn, ff)}.flatten  
+      val _allFlds = _works ++ _subFieldsAdd.toList    
+      val _flds: Map[String, BsonFormat[?]] = _allFlds.map{case (k,v) => k -> v.asInstanceOf[me.sgrouples.rogue.BsonFormat[?]]}.toMap
       override def defaultValue:T = throw RuntimeException("unknown default")
       
       override val flds:Map[String, me.sgrouples.rogue.BsonFormat[?]] = _flds
@@ -82,13 +85,12 @@ object MacroDeriv2 {
       }
 
       private def addNotNull0(
-      d: _root_.org.bson.BsonDocument,
-      k: String,
-      v: _root_.org.bson.BsonValue
-  ): Unit = {
-    if (!v.isNull()) { d.put(k, v) }
-  }
-
+        d: _root_.org.bson.BsonDocument,
+        k: String,
+        v: _root_.org.bson.BsonValue
+      ): Unit = {
+        if (!v.isNull()) { d.put(k, v) }
+      }
     }
     
   }
