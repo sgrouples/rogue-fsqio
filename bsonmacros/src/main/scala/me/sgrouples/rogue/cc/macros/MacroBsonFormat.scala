@@ -228,7 +228,7 @@ final class LocaleMacroBsonFormat extends MacroBaseBsonFormat[Locale] {
   }
 }
 
-final class BinaryMacroBsonFormat extends MacroBaseBsonFormat[Array[Byte]] {
+object BinaryMacroBsonFormat extends MacroBaseBsonFormat[Array[Byte]] {
   override def read(b: BsonValue): Array[Byte] = if (b.isBinary)
     b.asBinary().getData
   else defaultValue
@@ -242,7 +242,7 @@ final class BinaryMacroBsonFormat extends MacroBaseBsonFormat[Array[Byte]] {
   }
 }
 
-final class LocalDateTimeMacroBsonFormat
+object LocalDateTimeMacroBsonFormat
     extends MacroBaseBsonFormat[LocalDateTime] {
   override def read(b: BsonValue): LocalDateTime = {
     if (b.isDateTime) {
@@ -503,9 +503,9 @@ object MacroBsonFormat extends MacroBsonFormatDeriving:
    given MacroBsonFormat[Boolean] = BooleanMacroBsonFormat(false)
    given MacroBsonFormat[String] = StringMacroBsonFormat("")
    given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()
-   given MacroBsonFormat[LocalDateTime] = LocalDateTimeMacroBsonFormat()
+   given MacroBsonFormat[LocalDateTime] = LocalDateTimeMacroBsonFormat
    given MacroBsonFormat[Instant] = InstantMacroBsonFormat()
-   given MacroBsonFormat[Array[Byte]] = BinaryMacroBsonFormat()
+   given MacroBsonFormat[Array[Byte]] = BinaryMacroBsonFormat
    given MacroBsonFormat[Locale] = LocaleMacroBsonFormat()
    given MacroBsonFormat[Currency] = CurrencyMacroBsonFormat()
    given MacroBsonFormat[UUID] = UUIDMacroBsonFormat[UUID]()
