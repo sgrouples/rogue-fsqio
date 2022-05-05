@@ -207,6 +207,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T])
   *   @tparam OwnerType
   */
 
+  /*
 class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](
     collName: String
 )(implicit formats: BsonFormat[RecordType])
@@ -220,4 +221,4 @@ class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](
   ) = {
     this(namingStrategy[RecordType])(formats)
   }
-}
+}*/

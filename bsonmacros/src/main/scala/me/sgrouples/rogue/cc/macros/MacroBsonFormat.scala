@@ -305,7 +305,6 @@ class OptMacroBsonFormat[T](inner: MacroBsonFormat[T])
 
 trait EnumMacroFormats {
  
-
   def enumNameMacroFormat[T <: Enumeration, V](e: T): MacroBsonFormat[e.Value] =
     new MacroBaseBsonFormat[e.Value] {
       override def read(b: BsonValue):e.Value = {
@@ -341,7 +340,6 @@ trait EnumMacroFormats {
         writer.writeInt32(v.id)
       }
     }
-
 }
 
 class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(

@@ -4,12 +4,8 @@ import java.util.{Currency, Locale, UUID}
 
 import io.fsq.field.{Field, OptionalField, RequiredField}
 import me.sgrouples.rogue.cc.CcMeta
-import me.sgrouples.rogue.enums.ReflectEnumInstance
 import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.types.ObjectId
-import shapeless._
-import shapeless.labelled.{FieldType, field}
-import shapeless.tag.@@
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
@@ -28,9 +24,9 @@ class IntField[O](name: String, o: O) extends MCField[Int, O](name, o) {
   override def defaultValue = 0
 }
 
-class IntTaggedField[Tag, O](name: String, o: O)
-    extends MCField[Int @@ Tag, O](name, o) {
-  override def defaultValue: Int @@ Tag = tag[Tag][Int](0)
+class IntSubtypeField[T <: Int, O](name: String, o: O)
+    extends MCField[T, O](name, o) {
+  override def defaultValue: T = 0.asInstanceOf[T]
 }
 
 class LongField[O](name: String, o: O) extends MCField[Long, O](name, o) {
@@ -42,9 +38,9 @@ class BigDecimalField[O](name: String, o: O)
   override def defaultValue = BigDecimal(0)
 }
 
-class LongTaggedField[Tag, O](name: String, o: O)
-    extends MCField[Long @@ Tag, O](name, o) {
-  override def defaultValue: Long @@ Tag = tag[Tag][Long](0L)
+class LongSubtypeField[T <: Long, O](name: String, o: O)
+    extends MCField[T, O](name, o) {
+  override def defaultValue: T = 0L.asInstanceOf[T]
 }
 
 class DoubleField[O](name: String, o: O) extends MCField[Double, O](name, o) {
@@ -54,9 +50,9 @@ class StringField[O](name: String, o: O) extends MCField[String, O](name, o) {
   override def defaultValue = ""
 }
 
-class StringTaggedField[Tag, O](name: String, o: O)
-    extends MCField[String @@ Tag, O](name, o) {
-  override def defaultValue: String @@ Tag = tag[Tag][String]("")
+class StringSubtypeField[T <: String, O](name: String, o: O)
+    extends MCField[T, O](name, o) {
+  override def defaultValue: T = "".asInstanceOf[T]
 }
 
 class ObjectIdField[O](name: String, o: O)
@@ -64,27 +60,19 @@ class ObjectIdField[O](name: String, o: O)
   override def defaultValue: ObjectId = ObjectId.get()
 }
 
-class ObjectIdTaggedField[Tag, O](name: String, o: O)
-    extends MCField[ObjectId @@ Tag, O](name, o) {
-  override def defaultValue: ObjectId @@ Tag =
-    tag[Tag][ObjectId](ObjectId.get())
-}
-
-/*
- * explicit version where Subtype has to be given
- */
-class ObjectIdSubtypeField[Subtype <: ObjectId, O](name: String, o: O)
-    extends MCField[Subtype, O](name, o) {
-  override def defaultValue: Subtype = new ObjectId().asInstanceOf[Subtype]
+class ObjectIdSubtypeField[T <: ObjectId, O](name: String, o: O)
+    extends MCField[T, O](name, o) {
+  override def defaultValue: T =
+    ObjectId.get().asInstanceOf[T] //random oid ? hmm
 }
 
 class UUIDIdField[O](name: String, o: O) extends MCField[UUID, O](name, o) {
   override def defaultValue: UUID = UUID.randomUUID()
 }
 
-class UUIDIdTaggedField[Tag, O](name: String, o: O)
-    extends MCField[UUID @@ Tag, O](name, o) {
-  override def defaultValue: UUID @@ Tag = tag[Tag][UUID](UUID.randomUUID())
+class UUIDIdSubtypeField[T <: UUID, O](name: String, o: O)
+    extends MCField[T, O](name, o) {
+  override def defaultValue: T = UUID.randomUUID().asInstanceOf[T]
 }
 
 class LocalDateTimeField[O](name: String, o: O)
@@ -108,18 +96,16 @@ class LocaleField[O](name: String, o: O) extends MCField[Locale, O](name, o) {
 class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
   override def defaultValue = false
 }
-class EnumField[T <: Enumeration: TypeTag, O](name: String, o: O)
-    extends MCField[T#Value, O](name, o)
-    with ReflectEnumInstance[T] {
-  private val _enum = enumeration
-  override def defaultValue: T#Value = _enum(0)
+class EnumField[T <: Enumeration, O](name: String, o: O, val e: T)
+    extends MCField[e.Value, O](name, o)
+    with EnumInstance(e) {
+  override def defaultValue: enumeration.Value = enumeration(0)
 }
 
-class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O)
-    extends MCField[T#Value, O](name, o)
-    with ReflectEnumInstance[T] {
-  private val _enum = enumeration
-  override def defaultValue: T#Value = _enum(0)
+class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O, val e:T)
+    extends MCField[e.Value, O](name, o)
+    with EnumInstance(e) {
+  override def defaultValue: enumeration.Value = enumeration(0)
 }
 
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
@@ -212,30 +198,28 @@ class MapField[K: MapKeyFormat, V, O](name: String, o: O)
 }
 
 class OptIntField[O](name: String, o: O) extends OCField[Int, O](name, o)
-class OptIntTaggedField[Tag, O](name: String, o: O)
-    extends OCField[Int @@ Tag, O](name, o)
+class OptIntSubtypeField[T <: String, O](name: String, o: O)
+    extends OCField[T, O](name, o)
 
 class OptLongField[O](name: String, o: O) extends OCField[Long, O](name, o)
-class OptLongTaggedField[Tag, O](name: String, o: O)
-    extends OCField[Long @@ Tag, O](name, o)
+class OptLongSubtypeField[T <: Long, O](name: String, o: O)
+    extends OCField[T, O](name, o)
 
 class OptBigDecimalField[O](name: String, o: O)
     extends OCField[BigDecimal, O](name, o)
 
 class OptStringField[O](name: String, o: O) extends OCField[String, O](name, o)
-class OptStringTaggedField[Tag, O](name: String, o: O)
-    extends OCField[String @@ Tag, O](name, o)
+class OptStringSubtypeField[T <: String, O](name: String, o: O)
+    extends OCField[T, O](name, o)
 
 class OptObjectIdField[O](name: String, o: O)
     extends OCField[ObjectId, O](name, o)
-class OptObjectIdTaggedField[Tag, O](name: String, o: O)
-    extends OCField[ObjectId @@ Tag, O](name, o)
 class OptObjectIdSubtypeField[Subtype <: ObjectId, O](name: String, o: O)
     extends OCField[Subtype, O](name, o)
 
 class OptUUIDIdField[O](name: String, o: O) extends OCField[UUID, O](name, o)
-class OptUUIDIdTaggedField[Tag, O](name: String, o: O)
-    extends OCField[UUID @@ Tag, O](name, o)
+class OptUUIDIdSubtypeField[T <: UUID, O](name: String, o: O)
+    extends OCField[T, O](name, o)
 
 class OptDoubleField[O](name: String, o: O) extends OCField[Double, O](name, o)
 class OptLocalDateTimeField[O](name: String, o: O)
@@ -281,6 +265,7 @@ class OptCClassArrayField[C: ClassTag, MC <: CcMeta[C], O](
 class OptMapField[V, O](name: String, o: O)
     extends OCField[Map[String, V], O](name, o)
 
+/*    
 trait CcFields[T] {
   type RecRepr
   def flds: RecRepr
@@ -351,3 +336,4 @@ object CcFields extends LowPrioFields {
   type Aux[T, R] = CcFields[T] { type RecRepr = R }
   def apply[T](implicit f: CcFields[T]): Aux[T, f.RecRepr] = f
 }
+*/

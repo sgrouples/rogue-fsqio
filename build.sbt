@@ -24,12 +24,12 @@ lazy val bsonmacros = (project in file("bsonmacros")).dependsOn(bsonformats).set
       RogueDependencies.testDeps //++
       //Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
 ))
-lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings ++ Seq(
+/*lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings ++ Seq(
   name := "rogue-fsqio-bson-shapeless",
   libraryDependencies ++= RogueDependencies.ccDeps// ++
     //Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
-))
-lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros, bsonshapeless)
+))*/
+lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros /*, bsonshapeless */)
   .settings(defaultSettings ++ Seq(
     name := "rogue-shapeless",
     libraryDependencies ++= RogueDependencies.ccDeps //++
@@ -37,4 +37,4 @@ lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmac
   ))
 lazy val root = (project in file("."))
   .settings(defaultSettings)
-  .aggregate(field,core,index,indexchecker,cc,/*bsonmacros,*/bsonshapeless,bsonformats)
+  .aggregate(field,core,index,indexchecker,cc,bsonmacros,/*bsonshapeless,*/ bsonformats)
