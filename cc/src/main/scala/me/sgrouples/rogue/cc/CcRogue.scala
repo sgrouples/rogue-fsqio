@@ -269,27 +269,28 @@ trait CcRogue {
 
   implicit def enumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
       f: EnumIdField[E, O]
-  ): EnumIdQueryField[O, f.e.Value] =
-    new EnumIdQueryField(f)
-
+  ): EnumIdQueryField[O, f.e.Value] = {
+    new EnumIdQueryField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
+  }
   // this is here to force proper implicit resolution
 
   implicit def optRnumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
       f: OptEnumIdField[E, O]
-  ): EnumIdQueryField[O, E#Value] =
-    new EnumIdQueryField(f)
+  ): EnumIdQueryField[O, f.e.Value] =
+    new EnumIdQueryField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
 
-  implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[_], X](
-      f: EnumIdField[X, O]
-  ): EnumIdModifyField[O, X] =
-    new EnumIdModifyField(f)
+  implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[_], E <: Enumeration](
+      f: EnumIdField[E, O]
+  ): EnumIdModifyField[O, f.e.Value] =
+    new EnumIdModifyField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
+
 
   // this is here to force proper implicit resolution
 
   implicit def optEnumIdFieldToEnumIdModifyField[O <: CcMeta[
     _
-  ], E <: Enumeration](f: OptEnumIdField[E, O]): EnumIdModifyField[O, E#Value] =
-    new EnumIdModifyField(f)
+  ], E <: Enumeration](f: OptEnumIdField[E, O]): EnumIdModifyField[O, f.e.Value] =
+    new EnumIdModifyField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
 
   given localDateIsFlattened: Rogue.Flattened[LocalDateTime, LocalDateTime] =
     new Rogue.Flattened[LocalDateTime, LocalDateTime]

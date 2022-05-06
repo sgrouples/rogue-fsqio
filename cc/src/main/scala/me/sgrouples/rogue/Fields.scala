@@ -9,6 +9,7 @@ import org.bson.types.ObjectId
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
+import io.fsq.rogue.enums.EnumInstance
 
 abstract class CField[V, O](val name: String, val owner: O) extends Field[V, O]
 
@@ -99,13 +100,13 @@ class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
 class EnumField[T <: Enumeration, O](name: String, o: O, val e: T)
     extends MCField[e.Value, O](name, o)
     with EnumInstance(e) {
-  override def defaultValue: enumeration.Value = enumeration(0)
+  override def defaultValue: e.Value = e(0)
 }
 
 class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O, val e:T)
     extends MCField[e.Value, O](name, o)
     with EnumInstance(e) {
-  override def defaultValue: enumeration.Value = enumeration(0)
+    override def defaultValue: e.Value = e(0)
 }
 
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
@@ -198,7 +199,7 @@ class MapField[K: MapKeyFormat, V, O](name: String, o: O)
 }
 
 class OptIntField[O](name: String, o: O) extends OCField[Int, O](name, o)
-class OptIntSubtypeField[T <: String, O](name: String, o: O)
+class OptIntSubtypeField[T <: Int, O](name: String, o: O)
     extends OCField[T, O](name, o)
 
 class OptLongField[O](name: String, o: O) extends OCField[Long, O](name, o)
@@ -233,10 +234,10 @@ class OptInstantField[O](name: String, o: O)
     extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O)
     extends OCField[Boolean, O](name, o)
-class OptEnumField[T <: Enumeration, O](name: String, o: O)
-    extends OCField[T#Value, O](name, o)
-class OptEnumIdField[T <: Enumeration, O](name: String, o: O)
-    extends OCField[T#Value, O](name, o)
+class OptEnumField[T <: Enumeration, O](name: String, o: O, val e:T)
+    extends OCField[e.Value, O](name, o) with EnumInstance(e)
+class OptEnumIdField[T <: Enumeration, O](name: String, o: O, val e:T)
+    extends OCField[e.Value, O](name, o) with EnumInstance(e)
 class OptListField[V, O](name: String, o: O)
     extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O)

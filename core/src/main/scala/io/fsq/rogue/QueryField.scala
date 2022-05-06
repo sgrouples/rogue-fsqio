@@ -113,6 +113,7 @@ abstract class AbstractQueryField[F, V, DB, M](val field: Field[F, M]) {
   def lt(v: V) = LtQueryClause(field.name, valueToDB(v))
   def gt(v: V) = GtQueryClause(field.name, valueToDB(v))
   def lte(v: V) = LtEqQueryClause(field.name, valueToDB(v))
+
   def gte(v: V) = GtEqQueryClause(field.name, valueToDB(v))
 
   def <(v: V) = lt(v)
@@ -188,9 +189,9 @@ class EnumNameQueryField[M, E <: Enumeration#Value](field: Field[E, M])
   override def valueToDB(e: E) = e.toString
 }
 
-class EnumIdQueryField[M, E <: Enumeration#Value](field: Field[E, M])
-    extends AbstractQueryField[E, E, Int, M](field) {
-  override def valueToDB(e: E) = e.id
+class EnumIdQueryField[M, V](field: Field[V, M], conv: V => Int)
+    extends AbstractQueryField[V, V, Int, M](field) {
+  override def valueToDB(e: V) = conv(e)
 }
 
 class GeoQueryField[M](field: Field[LatLong, M])
