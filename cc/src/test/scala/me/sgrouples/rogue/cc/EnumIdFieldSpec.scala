@@ -3,8 +3,9 @@ package me.sgrouples.rogue.cc
 import me.sgrouples.rogue.EnumSerializeValue
 import munit.FunSuite
 import CcRogue._
-import me.sgrouples.rogue.BsonFormats._
-import me.sgrouples.rogue.EnumAnnotatedFormats._
+import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.CcRogue.*
+//import me.sgrouples.rogue.EnumAnnotatedFormats._
 
 @EnumSerializeValue
 object EnumIdFieldEnum extends Enumeration {
@@ -15,9 +16,9 @@ object EnumIdFieldEnum extends Enumeration {
 case class EnumIdFieldClass(`enum`: EnumIdFieldEnum.Value)
 
 class EnumIdFieldSpecMeta
-    extends RCcMetaExt[EnumIdFieldClass, EnumIdFieldSpecMeta] {
+    extends MCcMeta[EnumIdFieldClass, EnumIdFieldSpecMeta] {
 
-  val `enum` = OptEnumIdField(EnumIdFieldEnum)
+  val `enum` = OptEnumIdField("enum", EnumIdFieldEnum)
 
 }
 

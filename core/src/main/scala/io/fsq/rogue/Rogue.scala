@@ -10,6 +10,7 @@ import io.fsq.field.{
 }
 import java.util.Date
 import org.bson.types.ObjectId
+import io.fsq.rogue.enums.EnumInstance
 
 /** A utility trait containing typing shorthands, and a collection of implicit
   * conversions that make query syntax much simpler.
@@ -52,9 +53,11 @@ trait Rogue {
   implicit def rstringFieldToStringQueryField[F <: String, M](
       f: RField[F, M]
   ): StringQueryField[F, M] = new StringQueryField(f)
+  
   implicit def robjectIdFieldToObjectIdQueryField[F <: ObjectId, M](
       f: RField[F, M]
   ): ObjectIdQueryField[F, M] = new ObjectIdQueryField[F, M](f)
+  
   implicit def rdateFieldToDateQueryField[M](
       f: RField[Date, M]
   ): DateQueryField[M] = new DateQueryField(f)
@@ -63,13 +66,13 @@ trait Rogue {
   ): QueryField[DBObject, M] = new QueryField(f)
 
   implicit def renumNameFieldToEnumNameQueryField[M, F <: Enumeration#Value](
-      f: RField[F, M]
+      f: RField[F, M] with EnumInstance[_]
   ): EnumNameQueryField[M, F] = new EnumNameQueryField(f)
   implicit def renumerationSeqFieldToEnumerationSeqQueryField[
       M,
       F <: Enumeration#Value,
       CC[_] <: Seq[_]
-  ](f: RField[CC[F], M]): EnumerationSeqQueryField[F, M, CC] =
+  ](f: RField[CC[F], M] with EnumInstance[_]): EnumerationSeqQueryField[F, M, CC] =
     new EnumerationSeqQueryField[F, M, CC](f)
   implicit def rlatLongFieldToGeoQueryField[M](
       f: RField[LatLong, M]

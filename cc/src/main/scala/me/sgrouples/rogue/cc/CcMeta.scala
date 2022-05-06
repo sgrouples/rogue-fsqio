@@ -208,7 +208,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T])
   */
 
   /*
-class RCcMetaExt[RecordType, OwnerType <: RCcMeta[RecordType]](
+class MCc[RecordType, OwnerType <: RCcMeta[RecordType]](
     collName: String
 )(implicit formats: BsonFormat[RecordType])
     extends RCcMeta[RecordType](collName)(formats)

@@ -10,7 +10,7 @@ import munit.FunSuite
 import org.mongodb.scala.result.DeleteResult
 
 import scala.concurrent.duration._
-import shapeless.tag
+import me.sgrouples.rogue.tagsfortest.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -54,7 +54,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db = dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
+  implicit def db:MongoDatabase = dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
 
   override def beforeEach(context: BeforeEach): Unit = {}
 

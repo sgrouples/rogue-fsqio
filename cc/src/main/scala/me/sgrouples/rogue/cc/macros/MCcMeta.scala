@@ -1,6 +1,6 @@
 package me.sgrouples.rogue.cc.macros
 
-import org.mongodb.scala._
+import org.mongodb.scala.*
 import io.fsq.field.Field
 import io.fsq.rogue.index.MongoIndex
 import me.sgrouples.rogue.BsonFormat

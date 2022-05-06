@@ -5,10 +5,9 @@ import java.time.temporal.{ChronoUnit}
 
 import org.bson.types.ObjectId
 import munit.FunSuite
-import shapeless.tag.@@
-import shapeless.tag
-import me.sgrouples.rogue.BsonFormats._
-import me.sgrouples.rogue.EnumNameFormats._
+import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.tagsfortest.*
+//import me.sgrouples.rogue.EnumNameFormats._
 
 trait User
 
@@ -84,7 +83,7 @@ case class Group(
 
 class ComplexCaseClassSpec extends FunSuite {
 
-  class GroupMeta extends RCcMetaExt[Group, GroupMeta] {}
+  class GroupMeta extends MCcMeta[Group, GroupMeta] {}
 
   val Groups = new GroupMeta
 

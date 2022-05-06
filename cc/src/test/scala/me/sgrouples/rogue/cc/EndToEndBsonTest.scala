@@ -5,7 +5,7 @@ import java.util.regex.Pattern
 import org.mongodb.scala._
 import io.fsq.rogue._
 import munit.FunSuite
-import me.sgrouples.rogue.cc.CcRogue._
+import me.sgrouples.rogue.cc.CcRogue.*
 import org.bson.types.ObjectId
 
 import CcRogue._
@@ -45,7 +45,7 @@ class EndToEndBsonTest extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db =
+  implicit def db:MongoDatabase =
     dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   override def beforeAll(): Unit = {
@@ -79,6 +79,7 @@ class EndToEndBsonTest extends FunSuite {
     val vc = baseTestVenueClaim(v._id)
     VenueClaimR.insertOne(vc)
 
+    val x = VenueR.id
     // eqs
     val q = ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id)
     //println(s"Ret class ${classOf[q.meta.R]}")

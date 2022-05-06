@@ -31,6 +31,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
 
   protected def IntSubtypeField[T<:Int]: IntSubtypeField[T, Meta]  =
     named(new IntSubtypeField[T, Meta](_, this))
+
   protected def IntSubtypeField[T <: Int](
       name: String
   ): IntSubtypeField[T, Meta]  =
@@ -38,6 +39,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
 
   protected def OptIntSubtypeField[T <: Int]: OptIntSubtypeField[T, Meta]  =
     named(new OptIntSubtypeField[T, Meta](_, this))
+  
   protected def OptIntSubtypeField[T <: Int](
       name: String
   ): OptIntSubtypeField[T, Meta]  =
@@ -246,10 +248,10 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
     *   @tparam E
     * @return
     */
-  protected def EnumField[E <: Enumeration: TypeTag](
+  protected def EnumField[E <: Enumeration](
       e: E
   ): EnumField[E, Meta]  = named(new EnumField[E, Meta](_, this, e))
-  protected def EnumField[E <: Enumeration: TypeTag](
+  protected def EnumField[E <: Enumeration](
       name: String,
       e: E
   ): EnumField[E, Meta]  = named(name)(new EnumField[E, Meta](_, this, e))

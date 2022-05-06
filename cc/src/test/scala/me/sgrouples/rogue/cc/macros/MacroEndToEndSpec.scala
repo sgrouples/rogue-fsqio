@@ -12,7 +12,7 @@ import org.mongodb.scala.model.Filters
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
-import shapeless.tag
+import me.sgrouples.rogue.tagsfortest.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -55,7 +55,7 @@ class MacroEndToEndSpec extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db =
+  implicit def db:MongoDatabase =
     dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   override def beforeAll(): Unit = {

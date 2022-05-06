@@ -7,7 +7,7 @@ import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros._
 import org.bson.types.ObjectId
 import munit.FunSuite
-import shapeless._
+import me.sgrouples.rogue.tagsfortest.*
 
 class MacroComplexCaseClassSpec extends FunSuite {
 

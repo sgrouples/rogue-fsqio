@@ -47,10 +47,10 @@ case class Entity(_id: ObjectId, str: String, optInt: Option[Int], list:List[Int
 
   trait Metas {
     class EntityMeta extends  MCcMeta[Entity, EntityMeta]("entity_coll_name") {
-    @f val id = ObjectIdField("id")
-    @f val str = StringField
-    @f val optInt = OptIntField
-    @f val list = ListField[Int]
+    val id = ObjectIdField("id")("id")
+    val str = StringField("str")
+    val optInt = OptIntField("optInt")
+    val list = ListField[Int]("list")
     }
   }
 

@@ -103,7 +103,7 @@ class EnumField[T <: Enumeration, O](name: String, o: O, val e: T)
   override def defaultValue: e.Value = e(0)
 }
 
-class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O, val e:T)
+class EnumIdField[T <: Enumeration, O](name: String, o: O, val e:T)
     extends MCField[e.Value, O](name, o)
     with EnumInstance(e) {
     override def defaultValue: e.Value = e(0)

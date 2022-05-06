@@ -3,12 +3,11 @@ package me.sgrouples.rogue.cc
 import java.util.UUID
 
 import io.fsq.rogue._
-import me.sgrouples.rogue.BsonFormats._
+import me.sgrouples.rogue.cc.macros.*
 import me.sgrouples.rogue.cc
 import org.bson.types.ObjectId
 import munit.FunSuite
-import shapeless.tag
-import shapeless.tag.@@
+import me.sgrouples.rogue.tagsfortest.*
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.CcRogue._
 
@@ -45,14 +44,14 @@ trait TypedObjectId[RecordType, TagType] {
     override def compare(x: Id, y: Id): Int = x.compareTo(y)
   }
 }
+object A extends TypedObjectId[A, A]
 
 case class A(_id: A.Id, b: String)
 
-object A extends TypedObjectId[A, A]
 
 class ObjectIdSubtypeSpec extends FunSuite {
 
-  class MetaA extends RCcMetaExt[A, MetaA]() {
+  class MetaA extends MCcMeta[A, MetaA]() {
     val id = ObjectIdSubtypeField[A.Id]("_id")
   }
   val X = new MetaA
@@ -106,8 +105,8 @@ case class B(id: B.Id)
 
 class StringTaggedSpec extends FunSuite {
 
-  class MetaB extends RCcMetaExt[B, MetaB]() {
-    val id = StringTaggedField[B]("id")
+  class MetaB extends MCcMeta[B, MetaB]() {
+    val id = StringSubtypeField[B.Id]("id")
   }
 
   val X = new MetaB

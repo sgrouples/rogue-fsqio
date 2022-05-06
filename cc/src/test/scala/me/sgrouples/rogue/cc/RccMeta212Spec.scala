@@ -2,7 +2,8 @@ package me.sgrouples.rogue.cc
 
 import java.time.Instant
 
-import me.sgrouples.rogue.BsonFormats._
+import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.C
 import org.bson.types.ObjectId
 import munit.FunSuite
 trait QueryById[M] {
@@ -24,11 +25,11 @@ case class UserBlock(
 }
 
 class UserBlockMeta(name: String = "userblocks")
-    extends RCcMetaExt[UserBlock, UserBlockMeta](name)
+    extends MCcMeta[UserBlock, UserBlockMeta](name)
     with QueryById[UserBlockMeta] {
 
-  val thisIsWhatWorks = ObjectIdTaggedField[User]
-  val createdAt = InstantField
+  val thisIsWhatWorks = ObjectIdSubtypeField[User.Id]("thisIsWhatWorks")
+  val createdAt = InstantField("createdAt")
 }
 
 /** Created by mar on 02/06/2017.

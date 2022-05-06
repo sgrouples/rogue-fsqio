@@ -24,8 +24,7 @@ import me.sgrouples.rogue.cc.{
 import me.sgrouples.rogue.QueryParser._
 import org.bson.types._
 import munit.FunSuite
-import shapeless.tag
-import shapeless.tag.@@
+import me.sgrouples.rogue.tagsfortest.*
 import org.bson.types._
 
 //TODO - drop signature()
@@ -33,7 +32,7 @@ import org.bson.types._
 import scala.language.postfixOps
 
 class MacroQueryTest extends FunSuite {
-  import me.sgrouples.rogue.cc.macros.Metas._
+  import me.sgrouples.rogue.cc.macros.Metas.*
 
   // Copyright 2011 Foursquare Labs Inc. All Rights Reserved.
 
