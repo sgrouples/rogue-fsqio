@@ -5,10 +5,8 @@ import java.util.regex.Pattern
 import org.mongodb.scala._
 import io.fsq.rogue._
 import munit.FunSuite
-import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import org.bson.types.ObjectId
-
-import CcRogue._
 
 class EndToEndBsonTest extends FunSuite {
   import Metas._

@@ -81,7 +81,7 @@ case class VenueClaim(
 )
 
 object Venue {
-  def newId = tag[Venue](new ObjectId())
+  def newId: ObjectId @@ Venue = tag[Venue](new ObjectId())
 }
 
 case class Venue(

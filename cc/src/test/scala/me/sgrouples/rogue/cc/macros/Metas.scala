@@ -63,7 +63,7 @@ object Metas {
   val VenueR = new VenueRMeta
   class VenueClaimRMeta
       extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
-    val venueid = ObjectIdSubtypeField[ObjectId @@ VenueClaim]("vid")
+    val venueid = ObjectIdSubtypeField[ObjectId @@ Venue]("vid")
     val status = EnumField("status", ClaimStatus)
     val reason = OptEnumField("reason", RejectReason)
     val userId = LongField("uid")

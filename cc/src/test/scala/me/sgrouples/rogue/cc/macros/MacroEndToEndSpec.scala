@@ -96,7 +96,7 @@ class MacroEndToEndSpec extends FunSuite {
     for {
       _ <- VenueR.insertOneAsync(v)
       _ <- VenueClaimR.insertOneAsync(vc)
-      _ <- ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync().map {
+      _ <- VenueR.where(_.id eqs v._id).fetchAsync().map {
         res => assertEquals(res.map(_._id), Seq(v._id))
       }
       _ <- VenueR.where(_.mayor eqs v.mayor).fetchAsync().map { res =>

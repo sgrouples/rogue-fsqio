@@ -99,7 +99,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
       vc = baseTestVenueClaim(v._id)
       _ <- VenueClaimR.insertOneAsync(vc)
       venueRs1 <- ccMetaToQueryBuilder(VenueR)
-        .where(_.id eqs v._id)
+        .where(robjectIdFieldToObjectIdQueryField(_.id).eqs(v._id))
         .fetchAsync()
       _ = assertEquals(venueRs1.map(_._id), Seq(v._id))
       byMajor <- VenueR.where(_.mayor eqs v.mayor).fetchAsync()
