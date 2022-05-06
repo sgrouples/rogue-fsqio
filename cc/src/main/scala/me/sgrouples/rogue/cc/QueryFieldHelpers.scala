@@ -14,15 +14,6 @@ import scala.concurrent.duration.Duration
 import java.util.UUID
 
 
-trait NamesResolver {
-  protected def named[T <: io.fsq.field.Field[_, _]](name: String)(
-      func: String => T
-  ): T
-  protected def named[T <: io.fsq.field.Field[_, _]](
-      func: String => T
-  ): T 
-}
-
 trait QueryFieldHelpers[Meta] extends NamesResolver {
   requires: Meta =>
 

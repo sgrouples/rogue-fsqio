@@ -20,7 +20,7 @@ trait MacroNamesResolver[T] extends NamesResolver {
     // _validNames ++= macroGen.validNames()
     resolved = true
   }
-  override def named[T <: io.fsq.field.Field[_, _]](
+  override def named[T <: io.fsq.field.Field[?, ?]](
       name: String
   )(func: String => T): T = {
     if (!resolved) resolve()
@@ -33,6 +33,16 @@ trait MacroNamesResolver[T] extends NamesResolver {
     fields += (name -> field)
 
     field
+  }
+
+   override def named[T <: io.fsq.field.Field[?, ?]](
+      func: String => T
+  ): T  = {
+      val caller = Thread.currentThread().getStackTrace()(1)
+      new RuntimeException().printStackTrace()
+      throw new IllegalArgumentException(
+      s"[${caller.getClassName}:L${caller.getLineNumber}] named without name not supported in macros. use @f [me.sgrouples.rogue.cc.macros.f] or provide name"
+    )
   }
  
 }
