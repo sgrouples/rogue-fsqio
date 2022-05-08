@@ -13,6 +13,7 @@ import org.bson.BsonNull
 import org.bson.types.ObjectId
 
 import scala.util.matching.Regex
+import io.fsq.rogue.enums.EnumInstance
 
 object CondOps extends Enumeration {
   type Op = Value
@@ -184,9 +185,9 @@ class DateTimeQueryField[M](field: Field[Instant, M])
     new GtEqQueryClause(field.name, new Date(d.toEpochMilli))
 }
 
-class EnumNameQueryField[M, E <: Enumeration#Value](field: Field[E, M])
-    extends AbstractQueryField[E, E, String, M](field) {
-  override def valueToDB(e: E) = e.toString
+class EnumNameQueryField[M, E <: Enumeration, V <: Enumeration#Value](field: Field[V, M] with EnumInstance[E])
+    extends AbstractQueryField[V, V, String, M](field) {
+  override def valueToDB(e: V) = e.toString
 }
 
 class EnumIdQueryField[M, V](field: Field[V, M], conv: V => Int)
