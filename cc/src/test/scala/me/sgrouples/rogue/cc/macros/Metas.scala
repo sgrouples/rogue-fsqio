@@ -8,7 +8,7 @@ import me.sgrouples.rogue.cc.*
 import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 import me.sgrouples.rogue.map.MapKeyFormats.{given, *}
 
 case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
@@ -34,7 +34,7 @@ object Metas {
   class VenueRMeta
       extends MCcMeta[Venue, VenueRMeta](PluralLowerCase)
       with IndexBuilder[VenueRMeta] {
-    val id = ObjectIdSubtypeField[ObjectId @@ Venue]("_id")
+    val id = ObjectIdTaggedField[Venue]("_id")
     val mayor = LongField("mayor")
     val venuename = StringField("venuename")
     val closed = BooleanField("closed")

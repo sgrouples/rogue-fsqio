@@ -3,16 +3,16 @@ package me.sgrouples.rogue.cc.macros
 import java.time.LocalDateTime
 import java.util.{Currency, Locale}
 import java.util.regex.Pattern
-import org.mongodb.scala._
-import me.sgrouples.rogue.cc.CcRogue._
-import me.sgrouples.rogue.cc._
+import org.mongodb.scala.*
+import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.*
 import munit.FunSuite
 import org.bson.types.ObjectId
 import org.mongodb.scala.model.Filters
 
 import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
-import me.sgrouples.rogue.tagsfortest.*
+import scala.concurrent.duration.*
+import me.sgrouples.rogue.tags.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

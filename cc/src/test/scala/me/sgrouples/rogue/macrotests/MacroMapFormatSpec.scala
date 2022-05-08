@@ -4,7 +4,7 @@ import me.sgrouples.rogue.cc.CustomKey
 import me.sgrouples.rogue.cc.macros._
 import me.sgrouples.rogue.macrotests.Domain.StrLongMapT
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 import munit.FunSuite
 object Domain {
   type StrLongMapT = Map[String, Long]

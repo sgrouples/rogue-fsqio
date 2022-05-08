@@ -6,7 +6,7 @@ import me.sgrouples.rogue.map.MapKeyFormats.* // macros should import MapKeyForm
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDateTime}
 import java.util.{Currency, Locale, UUID}

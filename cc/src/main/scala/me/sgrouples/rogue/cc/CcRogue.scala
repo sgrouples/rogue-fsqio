@@ -136,6 +136,8 @@ trait CcRogue {
     ccQuery.asInstanceOf[ExecutableQuery[MB, M, R, InitialState]]
   }
 
+  //given Conversion[]
+
   implicit def localDateTimeFieldToLocalDateTimeQueryField[O <: CcMeta[_]](
       f: RField[LocalDateTime, O]
   ): LocalDateTimeQueryField[O] =

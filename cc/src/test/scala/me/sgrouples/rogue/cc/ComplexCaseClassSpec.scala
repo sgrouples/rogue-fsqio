@@ -6,7 +6,7 @@ import java.time.temporal.{ChronoUnit}
 import org.bson.types.ObjectId
 import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 //import me.sgrouples.rogue.EnumNameFormats._
 
 trait User

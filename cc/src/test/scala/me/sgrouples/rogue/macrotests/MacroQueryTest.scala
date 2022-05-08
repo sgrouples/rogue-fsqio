@@ -24,7 +24,7 @@ import me.sgrouples.rogue.cc.{
 import me.sgrouples.rogue.QueryParser._
 import org.bson.types._
 import munit.FunSuite
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 import org.bson.types._
 
 //TODO - drop signature()

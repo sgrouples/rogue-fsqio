@@ -25,7 +25,7 @@ object RogueSettings {
     },
     version := "7.0.0-SNAPSHOT",
     organization := "me.sgrouples",
-    scalaVersion := "3.1.1", //2.13.8",
+    scalaVersion := "3.1.2", //2.13.8",
     isSnapshot := false,
     //publishMavenStyle := true,
     Test / publishArtifact := false,
@@ -62,7 +62,7 @@ object RogueDependencies {
 
   val testDeps = Seq(
     "org.slf4j" % "slf4j-simple" % "1.7.36" % Test,
-    "org.scalameta" %% "munit" % "0.7.29" % Test,
+    "org.scalameta" %% "munit" % "1.0.0-M3" % Test,
     "io.netty" % "netty-all" % nettyVer % Test,
     "io.netty" % "netty-transport-native-epoll" % nettyVer % Test,
     "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test

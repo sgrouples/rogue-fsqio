@@ -14,7 +14,7 @@ import io.fsq.field.Field
 import me.sgrouples.rogue.CClassListField
 import me.sgrouples.rogue.cc.Metas._
 import org.bson.types._
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 import me.sgrouples.rogue.QueryParser._
 
 class QueryTest extends FunSuite {

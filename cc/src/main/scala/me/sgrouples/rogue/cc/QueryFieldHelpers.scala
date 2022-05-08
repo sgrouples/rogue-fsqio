@@ -133,6 +133,13 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def ObjectIdField(name: String): ObjectIdField[Meta]  =
     named(name)(new ObjectIdField[Meta](_, this))
 
+  protected def ObjectIdTaggedField[Tag]: ObjectIdTaggedField[Tag, Meta]  = named(
+    new ObjectIdTaggedField[Tag, Meta](_, this)
+  )
+  protected def ObjectIdTaggedField[Tag](name: String): ObjectIdTaggedField[Tag, Meta]  =
+    named(name)(new ObjectIdTaggedField[Tag, Meta](_, this))
+
+
   protected def OptObjectIdField: OptObjectIdField[Meta]  = named(
     new OptObjectIdField[Meta](_, this)
   )
@@ -145,6 +152,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
       : ObjectIdSubtypeField[T, Meta]  = named(
     new ObjectIdSubtypeField[T, Meta](_, this)
   )
+  
   protected def ObjectIdSubtypeField[T<:ObjectId](
       name: String
   ): ObjectIdSubtypeField[T, Meta]  =

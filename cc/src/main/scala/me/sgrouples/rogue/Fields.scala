@@ -10,6 +10,7 @@ import org.bson.types.ObjectId
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 import io.fsq.rogue.enums.EnumInstance
+import me.sgrouples.rogue.tags.*
 
 abstract class CField[V, O](val name: String, val owner: O) extends Field[V, O]
 
@@ -61,10 +62,18 @@ class ObjectIdField[O](name: String, o: O)
   override def defaultValue: ObjectId = ObjectId.get()
 }
 
-class ObjectIdSubtypeField[T <: ObjectId, O](name: String, o: O)
-    extends MCField[T, O](name, o) {
-  override def defaultValue: T =
-    ObjectId.get().asInstanceOf[T] //random oid ? hmm
+class ObjectIdTaggedField[Tag, O](name: String, o: O)
+    extends MCField[ObjectId @@ Tag, O](name, o) {
+  override def defaultValue: ObjectId @@ Tag =
+    tag[Tag](ObjectId.get())
+}
+
+/*
+ * explicit version where Subtype has to be given
+ */
+class ObjectIdSubtypeField[Subtype <: ObjectId, O](name: String, o: O)
+    extends MCField[Subtype, O](name, o) {
+  override def defaultValue: Subtype = new ObjectId().asInstanceOf[Subtype]
 }
 
 class UUIDIdField[O](name: String, o: O) extends MCField[UUID, O](name, o) {
@@ -215,6 +224,8 @@ class OptStringSubtypeField[T <: String, O](name: String, o: O)
 
 class OptObjectIdField[O](name: String, o: O)
     extends OCField[ObjectId, O](name, o)
+class OptObjectIdTaggedField[Tag, O](name: String, o: O)
+    extends OCField[ObjectId @@ Tag, O](name, o)
 class OptObjectIdSubtypeField[Subtype <: ObjectId, O](name: String, o: O)
     extends OCField[Subtype, O](name, o)
 

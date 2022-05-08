@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc
 
 import org.bson.types.ObjectId
 import munit.FunSuite
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 import me.sgrouples.rogue.cc.macros.*
     
 case class IdOneEnum(_id: ObjectId, one: String, en: VenueStatus.Value)

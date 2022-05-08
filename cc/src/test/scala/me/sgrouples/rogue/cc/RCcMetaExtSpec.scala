@@ -2,9 +2,11 @@ package me.sgrouples.rogue.cc
 
 import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 import me.sgrouples.rogue.map.MapKeyFormats.{given, *}
+import org.bson.types.ObjectId
 //import me.sgrouples.rogue.EnumNameFormats._
+import java.util.UUID
 
 case class CaseClass1(id: Long)
 
@@ -40,7 +42,7 @@ class MCcSpec extends FunSuite {
     val intSubtypeField_named =
       IntSubtypeField[Int @@ Tag](s"intSubtypeField$suffix")
 
-    val optIntSubtypeField = OptIntSubtypeField[String @@ Tag]("optIntSubtypeField")
+    val optIntSubtypeField = OptIntSubtypeField[Int @@ Tag]("optIntSubtypeField")
     val optIntSubtypeField_named =
       OptIntSubtypeField[Int @@ Tag](s"optIntSubtypeField$suffix")
 
@@ -82,8 +84,8 @@ class MCcSpec extends FunSuite {
     val optObjectIdField = OptObjectIdField("optObjectIdField")
     val optObjectIdField_named = OptObjectIdField(s"optObjectIdField$suffix")
 
-    val ObjectIdSubtypeField = ObjectIdSubtypeField[ObjectId @@ Tag]("ObjectIdSubtypeField")
-    val ObjectIdSubtypeField_named =
+    val objectIdSubtypeField = ObjectIdSubtypeField[ObjectId @@ Tag]("ObjectIdSubtypeField")
+    val objectIdSubtypeField_named =
       ObjectIdSubtypeField[ObjectId @@Tag](s"ObjectIdSubtypeField$suffix")
 
     val optObjectIdSubtypeField = OptObjectIdSubtypeField[ObjectId @@ Tag]

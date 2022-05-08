@@ -4,13 +4,14 @@ import java.time.LocalDateTime
 import java.util.{Currency, Locale}
 import java.util.regex.Pattern
 import org.mongodb.scala._
-import me.sgrouples.rogue.cc.CcRogue._
+import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.*
 import org.bson.types.ObjectId
 import munit.FunSuite
 import org.mongodb.scala.result.DeleteResult
 
 import scala.concurrent.duration._
-import me.sgrouples.rogue.tagsfortest.*
+import me.sgrouples.rogue.tags.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -99,7 +100,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
       vc = baseTestVenueClaim(v._id)
       _ <- VenueClaimR.insertOneAsync(vc)
       venueRs1 <- ccMetaToQueryBuilder(VenueR)
-        .where(robjectIdFieldToObjectIdQueryField(_.id).eqs(v._id))
+        .where(robjectIdFieldToObjectIdQueryField(_.id) eqs v._id)
         .fetchAsync()
       _ = assertEquals(venueRs1.map(_._id), Seq(v._id))
       byMajor <- VenueR.where(_.mayor eqs v.mayor).fetchAsync()
