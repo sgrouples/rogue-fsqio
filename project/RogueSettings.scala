@@ -3,13 +3,16 @@
 
 import sbt._
 import Keys.{scalaVersion, _}
-import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixScalaBinaryVersion, scalafixSemanticdb}
+import scalafix.sbt.ScalafixPlugin.autoImport.{
+  scalafixScalaBinaryVersion,
+  scalafixSemanticdb
+}
 
 object RogueSettings {
 
   val nexus = "https://nexus.groupl.es/"
-  val nexusReleases = "releases" at nexus+"repository/maven-releases/"
-  val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
+  val nexusReleases = "releases" at nexus + "repository/maven-releases/"
+  val nexusSnapshots = "snapshots" at nexus + "repository/maven-snapshots/"
 
   lazy val macroSettings: Seq[Setting[_]] = Seq(
     libraryDependencies ++= Seq(
@@ -23,7 +26,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "6.0.8",
+    version := "6.0.9-SNAPSHOT",
     organization := "me.sgrouples",
     scalaVersion := "2.13.8",
     isSnapshot := false,
@@ -40,25 +43,33 @@ object RogueSettings {
     Test / logBuffered := false,
     Test / parallelExecution := false,
     resolvers ++= Seq(nexusReleases, nexusSnapshots),
-    scalacOptions ++= Seq("-deprecation", "-unchecked", "-Yrangepos"), //, "-Ymacro-debug-lite"),
+    scalacOptions ++= Seq(
+      "-deprecation",
+      "-unchecked",
+      "-Yrangepos"
+    ), //, "-Ymacro-debug-lite"),
     //, "-P:semanticdb:synthetics:on"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
     scalacOptions ++= Seq("-feature", "-language:_"),
     semanticdbVersion := scalafixSemanticdb.revision,
-    scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
-    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials") ,
-    Test / testOptions ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(()=> MongoEmbedded.stop))
-	) ++ macroSettings
+    scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(
+      scalaVersion.value
+    ),
+    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials"),
+    Test / testOptions ++= Seq(
+      Tests.Setup(() => MongoEmbedded.start),
+      Tests.Cleanup(() => MongoEmbedded.stop)
+    )
+  ) ++ macroSettings
 }
 
 object RogueDependencies {
   val mongoVer = "4.5.0"
   val nettyVer = "4.1.74.Final"
 
-
-  val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
+  val bosnDeps = Seq("org.mongodb" % "bson" % mongoVer % Compile)
 
   val mongoDeps = Seq(
-    "org.mongodb.scala"        %% "mongo-scala-driver" % mongoVer    % Compile
+    "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer % Compile
   )
 
   val testDeps = Seq(
@@ -73,5 +84,5 @@ object RogueDependencies {
 
   val coreDeps = mongoDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless)  ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(shapeless) ++ testDeps
 }
