@@ -227,9 +227,17 @@ trait CcRogue {
       f: CClassArrayField[C, M, O]
   ): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
 
+  given[C, M <: CcMeta[C], O]: Conversion[CClassArrayField[C, M, O], CClassArrayModifyField[C, M, O]] with
+    def apply(f: CClassArrayField[C, M, O]): CClassArrayModifyField[C, M, O] =
+      new CClassArrayModifyField[C, M, O](f)
+
   implicit def optCcArrayFieldToCCArrayModifyField[C, M <: CcMeta[C], O](
       f: OptCClassArrayField[C, M, O]
   ): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
+  
+  given[C, M <: CcMeta[C], O]: Conversion[OptCClassArrayField[C, M, O], CClassArrayModifyField[C, M, O]] with
+    def apply(f: OptCClassArrayField[C, M, O]): CClassArrayModifyField[C, M, O] =
+      new CClassArrayModifyField[C, M, O](f)
 
   implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](
       f: RField[LocalDateTime, O]

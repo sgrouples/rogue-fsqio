@@ -291,10 +291,10 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
     *   @tparam E
     * @return
     */
-  protected def EnumIdField[E <: Enumeration: TypeTag](
+  protected def EnumIdField[E <: Enumeration](
       e: E
   ): EnumIdField[E, Meta]  = named(new EnumIdField[E, Meta](_, this, e))
-  protected def EnumIdField[E <: Enumeration: TypeTag](
+  protected def EnumIdField[E <: Enumeration](
       name: String,
       e: E
   ): EnumIdField[E, Meta]  =

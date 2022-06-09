@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 
 import me.sgrouples.rogue.*
-import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.cc.macros.*
 import org.bson.types.ObjectId
 import munit.FunSuite
