@@ -12,8 +12,9 @@ case class CaseClass1(id: Long)
 
 case class CaseClass2(id: Long)
 
-object SubtypedClass extends TypedObjectId[SubtypedClass, SubtypedClass]
 case class SubtypedClass(id: SubtypedClass.Id)
+
+object SubtypedClass extends TypedObjectId[SubtypedClass, SubtypedClass]
 
 trait Tag
 

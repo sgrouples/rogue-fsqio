@@ -10,6 +10,7 @@ import me.sgrouples.rogue.tags.*
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDateTime}
 import java.util.{Currency, Locale, UUID}
+import me.sgrouples.rogue.map.MapKeyFormat
 
 object VenueStatus extends Enumeration {
   type VenueStatus = Value
@@ -139,7 +140,7 @@ object Metas {
       with QueryFieldHelpers[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
     val status = EnumField("status", ClaimStatus)
-    val source = OptClassField("source", SourceBsonR)
+    val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
     val date = LocalDateTimeField("date")
   }
 
@@ -156,7 +157,7 @@ object Metas {
       extends MCcMeta[Venue, VenueRMeta](PluralLowerCase)
       with IndexBuilder[VenueRMeta] {
 
-    val id = ObjectIdSubtypeField("_id")
+    val id = ObjectIdTaggedField[Venue]("_id")
     val mayor = LongField("mayor")
     val venuename = StringField("venuename")
     val closed = BooleanField("closed")
@@ -200,7 +201,8 @@ object Metas {
     val id = new ObjectIdField("_id", this)
     val legacyid = new LongField("legid", this)
     val userId = new OptLongField("userId", this)
-    val counts = new MapField("counts", this)
+    implicit val keyFormat: MapKeyFormat[String] = summon // TODO why is this needed
+    val counts = new MapField[String, Long, TipR.type]("counts", this)
   }
 
   object OAuthConsumerR extends MCcMeta[OAuthConsumer, OAuthConsumerR.type]("oauthconsumers") {

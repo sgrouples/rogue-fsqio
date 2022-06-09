@@ -12,6 +12,14 @@ src_managed/
 project/boot/
 project/plugins/project/
 
+# metals
+.bloop/
+.bsp/
+.metals/
+project/.bloop/
+project/metals.sbt
+project/project/
+
 # Scala-IDE specific
 .scala_dependencies
 .worksheet

@@ -44,10 +44,10 @@ trait TypedObjectId[RecordType, TagType] {
     override def compare(x: Id, y: Id): Int = x.compareTo(y)
   }
 }
-object A extends TypedObjectId[A, A]
 
 case class A(_id: A.Id, b: String)
 
+object A extends TypedObjectId[A, A]
 
 class ObjectIdSubtypeSpec extends FunSuite {
 
@@ -99,9 +99,9 @@ trait TypedStringId[RecordType, TagType] {
   }
 }
 
-object B extends TypedStringId[B, B]
-
 case class B(id: B.Id)
+
+object B extends TypedStringId[B, B]
 
 class StringTaggedSpec extends FunSuite {
 

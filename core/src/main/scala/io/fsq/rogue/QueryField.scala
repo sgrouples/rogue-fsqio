@@ -185,7 +185,7 @@ class DateTimeQueryField[M](field: Field[Instant, M])
     new GtEqQueryClause(field.name, new Date(d.toEpochMilli))
 }
 
-class EnumNameQueryField[M, E <: Enumeration, V <: Enumeration#Value](field: Field[V, M] with EnumInstance[E])
+class EnumNameQueryField[M, V <: Enumeration#Value](field: Field[V, M])
     extends AbstractQueryField[V, V, String, M](field) {
   override def valueToDB(e: V) = e.toString
 }
