@@ -15,6 +15,7 @@ object VenueStatus extends Enumeration {
   type VenueStatus = Value
   val open = Value("Open")
   val closed = Value("Closed")
+  given MacroBsonFormat[VenueStatus.Value] = EnumMacroFormats.enumNameMacroFormat(VenueStatus)
 }
 object ClaimStatus extends Enumeration {
   type ClaimStatus = Value

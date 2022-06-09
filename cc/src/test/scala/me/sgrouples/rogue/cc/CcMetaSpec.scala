@@ -4,14 +4,12 @@ import org.bson.types.ObjectId
 import munit.FunSuite
 import me.sgrouples.rogue.tags.*
 import me.sgrouples.rogue.cc.macros.*
-    
+
 case class IdOneEnum(_id: ObjectId, one: String, en: VenueStatus.Value)
 
 class CcMetaSpec extends FunSuite {
 
   test("Meta R should work as expected") {
-    //reguired implicits for implicit call of BsonFormat[IdOneEnum] inside constructor of RCcMeta[IdOneEnum]
-    implicit val ev = VenueStatus
     object IdOneEnumR extends MCcMeta[IdOneEnum, IdOneEnumR.type]("idoneenum")
     val elem = IdOneEnum(new ObjectId(), "One", VenueStatus.closed)
     val bson = IdOneEnumR.write(elem)
