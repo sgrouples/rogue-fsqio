@@ -7,6 +7,7 @@ import me.sgrouples.rogue.map.MapKeyFormats.{given, *}
 import org.bson.types.ObjectId
 //import me.sgrouples.rogue.EnumNameFormats._
 import java.util.UUID
+import me.sgrouples.rogue.cc.innertest.*
 
 case class CaseClass1(id: Long)
 
