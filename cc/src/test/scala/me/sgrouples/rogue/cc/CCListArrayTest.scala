@@ -25,26 +25,10 @@ object InnerR extends MCcMeta[Inner, InnerR.type]("") {
 
 object OuterR extends MCcMeta[Outer, OuterR.type] {
   val id = new ObjectIdField("_id", this)
-  val innerList = new CClassListField[Inner, InnerR.type, OuterR.type](
-    "innerList",
-    InnerR,
-    this
-  )
-  val innerArray = new CClassArrayField[Inner, InnerR.type, OuterR.type](
-    "innerArray",
-    InnerR,
-    this
-  )
-  val innerOptArray = new OptCClassArrayField[Inner, InnerR.type, OuterR.type](
-    "innerOptArray",
-    InnerR,
-    this
-  )
-  val innerOptList = new OptCClassListField[Inner, InnerR.type, OuterR.type](
-    "innerOptList",
-    InnerR,
-    this
-  )
+  val innerList = ClassListField("innerList", InnerR)
+  val innerArray = ClassArrayField("innerArray", InnerR)
+  val innerOptArray = OptClassArrayField("innerOptArray", InnerR)
+  val innerOptList = OptClassListField("innerOptList", InnerR)
 }
 
 class CCListArrayTest extends FunSuite {
