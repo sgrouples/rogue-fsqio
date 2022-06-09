@@ -5,7 +5,7 @@ package me.sgrouples.rogue.cc
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 import io.fsq.rogue._
-import CcRogue._
+import CcRogue.{given, *}
 import munit.FunSuite
 
 import java.util.regex.Pattern

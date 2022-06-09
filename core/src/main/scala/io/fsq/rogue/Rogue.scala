@@ -74,7 +74,7 @@ trait Rogue {
       M,
       F <: Enumeration#Value,
       CC[_] <: Seq[_]
-  ](f: RField[CC[F], M] with EnumInstance[_]): EnumerationSeqQueryField[F, M, CC] =
+  ](f: RField[CC[F], M]): EnumerationSeqQueryField[F, M, CC] =
     new EnumerationSeqQueryField[F, M, CC](f)
   implicit def rlatLongFieldToGeoQueryField[M](
       f: RField[LatLong, M]

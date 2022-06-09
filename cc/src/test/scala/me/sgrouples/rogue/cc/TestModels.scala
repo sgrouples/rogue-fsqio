@@ -1,7 +1,7 @@
 package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder, Text}
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.map.MapKeyFormats.* // macros should import MapKeyFormats automatically!!!
+import me.sgrouples.rogue.map.MapKeyFormats.{given, *} // macros should import MapKeyFormats automatically!!!
 //import me.sgrouples.rogue.EnumNameFormats._
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.naming.PluralLowerCase
@@ -10,7 +10,6 @@ import me.sgrouples.rogue.tags.*
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDateTime}
 import java.util.{Currency, Locale, UUID}
-import me.sgrouples.rogue.map.MapKeyFormat
 
 object VenueStatus extends Enumeration {
   type VenueStatus = Value
@@ -201,7 +200,6 @@ object Metas {
     val id = new ObjectIdField("_id", this)
     val legacyid = new LongField("legid", this)
     val userId = new OptLongField("userId", this)
-    implicit val keyFormat: MapKeyFormat[String] = summon // TODO why is this needed
     val counts = new MapField[String, Long, TipR.type]("counts", this)
   }
 

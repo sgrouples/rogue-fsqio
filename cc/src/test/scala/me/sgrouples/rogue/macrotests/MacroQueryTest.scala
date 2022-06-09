@@ -3,7 +3,7 @@ package me.sgrouples.rogue.macrotests
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 import io.fsq.rogue._
-import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import munit.Clue.generate
 import java.util.regex.Pattern
 import me.sgrouples.rogue.cc.{
