@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder, Text}
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.map.MapKeyFormats.{given, *} // macros should import MapKeyFormats automatically!!!
 //import me.sgrouples.rogue.EnumNameFormats._
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.naming.PluralLowerCase
@@ -21,6 +20,7 @@ object ClaimStatus extends Enumeration {
   type ClaimStatus = Value
   val pending = Value("Pending approval")
   val approved = Value("Approved")
+  given MacroBsonFormat[ClaimStatus.Value] = EnumMacroFormats.enumNameMacroFormat(ClaimStatus)
 }
 
 object RejectReason extends Enumeration {
@@ -28,6 +28,7 @@ object RejectReason extends Enumeration {
   val tooManyClaims = Value("too many claims")
   val cheater = Value("cheater")
   val wrongCode = Value("wrong code")
+  given MacroBsonFormat[RejectReason.Value] = EnumMacroFormats.enumNameMacroFormat(RejectReason)
 }
 
 case class V1(legacyid: Long)
@@ -117,6 +118,7 @@ case class Comment(comments: List[OneComment])
 object ConsumerPrivilege extends Enumeration {
   type ConsumerPrivilege = Value
   val awardBadges = Value("Award badges")
+  given MacroBsonFormat[ConsumerPrivilege.Value] = EnumMacroFormats.enumNameMacroFormat(ConsumerPrivilege)
 }
 
 case class OAuthConsumer(privileges: List[ConsumerPrivilege.Value])

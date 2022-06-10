@@ -1,5 +1,5 @@
 package me.sgrouples.rogue.cc
-import me.sgrouples.rogue.map.{MapKeyFormat, MapKeyFormats}
+import me.sgrouples.rogue.map.MapKeyFormat 
 import org.bson.types.ObjectId
 
 package object macros {

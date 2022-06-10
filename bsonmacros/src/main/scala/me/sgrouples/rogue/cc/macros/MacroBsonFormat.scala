@@ -11,7 +11,6 @@ import org.bson.types.{Decimal128, ObjectId}
 import scala.collection.Factory
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
-import me.sgrouples.rogue.map.MapKeyFormats
 
 @implicitNotFound("MacroGen can't generate for ${T}")
 trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
@@ -494,10 +493,10 @@ object EnumMacroFormats extends EnumMacroFormats
 
 
 object MacroBsonFormat extends MacroBsonFormatDeriving:
-   import MapKeyFormats.{given, *}
    given MacroBsonFormat[Int] = IntMacroBsonFormat(0)
    given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
    given MacroBsonFormat[Double] = DoubleMacroBsonFormat(0d)
+   given MacroBsonFormat[BigDecimal] = BigDecimalMacroBsonFormat()
    given MacroBsonFormat[Boolean] = BooleanMacroBsonFormat(false)
    given MacroBsonFormat[String] = StringMacroBsonFormat("")
    given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()
@@ -526,6 +525,9 @@ object MacroBsonFormat extends MacroBsonFormatDeriving:
 
    implicit def vectorMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Vector[T]] =
      IterableLikeMacroFormat[T, Vector[T]](tf)
+   
+   implicit def setMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Set[T]] =
+     IterableLikeMacroFormat[T, Set[T]](tf)
 
    implicit def mapMacroFormat[K, T](using tf: MacroBsonFormat[T])(using MapKeyFormat[K]): MacroBsonFormat[Map[K, T]] =
      MapMacroFormat[K, T](tf, summon[MapKeyFormat[K]])

@@ -80,8 +80,7 @@ class MacroMapFormatSpec extends FunSuite {
   }
 
   class MapMeta extends MCcMeta[MapStrLong, MapMeta]("omm") {
-    import me.sgrouples.rogue.map.MapKeyFormats.*
-    val value = MapField("value") //(StringMapKeyFormat)
+    val value = MapField[String, Long]("value") //(StringMapKeyFormat)
   }
   test("deal with type aliases") {
     val meta = new MapMeta
