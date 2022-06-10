@@ -11,9 +11,14 @@ import io.netty.channel.socket.nio.NioSocketChannel
 
 import java.util.concurrent.Executors
 
+import com.dimafeng.testcontainers.MongoDBContainer
+import org.testcontainers.utility.DockerImageName
+
 object MongoTestConn {
 
   var client: Option[MongoClient] = None
+  private val containerDef = MongoDBContainer.Def(DockerImageName.parse("mongo:4.2.17"))
+  private var containerRef: Option[MongoDBContainer] = None
 
   def create(threadNamePrefix: String): EventLoopGroup = {
     if (Epoll.isAvailable) {
@@ -33,15 +38,13 @@ object MongoTestConn {
   }
 
   def connectToMongo(): MongoClient = {
-    val (host, port) = Option(System.getProperty("default.mongodb.server"))
-      .map({ str =>
-        val arr = str.split(':')
-        (arr(0), arr(1).toInt)
-      })
-      .getOrElse(("localhost", 51101))
+    if (containerRef.isEmpty) {
+      val mongo = containerDef.start()
+      containerRef = Some(mongo)
+    }
     val sff = nettyStreamFactoryFactory(create("XX"))
     val settings = MongoClientSettings.builder()
-      .applyConnectionString(ConnectionString(s"mongodb://${host}:${port}"))
+      .applyConnectionString(ConnectionString(containerRef.map(_.replicaSetUrl).getOrElse(throw RuntimeException("Mongo container is empty"))))
       .streamFactoryFactory(sff)
       .uuidRepresentation(UuidRepresentation.JAVA_LEGACY)
       .build()
