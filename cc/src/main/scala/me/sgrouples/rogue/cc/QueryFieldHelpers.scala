@@ -258,11 +258,12 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
     */
   protected def EnumField[E <: Enumeration](
       e: E
-  ): EnumField[E, Meta]  = named(new EnumField[E, Meta](_, this, e))
+  ): EnumField[e.Value, Meta]  = named(new EnumField[e.Value, Meta](_, this, e(0)))
+
   protected def EnumField[E <: Enumeration](
       name: String,
       e: E
-  ): EnumField[E, Meta]  = named(name)(new EnumField[E, Meta](_, this, e))
+  ): EnumField[e.Value, Meta]  = named(name)(new EnumField[e.Value, Meta](_, this, e(0)))
 
   /** This version of the EnumField method accepts e: E as a param to avoid ugly
     * type parameters like [MyEnum.type] So instead of writting val myEnum =
@@ -290,10 +291,10 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
     *   @tparam E
     * @return
     */
-  protected def EnumIdField[E <: Enumeration: TypeTag](
+  protected def EnumIdField[E <: Enumeration](
       e: E
   ): EnumIdField[E, Meta]  = named(new EnumIdField[E, Meta](_, this, e))
-  protected def EnumIdField[E <: Enumeration: TypeTag](
+  protected def EnumIdField[E <: Enumeration](
       name: String,
       e: E
   ): EnumIdField[E, Meta]  =

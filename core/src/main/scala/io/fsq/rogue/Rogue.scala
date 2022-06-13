@@ -67,14 +67,14 @@ trait Rogue {
       f: RField[DBObject, M]
   ): QueryField[DBObject, M] = new QueryField(f)
 
-  implicit def renumNameFieldToEnumNameQueryField[M, E <: Enumeration, F <: Enumeration#Value](
-      f: RField[F, M] with EnumInstance[E]
-  ): EnumNameQueryField[M, E, F] = new EnumNameQueryField(f)
+  implicit def renumNameFieldToEnumNameQueryField[M, F <: Enumeration#Value](
+      f: RField[F, M]
+  ): EnumNameQueryField[M, F] = new EnumNameQueryField(f)
   implicit def renumerationSeqFieldToEnumerationSeqQueryField[
       M,
       F <: Enumeration#Value,
       CC[_] <: Seq[_]
-  ](f: RField[CC[F], M] with EnumInstance[_]): EnumerationSeqQueryField[F, M, CC] =
+  ](f: RField[CC[F], M]): EnumerationSeqQueryField[F, M, CC] =
     new EnumerationSeqQueryField[F, M, CC](f)
   implicit def rlatLongFieldToGeoQueryField[M](
       f: RField[LatLong, M]

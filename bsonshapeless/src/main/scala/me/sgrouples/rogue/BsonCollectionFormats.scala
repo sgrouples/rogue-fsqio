@@ -1,6 +1,6 @@
 package me.sgrouples.rogue
 
-import me.sgrouples.rogue.map.{MapKeyFormat, MapKeyFormats}
+import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
 
 import scala.collection.mutable.ArrayBuffer
@@ -8,7 +8,6 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 trait BsonCollectionFormats extends TraversableLikeFormats {
-  requires: MapKeyFormats =>
   import scala.jdk.CollectionConverters._
 
   implicit def setFormat[T](using f: BsonFormat[T]): BsonFormat[Set[T]] =

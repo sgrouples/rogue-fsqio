@@ -3,11 +3,10 @@ package me.sgrouples.rogue.cc
 import java.time.Instant
 
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.C
 import org.bson.types.ObjectId
 import munit.FunSuite
 trait QueryById[M] {
-  requires: QueryFieldHelpers[M] =>
+  requires: QueryFieldHelpers[M] & M =>
 
   val thisIsWhatFails = ObjectIdField("_id")
 

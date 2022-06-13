@@ -3,7 +3,7 @@ package me.sgrouples.rogue.macrotests
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 import io.fsq.rogue._
-import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import munit.Clue.generate
 import java.util.regex.Pattern
 import me.sgrouples.rogue.cc.{
@@ -1419,7 +1419,7 @@ assertEquals(      Comment.where(_.comments.unsafeField[String]("comment") conta
     // $or with optional where clause
     assertEquals(
       VenueR
-        .or(_.where(_.legacyid eqs 1), _.whereOpt(None)(_.mayor eqs _))
+        .or(_.where(_.legacyid eqs 1), _.whereOpt(Option.empty[Long])(_.mayor eqs _))
         .modify(_.userId setTo 1)
         .q,
       pq(

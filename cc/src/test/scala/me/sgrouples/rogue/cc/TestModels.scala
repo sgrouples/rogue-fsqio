@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder, Text}
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.map.MapKeyFormats.* // macros should import MapKeyFormats automatically!!!
 //import me.sgrouples.rogue.EnumNameFormats._
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.naming.PluralLowerCase
@@ -15,11 +14,13 @@ object VenueStatus extends Enumeration {
   type VenueStatus = Value
   val open = Value("Open")
   val closed = Value("Closed")
+  given MacroBsonFormat[VenueStatus.Value] = EnumMacroFormats.enumNameMacroFormat(VenueStatus)
 }
 object ClaimStatus extends Enumeration {
   type ClaimStatus = Value
   val pending = Value("Pending approval")
   val approved = Value("Approved")
+  given MacroBsonFormat[ClaimStatus.Value] = EnumMacroFormats.enumNameMacroFormat(ClaimStatus)
 }
 
 object RejectReason extends Enumeration {
@@ -27,6 +28,7 @@ object RejectReason extends Enumeration {
   val tooManyClaims = Value("too many claims")
   val cheater = Value("cheater")
   val wrongCode = Value("wrong code")
+  given MacroBsonFormat[RejectReason.Value] = EnumMacroFormats.enumNameMacroFormat(RejectReason)
 }
 
 case class V1(legacyid: Long)
@@ -116,6 +118,7 @@ case class Comment(comments: List[OneComment])
 object ConsumerPrivilege extends Enumeration {
   type ConsumerPrivilege = Value
   val awardBadges = Value("Award badges")
+  given MacroBsonFormat[ConsumerPrivilege.Value] = EnumMacroFormats.enumNameMacroFormat(ConsumerPrivilege)
 }
 
 case class OAuthConsumer(privileges: List[ConsumerPrivilege.Value])
@@ -139,7 +142,7 @@ object Metas {
       with QueryFieldHelpers[VenueClaimBsonRMeta] {
     val uid = LongField("uid")
     val status = EnumField("status", ClaimStatus)
-    val source = OptClassField("source", SourceBsonR)
+    val source = OptClassField[SourceBson, SourceBsonR.type]("source", SourceBsonR)
     val date = LocalDateTimeField("date")
   }
 
@@ -156,7 +159,7 @@ object Metas {
       extends MCcMeta[Venue, VenueRMeta](PluralLowerCase)
       with IndexBuilder[VenueRMeta] {
 
-    val id = ObjectIdSubtypeField("_id")
+    val id = ObjectIdTaggedField[Venue]("_id")
     val mayor = LongField("mayor")
     val venuename = StringField("venuename")
     val closed = BooleanField("closed")
@@ -200,7 +203,7 @@ object Metas {
     val id = new ObjectIdField("_id", this)
     val legacyid = new LongField("legid", this)
     val userId = new OptLongField("userId", this)
-    val counts = new MapField("counts", this)
+    val counts = new MapField[String, Long, TipR.type]("counts", this)
   }
 
   object OAuthConsumerR extends MCcMeta[OAuthConsumer, OAuthConsumerR.type]("oauthconsumers") {

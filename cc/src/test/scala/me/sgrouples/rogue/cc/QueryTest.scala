@@ -5,7 +5,7 @@ package me.sgrouples.rogue.cc
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 import io.fsq.rogue._
-import CcRogue._
+import CcRogue.{given, *}
 import munit.FunSuite
 
 import java.util.regex.Pattern
@@ -878,7 +878,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
       pq(query + """{"$set": {"mayor_count": {"$numberLong": "3"}}}""" + suffix)
     )
     assertEquals(
-      VenueR.where(_.legacyid eqs 1).modify(_.mayor_count unset).q,
+      VenueR.where(_.legacyid eqs 1).modify(_.mayor_count.unset).q,
       pq(query + """{"$unset": {"mayor_count": 1}}""" + suffix)
     )
     assertEquals(
@@ -1041,7 +1041,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
       pq(query3 + """{"$inc": {"counts.foo": 5}}""" + suffix)
     )
     assertEquals(
-      TipR.where(_.legacyid eqs 1).modify(_.counts at "foo" unset).q,
+      TipR.where(_.legacyid eqs 1).modify(_.counts.at("foo").unset).q,
       pq(query3 + """{"$unset": {"counts.foo": 1}}""" + suffix)
     )
     assertEquals(
@@ -1467,7 +1467,7 @@ assertEquals(    Comment.where(_.comments.unsafeField[String]("comment") contain
     // $or with optional where clause
     assertEquals(
       VenueR
-        .or(_.where(_.legacyid eqs 1), _.whereOpt(None)(_.mayor eqs _))
+        .or(_.where(_.legacyid eqs 1), _.whereOpt(Option.empty[Long])(_.mayor eqs _))
         .modify(_.userId setTo 1)
         .q,
       pq(

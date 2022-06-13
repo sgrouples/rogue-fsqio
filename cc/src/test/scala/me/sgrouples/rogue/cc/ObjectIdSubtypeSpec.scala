@@ -1,4 +1,4 @@
-package me.sgrouples.rogue.cc
+package me.sgrouples.rogue.cc.innertest // TODO why this package name matters
 
 import java.util.UUID
 
@@ -44,10 +44,10 @@ trait TypedObjectId[RecordType, TagType] {
     override def compare(x: Id, y: Id): Int = x.compareTo(y)
   }
 }
-object A extends TypedObjectId[A, A]
 
 case class A(_id: A.Id, b: String)
 
+object A extends TypedObjectId[A, A]
 
 class ObjectIdSubtypeSpec extends FunSuite {
 
@@ -57,13 +57,13 @@ class ObjectIdSubtypeSpec extends FunSuite {
   val X = new MetaA
   val t: Query[
     MetaA,
-    cc.A.Id,
+    A.Id,
     Unordered with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified with SelectedOne
   ] = X.select(_.id)
 
   test("t should compile") {
     //should compile ..
-    val t: Query[_, me.sgrouples.rogue.cc.A.Id, _] = X.select(_.id)
+    val t: Query[_, A.Id, _] = X.select(_.id)
   }
 }
 
@@ -99,9 +99,9 @@ trait TypedStringId[RecordType, TagType] {
   }
 }
 
-object B extends TypedStringId[B, B]
-
 case class B(id: B.Id)
+
+object B extends TypedStringId[B, B]
 
 class StringTaggedSpec extends FunSuite {
 
@@ -110,11 +110,11 @@ class StringTaggedSpec extends FunSuite {
   }
 
   val X = new MetaB
-  val id: cc.B.Id = cc.B.Id.get()
-  val t: Query[MetaB, cc.B.Id, _] = X.select(_.id).where(_.id eqs id)
+  val id: B.Id = B.Id.get()
+  val t: Query[MetaB, B.Id, _] = X.select(_.id).where(_.id eqs id)
 
   test("t should compile") {
-    val t: Query[_, me.sgrouples.rogue.cc.B.Id, _] =
+    val t: Query[_, B.Id, _] =
       X.select(_.id).where(_.id eqs id)
   }
 }

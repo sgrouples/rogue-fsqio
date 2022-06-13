@@ -5,7 +5,7 @@ import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.{Currency, Locale, TimeZone, UUID}
 
 //import me.sgrouples.rogue.enums.ReflectEnumInstance
-import me.sgrouples.rogue.map.{MapKeyFormat, MapKeyFormats}
+import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson._
 import org.bson.types.{Decimal128, ObjectId}
 import scala.deriving.Mirror
@@ -21,7 +21,6 @@ import scala.language.implicitConversions
 trait StandardBsonFormats
     extends BaseBsonFormats
     with BsonCollectionFormats
-    with MapKeyFormats
 
 object BsonFormats extends StandardBsonFormats with BsonFormats
 

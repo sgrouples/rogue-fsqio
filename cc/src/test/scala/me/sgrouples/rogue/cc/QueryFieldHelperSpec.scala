@@ -1,6 +1,5 @@
 package me.sgrouples.rogue.cc
 
-import me.sgrouples.rogue.{BsonFormats, EnumNameFormats}
 import org.bson.types.ObjectId
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.cc.macros.*

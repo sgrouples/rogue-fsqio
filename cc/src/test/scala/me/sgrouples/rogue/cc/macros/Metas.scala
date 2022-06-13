@@ -9,7 +9,6 @@ import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
 import me.sgrouples.rogue.tags.*
-import me.sgrouples.rogue.map.MapKeyFormats.{given, *}
 
 case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
 
@@ -130,7 +129,6 @@ object Metas {
       counts: Map[ObjectId, Long]
   )
 
-  import me.sgrouples.rogue.map.MapKeyFormats.ObjectIdMapKeyFormat
   class CounterMeta extends MCcMeta[MCounter, CounterMeta] {
     val id = ObjectIdField("_id")
     val counts = MapField[ObjectId, Long]("counts")
@@ -145,7 +143,6 @@ object Metas {
       counts: Map[CounterId, Long]
   )
 
-  import me.sgrouples.rogue.map.MapKeyFormats.objectIdSubtypeMapKeyFormat
   class TypedCounterMeta extends MCcMeta[TypedCounter, TypedCounterMeta] {
     val id = ObjectIdField("_id")
     val counts = MapField[CounterId,Long]("counts") 
