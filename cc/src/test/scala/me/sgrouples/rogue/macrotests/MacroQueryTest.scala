@@ -24,8 +24,7 @@ import me.sgrouples.rogue.cc.{
 import me.sgrouples.rogue.QueryParser._
 import org.bson.types._
 import munit.FunSuite
-import shapeless.tag
-import shapeless.tag.@@
+import com.softwaremill.tagging._
 import org.bson.types._
 
 //TODO - drop signature()

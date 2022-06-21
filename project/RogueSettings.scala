@@ -81,8 +81,8 @@ object RogueDependencies {
   )
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
-
+  val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
   val coreDeps = mongoDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless) ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(shapeless, tagging) ++ testDeps
 }

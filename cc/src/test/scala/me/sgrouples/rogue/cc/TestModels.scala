@@ -5,8 +5,7 @@ import me.sgrouples.rogue.EnumNameFormats._
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
-import shapeless.tag
-import shapeless.tag.@@
+import com.softwaremill.tagging._
 
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDateTime}

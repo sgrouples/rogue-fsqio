@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc
 
 import org.bson.types.ObjectId
 import munit.FunSuite
-import shapeless.tag._
+import com.softwaremill.tagging._
 
 case class IdOneEnum(_id: ObjectId, one: String, en: VenueStatus.Value)
 

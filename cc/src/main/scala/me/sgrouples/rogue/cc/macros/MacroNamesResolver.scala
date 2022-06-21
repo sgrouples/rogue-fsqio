@@ -3,8 +3,7 @@ package me.sgrouples.rogue.cc.macros
 import java.util.concurrent.atomic.AtomicInteger
 
 import me.sgrouples.rogue.cc.{Marker, NamesResolver}
-import shapeless.tag
-import shapeless.tag.@@
+import com.softwaremill.tagging._
 
 import scala.collection.mutable
 
@@ -40,7 +39,7 @@ trait MacroNamesResolver[T] extends NamesResolver {
       )
     fields += (name -> field)
 
-    tag[Marker][T](field)
+    field.taggedWith[Marker]
   }
   override def named[T <: io.fsq.field.Field[_, _]](
       func: String => T

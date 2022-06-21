@@ -9,7 +9,7 @@ import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.types.ObjectId
 import shapeless._
 import shapeless.labelled.{FieldType, field}
-import shapeless.tag.@@
+import com.softwaremill.tagging._
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
@@ -30,7 +30,7 @@ class IntField[O](name: String, o: O) extends MCField[Int, O](name, o) {
 
 class IntTaggedField[Tag, O](name: String, o: O)
     extends MCField[Int @@ Tag, O](name, o) {
-  override def defaultValue: Int @@ Tag = tag[Tag][Int](0)
+  override def defaultValue: Int @@ Tag = 0.taggedWith[Tag]
 }
 
 class LongField[O](name: String, o: O) extends MCField[Long, O](name, o) {
@@ -44,7 +44,7 @@ class BigDecimalField[O](name: String, o: O)
 
 class LongTaggedField[Tag, O](name: String, o: O)
     extends MCField[Long @@ Tag, O](name, o) {
-  override def defaultValue: Long @@ Tag = tag[Tag][Long](0L)
+  override def defaultValue: Long @@ Tag = 0L.taggedWith[Tag]
 }
 
 class DoubleField[O](name: String, o: O) extends MCField[Double, O](name, o) {
@@ -56,7 +56,7 @@ class StringField[O](name: String, o: O) extends MCField[String, O](name, o) {
 
 class StringTaggedField[Tag, O](name: String, o: O)
     extends MCField[String @@ Tag, O](name, o) {
-  override def defaultValue: String @@ Tag = tag[Tag][String]("")
+  override def defaultValue: String @@ Tag = "".taggedWith[Tag]
 }
 
 class ObjectIdField[O](name: String, o: O)
@@ -67,7 +67,7 @@ class ObjectIdField[O](name: String, o: O)
 class ObjectIdTaggedField[Tag, O](name: String, o: O)
     extends MCField[ObjectId @@ Tag, O](name, o) {
   override def defaultValue: ObjectId @@ Tag =
-    tag[Tag][ObjectId](ObjectId.get())
+    ObjectId.get().taggedWith[Tag]
 }
 
 /*
@@ -84,7 +84,7 @@ class UUIDIdField[O](name: String, o: O) extends MCField[UUID, O](name, o) {
 
 class UUIDIdTaggedField[Tag, O](name: String, o: O)
     extends MCField[UUID @@ Tag, O](name, o) {
-  override def defaultValue: UUID @@ Tag = tag[Tag][UUID](UUID.randomUUID())
+  override def defaultValue: UUID @@ Tag = UUID.randomUUID().taggedWith[Tag]
 }
 
 class LocalDateTimeField[O](name: String, o: O)
