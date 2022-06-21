@@ -571,13 +571,13 @@ assertEquals(      VenueR.where(_.geolatlng nearSphere (39.0, -74.0, Radians(1.0
 
     // select case queries
     assertEquals(
-      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, V1).q,
+      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, V1.apply).q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "_id": 0})"""
       )
     )
     assertEquals(
-      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, _.userId, V2).q,
+      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, _.userId, V2.apply).q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "_id": 0})"""
       )
@@ -585,7 +585,7 @@ assertEquals(      VenueR.where(_.geolatlng nearSphere (39.0, -74.0, Radians(1.0
     assertEquals(
       VenueR
         .where(_.mayor eqs 1)
-        .selectCase(_.legacyid, _.userId, _.mayor, V3)
+        .selectCase(_.legacyid, _.userId, _.mayor, V3.apply)
         .q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "mayor": 1, "_id": 0})"""
@@ -594,7 +594,7 @@ assertEquals(      VenueR.where(_.geolatlng nearSphere (39.0, -74.0, Radians(1.0
     assertEquals(
       VenueR
         .where(_.mayor eqs 1)
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "mayor": 1, "mayor_count": 1, "_id": 0})"""
@@ -603,7 +603,7 @@ assertEquals(      VenueR.where(_.geolatlng nearSphere (39.0, -74.0, Radians(1.0
     assertEquals(
       VenueR
         .where(_.mayor eqs 1)
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
         .q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "mayor": 1, "mayor_count": 1, "closed": 1, "_id": 0})"""
@@ -619,7 +619,7 @@ assertEquals(      VenueR.where(_.geolatlng nearSphere (39.0, -74.0, Radians(1.0
           _.mayor_count,
           _.closed,
           _.tags,
-          V6
+          V6.apply
         )
         .q,
       pq(

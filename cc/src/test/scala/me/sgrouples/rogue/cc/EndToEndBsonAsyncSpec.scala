@@ -242,23 +242,23 @@ class EndToEndBsonAsyncSpec extends FunSuite {
     for {
       _ <- VenueR.insertOneAsync(v)
 
-      _ <- base.selectCase(_.legacyid, V1).fetchAsync().map {
+      _ <- base.selectCase(_.legacyid, V1.apply).fetchAsync().map {
         assertEquals(_, List(V1(v.legId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, V2).fetchAsync().map {
+      _ <- base.selectCase(_.legacyid, _.userId, V2.apply).fetchAsync().map {
         assertEquals(_, List(V2(v.legId, v.userId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetchAsync().map {
+      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3.apply).fetchAsync().map {
         assertEquals(_, List(V3(v.legId, v.userId, v.mayor)))
       }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .fetchAsync()
         .map {
           assertEquals(_, List(V4(v.legId, v.userId, v.mayor, v.mayor_count)))
         }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
         .fetchAsync()
         .map {
           assertEquals(
@@ -274,7 +274,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
           _.mayor_count,
           _.closed,
           _.tags,
-          V6
+          V6.apply
         )
         .fetchAsync()
         .map {

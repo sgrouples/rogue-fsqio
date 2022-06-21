@@ -243,23 +243,23 @@ class MacroEndToEndSpec extends FunSuite {
       _ <- VenueR.insertOneAsync(v)
 
       base = VenueR.where(_.id eqs v._id)
-      _ <- base.selectCase(_.legacyid, V1).fetchAsync().map { res =>
+      _ <- base.selectCase(_.legacyid, V1.apply).fetchAsync().map { res =>
         assertEquals(res, List(V1(v.legId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, V2).fetchAsync().map { res =>
+      _ <- base.selectCase(_.legacyid, _.userId, V2.apply).fetchAsync().map { res =>
         assertEquals(res, List(V2(v.legId, v.userId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetchAsync().map {
+      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3.apply).fetchAsync().map {
         res => assertEquals(res, List(V3(v.legId, v.userId, v.mayor)))
       }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .fetchAsync()
         .map { res =>
           assertEquals(res, List(V4(v.legId, v.userId, v.mayor, v.mayor_count)))
         }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
         .fetchAsync()
         .map { res =>
           assertEquals(
@@ -275,7 +275,7 @@ class MacroEndToEndSpec extends FunSuite {
           _.mayor_count,
           _.closed,
           _.tags,
-          V6
+          V6.apply
         )
         .fetchAsync()
         .map { res =>
@@ -754,7 +754,7 @@ class MacroEndToEndSpec extends FunSuite {
 
     // samples.foreach { sample => Locales.insertOneAsync(LocaleData(sample)).futureValue }
     for {
-      _ <- Locales.insertManyAsync(samples.map(LocaleData))
+      _ <- Locales.insertManyAsync(samples.map(LocaleData.apply))
       seq <- Locales.where(_.locale in samples).select(_.locale).fetchAsync()
       _ <- Locales
         .where(_.locale eqs Locale.CANADA_FRENCH)
