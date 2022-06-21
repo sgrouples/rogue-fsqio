@@ -50,7 +50,7 @@ class MacroMapFormatSpec extends FunSuite {
   test("write/read objectId subtype keyed map") {
 
     val meta = new ObjectIdSubtypeMapMeta
-    val v = ObjectIdSubtypeMap(Map(tag[M](ObjectId.get()) -> 1))
+    val v = ObjectIdSubtypeMap(Map(ObjectId.get().taggedWith[M] -> 1))
     val bson = meta.write(v)
     assertEquals(meta.read(bson), v)
   }

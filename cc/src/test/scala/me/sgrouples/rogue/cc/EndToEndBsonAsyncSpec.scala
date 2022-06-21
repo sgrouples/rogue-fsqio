@@ -21,7 +21,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
   def baseTestVenue(): Venue = Venue(
-    _id = tag[Venue][ObjectId](new ObjectId()),
+    _id = new ObjectId().taggedWith[Venue],
     legId = 123L,
     userId = 456L,
     venuename = "test venue",
@@ -42,7 +42,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
     VenueClaim(
-      tag[VenueClaim][ObjectId](new ObjectId()),
+      new ObjectId().taggedWith[VenueClaim],
       vid,
       123L,
       ClaimStatus.approved
@@ -704,7 +704,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   test("Map[K <: ObjectId, V] field") {
-    val counts: Map[CounterId, Long] = Map(tag[Counter](ObjectId.get) -> 100L)
+    val counts: Map[CounterId, Long] = Map(ObjectId.get.taggedWith[Counter] -> 100L)
     val counter = TypedCounter(counts = counts)
 
     for {

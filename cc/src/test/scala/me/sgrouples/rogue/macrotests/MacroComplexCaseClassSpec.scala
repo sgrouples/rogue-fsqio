@@ -7,7 +7,7 @@ import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros._
 import org.bson.types.ObjectId
 import munit.FunSuite
-import shapeless._
+import com.softwaremill.tagging._
 
 class MacroComplexCaseClassSpec extends FunSuite {
 
@@ -27,9 +27,9 @@ class MacroComplexCaseClassSpec extends FunSuite {
       "Group",
       None,
       GroupModelType.one,
-      tag[AnyTag][String]("Ala"),
-      tag[User][ObjectId](id),
-      List(tag[User][ObjectId](id), tag[User][ObjectId](id)),
+      "Ala".taggedWith[AnyTag],
+      id.taggedWith[User],
+      List(id, id).taggedWithF[User],
       None,
       "color",
       None,

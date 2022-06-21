@@ -65,7 +65,7 @@ case class VenueClaimBson(
 )
 
 object VenueClaim {
-  def newId = tag[VenueClaim](new ObjectId())
+  def newId = new ObjectId().taggedWith[VenueClaim]
 }
 
 case class VenueClaim(
@@ -78,7 +78,7 @@ case class VenueClaim(
 )
 
 object Venue {
-  def newId = tag[Venue](new ObjectId())
+  def newId = new ObjectId().taggedWith[Venue]
 }
 
 case class Venue(
