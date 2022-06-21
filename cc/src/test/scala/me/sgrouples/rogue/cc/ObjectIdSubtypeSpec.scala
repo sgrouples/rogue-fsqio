@@ -7,8 +7,7 @@ import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.cc
 import org.bson.types.ObjectId
 import munit.FunSuite
-import shapeless.tag
-import shapeless.tag.@@
+import com.softwaremill.tagging._
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.CcRogue._
 
@@ -23,9 +22,9 @@ trait TypedObjectId[RecordType, TagType] {
 
   object Id {
 
-    def get(): Id = tag[TagType][ObjectId](new ObjectId)
+    def get(): Id = new ObjectId().taggedWith[TagType]
 
-    def apply(text: String): Id = tag[TagType][ObjectId](new ObjectId(text))
+    def apply(text: String): Id = new ObjectId(text).taggedWith[TagType]
 
     object Extract {
       def unapply(in: String): Option[Id] = try { Some(apply(in)) }
@@ -80,7 +79,7 @@ trait TypedStringId[RecordType, TagType] {
       apply(UUID.randomUUID().toString())
 
     def apply(text: String): Id =
-      tag[TagType][String](text)
+      text.taggedWith[TagType]
 
     object Extract {
       def unapply(in: String): Option[Id] = try { Some(apply(in)) }

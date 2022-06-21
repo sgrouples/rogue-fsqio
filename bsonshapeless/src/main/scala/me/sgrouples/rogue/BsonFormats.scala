@@ -12,7 +12,7 @@ import shapeless._
 import shapeless.labelled.{FieldType, field}
 
 import scala.language.implicitConversions
-import shapeless.tag.@@
+import com.softwaremill.tagging._
 
 /** serialize enums as names
   */
@@ -197,9 +197,9 @@ trait BaseBsonFormats {
       tb: BsonFormat[T]
   ): BasicBsonFormat[T @@ Tag] = {
     new BasicBsonFormat[T @@ Tag] {
-      override def read(b: BsonValue): T @@ Tag = tag[Tag][T](tb.read(b))
+      override def read(b: BsonValue): T @@ Tag = tb.read(b).taggedWith[Tag]
       override def write(t: T @@ Tag): BsonValue = tb.write(t)
-      override def defaultValue: T @@ Tag = tag[Tag][T](tb.defaultValue)
+      override def defaultValue: T @@ Tag = tb.defaultValue.taggedWith[Tag]
     }
   }
 

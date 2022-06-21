@@ -26,7 +26,7 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "6.1.0",
+    version := "6.1.0.a",
     organization := "me.sgrouples",
     scalaVersion := "2.13.8",
     isSnapshot := false,
@@ -81,8 +81,8 @@ object RogueDependencies {
   )
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
-
+  val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
   val coreDeps = mongoDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless) ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(shapeless, tagging) ++ testDeps
 }

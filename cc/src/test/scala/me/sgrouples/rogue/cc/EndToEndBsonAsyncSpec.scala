@@ -10,7 +10,7 @@ import munit.FunSuite
 import org.mongodb.scala.result.DeleteResult
 
 import scala.concurrent.duration._
-import shapeless.tag
+import com.softwaremill.tagging._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}

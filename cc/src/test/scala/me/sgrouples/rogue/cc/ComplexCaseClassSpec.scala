@@ -5,8 +5,7 @@ import java.time.temporal.{ChronoUnit}
 
 import org.bson.types.ObjectId
 import munit.FunSuite
-import shapeless.tag.@@
-import shapeless.tag
+import com.softwaremill.tagging._
 import me.sgrouples.rogue.BsonFormats._
 import me.sgrouples.rogue.EnumNameFormats._
 

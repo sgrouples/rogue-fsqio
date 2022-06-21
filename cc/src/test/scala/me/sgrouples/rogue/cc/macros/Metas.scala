@@ -7,7 +7,7 @@ import io.fsq.rogue.index.{Asc, Desc, IndexBuilder}
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
-import shapeless.tag.@@
+import com.softwaremill.tagging._
 
 case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
 

@@ -6,8 +6,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.cc.debug.Debug
 import org.bson.types.ObjectId
-import shapeless.tag
-import shapeless.tag._
+import com.softwaremill.tagging._
 
 import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe
@@ -240,7 +239,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
         s"Field with name $name is already defined"
       )
     fields.put(name, field)
-    tag[Marker][T](field)
+    field.taggedWith[Marker]
   }
 
   override def named[T <: io.fsq.field.Field[_, _]](
@@ -254,7 +253,7 @@ trait RuntimeNameResolver[Meta] extends NamesResolver {
         s"Field with name $name is already defined"
       )
     fields.put(name, field)
-    tag[Marker][T](field)
+    field.taggedWith[Marker]
   }
 
   private[cc] def debugInfo(id: Int): String = {
