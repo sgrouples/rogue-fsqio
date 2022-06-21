@@ -11,7 +11,7 @@ import munit.FunSuite
 import org.mongodb.scala.result.DeleteResult
 
 import scala.concurrent.duration._
-import me.sgrouples.rogue.tags.*
+import com.softwaremill.tagging.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -22,7 +22,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
   def baseTestVenue(): Venue = Venue(
-    _id = tag[Venue][ObjectId](new ObjectId()),
+    _id = new ObjectId().taggedWith[Venue],
     legId = 123L,
     userId = 456L,
     venuename = "test venue",
@@ -43,7 +43,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
     VenueClaim(
-      tag[VenueClaim][ObjectId](new ObjectId()),
+      new ObjectId().taggedWith[VenueClaim],
       vid,
       123L,
       ClaimStatus.approved
@@ -705,7 +705,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   test("Map[K <: ObjectId, V] field") {
-    val counts: Map[CounterId, Long] = Map(tag[Counter](ObjectId.get) -> 100L)
+    val counts: Map[CounterId, Long] = Map(ObjectId.get.taggedWith[Counter] -> 100L)
     val counter = TypedCounter(counts = counts)
 
     for {

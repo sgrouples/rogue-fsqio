@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc
 
 import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.tags.*
+import com.softwaremill.tagging.*
 import org.bson.types.ObjectId
 //import me.sgrouples.rogue.EnumNameFormats._
 import java.util.UUID

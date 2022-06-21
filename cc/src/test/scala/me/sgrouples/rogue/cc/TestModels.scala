@@ -2,10 +2,10 @@ package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder, Text}
 import me.sgrouples.rogue.cc.macros.*
 //import me.sgrouples.rogue.EnumNameFormats._
-import me.sgrouples.rogue._
+import me.sgrouples.rogue.*
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.tags.*
+import com.softwaremill.tagging.*
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDateTime}
 import java.util.{Currency, Locale, UUID}
@@ -70,7 +70,7 @@ case class VenueClaimBson(
 )
 
 object VenueClaim {
-  def newId = tag[VenueClaim](new ObjectId())
+  def newId = new ObjectId().taggedWith[VenueClaim]
 }
 
 case class VenueClaim(
@@ -83,7 +83,7 @@ case class VenueClaim(
 )
 
 object Venue {
-  def newId: ObjectId @@ Venue = tag[Venue](new ObjectId())
+  def newId = new ObjectId().taggedWith[Venue]
 }
 
 case class Venue(

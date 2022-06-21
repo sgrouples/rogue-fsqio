@@ -13,10 +13,7 @@ import scala.compiletime.{constValue, constValueTuple, erasedValue, summonAll, s
 
 import scala.language.implicitConversions
 
-
-
-/** Basic bson serializers
-  */
+import com.softwaremill.tagging.*
 
 trait StandardBsonFormats
     extends BaseBsonFormats

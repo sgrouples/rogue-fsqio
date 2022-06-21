@@ -13,7 +13,6 @@ import me.sgrouples.rogue.map.MapKeyFormat
 import scala.concurrent.duration.Duration
 import java.util.UUID
 
-
 trait QueryFieldHelpers[Meta] extends NamesResolver {
   requires: Meta =>
 

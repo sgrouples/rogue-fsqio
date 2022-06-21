@@ -11,9 +11,8 @@ import org.bson.types.ObjectId
 import org.mongodb.scala.model.Filters
 
 import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.*
-import me.sgrouples.rogue.tags.*
-
+import scala.concurrent.duration._
+import com.softwaremill.tagging.*
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MacroEndToEndSpec extends FunSuite {
@@ -22,7 +21,7 @@ class MacroEndToEndSpec extends FunSuite {
   val lastClaim = VenueClaimBson(uid = 5678L, status = ClaimStatus.approved)
 
   def baseTestVenue(): Venue = Venue(
-    _id = tag[Venue][ObjectId](new ObjectId()),
+    _id = new ObjectId().taggedWith[Venue],
     legId = 123L,
     userId = 456L,
     venuename = "test venue",
@@ -43,7 +42,7 @@ class MacroEndToEndSpec extends FunSuite {
 
   def baseTestVenueClaim(vid: ObjectId): VenueClaim = {
     VenueClaim(
-      tag[VenueClaim][ObjectId](new ObjectId()),
+      new ObjectId().taggedWith[VenueClaim],
       vid,
       123L,
       ClaimStatus.approved
@@ -694,7 +693,7 @@ class MacroEndToEndSpec extends FunSuite {
 
   test("Map[K <: ObjectId, V] field should just work") {
 
-    val counts: Map[CounterId, Long] = Map(tag[MCounter](ObjectId.get) -> 100L)
+    val counts: Map[CounterId, Long] = Map(ObjectId.get.taggedWith[MCounter] -> 100L)
 
     val counter = TypedCounter(counts = counts)
 

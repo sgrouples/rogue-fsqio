@@ -4,7 +4,7 @@ import me.sgrouples.rogue.cc.CustomKey
 import me.sgrouples.rogue.cc.macros._
 import me.sgrouples.rogue.macrotests.Domain.StrLongMapT
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.tags.*
+import com.softwaremill.tagging.*
 import munit.FunSuite
 object Domain {
   type StrLongMapT = Map[String, Long]
@@ -50,7 +50,7 @@ class MacroMapFormatSpec extends FunSuite {
   test("write/read objectId subtype keyed map") {
 
     val meta = new ObjectIdSubtypeMapMeta
-    val v = ObjectIdSubtypeMap(Map(tag[M](ObjectId.get()) -> 1))
+    val v = ObjectIdSubtypeMap(Map(ObjectId.get().taggedWith[M] -> 1))
     val bson = meta.write(v)
     assertEquals(meta.read(bson), v)
   }

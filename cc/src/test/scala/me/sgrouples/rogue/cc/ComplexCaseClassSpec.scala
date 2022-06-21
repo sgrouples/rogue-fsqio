@@ -6,8 +6,8 @@ import java.time.temporal.{ChronoUnit}
 import org.bson.types.ObjectId
 import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
-import me.sgrouples.rogue.tags.*
 //import me.sgrouples.rogue.EnumNameFormats._
+import com.softwaremill.tagging.*
 
 trait User
 
@@ -106,9 +106,9 @@ class ComplexCaseClassSpec extends FunSuite {
       "Group",
       None,
       GroupModelType.one,
-      tag[AnyTag][String]("Ala"),
-      tag[User][ObjectId](id),
-      List(tag[User][ObjectId](id), tag[User][ObjectId](id)),
+      "Ala".taggedWith[AnyTag],
+      id.taggedWith[User],
+      List(id, id).taggedWithF[User],
       None,
       "color",
       None,

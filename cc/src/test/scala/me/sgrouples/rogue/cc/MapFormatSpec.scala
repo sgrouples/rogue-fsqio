@@ -4,7 +4,7 @@ import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
 import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.tags.*
+import com.softwaremill.tagging.*
 import me.sgrouples.rogue.cc.CcRogue.*
 
 
@@ -47,7 +47,7 @@ class MapFormatSpec extends FunSuite {
   test("it should write/read objectId subtype keyed map") {
 
     val meta = new ObjectIdSubtypeMapMeta
-    val v = ObjectIdSubtypeMap(Map(tag[MTypes.M](ObjectId.get()) -> 1))
+    val v = ObjectIdSubtypeMap(Map(ObjectId.get().taggedWith[MTypes.M] -> 1))
     val bson = meta.write(v)
     assertEquals(meta.read(bson), v)
   }

@@ -8,8 +8,8 @@ import Keys.{scalaVersion, _}
 object RogueSettings {
 
   val nexus = "https://nexus.groupl.es/"
-  val nexusReleases = "releases" at nexus+"repository/maven-releases/"
-  val nexusSnapshots = "snapshots" at nexus+"repository/maven-snapshots/"
+  val nexusReleases = "releases" at nexus + "repository/maven-releases/"
+  val nexusSnapshots = "snapshots" at nexus + "repository/maven-snapshots/"
 
   lazy val macroSettings: Seq[Setting[_]] = Seq(
     /*libraryDependencies ++= Seq(
@@ -71,9 +71,8 @@ object RogueDependencies {
 
   val shapeless = "org.typelevel" %% "shapeless3-deriving" % "3.0.4"
   //"com.chuusai" %% "shapeless" % "2.3.8"
-
+  val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
   val coreDeps = mongoDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless)  ++ testDeps
-
+  val ccDeps = mongoDeps ++ Seq(shapeless, tagging)  ++ testDeps
 }

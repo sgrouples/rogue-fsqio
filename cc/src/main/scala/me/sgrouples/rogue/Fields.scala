@@ -6,11 +6,11 @@ import io.fsq.field.{Field, OptionalField, RequiredField}
 import me.sgrouples.rogue.cc.CcMeta
 import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.types.ObjectId
+import com.softwaremill.tagging.*
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 import io.fsq.rogue.enums.EnumInstance
-import me.sgrouples.rogue.tags.*
 
 abstract class CField[V, O](val name: String, val owner: O) extends Field[V, O]
 
@@ -65,7 +65,7 @@ class ObjectIdField[O](name: String, o: O)
 class ObjectIdTaggedField[Tag, O](name: String, o: O)
     extends MCField[ObjectId @@ Tag, O](name, o) {
   override def defaultValue: ObjectId @@ Tag =
-    tag[Tag](ObjectId.get())
+    ObjectId.get().taggedWith[Tag]
 }
 
 /*

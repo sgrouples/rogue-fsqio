@@ -24,7 +24,7 @@ import me.sgrouples.rogue.cc.{
 import me.sgrouples.rogue.QueryParser._
 import org.bson.types._
 import munit.FunSuite
-import me.sgrouples.rogue.tags.*
+import com.softwaremill.tagging.*
 import org.bson.types._
 
 //TODO - drop signature()
@@ -43,7 +43,7 @@ class MacroQueryTest extends FunSuite {
     val oid2 = CcMongo.oidFromInstant(d2.toInstant(ZoneOffset.UTC))
     val oid = new ObjectId
     case class Ven1(id: ObjectId @@ Venue)
-    val ven1 = Ven1(tag[Venue](oid1))
+    val ven1 = Ven1(oid1.taggedWith[Venue])
 
     // eqs
     val x: Query[VenueRMeta, Venue, InitialState] = VenueR.where(_.mayor eqs 1)
@@ -60,7 +60,7 @@ class MacroQueryTest extends FunSuite {
       pq("""db.venues.find({"closed": true})""")
     )
     assertEquals(
-      VenueR.where(_.id eqs tag[Venue](oid)).q,
+      VenueR.where(_.id eqs oid.taggedWith[Venue]).q,
       pq(("""db.venues.find({"_id": {"$oid": "%s"}})""" format oid.toString))
     )
     assertEquals(
@@ -69,13 +69,13 @@ class MacroQueryTest extends FunSuite {
     )
 
     assertEquals(
-      VenueClaimR.where(_.venueid eqs tag[Venue](oid)).q,
+      VenueClaimR.where(_.venueid eqs oid.taggedWith[Venue]).q,
       pq(
         ("""db.venueclaims.find({"vid": {"$oid": "%s"}})""" format oid.toString)
       )
     )
     assertEquals(
-      VenueClaimR.where(_.venueid eqs tag[Venue](ven1.id)).q,
+      VenueClaimR.where(_.venueid eqs ven1.id.taggedWith[Venue]).q,
       pq(
         ("""db.venueclaims.find({"vid": {"$oid": "%s"}})""" format oid1.toString)
       )
@@ -1137,7 +1137,7 @@ assertEquals(      VenueR.where(_.geolatlng nearSphere (39.0, -74.0, Radians(1.0
   test("ProduceACorrectSignatureString") {
     val d1 = LocalDateTime.of(2010, 5, 1, 0, 0, 0, 0)
     val d2 = LocalDateTime.of(2010, 5, 2, 0, 0, 0, 0)
-    val oid = tag[Venue](new ObjectId)
+    val oid = new ObjectId().taggedWith[Venue]
 
     // basic ops
     assertEquals(

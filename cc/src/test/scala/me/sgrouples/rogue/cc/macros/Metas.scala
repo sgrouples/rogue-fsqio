@@ -8,7 +8,7 @@ import me.sgrouples.rogue.cc.*
 import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.tags.*
+import com.softwaremill.tagging.*
 
 case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
 
