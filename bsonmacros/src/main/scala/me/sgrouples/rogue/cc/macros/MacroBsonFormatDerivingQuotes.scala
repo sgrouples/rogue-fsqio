@@ -4,6 +4,10 @@ import scala.compiletime.*
 import scala.deriving.Mirror
 import scala.annotation.meta.field
 import me.sgrouples.rogue.BsonFormat
+import scala.annotation.experimental
+import org.bson.BsonWriter
+import org.mongodb.scala.bson.BsonDocument.apply
+import org.bson.BsonValue
 
 object MacroBsonFormatDerivingImpl:
   def gen[T: Type](using Quotes): Expr[MacroBsonFormat[T]] =
@@ -33,65 +37,67 @@ object MacroBsonFormatDerivingImpl:
   def genProduct[T: Type](using Quotes):Expr[MacroBsonFormat[T]] =
     import quotes.reflect.*
     val tpe:TypeRepr = TypeRepr.of[T]
-    //val flds = tpe.termSymbol.caseFields
-    //val flds = tpe.typeSymbol.primaryConstructor.paramSymss.flatten
     val fields: List[Symbol] = TypeTree.of[T].symbol.caseFields 
     val fieldsVec = Expr.apply(fields.map(_.name))
-    val termsTypes: List[(Symbol, (Term, TypeRepr))] = fields.map { field => 
+    //TODO - why it can't be reused ?
+    /*val termsTypes: List[(Symbol, (Term, TypeRepr))] = fields.map { field => 
         val fieldValDef: ValDef = field.tree.asInstanceOf[ValDef]  // TODO remove cast
         val fieldTpe: TypeRepr = fieldValDef.tpt.tpe
         field -> lookupFormatFor(fieldTpe)
+    }*/ 
+    
+    def appendValsImpl(writer:Expr[_root_.org.bson.BsonWriter], t:Expr[T]): Expr[Unit] = {
+      val bsonType = TypeRepr.of[_root_.org.bson.BsonWriter]
+      val strType = TypeRepr.of[String]
+      val vt = t.asTerm
+      val fff = fields.map{ fld =>
+        val fna = Expr(fld.name)
+        val fieldValDef: ValDef = fld.tree.asInstanceOf[ValDef]  // TODO remove cast
+        val fieldTpe: TypeRepr = fieldValDef.tpt.tpe
+        val (wTerm, wType) = lookupFormatFor(fieldTpe)
+        val fldVal = Select(t.asTerm, fld)
+        val app = Select.unique(wTerm,"appendKV")
+        report.info(app.show(using Printer.TreeShortCode))
+        val append = Apply(app, List(writer.asTerm, fna.asTerm, fldVal))
+        //println(append.show(using Printer.TreeShortCode))
+        //report.warning(bl.show(using Printer.TreeStructure))
+        append.asExpr
+      }
+      Expr.block(fff, '{()})
     }
-    /*termsTypes.foreach{ t => 
-        report.info(s"term types $t")
-    }*/
 
-    //def accessors(expr: Expr[T]): List[Expr[Any]] = flds.map(Select(expr.asTerm, _).asExpr)
-    //val f1 = flds.head
-    //.map(_.name.trim)
-    //val fieldAndShows: List[(Expr[MShow[_]], Symbol)] = mshows zip flds
-    /*val ex = fieldNames.zip.show.map { case (fld, s) =>
-      `Expr(fld)=s.show(t.fld)`
-    }*/
-    //shows.foreach(s=> println(s.asTerm.show(using Printer.TreeStructure)))
-    //val y = fieldAndShows.map{ case(sh, f) => 't.${f} = $sh.show($t.f) }
-    //val mshowBody: Expr[T] => Expr[String] => t => '{ "ALA" }
-      
-    //val mshowBody: Expr[T] => Expr[String] = t => 
-    //      '{ $sh1.mshow(Select(t.asTerm, fh)) }
+    def writeValImpl(d:Expr[org.bson.BsonDocument],t:Expr[T]): Expr[Unit] = {
+      //val fields: List[Symbol] = TypeTree.of[T].symbol.caseFields 
+      val vt = t.asTerm
+      val fff = fields.map{ fld =>
+        val fna = Expr(fld.name)
+        val fieldValDef: ValDef = fld.tree.asInstanceOf[ValDef]  // TODO remove cast
+        val fieldTpe: TypeRepr = fieldValDef.tpt.tpe
+        val (wTerm, wType) = lookupFormatFor(fieldTpe)
+        val fldVal = Select(t.asTerm, fld)
+        val wrExpr = Select.unique(wTerm, "write")
+        val app = Apply(wrExpr, List(fldVal))
+        '{ ${d}.append(${fna}, ${app.asExprOf[BsonValue]} ) }
+      }
+      Expr.block(fff, '{()})
+    }
 
-    /*def showField(caseClassTerm: Term, field: Symbol /*, showExpr:Expr[MShow[_]]*/): Expr[String] =
-      val fieldValDef: ValDef = field.tree.asInstanceOf[ValDef]  // TODO remove cast
-      val fieldTpe: TypeRepr = fieldValDef.tpt.tpe
-      val fieldName: String = fieldValDef.name
-      val (showTerm, showTpe) = lookupShowFor(fieldTpe) //showExpr.tree
-      val fieldValue = Select(caseClassTerm, field) // v.field
-      val strRepr = Apply(Select.unique(showTerm,"mshow"), List(fieldValue)).asExprOf[String]
-      '{s"${${Expr(fieldName)}}: ${${strRepr}}"}  // summon[Show[$fieldTpe]].show(v.field)
-    */
-    //def showBody(v: Expr[T]): Expr[String] =
-      //val vTerm: Term = v.asTerm
-      //val valuesExprs: List[Expr[String]] = fields.map(showField(vTerm, _))
-      //val exprOfList: Expr[List[String]] = Expr.ofList(valuesExprs)
-      //'{$exprOfList.mkString(", ")}
+    def readValImpl(b:Expr[_root_.org.bson.BsonDocument]): Expr[T] = {
+      val fieldVals = fields.map{ fld =>
+        val fna = Expr(fld.name)
+        val fieldValDef: ValDef = fld.tree.asInstanceOf[ValDef]  // TODO remove cast
+        val fieldTpe: TypeRepr = fieldValDef.tpt.tpe
+        val (wTerm, wType) = lookupFormatFor(fieldTpe)
+        val rExpr = Select.unique(wTerm,"readOrDefault")
+        val fldVal = '{ ${b}.get(${fna}) }
+        val readV = Apply(rExpr, List(fldVal.asTerm))
+        readV
+      }
+      val cs = tpe.classSymbol.get
+      val app = Apply(Select(New(TypeTree.of[T]), cs.primaryConstructor), fieldVals).asExprOf[T]
+      app
+    }
     
-    val fmtValsAndRefs = termsTypes.map { case ( fSym, (fTerm, tTypeRepr)) =>
-        val v =  Symbol.newVal(
-            Symbol.spliceOwner,
-            fSym.name +"_fmt",
-            tTypeRepr,
-            Flags.EmptyFlags,
-            Symbol.noSymbol
-            )
-        (ValDef(v, Some(fTerm)), Ref(v))
-        }
-    val (fmtVals, fmtRefs) = fmtValsAndRefs.unzip
-    val formats = fmtRefs.map(_.asInstanceOf[BsonFormat[_]])
-
-    val fldsMap =(fields.map(_.name) zip fmtRefs).map{ case (k, v) => k -> v.asInstanceOf[BsonFormat[_]] }.toMap
-    
-    
-    val b = Block(fmtVals, fmtRefs.head) 
 
     val r = '{
       new MacroBaseBsonFormat[T] {
@@ -104,31 +110,34 @@ object MacroBsonFormatDerivingImpl:
        // override val flds = ${ Expr(fldsMap) } //Map(..$fldsMap) //++ Seq(..$subFieldsAdd).flatten
         override def validNames():Vector[String] = ${fieldsVec}.toVector //why no vector?
         override def defaultValue: T = {
-            ???
+          throw new RuntimeException("Def val not impl")
+            //???
          // $defImpl
         }
 
         override def read(b: _root_.org.bson.BsonValue): T = {
           if(b.isDocument()) {
             val doc = b.asDocument()
-            
-            ???
-            //new $tpe(..$reads)
+            ${readValImpl('doc)}
           } else {
-            defaultValue
+            throw new RuntimeException("Read not impl - not document")
+            //???
+            //defaultValue
           }
         }
 
-        override def write(t: T): _root_.org.bson.BsonValue = {
-          val doc = new _root_.org.bson.BsonDocument()
-          //..$writers
-          doc
-        }
+        override def write(t: T): _root_.org.bson.BsonValue =
+          val docx = new _root_.org.bson.BsonDocument()
+          val writer = new org.bson.BsonDocumentWriter(docx)
+          //${writeValImpl('docx, 't)}
+          append(writer, t)
+          writer.close()
+          docx
         
-        private def appendVals(writer:_root_.org.bson.BsonWriter, t:T): Unit = {
-        
-          //..$appends
-        }
+        private def appendVals(writer:_root_.org.bson.BsonWriter, t:T): Unit =
+          ${appendValsImpl('writer, 't)}
+          //{}
+      
         override def append(writer:_root_.org.bson.BsonWriter, k:String, t:T): Unit = {
           writer.writeStartDocument(k)
           appendVals(writer, t)
@@ -140,16 +149,23 @@ object MacroBsonFormatDerivingImpl:
           writer.writeEndDocument()
         }
      }
-    } 
-    //r.asTerm.show(using Printer.TreeStructure)
-    report.info(r.show)
+    }
+    println(r.asTerm.show(using Printer.TreeShortCode))
     r
+   
 
   def genSum[T: Type](using  Quotes):Expr[MacroBaseBsonFormat[T]] =
     import quotes.reflect.*
     report.errorAndAbort(s"SUM type not yet supported ")
     
 
+  /**
+    * For given type t, return Term and TypeRepr of BsonFormat[t]
+    *
+    * @param quotes
+    * @param t
+    * @return 
+    */
   def lookupFormatFor(using quotes: Quotes)(t: quotes.reflect.TypeRepr): (quotes.reflect.Term, quotes.reflect.TypeRepr) =
     import quotes.reflect.*
     val showTpe = TypeRepr.of[MacroBsonFormat]

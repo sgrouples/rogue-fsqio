@@ -17,6 +17,11 @@ trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
   def validNames(): Vector[String]
   def append(writer: BsonWriter, k: String, v: T): Unit
   def append(writer: BsonWriter, v: T): Unit
+
+  //TODO - how to make select.unique work?
+  def appendKV(writer: BsonWriter, k: String, v: T): Unit =
+    append(writer, k, v)
+    
   def readOrDefault(v: BsonValue): T = {
     if (v != null) {
       read(v)
@@ -29,6 +34,8 @@ trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
   ): Unit = {
     if (!v.isNull()) { d.put(k, v) }
   }
+
+  
   def subfields(
       prefix: String,
       f: BsonFormat[_]
@@ -38,6 +45,7 @@ trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
     }
   }
 }
+
 
 abstract class MacroBaseBsonFormat[T] extends MacroBsonFormat[T] {
   override def flds: Map[String, BsonFormat[_]] = Map.empty

@@ -7,6 +7,7 @@ import org.bson.types.ObjectId
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import testtags.*
+import org.bson.BsonDocumentWriter
 
 
 case class UX(id:UX.Id, vv:Int)
@@ -59,8 +60,12 @@ class MacroDerivationTests extends FunSuite:
 
     inline def roundTrip[T](v:T)(using t:MacroBsonFormat[T] )=
         val obj = t.write(v)
+        println(s"write ${v}")
+        println(s"wrote ${obj}")
+        println(s"valid names ${t.validNames()}")
         val r = t.read(obj)
         assertEquals(v, r, s" for type ${v.getClass}")
+        
 
 
   
