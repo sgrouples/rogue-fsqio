@@ -109,21 +109,19 @@ object MacroBsonFormatDerivingImpl:
         //..$bsonFormats
        // override val flds = ${ Expr(fldsMap) } //Map(..$fldsMap) //++ Seq(..$subFieldsAdd).flatten
         override def validNames():Vector[String] = ${fieldsVec}.toVector //why no vector?
+
         override def defaultValue: T = {
-          throw new RuntimeException("Def val not impl")
-            //???
-         // $defImpl
+          //super ugly hack, but whatever
+          read (new org.bson.BsonDocument())
         }
 
         override def read(b: _root_.org.bson.BsonValue): T = {
-          if(b.isDocument()) {
-            val doc = b.asDocument()
-            ${readValImpl('doc)}
+          val doc = if(b.isDocument()) {
+            b.asDocument()
           } else {
-            throw new RuntimeException("Read not impl - not document")
-            //???
-            //defaultValue
+            new org.bson.BsonDocument()
           }
+          ${readValImpl('doc)}
         }
 
         override def write(t: T): _root_.org.bson.BsonValue =
