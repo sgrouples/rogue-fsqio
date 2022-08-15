@@ -98,6 +98,21 @@ object MacroBsonFormatDerivingImpl:
       app
     }
     
+    def fldsFormats:Expr[Map[String, MacroBsonFormat[?]]] = {
+      val fieldVals: List[(Expr[String], Expr[MacroBsonFormat[?]])] = fields.map{ fld =>
+        val fna = Expr(fld.name)
+        val fieldValDef: ValDef = fld.tree.asInstanceOf[ValDef]  // TODO remove cast
+        val fieldTpe: TypeRepr = fieldValDef.tpt.tpe
+        val (wTerm, wType) = lookupFormatFor(fieldTpe)
+        val wExpr = wTerm.asExprOf[MacroBsonFormat[?]]
+        (fna, wExpr)
+      }
+      val (ek, ev) = fieldVals.unzip
+      val keyExprs = Expr.ofList[String](ek)
+      val valExprs = Expr.ofList[MacroBsonFormat[?]](ev)
+      val res = '{ ($keyExprs.zip($valExprs)).toMap }      
+      res
+    }
 
     val r = '{
       new MacroBaseBsonFormat[T] {
@@ -109,6 +124,8 @@ object MacroBsonFormatDerivingImpl:
         //..$bsonFormats
        // override val flds = ${ Expr(fldsMap) } //Map(..$fldsMap) //++ Seq(..$subFieldsAdd).flatten
         override def validNames():Vector[String] = ${fieldsVec}.toVector //why no vector?
+
+        override val flds:Map[String, MacroBsonFormat[?]] = ${fldsFormats} 
 
         override def defaultValue: T = {
           //super ugly hack, but whatever
@@ -172,94 +189,9 @@ object MacroBsonFormatDerivingImpl:
       case res: ImplicitSearchSuccess => (res.tree, tclTpe)
       case _ => report.errorAndAbort(s"No Show format for ${tclTpe.typeSymbol}")
 
-    /*val elemInstances = summonAll[elementTypes]
-    val eqSumBody: (Expr[T], Expr[T]) => Expr[Boolean] = (x, y) =>
-      val ordx = '{ $m.ordinal($x) }
-      val ordy = '{ $m.ordinal($y) }
-      val elements = Expr.ofList(elemInstances)
-      '{ $ordx == $ordy && $elements($ordx).asInstanceOf[Eq[Any]].eqv($x, $y) }
-    '{ eqSum((x: T, y: T) => ${eqSumBody('x, 'y)}) }
-    println(s"IN given - ${ev}")
-    //val A = TypeRepr.of[A]
-    '{new MShow[T] {
-      def show(t: T): String = "a.b.c"
-    }
-    }*/
-
-  /*
-  def anns(s: Symbol): Expr[List[Annotation]] =
-    Expr.ofList(s.annotations.map(_.asExpr).collect {
-      case '{ $a: Annotation } => a
-    }.filter {
-      case '{ $a: internal.Child[_] } => false
-      case _ => true
-    }
-  )
-  */
-
+ 
   def genNoMirror[T: Type](using Quotes):Expr[MacroBaseBsonFormat[T]] =
     import quotes.reflect.*
     report.errorAndAbort(s"No derivation possible without mirror")
-    /*
-    val treeType = TypeTree.of[T]
-    val tpeRepr = treeType.tpe
-    val r = tpeRepr.show(using Printer.TypeReprStructure)
-    tpeRepr match
-      case AppliedType(base, args) =>
-        val m = Map(1->2)
-        val isArray = base.baseClasses.contains(Symbol.classSymbol("scala.Array"))
-        val isIterable = base.baseClasses.contains(Symbol.classSymbol("scala.collection.Iterable"))
-        val isMap = base.baseClasses.contains(Symbol.classSymbol("scala.collection.immutable.Map"))
-        val b = base.show(using Printer.TypeReprShortCode)
-        report.info(s"base is $b \nisArray $isArray\nisIterable $isIterable\nisMap $isMap")
-        '{
-          new MacroBaseBsonFormat[T]:
-            def mshow(t:T) = ${Expr(r)} + " genNoMirror "
-         }
-      case t: NamedType =>
-        report.errorAndAbort(s"NamedType not supported for $r")
-      case o: OrType =>
-        report.errorAndAbort(s"OrType not supported for $r")
-      case AndType(base, AppliedType(x@TypeRef(_, "Tagged"), y)) => // cheap hack for tagged Types 
-        val tagType = y.last.asType
-        val baseType = base.asType */
-        // only for tagged types
-        //val left = l.show(using Printer.TypeReprStructure)
-        //a.left.asType
-        //val tl = l.asType
-        //val right = y.head.show(using Printer.TypeReprStructure)
-        //val all = tpeRepr.show(using Printer.TypeReprStructure)
-        //report.errorAndAbort(s"left ${left}\nright ${right}\nall ${all}") 
-      
-        // report.info(s"e1 ${e1.show(using Printer.)}")
-        //val (baseMShowTerm, baseMShowType) = lookupShowFor(base) //.asExprOf[MShow[l]]
-        //val baseMType = baseMShowType.asType
-        //val baseShowExpr = baseMShowTerm.asExprOf[MShow[baseType.Underlying]] //.asExprOf[baseMType.Underlying].
-        //val lf = showForAnd.show(using Printer.TreeShortCode) 
-        //report.info(s"for left found $lf")
-        //val wr = TypeTree.of[WrappedMShow]
-        //TypeApply(wr.tpe, List(tpeRepr))
-        /*Apply(Select.apply())
-        '{ 
-          WrappedMShow[T, baseType.Underlying]($baseShowExpr)
-        }*/
-        //report.info(s"AndType only for\n   left $left   right $right")
-        //report.error(s"AndType not supported for $r") 
-      //case a@AndType(l,r) =>
-        //report.errorAndAbort(s"Generic AndType not supported ${tpeRepr}")
-    //option
-    //array
-    //map
-    //iterable 
-    //tpeRepr match 
-    //  case AppliedType()
-     // val m = MapTypeObject 
-    //val iterableTypeSymbol = typeOf[Iterable[_]].typeSymbol
-    //val at = appliedType(tpeRepr, tpeRepr.a)
-    //f at.baseClasses.contains(iterableTypeSymbol)
-    //if tpeRepr.termSymbol
-    //val x = Expr[String](tpeRepr.typeSymbol.fullName)
-    //val x = Expr[String](treeType.symbol.fullName)
-    //report.info(s"x is ${x}")
 
   
