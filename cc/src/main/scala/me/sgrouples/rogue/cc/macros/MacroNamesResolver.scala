@@ -38,6 +38,7 @@ trait MacroNamesResolver[T] extends NamesResolver {
    override def named[T <: io.fsq.field.Field[?, ?]](
       func: String => T
   ): T  = {
+      println(s"Caller is ${func} - call ${func("x")}")
       val caller = Thread.currentThread().getStackTrace()(1)
       new RuntimeException().printStackTrace()
       throw new IllegalArgumentException(

@@ -14,26 +14,26 @@ case class TestDomainObject(id: ObjectId)
 trait BaseTraitA[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
 
-  val baseA = IntField
+  val baseA = IntField("baseA")
 }
 
 trait BaseTraitB[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
 
-  val baseB = IntField
+  val baseB = IntField("baseB")
 }
 
 trait TestQueryTraitA[OwnerType]
     extends BaseTraitA[OwnerType]
     with BaseTraitB[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
-  val int = IntField
+  val int = IntField("int")
   val int_named = IntField("int_custom_name")
 }
 
 trait TestQueryTraitB[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
-  val optInt = OptIntField
+  val optInt = OptIntField("optInt")
   val optInt_named = OptIntField("optInt_custom_name")
 
 }
@@ -200,11 +200,11 @@ class QueryFieldHelperSpec extends FunSuite {
   class MultiThreadedTestMeta
       extends MCcMeta[AnotherValue, MultiThreadedTestMeta] {
     val a = StringField("a")
-    val b = StringField("a")
-    val c = StringField("a")
-    val d = StringField("a")
-    val e = StringField("a")
-    val f = StringField("a")
+    val b = StringField("b")
+    val c = StringField("c")
+    val d = StringField("d")
+    val e = StringField("e")
+    val f = StringField("f")
   }
 
   test("it should fail when name is duplicated") {
