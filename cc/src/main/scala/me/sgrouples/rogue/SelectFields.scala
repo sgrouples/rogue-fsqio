@@ -245,11 +245,12 @@ class CClassSeqModifyField[C, M <: CcMeta[C], O, CC[_] <: Seq[_]](
     )
   }
 
-  override def $: SelectableDummyCCField[C, M, O] = new SelectableDummyCCField[C, M, O](
-    fld.name + ".$",
-    fld.childMeta,
-    fld.owner
-  )
+  override def $ : SelectableDummyCCField[C, M, O] =
+    new SelectableDummyCCField[C, M, O](
+      fld.name + ".$",
+      fld.childMeta,
+      fld.owner
+    )
 
   def `$[]` = new SelectableDummyCCField[C, M, O](
     fld.name + ".$[]",
@@ -271,11 +272,12 @@ class CClassArrayModifyField[C, M <: CcMeta[C], O](
     )
   }
 
-  override def $: SelectableDummyCCField[C, M, O] = new SelectableDummyCCField[C, M, O](
-    fld.name + ".$",
-    fld.childMeta,
-    fld.owner
-  )
+  override def $ : SelectableDummyCCField[C, M, O] =
+    new SelectableDummyCCField[C, M, O](
+      fld.name + ".$",
+      fld.childMeta,
+      fld.owner
+    )
 
   def `$[]` = new SelectableDummyCCField[C, M, O](
     fld.name + ".$[]",

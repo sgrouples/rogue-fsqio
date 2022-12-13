@@ -8,13 +8,35 @@ package me.sgrouples.rogue.cc
 
 import java.time.{Instant, LocalDateTime}
 import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
-import io.fsq.rogue.{FindAndModifyQuery, MandatorySelectField, ModifyQuery, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SelectField, ShardingOk, Unlimited, Unordered, Unselected, Unskipped, _}
+import io.fsq.rogue.{
+  FindAndModifyQuery,
+  MandatorySelectField,
+  ModifyQuery,
+  OptionalSelectField,
+  Query,
+  QueryField,
+  QueryHelpers,
+  Rogue,
+  RogueException,
+  SelectField,
+  ShardingOk,
+  Unlimited,
+  Unordered,
+  Unselected,
+  Unskipped,
+  _
+}
 import io.fsq.rogue.MongoHelpers.AndCondition
 
 import java.util.{Currency, Locale, UUID}
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
-import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult}
+import org.mongodb.scala.result.{
+  DeleteResult,
+  InsertManyResult,
+  InsertOneResult,
+  UpdateResult
+}
 
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -112,7 +134,9 @@ trait CcRogue {
     ExecutableFindAndModifyQuery(query, CcBsonExecutors)
   }
 
-  implicit def ccMetaToAggregateQuery[MB <: CcMeta[_], M <: MB, State](meta: M): AggregateQuery[MB, M,InitialState] =
+  implicit def ccMetaToAggregateQuery[MB <: CcMeta[_], M <: MB, State](
+      meta: M
+  ): AggregateQuery[MB, M, InitialState] =
     AggregateQuery(meta.collectionName, CcBsonExecutors)
 
   implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](
@@ -227,16 +251,23 @@ trait CcRogue {
       f: CClassArrayField[C, M, O]
   ): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
 
-  given[C, M <: CcMeta[C], O]: Conversion[CClassArrayField[C, M, O], CClassArrayModifyField[C, M, O]] with
+  given [C, M <: CcMeta[C], O]
+      : Conversion[CClassArrayField[C, M, O], CClassArrayModifyField[C, M, O]]
+    with
     def apply(f: CClassArrayField[C, M, O]): CClassArrayModifyField[C, M, O] =
       new CClassArrayModifyField[C, M, O](f)
 
   implicit def optCcArrayFieldToCCArrayModifyField[C, M <: CcMeta[C], O](
       f: OptCClassArrayField[C, M, O]
   ): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
-  
-  given[C, M <: CcMeta[C], O]: Conversion[OptCClassArrayField[C, M, O], CClassArrayModifyField[C, M, O]] with
-    def apply(f: OptCClassArrayField[C, M, O]): CClassArrayModifyField[C, M, O] =
+
+  given [C, M <: CcMeta[C], O]: Conversion[
+    OptCClassArrayField[C, M, O],
+    CClassArrayModifyField[C, M, O]
+  ] with
+    def apply(
+        f: OptCClassArrayField[C, M, O]
+    ): CClassArrayModifyField[C, M, O] =
       new CClassArrayModifyField[C, M, O](f)
 
   implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](
@@ -280,34 +311,49 @@ trait CcRogue {
   implicit def enumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
       f: EnumIdField[E, O]
   ): EnumIdQueryField[O, f.e.Value] = {
-    new EnumIdQueryField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
+    new EnumIdQueryField(
+      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
+      (e: f.e.Value) => e.id
+    )
   }
   // this is here to force proper implicit resolution
 
   implicit def optRnumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
       f: OptEnumIdField[E, O]
   ): EnumIdQueryField[O, f.e.Value] =
-    new EnumIdQueryField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
+    new EnumIdQueryField(
+      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
+      (e: f.e.Value) => e.id
+    )
 
   implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[_], E <: Enumeration](
       f: EnumIdField[E, O]
   ): EnumIdModifyField[O, f.e.Value] =
-    new EnumIdModifyField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
-
+    new EnumIdModifyField(
+      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
+      (e: f.e.Value) => e.id
+    )
 
   // this is here to force proper implicit resolution
 
   implicit def optEnumIdFieldToEnumIdModifyField[O <: CcMeta[
     _
-  ], E <: Enumeration](f: OptEnumIdField[E, O]): EnumIdModifyField[O, f.e.Value] =
-    new EnumIdModifyField(f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]], (e: f.e.Value) => e.id)
+  ], E <: Enumeration](
+      f: OptEnumIdField[E, O]
+  ): EnumIdModifyField[O, f.e.Value] =
+    new EnumIdModifyField(
+      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
+      (e: f.e.Value) => e.id
+    )
 
   given localDateIsFlattened: Rogue.Flattened[LocalDateTime, LocalDateTime] =
     new Rogue.Flattened[LocalDateTime, LocalDateTime]
 
-  given instantIsFlattend:Rogue.Flattened[Instant, Instant] = new Rogue.Flattened[Instant, Instant]
+  given instantIsFlattend: Rogue.Flattened[Instant, Instant] =
+    new Rogue.Flattened[Instant, Instant]
 
-  implicit def objIdSubtypeIsFlattened[T <: ObjectId]: Rogue.Flattened[T, ObjectId] =
+  implicit def objIdSubtypeIsFlattened[T <: ObjectId]
+      : Rogue.Flattened[T, ObjectId] =
     new Rogue.Flattened[T, ObjectId]
 
   implicit def binaryFieldToQueryField[M](
@@ -320,9 +366,13 @@ trait CcRogue {
 
   implicit def updateResultToVoid(i: Future[UpdateResult]): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
-  implicit def deleteResultToVoid(i: Future[com.mongodb.client.result.DeleteResult]): Future[Unit] =
+  implicit def deleteResultToVoid(
+      i: Future[com.mongodb.client.result.DeleteResult]
+  ): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
-  implicit def insertManyResultToVoid(i: Future[InsertManyResult]): Future[Unit] =
+  implicit def insertManyResultToVoid(
+      i: Future[InsertManyResult]
+  ): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
   implicit def insertOneResultToVoid(i: Future[InsertOneResult]): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)

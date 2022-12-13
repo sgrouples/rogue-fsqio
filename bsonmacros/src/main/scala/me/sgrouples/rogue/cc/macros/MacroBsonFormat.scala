@@ -21,7 +21,7 @@ trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
   //TODO - how to make select.unique work?
   def appendKV(writer: BsonWriter, k: String, v: T): Unit =
     append(writer, k, v)
-    
+
   def readOrDefault(v: BsonValue): T = {
     if (v != null) {
       read(v)
@@ -35,7 +35,6 @@ trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
     if (!v.isNull()) { d.put(k, v) }
   }
 
-  
   def subfields(
       prefix: String,
       f: BsonFormat[_]
@@ -45,7 +44,6 @@ trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
     }
   }
 }
-
 
 abstract class MacroBaseBsonFormat[T] extends MacroBsonFormat[T] {
   override def flds: Map[String, BsonFormat[_]] = Map.empty
@@ -249,8 +247,7 @@ object BinaryMacroBsonFormat extends MacroBaseBsonFormat[Array[Byte]] {
   }
 }
 
-object LocalDateTimeMacroBsonFormat
-    extends MacroBaseBsonFormat[LocalDateTime] {
+object LocalDateTimeMacroBsonFormat extends MacroBaseBsonFormat[LocalDateTime] {
   override def read(b: BsonValue): LocalDateTime = {
     if (b.isDateTime) {
       LocalDateTime.ofInstant(
@@ -309,12 +306,11 @@ class OptMacroBsonFormat[T](inner: MacroBsonFormat[T])
   override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
 
-
 trait EnumMacroFormats {
- 
+
   def enumNameMacroFormat[T <: Enumeration, V](e: T): MacroBsonFormat[e.Value] =
     new MacroBaseBsonFormat[e.Value] {
-      override def read(b: BsonValue):e.Value = {
+      override def read(b: BsonValue): e.Value = {
         if (b.isString) e.withName(b.asString().getValue)
         else if (b.isNumber) e.apply(b.asNumber().intValue())
         else defaultValue
@@ -343,7 +339,7 @@ trait EnumMacroFormats {
       override def append(writer: BsonWriter, k: String, v: e.Value): Unit = {
         writer.writeInt32(k, v.id)
       }
-      override def append(writer: BsonWriter, v:e.Value): Unit = {
+      override def append(writer: BsonWriter, v: e.Value): Unit = {
         writer.writeInt32(v.id)
       }
     }
@@ -454,7 +450,8 @@ class ArrayMacroBsonFormat[T: ClassTag](inner: MacroBsonFormat[T])
 
   override def flds: Map[String, BsonFormat[_]] = inner.flds
 }
-class MapMacroFormat[K, T](inner: MacroBsonFormat[T], kf: MapKeyFormat[K]) extends MacroBsonFormat[Map[K, T]] {
+class MapMacroFormat[K, T](inner: MacroBsonFormat[T], kf: MapKeyFormat[K])
+    extends MacroBsonFormat[Map[K, T]] {
   import scala.jdk.CollectionConverters._
   private def appendVals(writer: BsonWriter, v: Map[K, T]): Unit = {
     v.foreach { case (k, v) =>
@@ -498,47 +495,61 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T], kf: MapKeyFormat[K]) exten
 
 object EnumMacroFormats extends EnumMacroFormats
 
-
-
 object MacroBsonFormat extends MacroBsonFormatDeriving:
-   given MacroBsonFormat[Int] = IntMacroBsonFormat(0)
-   given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
-   given MacroBsonFormat[Double] = DoubleMacroBsonFormat(0d)
-   given MacroBsonFormat[BigDecimal] = BigDecimalMacroBsonFormat()
-   given MacroBsonFormat[Boolean] = BooleanMacroBsonFormat(false)
-   given MacroBsonFormat[String] = StringMacroBsonFormat("")
-   given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()
-   given MacroBsonFormat[LocalDateTime] = LocalDateTimeMacroBsonFormat
-   given MacroBsonFormat[Instant] = InstantMacroBsonFormat()
-   given MacroBsonFormat[Array[Byte]] = BinaryMacroBsonFormat
-   given MacroBsonFormat[Locale] = LocaleMacroBsonFormat()
-   given MacroBsonFormat[Currency] = CurrencyMacroBsonFormat()
-   given MacroBsonFormat[UUID] = UUIDMacroBsonFormat[UUID]()
- 
-   //for all bases, or known subtypes only?
-   implicit def macroBsonFormatForObjectIdSubtype[T <: ObjectId]: MacroBsonFormat[T] =
-     ObjectIdMacroBsonFormat[T]()
- 
-   implicit def macroBsonFormatForStringSubtype[T <: String]: MacroBsonFormat[T] =
-     StringMacroBsonFormat[T]()
- 
-   implicit def optMacroBsonFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Option[T]] =
-     OptMacroBsonFormat[T](tf)
- 
-   implicit def seqMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Seq[T]] =
-     IterableLikeMacroFormat[T, Seq[T]](tf)
+  given MacroBsonFormat[Int] = IntMacroBsonFormat(0)
+  given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
+  given MacroBsonFormat[Double] = DoubleMacroBsonFormat(0d)
+  given MacroBsonFormat[BigDecimal] = BigDecimalMacroBsonFormat()
+  given MacroBsonFormat[Boolean] = BooleanMacroBsonFormat(false)
+  given MacroBsonFormat[String] = StringMacroBsonFormat("")
+  given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()
+  given MacroBsonFormat[LocalDateTime] = LocalDateTimeMacroBsonFormat
+  given MacroBsonFormat[Instant] = InstantMacroBsonFormat()
+  given MacroBsonFormat[Array[Byte]] = BinaryMacroBsonFormat
+  given MacroBsonFormat[Locale] = LocaleMacroBsonFormat()
+  given MacroBsonFormat[Currency] = CurrencyMacroBsonFormat()
+  given MacroBsonFormat[UUID] = UUIDMacroBsonFormat[UUID]()
 
-   implicit def listMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[List[T]] =
-     IterableLikeMacroFormat[T, List[T]](tf)
+  //for all bases, or known subtypes only?
+  implicit def macroBsonFormatForObjectIdSubtype[T <: ObjectId]
+      : MacroBsonFormat[T] =
+    ObjectIdMacroBsonFormat[T]()
 
-   implicit def vectorMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Vector[T]] =
-     IterableLikeMacroFormat[T, Vector[T]](tf)
-   
-   implicit def setMacroFormat[T](using tf:MacroBsonFormat[T]): MacroBsonFormat[Set[T]] =
-     IterableLikeMacroFormat[T, Set[T]](tf)
+  implicit def macroBsonFormatForStringSubtype[T <: String]
+      : MacroBsonFormat[T] =
+    StringMacroBsonFormat[T]()
 
-   implicit def mapMacroFormat[K, T](using tf: MacroBsonFormat[T])(using MapKeyFormat[K]): MacroBsonFormat[Map[K, T]] =
-     MapMacroFormat[K, T](tf, summon[MapKeyFormat[K]])
+  implicit def optMacroBsonFormat[T](using
+      tf: MacroBsonFormat[T]
+  ): MacroBsonFormat[Option[T]] =
+    OptMacroBsonFormat[T](tf)
 
-   implicit def arrayMacroFormat[T: ClassTag](using tf:MacroBsonFormat[T]): MacroBsonFormat[Array[T]] =
-     ArrayMacroBsonFormat[T](tf)
+  implicit def seqMacroFormat[T](using
+      tf: MacroBsonFormat[T]
+  ): MacroBsonFormat[Seq[T]] =
+    IterableLikeMacroFormat[T, Seq[T]](tf)
+
+  implicit def listMacroFormat[T](using
+      tf: MacroBsonFormat[T]
+  ): MacroBsonFormat[List[T]] =
+    IterableLikeMacroFormat[T, List[T]](tf)
+
+  implicit def vectorMacroFormat[T](using
+      tf: MacroBsonFormat[T]
+  ): MacroBsonFormat[Vector[T]] =
+    IterableLikeMacroFormat[T, Vector[T]](tf)
+
+  implicit def setMacroFormat[T](using
+      tf: MacroBsonFormat[T]
+  ): MacroBsonFormat[Set[T]] =
+    IterableLikeMacroFormat[T, Set[T]](tf)
+
+  implicit def mapMacroFormat[K, T](using tf: MacroBsonFormat[T])(using
+      MapKeyFormat[K]
+  ): MacroBsonFormat[Map[K, T]] =
+    MapMacroFormat[K, T](tf, summon[MapKeyFormat[K]])
+
+  implicit def arrayMacroFormat[T: ClassTag](using
+      tf: MacroBsonFormat[T]
+  ): MacroBsonFormat[Array[T]] =
+    ArrayMacroBsonFormat[T](tf)

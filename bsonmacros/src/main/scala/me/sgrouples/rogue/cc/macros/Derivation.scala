@@ -5,8 +5,7 @@ import scala.deriving.Mirror
 import scala.collection.mutable.WrappedArray
 import scala.compiletime.{constValue, erasedValue, error, summonFrom}
 
-/**
-  * copied from circe
+/** copied from circe
   */
 object Derivation {
   private[macros] trait MacroBsonFormatDerivation
@@ -248,7 +247,7 @@ private[macros] trait CodecDerivation {
         }
     }
 }
-*/
+ */
 
 /*
 private[macros] trait DerivedEncoder[A] extends DerivedInstance[A] with Encoder.AsObject[A] {
@@ -319,4 +318,4 @@ private[macros] trait DerivedDecoder[A] extends DerivedInstance[A] with Decoder[
     case None => -1
   }
 }
-*/
+ */

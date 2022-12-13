@@ -6,5 +6,5 @@ trait NamesResolver {
   ): T
   protected def named[T <: io.fsq.field.Field[?, ?]](
       func: String => T
-  ): T 
+  ): T
 }

@@ -24,7 +24,8 @@ object MapKeyFormat {
   given MapKeyFormat[String] = DefaultMapKeyFormat[String](identity)
   given MapKeyFormat[Long] = DefaultMapKeyFormat[Long](_.toLong)
   given MapKeyFormat[Int] = DefaultMapKeyFormat[Int](_.toInt)
-  given ObjectIdMapKeyFormat: MapKeyFormat[ObjectId] = DefaultMapKeyFormat[ObjectId](new ObjectId(_))
+  given ObjectIdMapKeyFormat: MapKeyFormat[ObjectId] =
+    DefaultMapKeyFormat[ObjectId](new ObjectId(_))
   implicit def objectIdSubtypeMapKeyFormat[S <: ObjectId]: MapKeyFormat[S] =
     apply[S](ObjectIdMapKeyFormat.read(_).asInstanceOf[S])
 }

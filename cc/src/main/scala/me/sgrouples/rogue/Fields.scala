@@ -111,10 +111,10 @@ class EnumField[T <: Enumeration#Value, O](name: String, o: O, defaultVal: T)
   override def defaultValue: T = defaultVal
 }
 
-class EnumIdField[T <: Enumeration, O](name: String, o: O, val e:T)
+class EnumIdField[T <: Enumeration, O](name: String, o: O, val e: T)
     extends MCField[e.Value, O](name, o)
     with EnumInstance(e) {
-    override def defaultValue: e.Value = e(0)
+  override def defaultValue: e.Value = e(0)
 }
 
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
@@ -244,10 +244,12 @@ class OptInstantField[O](name: String, o: O)
     extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O)
     extends OCField[Boolean, O](name, o)
-class OptEnumField[T <: Enumeration, O](name: String, o: O, val e:T)
-    extends OCField[e.Value, O](name, o) with EnumInstance(e)
-class OptEnumIdField[T <: Enumeration, O](name: String, o: O, val e:T)
-    extends OCField[e.Value, O](name, o) with EnumInstance(e)
+class OptEnumField[T <: Enumeration, O](name: String, o: O, val e: T)
+    extends OCField[e.Value, O](name, o)
+    with EnumInstance(e)
+class OptEnumIdField[T <: Enumeration, O](name: String, o: O, val e: T)
+    extends OCField[e.Value, O](name, o)
+    with EnumInstance(e)
 class OptListField[V, O](name: String, o: O)
     extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O)
@@ -276,7 +278,7 @@ class OptCClassArrayField[C: ClassTag, MC <: CcMeta[C], O](
 class OptMapField[V, O](name: String, o: O)
     extends OCField[Map[String, V], O](name, o)
 
-/*    
+/*
 trait CcFields[T] {
   type RecRepr
   def flds: RecRepr
@@ -347,4 +349,4 @@ object CcFields extends LowPrioFields {
   type Aux[T, R] = CcFields[T] { type RecRepr = R }
   def apply[T](implicit f: CcFields[T]): Aux[T, f.RecRepr] = f
 }
-*/
+ */

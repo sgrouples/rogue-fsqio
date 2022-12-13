@@ -207,7 +207,7 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T])
   *   @tparam OwnerType
   */
 
-  /*
+/*
 class MCc[RecordType, OwnerType <: RCcMeta[RecordType]](
     collName: String
 )(implicit formats: BsonFormat[RecordType])
