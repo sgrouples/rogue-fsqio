@@ -6,7 +6,7 @@ scalaVersion := "3.2.1"
 lazy val field = (project in file("field")).settings(defaultSettings)
 lazy val bsonformats = (project in file("bsonformats")).settings(defaultSettings ++ Seq(
   name := "rogue-bsonformats",
-  libraryDependencies ++= RogueDependencies.bosnDeps
+  libraryDependencies ++= RogueDependencies.bsonDeps
 ))
 lazy val index = (project in file("index")).settings(defaultSettings ++ Seq(
   name := "rogue-index",

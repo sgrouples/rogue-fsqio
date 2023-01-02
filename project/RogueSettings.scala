@@ -51,11 +51,11 @@ object RogueSettings {
 }
 
 object RogueDependencies {
-  val mongoVer = "4.5.1"
-  val nettyVer = "4.1.74.Final"
-  val testcontainersScalaVersion = "0.39.12"
+  val mongoVer = "4.8.1"
+  val nettyVer = "4.1.86.Final"
+  val testcontainersScalaVersion = "0.40.12"
 
-  val bosnDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
+  val bsonDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
 
   val mongoDeps = Seq(
     "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer  % Compile cross(CrossVersion.for3Use2_13)
@@ -63,16 +63,15 @@ object RogueDependencies {
 
   val testDeps = Seq(
     "org.slf4j" % "slf4j-simple" % "1.7.36" % Test,
-    "org.scalameta" %% "munit" % "1.0.0-M3" % Test,
+    "org.scalameta" %% "munit" % "1.0.0-M7" % Test,
     "io.netty" % "netty-all" % nettyVer % Test,
     "io.netty" % "netty-transport-native-epoll" % nettyVer % Test,
     "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test,
-    "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion
+    "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion % Test
   )
 
-  val shapeless = "org.typelevel" %% "shapeless3-deriving" % "3.0.4"
   val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
   val coreDeps = mongoDeps
 
-  val ccDeps = mongoDeps ++ Seq(shapeless, tagging)  ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(tagging)  ++ testDeps
 }
