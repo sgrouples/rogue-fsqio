@@ -60,9 +60,9 @@ class MacroDerivationTests extends FunSuite:
 
     inline def roundTrip[T](v:T)(using t:MacroBsonFormat[T] )=
         val obj = t.write(v)
-        println(s"write ${v}")
+        /*println(s"write ${v}")
         println(s"wrote ${obj}")
-        println(s"valid names ${t.validNames()}")
+        println(s"valid names ${t.validNames()}")*/
         val r = t.read(obj)
         assertEquals(v, r, s" for type ${v.getClass}")
         

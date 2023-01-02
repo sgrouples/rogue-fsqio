@@ -240,10 +240,10 @@ object BinaryMacroBsonFormat extends MacroBaseBsonFormat[Array[Byte]] {
   override def write(t: Array[Byte]): BsonValue = new BsonBinary(t)
   override def defaultValue: Array[Byte] = Array.empty
   override def append(writer: BsonWriter, k: String, v: Array[Byte]): Unit = {
-    writer.writeString(k, v.toString)
+    writer.writeBinaryData(k, BsonBinary(v))
   }
   override def append(writer: BsonWriter, v: Array[Byte]): Unit = {
-    writer.writeString(v.toString)
+    writer.writeBinaryData(BsonBinary(v))
   }
 }
 

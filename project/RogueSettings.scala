@@ -71,7 +71,6 @@ object RogueDependencies {
   )
 
   val shapeless = "org.typelevel" %% "shapeless3-deriving" % "3.0.4"
-  //"com.chuusai" %% "shapeless" % "2.3.8"
   val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
   val coreDeps = mongoDeps
 

@@ -170,7 +170,6 @@ object MacroBsonFormatDerivingImpl:
         }
       }
     }
-    println(r.asTerm.show(using Printer.TreeShortCode))
     r
 
   def genSum[T: Type](using Quotes): Expr[MacroBaseBsonFormat[T]] =
