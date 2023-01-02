@@ -127,8 +127,8 @@ object MacroBsonFormatDerivingImpl:
           fieldsVec
         }.toVector //why no vector?
 
-        override val flds: Map[String, MacroBsonFormat[?]] = ${ fldsFormats }
-
+        override val flds: Map[String, BsonFormat[?]] = ${ fldsFormats } ++ (${ fldsFormats }.map{ case (name, f)=> subfields(name, f) }).flatten.toMap[String, BsonFormat[?]]
+          
         override def defaultValue: T = {
           //super ugly hack, but whatever
           read(new org.bson.BsonDocument())
