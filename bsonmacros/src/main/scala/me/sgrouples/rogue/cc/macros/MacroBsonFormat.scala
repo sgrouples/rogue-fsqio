@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc.macros
 
 import java.nio.{ByteBuffer, ByteOrder}
 import java.time.{Instant, LocalDateTime, ZoneOffset}
-import java.util.{Currency, Locale, UUID}
+import java.util.{Currency, Locale, UUID, TimeZone}
 
 import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{BaseBsonFormat, BsonFormat, SupportedLocales}
@@ -264,11 +264,25 @@ final class LocalDateTimeMacroBsonFormat
   }
 }
 
+final class TimeZoneMacroBsonFormat extends MacroBaseBsonFormat[TimeZone] {
+  override def read(b: BsonValue): TimeZone =
+    TimeZone.getTimeZone(b.asString().getValue)
+  override def write(tz: TimeZone): BsonValue = new BsonString(tz.getID)
+  override def defaultValue: TimeZone =
+    TimeZone.getTimeZone("UTC")
+  override def append(writer: BsonWriter, k: String, v: TimeZone): Unit =
+    writer.writeString(k, v.getID())
+  override def append(writer: BsonWriter, v: TimeZone): Unit =
+    writer.writeString(v.getID())
+}
+
 final class InstantMacroBsonFormat(default: Instant = Instant.ofEpochMilli(0))
     extends MacroBaseBsonFormat[Instant] {
   override def read(b: BsonValue): Instant = {
     if (b.isDateTime) {
       Instant.ofEpochMilli(b.asDateTime().getValue)
+    } else if (b.isNumber) {
+      Instant.ofEpochMilli(b.asNumber().longValue())
     } else defaultValue
   }
   override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
