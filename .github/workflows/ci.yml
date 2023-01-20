@@ -20,8 +20,6 @@ jobs:
           java-version: '11'
           cache: 'sbt'
       - name: Test
-        working-directory: backend
         run: sbt test
       - name: Publish
-        working-directory: backend
         run: sbt publish
