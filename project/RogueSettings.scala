@@ -7,12 +7,10 @@ import scalafix.sbt.ScalafixPlugin.autoImport.{
   scalafixScalaBinaryVersion,
   scalafixSemanticdb
 }
+import sbtghpackages.GitHubPackagesPlugin.autoImport._
+import com.github.sbt.git.GitPlugin.autoImport._
 
 object RogueSettings {
-
-  val nexus = "https://nexus.groupl.es/"
-  val nexusReleases = "releases" at nexus + "repository/maven-releases/"
-  val nexusSnapshots = "snapshots" at nexus + "repository/maven-snapshots/"
 
   lazy val macroSettings: Seq[Setting[_]] = Seq(
     libraryDependencies ++= Seq(
@@ -26,23 +24,23 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "6.2.0",
+    githubOwner := "Sgrouples",
+    githubRepository := "rogue-fsqio",
+    githubTokenSource := TokenSource.Or(
+      TokenSource.Environment("GITHUB_TOKEN"),
+      TokenSource.Environment("SHELL")
+    ),
+    git.useGitDescribe := true,
+    git.gitDescribePatterns := Seq("v*"),
+    versionScheme := Some("strict"),
     organization := "me.sgrouples",
     scalaVersion := "2.13.8",
-    isSnapshot := false,
     publishMavenStyle := true,
     Test / publishArtifact := false,
     pomIncludeRepository := { _ => false },
-    publishTo := version { v =>
-      if (v.endsWith("-SNAPSHOT"))
-        Some(nexusSnapshots)
-      else
-        Some(nexusReleases)
-    }.value,
     Test / fork := true,
     Test / logBuffered := false,
     Test / parallelExecution := false,
-    resolvers ++= Seq(nexusReleases, nexusSnapshots),
     scalacOptions ++= Seq(
       "-deprecation",
       "-unchecked",
@@ -54,7 +52,6 @@ object RogueSettings {
     scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(
       scalaVersion.value
     ),
-    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials"),
     Test / testOptions ++= Seq(
       Tests.Setup(() => MongoEmbedded.start),
       Tests.Cleanup(() => MongoEmbedded.stop)
