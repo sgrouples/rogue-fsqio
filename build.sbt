@@ -15,5 +15,7 @@ lazy val bsonmacros = (project in file("bsonmacros")).dependsOn(bsonformats).set
 lazy val bsonshapeless = (project in file("bsonshapeless")).dependsOn(bsonformats).settings(defaultSettings)
 lazy val cc = (project in file("cc")).dependsOn(bsonformats,field, core, bsonmacros, bsonshapeless).settings(defaultSettings)
 lazy val root = (project in file("."))
+  .enablePlugins(GitVersioning)
   .settings(defaultSettings)
+  .settings(publish / skip := true)
   .aggregate(field,core,index,indexchecker,cc,bsonmacros,bsonshapeless,bsonformats)
