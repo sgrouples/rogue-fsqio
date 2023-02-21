@@ -26,6 +26,12 @@ case class ExecutableQuery[MB, M <: MB, R, State](
     */
   def count()(implicit db: MongoDatabase): Long = waitForFuture(countAsync())
 
+  def estimatedDocumentCount()(implicit
+      ev1: Required[State, InitialState],
+      db: MongoDatabase
+  ): Long =
+    waitForFuture(estimatedDocumentCountAsync())
+
   /** Returns the number of distinct values returned by a query. The query must
     * not have limit or skip clauses.
     */
@@ -160,6 +166,12 @@ case class ExecutableQuery[MB, M <: MB, R, State](
   // async ops
   def countAsync()(implicit dba: MongoDatabase): Future[Long] =
     ex.async.count(query)
+
+  def estimatedDocumentCountAsync()(implicit
+      ev1: Required[State, InitialState],
+      dba: MongoDatabase
+  ): Future[Long] =
+    ex.async.estimatedDocumentCount(query)
 
   def foreachAsync(f: R => Unit)(implicit dba: MongoDatabase): Future[Unit] =
     ex.async.foreach(query)(f)
@@ -424,3 +436,4 @@ case class AggregateQuery[MB, M <: MB,  State](collectionName:String, ex: BsonEx
   private[this] def getCollection(db:MongoDatabase, collectionName:String, readPreference: ReadPreference) =
     db.getCollection(collectionName).withReadPreference(readPreference)
 }
+
