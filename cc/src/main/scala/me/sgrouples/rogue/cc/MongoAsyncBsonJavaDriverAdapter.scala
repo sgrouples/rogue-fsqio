@@ -89,6 +89,15 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
     obs.toFuture()
   }
 
+  def estimatedDocumentCount[M <: MB](
+      query: Query[M, _, _],
+      readPreference: Option[ReadPreference]
+  )(implicit dba: MongoDatabase): Future[Long] = {
+    val coll = getDBCollection(query, readPreference)
+    val obs: SingleObservable[Long] = coll.estimatedDocumentCount()
+    obs.toFuture()
+  }
+
   def exists[M <: MB](
       query: Query[M, _, _],
       readPreference: Option[ReadPreference]

@@ -60,7 +60,7 @@ object RogueSettings {
 }
 
 object RogueDependencies {
-  val mongoVer = "4.5.0"
+  val mongoVer = "4.9.0"
   val nettyVer = "4.1.74.Final"
 
   val bosnDeps = Seq("org.mongodb" % "bson" % mongoVer % Compile)

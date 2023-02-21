@@ -52,6 +52,17 @@ trait AsyncBsonQueryExecutor[MB] extends ReadWriteSerializers[MB] with Rogue {
     adapter.count(query, readPreference)
   }
 
+  def estimatedDocumentCount[M <: MB, State](
+      query: Query[M, _, State],
+      readPreference: Option[ReadPreference] = None
+  )(implicit
+      ev1: Required[State, InitialState],
+      ev2: ShardingOk[M, State],
+      dba: MongoDatabase
+  ): Future[Long] = {
+    adapter.estimatedDocumentCount(query, readPreference)
+  }
+
   def exists[M <: MB, State](
       query: Query[M, _, State],
       readPreference: Option[ReadPreference] = None
