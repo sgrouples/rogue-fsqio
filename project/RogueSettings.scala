@@ -51,10 +51,6 @@ object RogueSettings {
     semanticdbVersion := scalafixSemanticdb.revision,
     scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(
       scalaVersion.value
-    ),
-    Test / testOptions ++= Seq(
-      Tests.Setup(() => MongoEmbedded.start),
-      Tests.Cleanup(() => MongoEmbedded.stop)
     )
   ) ++ macroSettings
 }
@@ -62,6 +58,7 @@ object RogueSettings {
 object RogueDependencies {
   val mongoVer = "4.9.0"
   val nettyVer = "4.1.74.Final"
+  val testcontainersScalaVersion = "0.39.12"
 
   val bosnDeps = Seq("org.mongodb" % "bson" % mongoVer % Compile)
 
@@ -74,7 +71,8 @@ object RogueDependencies {
     "org.scalameta" %% "munit" % "0.7.27" % Test,
     "io.netty" % "netty-all" % nettyVer % Test,
     "io.netty" % "netty-transport-native-epoll" % nettyVer % Test,
-    "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test
+    "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test,
+    "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion % Test
   )
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
