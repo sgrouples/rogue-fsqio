@@ -17,7 +17,7 @@ import org.testcontainers.utility.DockerImageName
 object MongoTestConn {
 
   var client: Option[MongoClient] = None
-  private val containerDef = MongoDBContainer.Def(DockerImageName.parse("mongo:4.2.17"))
+  private val containerDef = MongoDBContainer.Def(DockerImageName.parse("mongo:5.0.10"))
   private var containerRef: Option[MongoDBContainer] = None
 
   def create(threadNamePrefix: String): EventLoopGroup = {
