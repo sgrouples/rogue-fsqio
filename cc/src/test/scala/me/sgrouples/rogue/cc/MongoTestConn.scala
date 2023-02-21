@@ -44,7 +44,7 @@ object MongoTestConn {
     }
     val sff = nettyStreamFactoryFactory(create("XX"))
     val settings = MongoClientSettings.builder()
-      .applyConnectionString(ConnectionString(containerRef.map(_.replicaSetUrl).getOrElse(throw RuntimeException("Mongo container is empty"))))
+      .applyConnectionString(ConnectionString(containerRef.map(_.replicaSetUrl).getOrElse(throw new RuntimeException("Mongo container is empty"))))
       .streamFactoryFactory(sff)
       .uuidRepresentation(UuidRepresentation.JAVA_LEGACY)
       .build()
