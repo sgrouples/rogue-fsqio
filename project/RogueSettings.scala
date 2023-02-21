@@ -72,7 +72,7 @@ object RogueDependencies {
     "io.netty" % "netty-all" % nettyVer % Test,
     "io.netty" % "netty-transport-native-epoll" % nettyVer % Test,
     "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test,
-    "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion
+    "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion % Test
   )
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
