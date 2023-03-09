@@ -12,6 +12,12 @@ private[rogue] object SupportedLocales {
     mb += ("nb" -> new Locale(
       "nb"
     )) // norwegian bokmål, missing from getAvailableLocales
+
+    // supporting legacy ISO language codes on Java 17:
+    mb += ("iw" -> new Locale("iw"))
+    mb += ("ji" -> new Locale("ji"))
+    mb += ("in" -> new Locale("in"))
+
     mb.result()
   }
 }
