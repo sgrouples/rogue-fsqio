@@ -1,13 +1,13 @@
 package me.sgrouples.rogue.cc.macros
 
-import java.time.Instant
-import java.util.{Currency, Locale, UUID}
-
+import com.softwaremill.tagging._
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder}
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
-import com.softwaremill.tagging._
+
+import java.time.Instant
+import java.util.{Currency, Locale, UUID}
 
 case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
 
@@ -50,7 +50,7 @@ object Metas {
       ClassRequiredField(VenueClaimBsonR, VenueClaimBson.default)
 
     @f val last_updated = LocalDateTimeField
-    @f val popularity = ListField[Long]
+    @f val popularity = VectorField[Long]
     @f val categories = ListField[ObjectId]
 
     val idIdx = index(id, Asc)
