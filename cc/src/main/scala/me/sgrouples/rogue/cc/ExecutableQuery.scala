@@ -5,14 +5,32 @@ package me.sgrouples.rogue.cc
 
 import com.mongodb.client.result.InsertManyResult
 import io.fsq.field.Field
-import io.fsq.rogue.{AddLimit, FindAndModifyQuery, ModifyQuery, Query, RequireShardKey, Required, ShardingOk, Unlimited, Unselected, Unskipped, _}
 import io.fsq.rogue.MongoHelpers.MongoSelect
+import io.fsq.rogue.{
+  AddLimit,
+  FindAndModifyQuery,
+  ModifyQuery,
+  Query,
+  RequireShardKey,
+  Required,
+  ShardingOk,
+  Unlimited,
+  Unselected,
+  Unskipped,
+  _
+}
+import me.sgrouples.rogue.ListField
 import org.mongodb.scala._
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult}
+import org.mongodb.scala.result.{
+  DeleteResult,
+  InsertManyResult,
+  InsertOneResult,
+  UpdateResult
+}
 import org.reactivestreams.Publisher
 
-import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.concurrent.{blocking, ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, R, State](
@@ -65,6 +83,19 @@ case class ExecutableQuery[MB, M <: MB, R, State](
     */
   def distinctAsync[V: ClassTag](
       field: M => Field[V, _],
+      readPreference: Option[ReadPreference] = None
+  )(implicit db: MongoDatabase): Future[Seq[V]] = {
+    ex.async.distinct(query, readPreference)(
+      field.asInstanceOf[M => Field[V, M]]
+    )
+  }
+
+  /** Like above but must be called with explicit types. Usefull when the field
+    * type is an Array/List/Seq. See here:
+    * https://www.mongodb.com/docs/manual/reference/command/distinct/#return-distinct-values-for-an-array-field
+    */
+  def distinctAsyncT[V: ClassTag, GenField[_, _] <: Field[_, _]](
+      field: M => GenField[V, _],
       readPreference: Option[ReadPreference] = None
   )(implicit db: MongoDatabase): Future[Seq[V]] = {
     ex.async.distinct(query, readPreference)(
@@ -433,7 +464,10 @@ case class AggregateQuery[MB, M <: MB,  State](collectionName:String, ex: BsonEx
       .toFuture()
   }
 
-  private[this] def getCollection(db:MongoDatabase, collectionName:String, readPreference: ReadPreference) =
+  private[this] def getCollection(
+      db: MongoDatabase,
+      collectionName: String,
+      readPreference: ReadPreference
+  ) =
     db.getCollection(collectionName).withReadPreference(readPreference)
 }
-
