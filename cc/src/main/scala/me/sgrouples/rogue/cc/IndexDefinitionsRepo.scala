@@ -1,5 +1,6 @@
 package me.sgrouples.rogue.cc
 
+import me.sgrouples.rogue.cc.macros.MCcMeta
 import org.mongodb.scala.MongoDatabase
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,7 +9,7 @@ import scala.util.Try
 trait IndexDefinitionsRepo {
   implicit def db: MongoDatabase
 
-  def meta: IndexDefinitions[_, _]
+  def meta: MCcMeta[_, _] with IndexDefinitions[_, _]
 
   def tryCreateDefinedIndexes(): Seq[Try[String]] = meta.tryCreateDefinedIndexes
 
