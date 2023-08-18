@@ -1,8 +1,8 @@
 package me.sgrouples.rogue.cc.macros
 
 import scala.annotation.StaticAnnotation
-import scala.language.experimental.macros
 import scala.annotation.compileTimeOnly
+import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 
 @compileTimeOnly("f annotation requires macros paradise plugin")
@@ -48,6 +48,14 @@ object GenFieldName {
       case q"$mods val $pat = EnumField($expr)" :: Nil =>
         val fname = Constant(pat.toString())
         q"$mods val $pat = EnumField($fname, $expr)"
+
+      case q"$mods val $pat = EnumIdField($expr)" :: Nil =>
+        val fname = Constant(pat.toString())
+        q"$mods val $pat = EnumIdField($fname, $expr)"
+
+      case q"$mods val $pat = OptEnumIdField($expr)" :: Nil =>
+        val fname = Constant(pat.toString())
+        q"$mods val $pat = OptEnumIdField($fname, $expr)"
 
       case q"$mods val $pat = $expr($exp1)" :: Nil =>
         val r = q"$mods val $pat = $expr($exp1)"

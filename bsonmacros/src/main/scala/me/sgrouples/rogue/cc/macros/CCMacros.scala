@@ -102,6 +102,8 @@ class MacroCCGenerator(val c: Context) {
         q"new _root_.me.sgrouples.rogue.cc.macros.LocalDateTimeMacroBsonFormat()"
       } else if (at <:< typeOf[BigDecimal]) {
         q"new _root_.me.sgrouples.rogue.cc.macros.BigDecimalMacroBsonFormat()"
+      } else if (at <:< typeOf[java.util.TimeZone]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.TimeZoneMacroBsonFormat()"
       } else {
         val x = appliedType(typeOf[MacroBsonFormat[_]], at)
         c.inferImplicitValue(x)
