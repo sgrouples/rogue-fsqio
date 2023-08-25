@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc.macros
 
-import scala.annotation.StaticAnnotation
-import scala.annotation.compileTimeOnly
+import scala.annotation.{compileTimeOnly, StaticAnnotation}
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 
@@ -48,6 +47,10 @@ object GenFieldName {
       case q"$mods val $pat = EnumField($expr)" :: Nil =>
         val fname = Constant(pat.toString())
         q"$mods val $pat = EnumField($fname, $expr)"
+
+      case q"$mods val $pat = OptEnumField($expr)" :: Nil =>
+        val fname = Constant(pat.toString())
+        q"$mods val $pat = OptEnumField($fname, $expr)"
 
       case q"$mods val $pat = EnumIdField($expr)" :: Nil =>
         val fname = Constant(pat.toString())
