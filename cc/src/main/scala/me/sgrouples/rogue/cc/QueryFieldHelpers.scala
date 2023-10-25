@@ -2,7 +2,6 @@ package me.sgrouples.rogue.cc
 
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, TimeUnit}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
-
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.cc.debug.Debug
 import org.bson.types.ObjectId
@@ -13,6 +12,7 @@ import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
 import scala.reflect.{ClassTag, api}
 import Debug.DefaultImplicits._
+import enumeratum.{Enum, EnumEntry}
 import me.sgrouples.rogue.map.MapKeyFormat
 
 import scala.concurrent.duration.Duration
@@ -793,6 +793,16 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptLocaleField(name: String): OptLocaleField[Meta] @@ Marker =
     named(name)(new OptLocaleField[Meta](_, this))
 
+  protected def EnumeratumField[E <: EnumEntry](
+      e: Enum[E]
+  ): EnumeratumField[E, Meta] @@ Marker =
+    named(new EnumeratumField[E, Meta](e, _, this))
+
+  protected def EnumeratumField[E <: EnumEntry](
+      name: String,
+      e: Enum[E]
+  ): EnumeratumField[E, Meta] @@ Marker =
+    named(name)(new EnumeratumField[E, Meta](e, _, this))
 }
 
 trait NamedQueryFieldHelpers[Meta]

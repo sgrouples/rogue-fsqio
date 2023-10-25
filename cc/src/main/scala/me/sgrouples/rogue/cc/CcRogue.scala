@@ -6,15 +6,39 @@ package me.sgrouples.rogue.cc
 // Copyright 2016 Sgrouples Inc. All Rights Reserved.
 //
 
+import enumeratum.EnumEntry
+
 import java.time.{Instant, LocalDateTime}
 import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
-import io.fsq.rogue.{FindAndModifyQuery, MandatorySelectField, ModifyQuery, OptionalSelectField, Query, QueryField, QueryHelpers, Rogue, RogueException, SelectField, ShardingOk, Unlimited, Unordered, Unselected, Unskipped, _}
+import io.fsq.rogue.{
+  FindAndModifyQuery,
+  MandatorySelectField,
+  ModifyQuery,
+  OptionalSelectField,
+  Query,
+  QueryField,
+  QueryHelpers,
+  Rogue,
+  RogueException,
+  SelectField,
+  ShardingOk,
+  Unlimited,
+  Unordered,
+  Unselected,
+  Unskipped,
+  _
+}
 import io.fsq.rogue.MongoHelpers.AndCondition
 
 import java.util.{Currency, Locale, UUID}
 import me.sgrouples.rogue._
 import org.bson.types.ObjectId
-import org.mongodb.scala.result.{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult}
+import org.mongodb.scala.result.{
+  DeleteResult,
+  InsertManyResult,
+  InsertOneResult,
+  UpdateResult
+}
 
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -112,7 +136,9 @@ trait CcRogue {
     ExecutableFindAndModifyQuery(query, CcBsonExecutors)
   }
 
-  implicit def ccMetaToAggregateQuery[MB <: CcMeta[_], M <: MB, State](meta: M): AggregateQuery[MB, M,InitialState] =
+  implicit def ccMetaToAggregateQuery[MB <: CcMeta[_], M <: MB, State](
+      meta: M
+  ): AggregateQuery[MB, M, InitialState] =
     AggregateQuery(meta.collectionName, CcBsonExecutors)
 
   implicit def metaRecordToCcQuery[MB <: CcMeta[_], M <: MB, R](
@@ -309,12 +335,21 @@ trait CcRogue {
 
   implicit def updateResultToVoid(i: Future[UpdateResult]): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
-  implicit def deleteResultToVoid(i: Future[com.mongodb.client.result.DeleteResult]): Future[Unit] =
+  implicit def deleteResultToVoid(
+      i: Future[com.mongodb.client.result.DeleteResult]
+  ): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
-  implicit def insertManyResultToVoid(i: Future[InsertManyResult]): Future[Unit] =
+  implicit def insertManyResultToVoid(
+      i: Future[InsertManyResult]
+  ): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
   implicit def insertOneResultToVoid(i: Future[InsertOneResult]): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
+
+  implicit def enumeratumFieldToEnumeratumEnumQueryField[M, E <: EnumEntry](
+      f: EnumeratumField[E, M]
+  ): EnumeratumEnumQueryField[M, E] =
+    new EnumeratumEnumQueryField(f)
 }
 
 object CcRogue extends Rogue with CcRogue
