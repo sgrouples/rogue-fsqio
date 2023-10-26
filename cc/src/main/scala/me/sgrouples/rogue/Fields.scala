@@ -1,7 +1,6 @@
 package me.sgrouples.rogue
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.{Currency, Locale, UUID}
-
 import io.fsq.field.{Field, OptionalField, RequiredField}
 import me.sgrouples.rogue.cc.CcMeta
 import me.sgrouples.rogue.enums.ReflectEnumInstance
@@ -10,6 +9,7 @@ import org.bson.types.ObjectId
 import shapeless._
 import shapeless.labelled.{FieldType, field}
 import com.softwaremill.tagging._
+import enumeratum.{Enum, EnumEntry}
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
@@ -120,6 +120,11 @@ class EnumIdField[T <: Enumeration: TypeTag, O](name: String, o: O)
     with ReflectEnumInstance[T] {
   private val enum = enumeration
   override def defaultValue: T#Value = enum(0)
+}
+
+class EnumeratumField[E <: EnumEntry, O](e: Enum[E], name: String, o: O)
+    extends MCField[E, O](name, o) {
+  override def defaultValue: E = e.values.head
 }
 
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {

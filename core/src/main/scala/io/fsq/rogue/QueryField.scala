@@ -193,6 +193,11 @@ class EnumIdQueryField[M, E <: Enumeration#Value](field: Field[E, M])
   override def valueToDB(e: E) = e.id
 }
 
+class EnumeratumEnumQueryField[M, E <: enumeratum.EnumEntry](field: Field[E, M])
+    extends AbstractQueryField[E, E, String, M](field) {
+  override def valueToDB(e: E) = e.entryName
+}
+
 class GeoQueryField[M](field: Field[LatLong, M])
     extends AbstractQueryField[LatLong, LatLong, java.util.List[Double], M](
       field

@@ -2,15 +2,17 @@ package me.sgrouples.rogue.cc.macros
 
 import java.nio.{ByteBuffer, ByteOrder}
 import java.time.{Instant, LocalDateTime, ZoneOffset}
-import java.util.{Currency, Locale, UUID, TimeZone}
-
+import java.util.{Currency, Locale, TimeZone, UUID}
 import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{BaseBsonFormat, BsonFormat, SupportedLocales}
 import org.bson._
 import org.bson.types.{Decimal128, ObjectId}
+
 import scala.collection.Factory
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
+import enumeratum._
+import enumeratum.values.ValueEnumEntry
 
 @implicitNotFound("MacroGen can't generate for ${T}")
 trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
@@ -355,6 +357,26 @@ trait EnumMacroFormats {
 
 }
 
+trait EnumeratumMacroFormats {
+
+  def enumMacroFormat[T <: EnumEntry](e: Enum[T]): MacroBsonFormat[T] =
+    new MacroBaseBsonFormat[T] {
+      override def read(b: BsonValue): T = {
+        if (b.isString) e.withName(b.asString().getValue)
+        else if (b.isNumber) e.values(b.asNumber().intValue())
+        else defaultValue
+      }
+      override def defaultValue: T = e.values.head
+      override def write(t: T): BsonValue = new BsonString(t.entryName)
+      override def append(writer: BsonWriter, k: String, v: T): Unit = {
+        writer.writeString(k, v.entryName)
+      }
+      override def append(writer: BsonWriter, v: T): Unit = {
+        writer.writeString(v.entryName)
+      }
+    }
+}
+
 class IterableLikeMacroFormat[T, C <: Iterable[T]](inner: MacroBsonFormat[T])(
     implicit f: Factory[T, C]
 ) extends MacroBsonFormat[C] {
@@ -505,3 +527,5 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T])(implicit
 }
 
 object EnumMacroFormats extends EnumMacroFormats
+
+object EnumeratumMacroFormats extends EnumeratumMacroFormats

@@ -75,9 +75,10 @@ object RogueDependencies {
     "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion % Test
   )
 
+  val enumeratum = "com.beachape" %% "enumeratum" % "1.7.2"
   val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
   val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
-  val coreDeps = mongoDeps
+  val coreDeps = mongoDeps ++ Seq(enumeratum)
 
   val ccDeps = mongoDeps ++ Seq(shapeless, tagging) ++ testDeps
 }
