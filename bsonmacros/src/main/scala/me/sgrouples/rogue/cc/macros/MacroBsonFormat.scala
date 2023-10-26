@@ -363,6 +363,7 @@ trait EnumeratumMacroFormats {
     new MacroBaseBsonFormat[T] {
       override def read(b: BsonValue): T = {
         if (b.isString) e.withName(b.asString().getValue)
+        else if (b.isNumber) e.values(b.asNumber().intValue())
         else defaultValue
       }
       override def defaultValue: T = e.values.head
