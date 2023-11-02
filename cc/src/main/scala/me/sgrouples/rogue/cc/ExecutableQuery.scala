@@ -395,10 +395,18 @@ case class InsertableQuery[MB, M <: MB, R, State](
   import Waiter._
 
   def insertOneAsync(
+      t: R,
+      writeConcern: WriteConcern
+  )(implicit dba: MongoDatabase): Future[InsertOneResult] = {
+    ex.async.insertOne(query, t, writeConcern)
+  }
+
+  def insertOneAsync(
       t: R
   )(implicit dba: MongoDatabase): Future[InsertOneResult] = {
     ex.async.insertOne(query, t)
   }
+
   def insertManyAsync(
       ts: Seq[R]
   )(implicit dba: MongoDatabase): Future[InsertManyResult] = {
