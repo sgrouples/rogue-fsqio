@@ -10,7 +10,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.mongodb.scala.ObservableFuture
 
-case class NumModel(_id: Int, bla: String)
+case class NumModel(_id: Int, bla: String) derives MacroBsonFormat
 
 class AsyncBatchSpec extends FunSuite {
   class NumModelMeta extends MCcMeta[NumModel, NumModelMeta]("nummodel") {

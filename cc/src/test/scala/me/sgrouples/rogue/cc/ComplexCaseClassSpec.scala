@@ -57,7 +57,7 @@ case class Role(
     name: RoleName.Value,
     permissions: Set[Permission.Value],
     origin: Option[RoleName.Value] = None
-)
+) derives MacroBsonFormat
 
 case class Group(
     id: ObjectId,
@@ -85,7 +85,7 @@ case class Group(
     pdFeaturedPosition: Option[Int],
     createdAt: Instant,
     teamId: Option[Team.Id]
-)
+) derives MacroBsonFormat
 
 class ComplexCaseClassSpec extends FunSuite {
 

@@ -9,7 +9,7 @@ import munit.FunSuite
 import scala.concurrent.Future
 import scala.util.Try
 import scala.concurrent.ExecutionContext.Implicits.global
-case class TestDomainObject(id: ObjectId)
+case class TestDomainObject(id: ObjectId) derives MacroBsonFormat
 
 trait BaseTraitA[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
@@ -38,8 +38,8 @@ trait TestQueryTraitB[OwnerType] {
 
 }
 
-case class AnotherValue(a: String)
-case class DifferentValue(a: String)
+case class AnotherValue(a: String) derives MacroBsonFormat
+case class DifferentValue(a: String) derives MacroBsonFormat
 
 class TestDomainObjectMeta
     extends MCcMeta[TestDomainObject, TestDomainObjectMeta]

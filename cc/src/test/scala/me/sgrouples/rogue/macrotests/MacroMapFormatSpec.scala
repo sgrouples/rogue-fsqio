@@ -11,20 +11,20 @@ object Domain {
 }
 class MacroMapFormatSpec extends FunSuite {
 
-  case class StringMap(value: Map[String, Long])
-  case class ObjectIdMap(value: Map[ObjectId, Long])
+  case class StringMap(value: Map[String, Long]) derives MacroBsonFormat
+  case class ObjectIdMap(value: Map[ObjectId, Long]) derives MacroBsonFormat
   case class OptMapStrLong(
       expanded: Option[Map[String, Long]],
       aliased: Option[StrLongMapT]
-  )
-  case class MapStrLong(expanded: Map[String, Long], aliased: StrLongMapT)
+  ) derives MacroBsonFormat
+  case class MapStrLong(expanded: Map[String, Long], aliased: StrLongMapT) derives MacroBsonFormat
 
   trait M
 
   type ObjectIdSubtype = ObjectId @@ M
 
-  case class ObjectIdSubtypeMap(value: Map[ObjectIdSubtype, Long])
-  case class CustomKeyMap(value: Map[CustomKey, Long])
+  case class ObjectIdSubtypeMap(value: Map[ObjectIdSubtype, Long]) derives MacroBsonFormat
+  case class CustomKeyMap(value: Map[CustomKey, Long]) derives MacroBsonFormat
 
   class StringMapMeta extends MCcMeta[StringMap, StringMapMeta]("smm")
 

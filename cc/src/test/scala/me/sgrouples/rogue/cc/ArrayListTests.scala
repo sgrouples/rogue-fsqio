@@ -10,7 +10,7 @@ import scala.concurrent.Future
 case class ArrayOfListWrapper(
                                arrayOfList: Array[List[String]],
                                _id: Int = 1
-                       )
+                       ) derives MacroBsonFormat
 
 class ArrayOfListWrapperMeta extends MCcMeta[ArrayOfListWrapper, ArrayOfListWrapperMeta]() {
   val id = IntField("id")

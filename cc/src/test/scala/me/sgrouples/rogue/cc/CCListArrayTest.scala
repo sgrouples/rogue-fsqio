@@ -7,7 +7,7 @@ import org.bson.types.ObjectId
 import munit.FunSuite
 import me.sgrouples.rogue.QueryParser.*
 
-case class Inner(a: Int, b: String, c: Array[String] = Array.empty)
+case class Inner(a: Int, b: String, c: Array[String] = Array.empty) derives MacroBsonFormat
 
 case class Outer(
     _id: ObjectId,
@@ -15,7 +15,7 @@ case class Outer(
     innerArray: Array[Inner],
     innerOptArray: Option[Array[Inner]],
     innerOptList: Option[List[Inner]]
-)
+) derives MacroBsonFormat
 object InnerR extends MCcMeta[Inner, InnerR.type]("") {
   val a = new IntField("a", this)
   val b = new StringField("b", this)

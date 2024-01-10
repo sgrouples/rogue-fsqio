@@ -14,7 +14,7 @@ object EnumIdFieldEnum extends Enumeration {
   given MacroBsonFormat[EnumIdFieldEnum.Value] = EnumMacroFormats.enumValueMacroFormat(EnumIdFieldEnum)
 }
 
-case class EnumIdFieldClass(`enum`: EnumIdFieldEnum.Value)
+case class EnumIdFieldClass(`enum`: EnumIdFieldEnum.Value) derives MacroBsonFormat
 
 class EnumIdFieldSpecMeta
     extends MCcMeta[EnumIdFieldClass, EnumIdFieldSpecMeta] {

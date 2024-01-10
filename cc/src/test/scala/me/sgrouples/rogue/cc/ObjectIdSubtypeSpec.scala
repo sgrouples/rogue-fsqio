@@ -45,7 +45,7 @@ trait TypedObjectId[RecordType, TagType] {
   }
 }
 
-case class A(_id: A.Id, b: String)
+case class A(_id: A.Id, b: String) derives MacroBsonFormat
 
 object A extends TypedObjectId[A, A]
 
@@ -99,7 +99,7 @@ trait TypedStringId[RecordType, TagType] {
   }
 }
 
-case class B(id: B.Id)
+case class B(id: B.Id) derives MacroBsonFormat
 
 object B extends TypedStringId[B, B]
 

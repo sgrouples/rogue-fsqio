@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc.macros
 import munit.FunSuite
 import me.sgrouples.rogue.cc.*
 
-case class CArrays(bytes: Array[Byte], strings:Array[String])
+case class CArrays(bytes: Array[Byte], strings:Array[String]) derives MacroBsonFormat
 
 class BinArrayTest extends FunSuite {
  class CMeta extends MCcMeta[CArrays, CMeta]("cm") {

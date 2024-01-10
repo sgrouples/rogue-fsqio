@@ -5,7 +5,7 @@ import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
 import com.softwaremill.tagging.*
 
-case class IdOneEnum(_id: ObjectId, one: String, en: VenueStatus.Value)
+case class IdOneEnum(_id: ObjectId, one: String, en: VenueStatus.Value) derives MacroBsonFormat
 
 class CcMetaSpec extends FunSuite {
 

@@ -7,10 +7,15 @@ import org.bson.types.ObjectId
 import com.softwaremill.tagging.*
 import me.sgrouples.rogue.cc.CcRogue.*
 
-
 case class CustomKey(value: Long) extends AnyVal
-case class StringMap(value: Map[String, Long])
-case class ObjectIdMap(value: Map[ObjectId, Long])
+
+object CustomKey {
+  given MapKeyFormat[CustomKey] =
+    MapKeyFormat(s => CustomKey(s.toLong), _.value.toString)
+}
+
+case class StringMap(value: Map[String, Long]) derives MacroBsonFormat
+case class ObjectIdMap(value: Map[ObjectId, Long]) derives MacroBsonFormat
 class StringMapMeta extends MCcMeta[StringMap, StringMapMeta]
 
 object MTypes {
@@ -18,7 +23,8 @@ object MTypes {
   type ObjectIdSubtype = ObjectId @@ M
 }
 case class ObjectIdSubtypeMap(value: Map[MTypes.ObjectIdSubtype, Long])
-case class CustomKeyMap(value: Map[CustomKey, Long])
+    derives MacroBsonFormat
+case class CustomKeyMap(value: Map[CustomKey, Long]) derives MacroBsonFormat
 
 class MapFormatSpec extends FunSuite {
 

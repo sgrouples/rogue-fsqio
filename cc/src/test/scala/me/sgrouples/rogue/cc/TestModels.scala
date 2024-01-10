@@ -56,7 +56,7 @@ case class V6(
     tags: List[String]
 )
 
-case class SourceBson(name: String, url: String)
+case class SourceBson(name: String, url: String) derives MacroBsonFormat
 
 object VenueClaimBson {
   val default = VenueClaimBson(-1L, ClaimStatus.pending)
@@ -67,7 +67,7 @@ case class VenueClaimBson(
     status: ClaimStatus.Value = ClaimStatus.pending,
     source: Option[SourceBson] = None,
     date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
-)
+) derives MacroBsonFormat
 
 object VenueClaim {
   def newId = new ObjectId().taggedWith[VenueClaim]
@@ -80,7 +80,7 @@ case class VenueClaim(
     status: ClaimStatus.Value,
     reason: Option[RejectReason.Value] = None,
     date: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
-)
+) derives MacroBsonFormat
 
 object Venue {
   def newId = new ObjectId().taggedWith[Venue]
@@ -102,18 +102,18 @@ case class Venue(
     claims: List[VenueClaimBson],
     lastClaim: Option[VenueClaimBson],
     firstClaim: VenueClaimBson = VenueClaimBson.default
-)
+) derives MacroBsonFormat
 
 case class Tip(
     _id: ObjectId,
     legid: Long,
     counts: Map[String, Long],
     userId: Option[Long] = None
-)
+) derives MacroBsonFormat
 
-case class OneComment(timestamp: String, userid: Long, comment: String)
+case class OneComment(timestamp: String, userid: Long, comment: String) derives MacroBsonFormat
 
-case class Comment(comments: List[OneComment])
+case class Comment(comments: List[OneComment]) derives MacroBsonFormat
 
 object ConsumerPrivilege extends Enumeration {
   type ConsumerPrivilege = Value
@@ -121,14 +121,14 @@ object ConsumerPrivilege extends Enumeration {
   given MacroBsonFormat[ConsumerPrivilege.Value] = EnumMacroFormats.enumNameMacroFormat(ConsumerPrivilege)
 }
 
-case class OAuthConsumer(privileges: List[ConsumerPrivilege.Value])
+case class OAuthConsumer(privileges: List[ConsumerPrivilege.Value]) derives MacroBsonFormat
 
 case class OptValCC(
     _id: ObjectId = new ObjectId(),
     maybes: Option[String] = None,
     maybeid: Option[ObjectId] = None,
     realString: String
-)
+) derives MacroBsonFormat
 
 object Metas {
 
@@ -226,16 +226,16 @@ object Metas {
     val rs = new StringField("realString", this)
   }
 
-  case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
+  case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now()) derives MacroBsonFormat
   object UuidCcR extends MCcMeta[UuidCc, UuidCcR.type]("uuidcc") {
     val id = new UUIDIdField("_id", this)
     val s = new StringField("s", this)
     val dt = new InstantField("i", this)
   }
 
-  case class Money(amount: BigDecimal, currency: Currency)
+  case class Money(amount: BigDecimal, currency: Currency) derives MacroBsonFormat
 
-  case class Invoice(id: Long, name: String, total: Money)
+  case class Invoice(id: Long, name: String, total: Money) derives MacroBsonFormat
 
   class MoneyMeta extends MCcMeta[Money, MoneyMeta] {
     val amount = BigDecimalField
@@ -253,7 +253,7 @@ object Metas {
   case class Counter(
       _id: ObjectId = ObjectId.get(),
       counts: Map[ObjectId, Long]
-  )
+  ) derives MacroBsonFormat
 
   class CounterMeta extends MCcMeta[Counter, CounterMeta] {
     val id = ObjectIdField("_id")
@@ -267,7 +267,7 @@ object Metas {
   case class TypedCounter(
       _id: ObjectId = ObjectId.get(),
       counts: Map[CounterId, Long]
-  )
+  ) derives MacroBsonFormat
 
   class TypedCounterMeta extends MCcMeta[TypedCounter, TypedCounterMeta] {
     val id = ObjectIdField("_id")
@@ -276,13 +276,13 @@ object Metas {
 
   val TypedCounters = new TypedCounterMeta
 
-  case class BinaryData(data: Array[Byte])
+  case class BinaryData(data: Array[Byte]) derives MacroBsonFormat
 
   class BinaryDataMeta extends MCcMeta[BinaryData, BinaryDataMeta] {}
 
   val Binaries = new BinaryDataMeta
 
-  case class LocaleData(locale: Locale)
+  case class LocaleData(locale: Locale) derives MacroBsonFormat
 
   class LocaleDataMeta extends MCcMeta[LocaleData, LocaleDataMeta] {
     val locale = LocaleField

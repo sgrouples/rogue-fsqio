@@ -22,8 +22,8 @@ object OX:
     object Id:
       def apply(s:ObjectId):Id = tag[OX](s)
 
-case class InnerC(i:Int, v:Option[String])
-case class OuterC(i:InnerC, o:Seq[InnerC])
+case class InnerC(i:Int, v:Option[String]) derives MacroBsonFormat
+case class OuterC(i:InnerC, o:Seq[InnerC]) derives MacroBsonFormat
 
 class MacroDerivationTests extends FunSuite:
     val oid = ObjectId()

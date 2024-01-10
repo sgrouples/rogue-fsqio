@@ -18,7 +18,7 @@ case class UserBlock(
     blocked: ObjectId,
     createdAt: Instant,
     isNotIndexed: Option[Boolean] = None
-) {
+) derives MacroBsonFormat {
   def userId: ObjectId = userPk
   def id: ObjectId = _id
 }

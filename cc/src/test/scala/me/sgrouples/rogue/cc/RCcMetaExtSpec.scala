@@ -8,11 +8,11 @@ import org.bson.types.ObjectId
 import java.util.UUID
 import me.sgrouples.rogue.cc.innertest.*
 
-case class CaseClass1(id: Long)
+case class CaseClass1(id: Long) derives MacroBsonFormat
 
-case class CaseClass2(id: Long)
+case class CaseClass2(id: Long) derives MacroBsonFormat
 
-case class SubtypedClass(id: SubtypedClass.Id)
+case class SubtypedClass(id: SubtypedClass.Id) derives MacroBsonFormat
 
 object SubtypedClass extends TypedObjectId[SubtypedClass, SubtypedClass]
 

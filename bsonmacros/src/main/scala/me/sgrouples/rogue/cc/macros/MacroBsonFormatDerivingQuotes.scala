@@ -12,10 +12,7 @@ import org.bson.BsonValue
 object MacroBsonFormatDerivingImpl:
   def gen[T: Type](using Quotes): Expr[MacroBsonFormat[T]] =
     import quotes.reflect.*
-    Expr.summon[MacroBsonFormat[T]] match {
-      case Some(expr: Expr[_]) => expr
-      case None                => genDerived[T]
-    }
+    genDerived[T]
 
   def genDerived[T: Type](using Quotes): Expr[MacroBsonFormat[T]] =
     import quotes.reflect.*
@@ -127,8 +124,12 @@ object MacroBsonFormatDerivingImpl:
           fieldsVec
         }.toVector //why no vector?
 
-        override val flds: Map[String, BsonFormat[?]] = ${ fldsFormats } ++ (${ fldsFormats }.map{ case (name, f)=> subfields(name, f) }).flatten.toMap[String, BsonFormat[?]]
-          
+        override val flds: Map[String, BsonFormat[?]] =
+          ${ fldsFormats } ++ (${ fldsFormats }
+            .map { case (name, f) => subfields(name, f) })
+            .flatten
+            .toMap[String, BsonFormat[?]]
+
         override def defaultValue: T = {
           //super ugly hack, but whatever
           read(new org.bson.BsonDocument())

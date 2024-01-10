@@ -6,7 +6,7 @@ import me.sgrouples.rogue.cc.CcRogue.*
 import me.sgrouples.rogue.cc.macros.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
-case class Cont(_id: ObjectId, lst: Seq[ObjectId])
+case class Cont(_id: ObjectId, lst: Seq[ObjectId]) derives MacroBsonFormat
 
 class M extends MCcMeta[Cont, M]("cont") {
   val id = ObjectIdField("_id")

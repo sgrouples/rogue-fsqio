@@ -11,7 +11,7 @@ import com.softwaremill.tagging.*
 import java.time.Instant
 import java.util.{Currency, Locale, UUID}
 
-case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
+case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now()) derives MacroBsonFormat
 
 object Metas {
 
@@ -114,9 +114,9 @@ object Metas {
   }
   val UuidCcR = new UuidCcMeta
 
-  case class Money(amount: BigDecimal, currency: Currency)
+  case class Money(amount: BigDecimal, currency: Currency) derives MacroBsonFormat
 
-  case class Invoice(id: Long, name: String, total: Money)
+  case class Invoice(id: Long, name: String, total: Money) derives MacroBsonFormat
 
   class MoneyMeta extends MCcMeta[Money, MoneyMeta] {
     val amount = BigDecimalField("amount")
@@ -134,7 +134,7 @@ object Metas {
   case class MCounter(
       _id: ObjectId = ObjectId.get(),
       counts: Map[ObjectId, Long]
-  )
+  ) derives MacroBsonFormat
 
   class CounterMeta extends MCcMeta[MCounter, CounterMeta] {
     val id = ObjectIdField("_id")
@@ -148,7 +148,7 @@ object Metas {
   case class TypedCounter(
       _id: ObjectId = ObjectId.get(),
       counts: Map[CounterId, Long]
-  )
+  ) derives MacroBsonFormat
 
   class TypedCounterMeta extends MCcMeta[TypedCounter, TypedCounterMeta] {
     val id = ObjectIdField("_id")
@@ -157,13 +157,13 @@ object Metas {
 
   val TypedCounters = new TypedCounterMeta
 
-  case class BinaryData(data: Array[Byte])
+  case class BinaryData(data: Array[Byte]) derives MacroBsonFormat
 
   class BinaryDataMeta extends MCcMeta[BinaryData, BinaryDataMeta] {}
 
   val Binaries = new BinaryDataMeta
 
-  case class LocaleData(locale: Locale)
+  case class LocaleData(locale: Locale) derives MacroBsonFormat
 
   class LocaleDataMeta extends MCcMeta[LocaleData, LocaleDataMeta] {
     val locale = LocaleField("locale")

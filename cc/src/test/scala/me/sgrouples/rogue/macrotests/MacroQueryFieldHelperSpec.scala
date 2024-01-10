@@ -169,7 +169,7 @@ class MacroQueryFieldHelperSpec extends FunSuite with X {
 
   }
 
-  case class AnotherValue(a: String)
+  case class AnotherValue(a: String) derives MacroBsonFormat
 
   class AnotherTestMeta extends MCcMeta[AnotherValue, AnotherTestMeta] {
     val a = StringField("a")
@@ -193,7 +193,7 @@ class MacroQueryFieldHelperSpec extends FunSuite with X {
     )
   }
 
-  case class DifferentValue(a: String)
+  case class DifferentValue(a: String) derives MacroBsonFormat
 
   class DifferentTestMeta extends MCcMeta[DifferentValue, DifferentTestMeta] {
     val a = StringField("a")
