@@ -102,6 +102,13 @@ class MacroCCGenerator( /*val c: Context*/ ) {
         q"new _root_.me.sgrouples.rogue.cc.macros.LocalDateTimeMacroBsonFormat()"
       } else if (at <:< typeOf[BigDecimal]) {
         q"new _root_.me.sgrouples.rogue.cc.macros.BigDecimalMacroBsonFormat()"
+      } else if (at <:< typeOf[java.util.TimeZone]) {
+        q"new _root_.me.sgrouples.rogue.cc.macros.TimeZoneMacroBsonFormat()"
+      } else if (
+        at <:< typeOf[enumeratum.EnumEntry] &&
+        at.typeSymbol.companion != NoSymbol
+      ) {
+        q"me.sgrouples.rogue.cc.macros.EnumeratumMacroFormats.enumMacroFormat[$at](${at.typeSymbol.companion})"
       } else {
         val x = appliedType(typeOf[MacroBsonFormat[_]], at)
         c.inferImplicitValue(x)
@@ -284,7 +291,7 @@ class MacroCCGenerator( /*val c: Context*/ ) {
     } getOrElse {
       q""" new MacroBsonFormat[$tpe] {
           override def validNames():Vector[String] = Vector.empty
-          override def defaultValue(): $tpe = {
+          override def defaultValue: $tpe = {
             println("T def val not impl")
             ???
           }

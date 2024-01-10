@@ -6,8 +6,11 @@ import java.util.regex.Pattern
 import org.mongodb.scala.*
 import me.sgrouples.rogue.cc.CcRogue.*
 import me.sgrouples.rogue.cc.*
+import me.sgrouples.rogue.{ListField, VectorField}
+import io.fsq.field.Field
 import munit.FunSuite
 import org.bson.types.ObjectId
+import org.mongodb.scala._
 import org.mongodb.scala.model.Filters
 
 import scala.concurrent.{Await, Future}
@@ -54,7 +57,7 @@ class MacroEndToEndSpec extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db:MongoDatabase =
+  implicit def db: MongoDatabase =
     dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   override def beforeAll(): Unit = {
@@ -95,8 +98,8 @@ class MacroEndToEndSpec extends FunSuite {
     for {
       _ <- VenueR.insertOneAsync(v)
       _ <- VenueClaimR.insertOneAsync(vc)
-      _ <- VenueR.where(_.id eqs v._id).fetchAsync().map {
-        res => assertEquals(res.map(_._id), Seq(v._id))
+      _ <- VenueR.where(_.id eqs v._id).fetchAsync().map { res =>
+        assertEquals(res.map(_._id), Seq(v._id))
       }
       _ <- VenueR.where(_.mayor eqs v.mayor).fetchAsync().map { res =>
         assertEquals(res.map(_._id), List(v._id))
@@ -246,12 +249,16 @@ class MacroEndToEndSpec extends FunSuite {
       _ <- base.selectCase(_.legacyid, V1.apply).fetchAsync().map { res =>
         assertEquals(res, List(V1(v.legId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, V2.apply).fetchAsync().map { res =>
-        assertEquals(res, List(V2(v.legId, v.userId)))
+      _ <- base.selectCase(_.legacyid, _.userId, V2.apply).fetchAsync().map {
+        res =>
+          assertEquals(res, List(V2(v.legId, v.userId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3.apply).fetchAsync().map {
-        res => assertEquals(res, List(V3(v.legId, v.userId, v.mayor)))
-      }
+      _ <- base
+        .selectCase(_.legacyid, _.userId, _.mayor, V3.apply)
+        .fetchAsync()
+        .map { res =>
+          assertEquals(res, List(V3(v.legId, v.userId, v.mayor)))
+        }
       _ <- base
         .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .fetchAsync()
@@ -259,7 +266,14 @@ class MacroEndToEndSpec extends FunSuite {
           assertEquals(res, List(V4(v.legId, v.userId, v.mayor, v.mayor_count)))
         }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
+        .selectCase(
+          _.legacyid,
+          _.userId,
+          _.mayor,
+          _.mayor_count,
+          _.closed,
+          V5.apply
+        )
         .fetchAsync()
         .map { res =>
           assertEquals(
@@ -523,8 +537,10 @@ class MacroEndToEndSpec extends FunSuite {
   test("Distinct should work as expected") {
     for {
       _ <- Future.sequence(
-        (1 to 5).map(_ =>
-          VenueR.insertOneAsync(baseTestVenue().copy(userId = 1L))
+        (1 to 5).map(id =>
+          VenueR.insertOneAsync(
+            baseTestVenue().copy(userId = 1L).copy(venuename = id.toString)
+          )
         )
       )
       _ <- Future.sequence(
@@ -540,6 +556,21 @@ class MacroEndToEndSpec extends FunSuite {
       _ <- VenueR.where(_.mayor eqs 789L).distinctAsync(_.userId).map { res =>
         assertEquals(res.length, 3)
       }
+      _ <- VenueR
+        .distinctAsyncT[Long, VectorField](_.popularity)
+        .map(
+          assertEquals(Seq(1L, 2L, 3L), _)
+        )
+      _ <- VenueR
+        .distinctAsyncT[String, ListField](_.tags)
+        .map(
+          assertEquals(Seq("some tag", "test tag1"), _)
+        )
+      _ <- VenueR
+        .distinctAsyncT[String, Field](_.venuename)
+        .map(
+          assertEquals(Seq("1", "2", "3", "4", "5", "test venue"), _)
+        )
       _ <- VenueR
         .where(_.mayor eqs 789L)
         .countDistinctAsync(_.userId)
@@ -693,7 +724,8 @@ class MacroEndToEndSpec extends FunSuite {
 
   test("Map[K <: ObjectId, V] field should just work") {
 
-    val counts: Map[CounterId, Long] = Map(ObjectId.get.taggedWith[MCounter] -> 100L)
+    val counts: Map[CounterId, Long] =
+      Map(ObjectId.get.taggedWith[MCounter] -> 100L)
 
     val counter = TypedCounter(counts = counts)
 
@@ -816,7 +848,7 @@ class MacroEndToEndSpec extends FunSuite {
   }
 
   test("aggregatesTest") {
-    case class Ures(u: Long, t:Int)
+    case class Ures(u: Long, t: Int)
     import org.mongodb.scala.model.Aggregates._
     import org.mongodb.scala.model.Accumulators._
     for {
@@ -825,12 +857,18 @@ class MacroEndToEndSpec extends FunSuite {
           VenueR.insertOneAsync(baseTestVenue().copy(userId = i.toLong / 2))
         }
       )
-      aggregatedSeq <- VenueR.aggregateSeq(Seq(group("$userId",sum("total", 1))), doc =>
-        Ures(doc.getLong("_id"), doc.getInteger("total"))
+      aggregatedSeq <- VenueR.aggregateSeq(
+        Seq(group("$userId", sum("total", 1))),
+        doc => Ures(doc.getLong("_id"), doc.getInteger("total"))
       )
-      aggregatedFold <- VenueR.aggregateFoldLeft(Seq(group("$userId",sum("total", 1))),
+      aggregatedFold <- VenueR.aggregateFoldLeft(
+        Seq(group("$userId", sum("total", 1))),
         Map.empty[Long, Int],
-        (acc: Map[Long, Int], doc) => acc.updated(doc.getLong("_id").longValue(), doc.getInteger("total").intValue())
+        (acc: Map[Long, Int], doc) =>
+          acc.updated(
+            doc.getLong("_id").longValue(),
+            doc.getInteger("total").intValue()
+          )
       )
     } yield {
       assert(aggregatedSeq.length == 5)

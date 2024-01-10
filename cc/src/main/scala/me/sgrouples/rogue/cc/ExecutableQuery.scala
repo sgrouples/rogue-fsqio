@@ -19,6 +19,7 @@ import io.fsq.rogue.{
   _
 }
 import io.fsq.rogue.MongoHelpers.MongoSelect
+import me.sgrouples.rogue.ListField
 import org.mongodb.scala._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.result.{
@@ -29,7 +30,7 @@ import org.mongodb.scala.result.{
 }
 import org.reactivestreams.Publisher
 
-import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.concurrent.{blocking, ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 case class ExecutableQuery[MB, M <: MB, R, State](
@@ -42,6 +43,12 @@ case class ExecutableQuery[MB, M <: MB, R, State](
     * that do not have limits or skips.
     */
   def count()(implicit db: MongoDatabase): Long = waitForFuture(countAsync())
+
+  def estimatedDocumentCount()(implicit
+      ev1: Required[State, InitialState],
+      db: MongoDatabase
+  ): Long =
+    waitForFuture(estimatedDocumentCountAsync())
 
   /** Returns the number of distinct values returned by a query. The query must
     * not have limit or skip clauses.
@@ -76,6 +83,19 @@ case class ExecutableQuery[MB, M <: MB, R, State](
     */
   def distinctAsync[V: ClassTag](
       field: M => Field[V, _],
+      readPreference: Option[ReadPreference] = None
+  )(implicit db: MongoDatabase): Future[Seq[V]] = {
+    ex.async.distinct(query, readPreference)(
+      field.asInstanceOf[M => Field[V, M]]
+    )
+  }
+
+  /** Like above but must be called with explicit types. Usefull when the field
+    * type is an Array/List/Seq. See here:
+    * https://www.mongodb.com/docs/manual/reference/command/distinct/#return-distinct-values-for-an-array-field
+    */
+  def distinctAsyncT[V: ClassTag, GenField[_, _] <: Field[_, _]](
+      field: M => GenField[V, M],
       readPreference: Option[ReadPreference] = None
   )(implicit db: MongoDatabase): Future[Seq[V]] = {
     ex.async.distinct(query, readPreference)(
@@ -177,6 +197,12 @@ case class ExecutableQuery[MB, M <: MB, R, State](
   // async ops
   def countAsync()(implicit dba: MongoDatabase): Future[Long] =
     ex.async.count(query)
+
+  def estimatedDocumentCountAsync()(implicit
+      ev1: Required[State, InitialState],
+      dba: MongoDatabase
+  ): Future[Long] =
+    ex.async.estimatedDocumentCount(query)
 
   def foreachAsync(f: R => Unit)(implicit dba: MongoDatabase): Future[Unit] =
     ex.async.foreach(query)(f)
@@ -369,10 +395,18 @@ case class InsertableQuery[MB, M <: MB, R, State](
   import Waiter._
 
   def insertOneAsync(
+      t: R,
+      writeConcern: WriteConcern
+  )(implicit dba: MongoDatabase): Future[InsertOneResult] = {
+    ex.async.insertOne(query, t, writeConcern)
+  }
+
+  def insertOneAsync(
       t: R
   )(implicit dba: MongoDatabase): Future[InsertOneResult] = {
     ex.async.insertOne(query, t)
   }
+
   def insertManyAsync(
       ts: Seq[R]
   )(implicit dba: MongoDatabase): Future[InsertManyResult] = {

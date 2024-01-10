@@ -17,24 +17,38 @@ import org.testcontainers.utility.DockerImageName
 object MongoTestConn {
 
   var client: Option[MongoClient] = None
-  private val containerDef = MongoDBContainer.Def(DockerImageName.parse("mongo:4.2.17"))
+
+  private val containerDef =
+    MongoDBContainer.Def(DockerImageName.parse("mongo:5.0.10"))
   private var containerRef: Option[MongoDBContainer] = None
 
   def create(threadNamePrefix: String): EventLoopGroup = {
     if (Epoll.isAvailable) {
-      new EpollEventLoopGroup(1, new NamedThreadFactory(Executors.defaultThreadFactory(),"epoll-test-"))
+      new EpollEventLoopGroup(
+        1,
+        new NamedThreadFactory(Executors.defaultThreadFactory(), "epoll-test-")
+      )
     } else {
-      new NioEventLoopGroup(1,  new NamedThreadFactory(Executors.defaultThreadFactory(),"nio-test"))
+      new NioEventLoopGroup(
+        1,
+        new NamedThreadFactory(Executors.defaultThreadFactory(), "nio-test")
+      )
     }
   }
 
-  def nettyStreamFactoryFactory(eventLoopGroup: EventLoopGroup): StreamFactoryFactory = {
+  def nettyStreamFactoryFactory(
+      eventLoopGroup: EventLoopGroup
+  ): StreamFactoryFactory = {
     val socketChannelClass = if (Epoll.isAvailable) {
       classOf[EpollSocketChannel]
     } else {
       classOf[NioSocketChannel]
     }
-    NettyStreamFactoryFactory.builder().eventLoopGroup(eventLoopGroup).socketChannelClass(socketChannelClass).build()
+    NettyStreamFactoryFactory
+      .builder()
+      .eventLoopGroup(eventLoopGroup)
+      .socketChannelClass(socketChannelClass)
+      .build()
   }
 
   def connectToMongo(): MongoClient = {
@@ -43,8 +57,15 @@ object MongoTestConn {
       containerRef = Some(mongo)
     }
     val sff = nettyStreamFactoryFactory(create("XX"))
-    val settings = MongoClientSettings.builder()
-      .applyConnectionString(ConnectionString(containerRef.map(_.replicaSetUrl).getOrElse(throw RuntimeException("Mongo container is empty"))))
+    val settings = MongoClientSettings
+      .builder()
+      .applyConnectionString(
+        ConnectionString(
+          containerRef
+            .map(_.replicaSetUrl)
+            .getOrElse(throw new RuntimeException("Mongo container is empty"))
+        )
+      )
       .streamFactoryFactory(sff)
       .uuidRepresentation(UuidRepresentation.JAVA_LEGACY)
       .build()

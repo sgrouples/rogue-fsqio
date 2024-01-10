@@ -1,14 +1,15 @@
 package me.sgrouples.rogue.cc.macros
 
-import java.time.Instant
-import java.util.{Currency, Locale, UUID}
-
+import com.softwaremill.tagging._
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder}
 import me.sgrouples.rogue.cc.*
 import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
 import com.softwaremill.tagging.*
+
+import java.time.Instant
+import java.util.{Currency, Locale, UUID}
 
 case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
 
@@ -44,14 +45,20 @@ object Metas {
     val tags = ListField[String]("tags")
 
     val claims =
-      ClassListField[VenueClaimBson, VenueClaimBsonRMeta]("claims", VenueClaimBsonR)
+      ClassListField[VenueClaimBson, VenueClaimBsonRMeta](
+        "claims",
+        VenueClaimBsonR
+      )
     val lastClaim =
-      OptClassField[VenueClaimBson, VenueClaimBsonRMeta]("lastClaim", VenueClaimBsonR)
+      OptClassField[VenueClaimBson, VenueClaimBsonRMeta](
+        "lastClaim",
+        VenueClaimBsonR
+      )
     val firstClaim =
       ClassRequiredField("firstClaim", VenueClaimBsonR, VenueClaimBson.default)
 
     val last_updated = LocalDateTimeField("last_updated")
-    val popularity = ListField[Long]("popularity")
+    val popularity = VectorField[Long]("popularity")
     val categories = ListField[ObjectId]("categories")
 
     val idIdx = index(id, Asc)
@@ -145,7 +152,7 @@ object Metas {
 
   class TypedCounterMeta extends MCcMeta[TypedCounter, TypedCounterMeta] {
     val id = ObjectIdField("_id")
-    val counts = MapField[CounterId,Long]("counts") 
+    val counts = MapField[CounterId, Long]("counts")
   }
 
   val TypedCounters = new TypedCounterMeta

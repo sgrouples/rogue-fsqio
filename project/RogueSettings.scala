@@ -4,12 +4,10 @@
 import sbt._
 import Keys.{scalaVersion, _}
 //import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixScalaBinaryVersion, scalafixSemanticdb}
+import sbtghpackages.GitHubPackagesPlugin.autoImport._
+import com.github.sbt.git.GitPlugin.autoImport._
 
 object RogueSettings {
-
-  val nexus = "https://nexus.groupl.es/"
-  val nexusReleases = "releases" at nexus + "repository/maven-releases/"
-  val nexusSnapshots = "snapshots" at nexus + "repository/maven-snapshots/"
 
   lazy val macroSettings: Seq[Setting[_]] = Seq(
     /*libraryDependencies ++= Seq(
@@ -23,42 +21,49 @@ object RogueSettings {
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
     },
-    version := "7.0.0-SNAPSHOT",
+    githubOwner := "Sgrouples",
+    githubRepository := "rogue-fsqio",
+    githubTokenSource := TokenSource.Or(
+      TokenSource.Environment("GITHUB_TOKEN"),
+      TokenSource.Environment("SHELL")
+    ),
+    git.useGitDescribe := true,
+    git.gitDescribePatterns := Seq("v*"),
+    versionScheme := Some("strict"),
     organization := "me.sgrouples",
     scalaVersion := "3.2.1", //2.13.8",
     isSnapshot := false,
+    publishMavenStyle := true,
     //publishMavenStyle := true,
     Test / publishArtifact := false,
     pomIncludeRepository := { _ => false },
-    publishTo := version { v =>
-      if (v.endsWith("-SNAPSHOT"))
-        Some(nexusSnapshots)
-      else
-        Some(nexusReleases)
-    }.value,
     Test / fork := true,
     Test / logBuffered := false,
     Test / parallelExecution := false,
-   //scalacOptions ++= Seq("-V"),
+    scalacOptions ++= Seq(
+      "-deprecation",
+      "-unchecked",
+      "-explain",
+      "-feature",
+      "-language:implicitConversions"
+    )
     //resolvers ++= Seq(nexusReleases, nexusSnapshots),
-    //scalacOptions ++= Seq("-deprecation", "-unchecked","-language:implicitConversions"), //"-Yrangepos"), , "-Ymacro-debug-lite"),
     //, "-P:semanticdb:synthetics:on"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
     //scalacOptions ++= Seq("-feature", "-language:_", "-rewrite", "-source:3.0-migration"),
     //semanticdbVersion := scalafixSemanticdb.revision,
     //scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
-    credentials += Credentials(Path.userHome / ".ivy2" / ".meweCredentials") ,
-    ) ++ macroSettings
+  ) ++ macroSettings
 }
 
 object RogueDependencies {
-  val mongoVer = "4.8.1"
+  val mongoVer = "4.9.0"
   val nettyVer = "4.1.86.Final"
   val testcontainersScalaVersion = "0.40.12"
 
-  val bsonDeps = Seq("org.mongodb" %  "bson" % mongoVer % Compile)
+  val bsonDeps = Seq("org.mongodb" % "bson" % mongoVer % Compile)
 
   val mongoDeps = Seq(
-    "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer  % Compile cross(CrossVersion.for3Use2_13)
+    "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer % Compile cross (CrossVersion.for3Use2_13)
   )
 
   val testDeps = Seq(
@@ -70,8 +75,9 @@ object RogueDependencies {
     "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion % Test
   )
 
+  val enumeratum = "com.beachape" %% "enumeratum" % "1.7.2"
   val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
-  val coreDeps = mongoDeps
+  val coreDeps = mongoDeps ++ Seq(enumeratum)
 
-  val ccDeps = mongoDeps ++ Seq(tagging)  ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(tagging) ++ testDeps
 }

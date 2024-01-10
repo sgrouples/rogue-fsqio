@@ -1,12 +1,12 @@
 package me.sgrouples.rogue
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.{Currency, Locale, UUID}
-
 import io.fsq.field.{Field, OptionalField, RequiredField}
 import me.sgrouples.rogue.cc.CcMeta
 import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.types.ObjectId
 import com.softwaremill.tagging.*
+import enumeratum.{Enum, EnumEntry}
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
@@ -115,6 +115,11 @@ class EnumIdField[T <: Enumeration, O](name: String, o: O, val e: T)
     extends MCField[e.Value, O](name, o)
     with EnumInstance(e) {
   override def defaultValue: e.Value = e(0)
+}
+
+class EnumeratumField[E <: EnumEntry, O](e: Enum[E], name: String, o: O)
+    extends MCField[E, O](name, o) {
+  override def defaultValue: E = e.values.head
 }
 
 class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {

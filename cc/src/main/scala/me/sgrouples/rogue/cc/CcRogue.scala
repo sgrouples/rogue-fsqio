@@ -6,6 +6,8 @@ package me.sgrouples.rogue.cc
 // Copyright 2016 Sgrouples Inc. All Rights Reserved.
 //
 
+import enumeratum.EnumEntry
+
 import java.time.{Instant, LocalDateTime}
 import io.fsq.field.{Field => RField, OptionalField => ROptionalField}
 import io.fsq.rogue.{
@@ -376,6 +378,11 @@ trait CcRogue {
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
   implicit def insertOneResultToVoid(i: Future[InsertOneResult]): Future[Unit] =
     i.map(_ => ())(scala.concurrent.ExecutionContext.parasitic)
+
+  implicit def enumeratumFieldToEnumeratumEnumQueryField[M, E <: EnumEntry](
+      f: EnumeratumField[E, M]
+  ): EnumeratumEnumQueryField[M, E] =
+    new EnumeratumEnumQueryField(f)
 }
 
 object CcRogue extends Rogue with CcRogue

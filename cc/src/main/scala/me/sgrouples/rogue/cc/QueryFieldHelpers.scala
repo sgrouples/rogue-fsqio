@@ -7,6 +7,8 @@ import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe._
 import scala.reflect.{ClassTag, api}
+
+import enumeratum.{Enum, EnumEntry}
 import me.sgrouples.rogue.map.MapKeyFormat
 
 import scala.concurrent.duration.Duration
@@ -479,6 +481,16 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptLocaleField(name: String): OptLocaleField[Meta] =
     named(name)(new OptLocaleField[Meta](_, this))
 
+  protected def EnumeratumField[E <: EnumEntry](
+      e: Enum[E]
+  ): EnumeratumField[E, Meta] =
+    named(new EnumeratumField[E, Meta](e, _, this))
+
+  protected def EnumeratumField[E <: EnumEntry](
+      name: String,
+      e: Enum[E]
+  ): EnumeratumField[E, Meta] =
+    named(name)(new EnumeratumField[E, Meta](e, _, this))
 }
 
 /*trait NamedQueryFieldHelpers[Meta]

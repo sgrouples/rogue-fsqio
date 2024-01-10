@@ -38,6 +38,22 @@ object GenFieldName {
         val fname = Constant(pat.toString())
         q"$mods val $pat = EnumField($fname, $expr)"
 
+      case q"$mods val $pat = OptEnumField($expr)" :: Nil =>
+        val fname = Constant(pat.toString())
+        q"$mods val $pat = OptEnumField($fname, $expr)"
+
+      case q"$mods val $pat = EnumIdField($expr)" :: Nil =>
+        val fname = Constant(pat.toString())
+        q"$mods val $pat = EnumIdField($fname, $expr)"
+
+      case q"$mods val $pat = OptEnumIdField($expr)" :: Nil =>
+        val fname = Constant(pat.toString())
+        q"$mods val $pat = OptEnumIdField($fname, $expr)"
+
+      case q"$mods val $pat = EnumeratumField($expr)" :: Nil =>
+        val fname = Constant(pat.toString())
+        q"$mods val $pat = EnumeratumField($fname, $expr)"
+
       case q"$mods val $pat = $expr($exp1)" :: Nil =>
         val r = q"$mods val $pat = $expr($exp1)"
         //println(s"No change - let's assume we have name - ${r}")

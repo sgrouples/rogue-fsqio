@@ -2,15 +2,17 @@ package me.sgrouples.rogue.cc.macros
 
 import java.nio.{ByteBuffer, ByteOrder}
 import java.time.{Instant, LocalDateTime, ZoneOffset}
-import java.util.{Currency, Locale, UUID}
-
+import java.util.{Currency, Locale, TimeZone, UUID}
 import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{BaseBsonFormat, BsonFormat, SupportedLocales}
 import org.bson._
 import org.bson.types.{Decimal128, ObjectId}
+
 import scala.collection.Factory
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
+import enumeratum._
+import enumeratum.values.ValueEnumEntry
 
 @implicitNotFound("MacroGen can't generate for ${T}")
 trait MacroBsonFormat[T] extends BaseBsonFormat[T] {
@@ -269,11 +271,25 @@ object LocalDateTimeMacroBsonFormat extends MacroBaseBsonFormat[LocalDateTime] {
   }
 }
 
+final class TimeZoneMacroBsonFormat extends MacroBaseBsonFormat[TimeZone] {
+  override def read(b: BsonValue): TimeZone =
+    TimeZone.getTimeZone(b.asString().getValue)
+  override def write(tz: TimeZone): BsonValue = new BsonString(tz.getID)
+  override def defaultValue: TimeZone =
+    TimeZone.getTimeZone("UTC")
+  override def append(writer: BsonWriter, k: String, v: TimeZone): Unit =
+    writer.writeString(k, v.getID())
+  override def append(writer: BsonWriter, v: TimeZone): Unit =
+    writer.writeString(v.getID())
+}
+
 final class InstantMacroBsonFormat(default: Instant = Instant.ofEpochMilli(0))
     extends MacroBaseBsonFormat[Instant] {
   override def read(b: BsonValue): Instant = {
     if (b.isDateTime) {
       Instant.ofEpochMilli(b.asDateTime().getValue)
+    } else if (b.isNumber) {
+      Instant.ofEpochMilli(b.asNumber().longValue())
     } else defaultValue
   }
   override def write(t: Instant): BsonValue = new BsonDateTime(t.toEpochMilli)
@@ -341,6 +357,26 @@ trait EnumMacroFormats {
       }
       override def append(writer: BsonWriter, v: e.Value): Unit = {
         writer.writeInt32(v.id)
+      }
+    }
+}
+
+trait EnumeratumMacroFormats {
+
+  def enumMacroFormat[T <: EnumEntry](e: Enum[T]): MacroBsonFormat[T] =
+    new MacroBaseBsonFormat[T] {
+      override def read(b: BsonValue): T = {
+        if (b.isString) e.withName(b.asString().getValue)
+        else if (b.isNumber) e.values(b.asNumber().intValue())
+        else defaultValue
+      }
+      override def defaultValue: T = e.values.head
+      override def write(t: T): BsonValue = new BsonString(t.entryName)
+      override def append(writer: BsonWriter, k: String, v: T): Unit = {
+        writer.writeString(k, v.entryName)
+      }
+      override def append(writer: BsonWriter, v: T): Unit = {
+        writer.writeString(v.entryName)
       }
     }
 }
@@ -492,6 +528,8 @@ class MapMacroFormat[K, T](inner: MacroBsonFormat[T], kf: MapKeyFormat[K])
 
   override def flds: Map[String, BsonFormat[_]] = Map("*" -> inner)
 }
+
+object EnumeratumMacroFormats extends EnumeratumMacroFormats
 
 object EnumMacroFormats extends EnumMacroFormats
 
