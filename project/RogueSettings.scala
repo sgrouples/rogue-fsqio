@@ -9,14 +9,6 @@ import com.github.sbt.git.GitPlugin.autoImport._
 
 object RogueSettings {
 
-  lazy val macroSettings: Seq[Setting[_]] = Seq(
-    /*libraryDependencies ++= Seq(
-      scalaOrganization.value % "scala-compiler" % scalaVersion.value % Provided,
-      scalaOrganization.value % "scala-reflect" % scalaVersion.value % Provided
-    ),
-    scalacOptions ++= Seq("-Ymacro-annotations")*/
-  )
-
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
       s"testOnly $param" :: s"testOnlyUntilFailed $param" :: state
@@ -34,7 +26,6 @@ object RogueSettings {
     scalaVersion := "3.2.1", //2.13.8",
     isSnapshot := false,
     publishMavenStyle := true,
-    //publishMavenStyle := true,
     Test / publishArtifact := false,
     pomIncludeRepository := { _ => false },
     Test / fork := true,
@@ -47,12 +38,9 @@ object RogueSettings {
       "-feature",
       "-language:implicitConversions"
     )
-    //resolvers ++= Seq(nexusReleases, nexusSnapshots),
-    //, "-P:semanticdb:synthetics:on"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
-    //scalacOptions ++= Seq("-feature", "-language:_", "-rewrite", "-source:3.0-migration"),
     //semanticdbVersion := scalafixSemanticdb.revision,
     //scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
-  ) ++ macroSettings
+  )
 }
 
 object RogueDependencies {
