@@ -15,7 +15,7 @@ trait MacroNamesResolver[T] extends NamesResolver {
     mutable.Map.empty
   private[this] val _validNames: mutable.Set[String] = mutable.Set.empty[String]
 
-  protected def macroGen: MacroBsonFormat[T]
+  protected def bsonFormat: MacroBsonFormat[T]
   def resolve(): Unit = {
     // _validNames ++= macroGen.validNames()
     resolved = true

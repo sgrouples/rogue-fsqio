@@ -191,7 +191,8 @@ object MacroBsonFormatDerivingImpl:
     val tclTpe: TypeRepr = showTpe.appliedTo(t)
     Implicits.search(tclTpe) match
       case res: ImplicitSearchSuccess => (res.tree, tclTpe)
-      case _ => report.errorAndAbort(s"No Show format for ${tclTpe.typeSymbol}")
+      case fail =>
+        report.errorAndAbort(s"No MacroBsonFormat format for ${t.show}")
 
   def genNoMirror[T: Type](using Quotes): Expr[MacroBaseBsonFormat[T]] =
     import quotes.reflect.*
