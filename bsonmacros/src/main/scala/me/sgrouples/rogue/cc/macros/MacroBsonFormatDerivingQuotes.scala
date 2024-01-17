@@ -10,6 +10,10 @@ import org.mongodb.scala.bson.BsonDocument.apply
 import org.bson.BsonValue
 
 object MacroBsonFormatDerivingImpl:
+  private val debug: Boolean = Option(System.getenv("ROGUE_MACRO_DEBUG"))
+    .flatMap(_.toBooleanOption)
+    .contains(true)
+
   def genAuto[T: Type](using Quotes): Expr[MacroBsonFormat[T]] =
     import quotes.reflect.*
     Expr.summon[MacroBsonFormat[T]] match {
@@ -55,22 +59,29 @@ object MacroBsonFormatDerivingImpl:
         val fieldTpe: TypeRepr = fieldValDef.tpt.tpe
         val (wTerm, wType) = lookupFormatFor(fieldTpe)
         val app = Select.unique(wTerm, "appendKV")
-        def writerAppendF(
-            writer: Expr[_root_.org.bson.BsonWriter],
-            t: Expr[T]
-        ): Expr[Any] = {
+
+        def writeValF(
+            d: Expr[org.bson.BsonDocument],
+            t: Expr[T],
+            fmtRef: Ref
+        ) = {
           val fldVal = Select(t.asTerm, fld)
-          val append = Apply(app, List(writer.asTerm, fna.asTerm, fldVal))
-          append.asExpr
-        }
-        def writeValF(d: Expr[org.bson.BsonDocument], t: Expr[T]) = {
-          val fldVal = Select(t.asTerm, fld)
-          val wrExpr = Select.unique(wTerm, "write")
+          val wrExpr = Select.unique(fmtRef, "write")
           val app = Apply(wrExpr, List(fldVal))
-          '{ ${ d }.append(${ fna }, ${ app.asExprOf[BsonValue] }) }
+          val bsonVal = app.asExprOf[BsonValue]
+          ValDef
+            .let(Symbol.spliceOwner, "bson", bsonVal.asTerm) { ref =>
+              '{
+                if (!${ ref.asExprOf[BsonValue] }.isNull()) {
+                  ${ d }.append(${ fna }, ${ ref.asExprOf[BsonValue] })
+                }
+              }.asTerm
+            }
+            .asExpr
         }
-        def readValF(b: Expr[_root_.org.bson.BsonDocument]) = {
-          val rExpr = Select.unique(wTerm, "readOrDefault")
+
+        def readValF(b: Expr[_root_.org.bson.BsonDocument], formatRef: Ref) = {
+          val rExpr = Select.unique(formatRef, "readOrDefault")
           val fldVal = '{ ${ b }.get(${ fna }) }
           Apply(rExpr, List(fldVal.asTerm))
         }
@@ -78,29 +89,54 @@ object MacroBsonFormatDerivingImpl:
           val wExpr = wTerm.asExprOf[MacroBsonFormat[?]]
           (fna, wExpr)
         }
+
+        def writerAppendF(
+            writer: Expr[_root_.org.bson.BsonWriter],
+            t: Expr[T],
+            formatRef: Ref
+        ): Expr[Any] = {
+          val fldVal = Select(t.asTerm, fld)
+          val app = Select.unique(formatRef, "appendKV")
+          val append = Apply(app, List(writer.asTerm, fna.asTerm, fldVal))
+          append.asExpr
+        }
         (writerAppendF, writeValF, readValF, fldFormatF)
       }
     }
 
     def appendValsImpl(
+        formatRefs: List[Ref],
         writer: Expr[_root_.org.bson.BsonWriter],
         t: Expr[T]
     ): Expr[Unit] = {
       val bsonType = TypeRepr.of[_root_.org.bson.BsonWriter]
       val strType = TypeRepr.of[String]
       val vt = t.asTerm
-      val fff = allFldFormats.map { case (wa, _, _, _) => wa(writer, t) }
+      val fff = allFldFormats.zip(formatRefs).map {
+        case ((wa, _, _, _), formatDef) => wa(writer, t, formatDef)
+      }
       Expr.block(fff, '{ () })
     }
 
-    def writeValImpl(d: Expr[org.bson.BsonDocument], t: Expr[T]): Expr[Unit] = {
+    def writeValImpl(
+        formatRefs: List[Ref],
+        d: Expr[org.bson.BsonDocument],
+        t: Expr[T]
+    ): Expr[Unit] = {
       val vt = t.asTerm
-      val fff = allFldFormats.map { case (_, wv, _, _) => wv(d, t) }
+      val fff = allFldFormats.zip(formatRefs).map {
+        case ((_, wv, _, _), format) => wv(d, t, format)
+      }
       Expr.block(fff, '{ () })
     }
 
-    def readValImpl(b: Expr[_root_.org.bson.BsonDocument]): Expr[T] = {
-      val fieldVals = allFldFormats.map { case (_, _, rv, _) => rv(b) }
+    def readValImpl(
+        formatRefs: List[Ref],
+        b: Expr[_root_.org.bson.BsonDocument]
+    ): Expr[T] = {
+      val fieldVals = allFldFormats.zip(formatRefs).map {
+        case ((_, _, rv, _), format) => rv(b, format)
+      }
       val cs = tpe.classSymbol.get
       val app =
         Apply(Select(New(TypeTree.of[T]), cs.primaryConstructor), fieldVals)
@@ -108,7 +144,7 @@ object MacroBsonFormatDerivingImpl:
       app
     }
 
-    def fldsFormats: Expr[Map[String, MacroBsonFormat[?]]] = {
+    def fldsFormatsMap: Expr[Map[String, MacroBsonFormat[?]]] = {
       val fieldVals: List[(Expr[String], Expr[MacroBsonFormat[?]])] =
         allFldFormats.map { case (_, _, _, fF) => fF }
       val (ek, ev) = fieldVals.unzip
@@ -118,66 +154,85 @@ object MacroBsonFormatDerivingImpl:
       res
     }
 
-    val r = '{
-      new MacroBaseBsonFormat[T] {
-        //${ b.asExpr }
-        //${vd.asExpr}
-        //${ vd.asExpr }
-        //${fields.map { s => Expr(s = 1)} }
-        //${Expr.apply(h) = 1 }
-        //..$bsonFormats
-        // override val flds = ${ Expr(fldsMap) } //Map(..$fldsMap) //++ Seq(..$subFieldsAdd).flatten
-        override def validNames(): Vector[String] = ${
-          fieldsVec
-        }.toVector //why no vector?
-
-        override def flds: Map[String, BsonFormat[?]] =
-          ${ fldsFormats } ++ (${ fldsFormats }
-            .map { case (name, f) => subfields(name, f) })
-            .flatten
-            .toMap[String, BsonFormat[?]]
-
-        override def defaultValue: T = {
-          //super ugly hack, but whatever
-          read(new org.bson.BsonDocument())
-        }
-
-        override def read(b: _root_.org.bson.BsonValue): T = {
-          val doc = if (b.isDocument()) {
-            b.asDocument()
-          } else {
-            new org.bson.BsonDocument()
-          }
-          ${ readValImpl('doc) }
-        }
-
-        override def write(t: T): _root_.org.bson.BsonValue =
-          val docx = new _root_.org.bson.BsonDocument()
-          val writer = new org.bson.BsonDocumentWriter(docx)
-          append(writer, t)
-          writer.close()
-          docx
-
-        private def appendVals(writer: _root_.org.bson.BsonWriter, t: T): Unit =
-          ${ appendValsImpl('writer, 't) }
-        //{}
-
-        override def append(
-            writer: _root_.org.bson.BsonWriter,
-            k: String,
-            t: T
-        ): Unit = {
-          writer.writeStartDocument(k)
-          appendVals(writer, t)
-          writer.writeEndDocument()
-        }
-        override def append(writer: _root_.org.bson.BsonWriter, t: T): Unit = {
-          writer.writeStartDocument()
-          appendVals(writer, t)
-          writer.writeEndDocument()
-        }
-      }
+    def fieldFormats: List[Expr[MacroBsonFormat[?]]] = {
+      val fieldVals: List[(Expr[String], Expr[MacroBsonFormat[?]])] =
+        allFldFormats.map { case (_, _, _, fF) => fF }
+      val (names, formats) = fieldVals.unzip
+      formats
     }
+
+    val r = ValDef
+      .let(Symbol.spliceOwner, fieldFormats.map(_.asTerm)) { fieldFormatRefs =>
+        '{
+          new MacroBaseBsonFormat[T] {
+            //${ b.asExpr }
+            //${vd.asExpr}
+            //${ vd.asExpr }
+            //${fields.map { s => Expr(s = 1)} }
+            //${Expr.apply(h) = 1 }
+            //..$bsonFormats
+            // override val flds = ${ Expr(fldsMap) } //Map(..$fldsMap) //++ Seq(..$subFieldsAdd).flatten
+            override def validNames(): Vector[String] = ${
+              fieldsVec
+            }.toVector //why no vector?
+
+            override def flds: Map[String, BsonFormat[?]] =
+              ${ fldsFormatsMap } ++ (${ fldsFormatsMap }
+                .map { case (name, f) => subfields(name, f) })
+                .flatten
+                .toMap[String, BsonFormat[?]]
+
+            override def defaultValue: T = {
+              //super ugly hack, but whatever
+              read(new org.bson.BsonDocument())
+            }
+
+            override def read(b: _root_.org.bson.BsonValue): T = {
+              val doc = if (b.isDocument()) {
+                b.asDocument()
+              } else {
+                new org.bson.BsonDocument()
+              }
+              ${ readValImpl(fieldFormatRefs, 'doc) }
+            }
+
+            override def write(t: T): _root_.org.bson.BsonValue =
+              val docx = new _root_.org.bson.BsonDocument()
+              ${ writeValImpl(fieldFormatRefs, 'docx, 't) }
+              docx
+
+            private def appendVals(
+                writer: _root_.org.bson.BsonWriter,
+                t: T
+            ): Unit =
+              ${ appendValsImpl(fieldFormatRefs, 'writer, 't) }
+
+            override def append(
+                writer: _root_.org.bson.BsonWriter,
+                k: String,
+                t: T
+            ): Unit = {
+              writer.writeStartDocument(k)
+              appendVals(writer, t)
+              writer.writeEndDocument()
+            }
+
+            override def append(
+                writer: _root_.org.bson.BsonWriter,
+                t: T
+            ): Unit = {
+              writer.writeStartDocument()
+              appendVals(writer, t)
+              writer.writeEndDocument()
+            }
+          }
+        }.asTerm
+      }
+      .asExpr
+      .asInstanceOf[Expr[MacroBsonFormat[T]]]
+
+    if debug then report.info(r.show)
+
     r
 
   def genSum[T: Type](using Quotes): Expr[MacroBaseBsonFormat[T]] =
