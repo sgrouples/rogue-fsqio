@@ -34,16 +34,4 @@ trait MacroNamesResolver[T] extends NamesResolver {
 
     field
   }
-
-  override def named[T <: io.fsq.field.Field[?, ?]](
-      func: String => T
-  ): T = {
-    println(s"Caller is ${func} - call ${func("x")}")
-    val caller = Thread.currentThread().getStackTrace()(1)
-    new RuntimeException().printStackTrace()
-    throw new IllegalArgumentException(
-      s"[${caller.getClassName}:L${caller.getLineNumber}] named without name not supported in macros. use @f [me.sgrouples.rogue.cc.macros.f] or provide name"
-    )
-  }
-
 }
