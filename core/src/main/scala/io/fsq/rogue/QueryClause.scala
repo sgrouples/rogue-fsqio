@@ -29,94 +29,94 @@ abstract class IndexableQueryClause[V, Ind <: MaybeIndexed](
 trait ShardKeyClause
 
 case class AllQueryClause[V](
-    override val fieldName: String,
+    fname: String,
     vs: java.util.List[V]
 ) extends IndexableQueryClause[java.util.List[V], Index](
-      fieldName,
+      fname,
       Index,
       CondOps.All -> vs
     ) {}
 
 case class InQueryClause[V](
-    override val fieldName: String,
+    fname: String,
     vs: java.util.List[V]
 ) extends IndexableQueryClause[java.util.List[V], Index](
-      fieldName,
+      fname,
       Index,
       CondOps.In -> vs
     ) {}
 
-case class GtQueryClause[V](override val fieldName: String, v: V)
+case class GtQueryClause[V](fname: String, v: V)
     extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.Gt -> v
     ) {}
 
-case class GtEqQueryClause[V](override val fieldName: String, v: V)
+case class GtEqQueryClause[V](fname: String, v: V)
     extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.GtEq -> v
     ) {}
 
-case class LtQueryClause[V](override val fieldName: String, v: V)
+case class LtQueryClause[V](fname: String, v: V)
     extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.Lt -> v
     ) {}
 
-case class LtEqQueryClause[V](override val fieldName: String, v: V)
+case class LtEqQueryClause[V](fname: String, v: V)
     extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.LtEq -> v
     ) {}
 
 case class BetweenQueryClause[V](
-    override val fieldName: String,
+    fname: String,
     lower: V,
     upper: V
 ) extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.GtEq -> lower,
       CondOps.LtEq -> upper
     ) {}
 
 case class StrictBetweenQueryClause[V](
-    override val fieldName: String,
+    fname: String,
     lower: V,
     upper: V
 ) extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.Gt -> lower,
       CondOps.Lt -> upper
     ) {}
 
-case class NeQueryClause[V](override val fieldName: String, v: V)
+case class NeQueryClause[V](fname: String, v: V)
     extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.Ne -> v
     ) {}
 
-case class NearQueryClause[V](override val fieldName: String, v: V)
+case class NearQueryClause[V](fname: String, v: V)
     extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan,
       CondOps.Near -> v
     ) {}
 
 case class NearSphereQueryClause[V](
-    override val fieldName: String,
+    fname: String,
     lat: Double,
     lng: Double,
     radians: Radians
 ) extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan
     ) {
   override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
@@ -129,49 +129,49 @@ case class NearSphereQueryClause[V](
 }
 
 case class ModQueryClause[V](
-    override val fieldName: String,
+    fname: String,
     v: java.util.List[V]
 ) extends IndexableQueryClause[java.util.List[V], IndexScan](
-      fieldName,
+      fname,
       IndexScan,
       CondOps.Mod -> v
     ) {}
 
-case class TypeQueryClause(override val fieldName: String, v: MongoType.Value)
+case class TypeQueryClause(fname: String, v: MongoType.Value)
     extends IndexableQueryClause[Int, IndexScan](
-      fieldName,
+      fname,
       IndexScan,
       CondOps.Type -> v.id
     ) {}
 
-case class ExistsQueryClause(override val fieldName: String, v: Boolean)
+case class ExistsQueryClause(fname: String, v: Boolean)
     extends IndexableQueryClause[Boolean, IndexScan](
-      fieldName,
+      fname,
       IndexScan,
       CondOps.Exists -> v
     ) {}
 
 case class NinQueryClause[V](
-    override val fieldName: String,
+    fname: String,
     vs: java.util.List[V]
 ) extends IndexableQueryClause[java.util.List[V], DocumentScan](
-      fieldName,
+      fname,
       DocumentScan,
       CondOps.Nin -> vs
     ) {}
 
-case class SizeQueryClause(override val fieldName: String, v: Int)
+case class SizeQueryClause(fname: String, v: Int)
     extends IndexableQueryClause[Int, DocumentScan](
-      fieldName,
+      fname,
       DocumentScan,
       CondOps.Size -> v
     ) {}
 
 case class RegexQueryClause[Ind <: MaybeIndexed](
-    override val fieldName: String,
+    fname: String,
     actualIB: Ind,
     p: Pattern
-) extends IndexableQueryClause[Pattern, Ind](fieldName, actualIB) {
+) extends IndexableQueryClause[Pattern, Ind](fname, actualIB) {
   val flagMap = Map(
     Pattern.CANON_EQ -> "c",
     Pattern.CASE_INSENSITIVE -> "i",
@@ -204,27 +204,27 @@ case class RawQueryClause(f: BasicDBObjectBuilder => Unit)
   }
 }
 
-case class EmptyQueryClause[V](override val fieldName: String)
-    extends IndexableQueryClause[V, Index](fieldName, Index) {
+case class EmptyQueryClause[V](fname: String)
+    extends IndexableQueryClause[V, Index](fname, Index) {
   override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {}
 }
 
 case class EqClause[V, Ind <: MaybeIndexed](
-    override val fieldName: String,
+    fname: String,
     value: V
-) extends IndexableQueryClause[V, Index](fieldName, Index) {
+) extends IndexableQueryClause[V, Index](fname, Index) {
   override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
     q.add(fieldName, if (signature) 0 else value)
   }
 }
 
 case class WithinCircleClause[V](
-    override val fieldName: String,
+    fname: String,
     lat: Double,
     lng: Double,
     radius: Double
 ) extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan
     ) {
   override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
@@ -236,13 +236,13 @@ case class WithinCircleClause[V](
 }
 
 case class WithinBoxClause[V](
-    override val fieldName: String,
+    fname: String,
     lat1: Double,
     lng1: Double,
     lat2: Double,
     lng2: Double
 ) extends IndexableQueryClause[V, PartialIndexScan](
-      fieldName,
+      fname,
       PartialIndexScan
     ) {
   override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
@@ -258,9 +258,9 @@ case class WithinBoxClause[V](
 }
 
 case class ElemMatchWithPredicateClause[V](
-    override val fieldName: String,
+    fname: String,
     clauses: Seq[QueryClause[_]]
-) extends IndexableQueryClause[V, DocumentScan](fieldName, DocumentScan) {
+) extends IndexableQueryClause[V, DocumentScan](fname, DocumentScan) {
   override def extend(q: BasicDBObjectBuilder, signature: Boolean): Unit = {
     import io.fsq.rogue.MongoHelpers.AndCondition
     val nested = q.push("$elemMatch")

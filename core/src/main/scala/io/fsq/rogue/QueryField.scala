@@ -13,7 +13,6 @@ import org.bson.BsonNull
 import org.bson.types.ObjectId
 
 import scala.util.matching.Regex
-import io.fsq.rogue.enums.EnumInstance
 
 object CondOps extends Enumeration {
   type Op = Value

@@ -55,7 +55,8 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db:MongoDatabase = dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
+  implicit def db: MongoDatabase =
+    dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
 
   override def beforeEach(context: BeforeEach): Unit = {}
 
@@ -248,9 +249,12 @@ class EndToEndBsonAsyncSpec extends FunSuite {
       _ <- base.selectCase(_.legacyid, _.userId, V2.apply).fetchAsync().map {
         assertEquals(_, List(V2(v.legId, v.userId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3.apply).fetchAsync().map {
-        assertEquals(_, List(V3(v.legId, v.userId, v.mayor)))
-      }
+      _ <- base
+        .selectCase(_.legacyid, _.userId, _.mayor, V3.apply)
+        .fetchAsync()
+        .map {
+          assertEquals(_, List(V3(v.legId, v.userId, v.mayor)))
+        }
       _ <- base
         .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .fetchAsync()
@@ -258,7 +262,14 @@ class EndToEndBsonAsyncSpec extends FunSuite {
           assertEquals(_, List(V4(v.legId, v.userId, v.mayor, v.mayor_count)))
         }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
+        .selectCase(
+          _.legacyid,
+          _.userId,
+          _.mayor,
+          _.mayor_count,
+          _.closed,
+          V5.apply
+        )
         .fetchAsync()
         .map {
           assertEquals(
@@ -705,7 +716,8 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   test("Map[K <: ObjectId, V] field") {
-    val counts: Map[CounterId, Long] = Map(ObjectId.get.taggedWith[Counter] -> 100L)
+    val counts: Map[CounterId, Long] =
+      Map(ObjectId.get.taggedWith[Counter] -> 100L)
     val counter = TypedCounter(counts = counts)
 
     for {
@@ -768,5 +780,28 @@ class EndToEndBsonAsyncSpec extends FunSuite {
         assertEquals(rcv, List("test venue", "test venue", "test venue"))
         assert(true, "OK")
       }
+  }
+
+  test("OptEnum queries should compile and work") {
+    val claim = baseTestVenueClaim(new ObjectId)
+
+    def getReason =
+      VenueClaimR
+        .where(_.id eqs claim._id)
+        .select(_.reason)
+        .getAsync()
+
+    for {
+      _ <- VenueClaimR.insertOneAsync(claim)
+      beforeUpdate <- getReason
+      _ <- VenueClaimR
+        .where(_.id eqs claim._id)
+        .modify(_.reason setTo RejectReason.cheater)
+        .updateOneAsync()
+      afterUpdate <- getReason
+    } yield {
+      assertEquals(beforeUpdate, Some(None))
+      assertEquals(afterUpdate, Some(Some(RejectReason.cheater)))
+    }
   }
 }

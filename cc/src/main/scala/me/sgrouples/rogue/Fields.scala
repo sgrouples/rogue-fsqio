@@ -10,7 +10,6 @@ import enumeratum.{Enum, EnumEntry}
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
-import io.fsq.rogue.enums.EnumInstance
 
 abstract class CField[V, O](val name: String, val owner: O) extends Field[V, O]
 
@@ -111,11 +110,11 @@ class EnumField[T <: Enumeration#Value, O](name: String, o: O, defaultVal: T)
   override def defaultValue: T = defaultVal
 }
 
-class EnumIdField[T <: Enumeration, O](name: String, o: O, val e: T)
-    extends MCField[e.Value, O](name, o)
-    with EnumInstance(e) {
-  override def defaultValue: e.Value = e(0)
-}
+class EnumIdField[T <: Enumeration#Value, O](
+    name: String,
+    o: O,
+    override val defaultValue: T
+) extends MCField[T, O](name, o)
 
 class EnumeratumField[E <: EnumEntry, O](e: Enum[E], name: String, o: O)
     extends MCField[E, O](name, o) {
@@ -249,12 +248,10 @@ class OptInstantField[O](name: String, o: O)
     extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O)
     extends OCField[Boolean, O](name, o)
-class OptEnumField[T <: Enumeration, O](name: String, o: O, val e: T)
-    extends OCField[e.Value, O](name, o)
-    with EnumInstance(e)
-class OptEnumIdField[T <: Enumeration, O](name: String, o: O, val e: T)
-    extends OCField[e.Value, O](name, o)
-    with EnumInstance(e)
+class OptEnumField[T <: Enumeration#Value, O](name: String, o: O)
+    extends OCField[T, O](name, o)
+class OptEnumIdField[T <: Enumeration#Value, O](name: String, o: O)
+    extends OCField[T, O](name, o)
 class OptListField[V, O](name: String, o: O)
     extends OCField[List[V], O](name, o)
 class OptArrayField[V: ClassTag, O](name: String, o: O)

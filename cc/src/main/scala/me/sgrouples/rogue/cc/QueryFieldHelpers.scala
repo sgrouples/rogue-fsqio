@@ -177,8 +177,8 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptEnumField[E <: Enumeration](
       name: String,
       e: E
-  ): OptEnumField[E, Meta] =
-    named(name)(new OptEnumField[E, Meta](_, this, e))
+  ): OptEnumField[e.Value, Meta] =
+    named(name)(new OptEnumField[e.Value, Meta](_, this))
 
   /** This version of the EnumField method accepts e: E as a param to avoid ugly
     * type parameters like [MyEnum.type] So instead of writting val myEnum =
@@ -191,8 +191,8 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def EnumIdField[E <: Enumeration](
       name: String,
       e: E
-  ): EnumIdField[E, Meta] =
-    named(name)(new EnumIdField[E, Meta](_, this, e))
+  ): EnumIdField[e.Value, Meta] =
+    named(name)(new EnumIdField[e.Value, Meta](_, this, e(0)))
 
   /** This version of the EnumField method accepts e: E as a param to avoid ugly
     * type parameters like [MyEnum.type] So instead of writing val myEnum =
@@ -205,8 +205,8 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptEnumIdField[E <: Enumeration](
       name: String,
       e: E
-  ): OptEnumIdField[E, Meta] =
-    named(name)(new OptEnumIdField[E, Meta](_, this, e))
+  ): OptEnumIdField[e.Value, Meta] =
+    named(name)(new OptEnumIdField[e.Value, Meta](_, this))
 
   protected def ListField[V](name: String): ListField[V, Meta] =
     named(name)(new ListField[V, Meta](_, this))

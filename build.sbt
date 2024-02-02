@@ -1,7 +1,7 @@
 import RogueSettings._
 Seq(RogueSettings.defaultSettings: _*)
 
-scalaVersion := "3.2.1"
+scalaVersion := "3.3.0"
 
 lazy val field = (project in file("field")).settings(defaultSettings)
 lazy val bsonformats = (project in file("bsonformats")).settings(

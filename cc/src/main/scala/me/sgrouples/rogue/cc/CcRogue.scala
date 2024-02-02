@@ -310,42 +310,48 @@ trait CcRogue {
       override def owner = f.owner
     })
 
-  implicit def enumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
+  implicit def enumIdFieldToEnumQueryField[O <: CcMeta[
+    _
+  ], E <: Enumeration#Value](
       f: EnumIdField[E, O]
-  ): EnumIdQueryField[O, f.e.Value] = {
+  ): EnumIdQueryField[O, E] = {
     new EnumIdQueryField(
-      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
-      (e: f.e.Value) => e.id
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
     )
   }
   // this is here to force proper implicit resolution
 
-  implicit def optRnumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
+  implicit def optRnumIdFieldToEnumQueryField[O <: CcMeta[
+    _
+  ], E <: Enumeration#Value](
       f: OptEnumIdField[E, O]
-  ): EnumIdQueryField[O, f.e.Value] =
+  ): EnumIdQueryField[O, E] =
     new EnumIdQueryField(
-      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
-      (e: f.e.Value) => e.id
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
     )
 
-  implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[_], E <: Enumeration](
+  implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[
+    _
+  ], E <: Enumeration#Value](
       f: EnumIdField[E, O]
-  ): EnumIdModifyField[O, f.e.Value] =
+  ): EnumIdModifyField[O, E] =
     new EnumIdModifyField(
-      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
-      (e: f.e.Value) => e.id
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
     )
 
   // this is here to force proper implicit resolution
 
   implicit def optEnumIdFieldToEnumIdModifyField[O <: CcMeta[
     _
-  ], E <: Enumeration](
+  ], E <: Enumeration#Value](
       f: OptEnumIdField[E, O]
-  ): EnumIdModifyField[O, f.e.Value] =
+  ): EnumIdModifyField[O, E] =
     new EnumIdModifyField(
-      f.asInstanceOf[io.fsq.field.Field[f.e.Value, O]],
-      (e: f.e.Value) => e.id
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
     )
 
   given localDateIsFlattened: Rogue.Flattened[LocalDateTime, LocalDateTime] =

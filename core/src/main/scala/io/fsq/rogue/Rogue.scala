@@ -10,7 +10,6 @@ import io.fsq.field.{
 }
 import java.util.Date
 import org.bson.types.ObjectId
-import io.fsq.rogue.enums.EnumInstance
 
 /** A utility trait containing typing shorthands, and a collection of implicit
   * conversions that make query syntax much simpler.

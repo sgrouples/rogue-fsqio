@@ -201,6 +201,7 @@ object Metas {
   class VenueClaimRMeta
       extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims")
       /*with RuntimeNameResolver[VenueClaimRMeta]*/ {
+    val id = ObjectIdField("_id")
     val venueid = ObjectIdSubtypeField[ObjectId @@ Venue]("vid")
     val status = EnumField("status", ClaimStatus)
     val reason = OptEnumField("reason", RejectReason)
