@@ -86,6 +86,11 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   ): ObjectIdTaggedField[Tag, Meta] =
     named(name)(new ObjectIdTaggedField[Tag, Meta](_, this))
 
+  protected def OptObjectIdTaggedField[Tag](
+      name: String
+  ): OptObjectIdTaggedField[Tag, Meta] =
+    named(name)(new OptObjectIdTaggedField[Tag, Meta](_, this))
+
   protected def OptObjectIdField(
       name: String
   ): OptObjectIdField[Meta] =
