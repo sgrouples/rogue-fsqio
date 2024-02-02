@@ -543,6 +543,7 @@ object MacroBsonFormat extends MacroBsonFormatDeriving:
   given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()
   given MacroBsonFormat[LocalDateTime] = LocalDateTimeMacroBsonFormat
   given MacroBsonFormat[Instant] = InstantMacroBsonFormat()
+  given MacroBsonFormat[TimeZone] = TimeZoneMacroBsonFormat()
   given MacroBsonFormat[Array[Byte]] = BinaryMacroBsonFormat
   given MacroBsonFormat[Locale] = LocaleMacroBsonFormat()
   given MacroBsonFormat[Currency] = CurrencyMacroBsonFormat()
