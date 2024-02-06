@@ -568,6 +568,11 @@ object MacroBsonFormat extends MacroBsonFormatDeriving:
   ): MacroBsonFormat[Seq[T]] =
     IterableLikeMacroFormat[T, Seq[T]](tf)
 
+  implicit def indexedSeqMacroFormat[T](using
+      tf: MacroBsonFormat[T]
+  ): MacroBsonFormat[IndexedSeq[T]] =
+    IterableLikeMacroFormat[T, IndexedSeq[T]](tf)
+
   implicit def listMacroFormat[T](using
       tf: MacroBsonFormat[T]
   ): MacroBsonFormat[List[T]] =

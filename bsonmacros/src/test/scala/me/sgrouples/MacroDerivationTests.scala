@@ -24,7 +24,8 @@ object OX:
 case class InnerC(i: Int, v: Option[String])
 case class OuterC(i: InnerC, o: Seq[InnerC])
 
-case class DerivesC(i: Int, v: Option[String]) derives MacroBsonFormat
+case class DerivesC(i: Int, v: Option[String], b: IndexedSeq[String])
+    derives MacroBsonFormat
 
 class MacroDerivationTests extends FunSuite:
   val oid = ObjectId()
@@ -65,7 +66,7 @@ class MacroDerivationTests extends FunSuite:
   }
 
   test("case class with derives") {
-    roundTrip[DerivesC](DerivesC(2, Some("b")))
+    roundTrip[DerivesC](DerivesC(2, Some("b"), IndexedSeq("c")))
   }
 
   inline def roundTrip[T](v: T)(using t: MacroBsonFormat[T]) =
