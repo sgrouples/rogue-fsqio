@@ -245,11 +245,12 @@ class CClassSeqModifyField[C, M <: CcMeta[C], O, CC[_] <: Seq[_]](
     )
   }
 
-  override def $ = new SelectableDummyCCField[C, M, O](
-    fld.name + ".$",
-    fld.childMeta,
-    fld.owner
-  )
+  override def $ : SelectableDummyCCField[C, M, O] =
+    new SelectableDummyCCField[C, M, O](
+      fld.name + ".$",
+      fld.childMeta,
+      fld.owner
+    )
 
   def `$[]` = new SelectableDummyCCField[C, M, O](
     fld.name + ".$[]",
@@ -271,11 +272,12 @@ class CClassArrayModifyField[C, M <: CcMeta[C], O](
     )
   }
 
-  override def $ = new SelectableDummyCCField[C, M, O](
-    fld.name + ".$",
-    fld.childMeta,
-    fld.owner
-  )
+  override def $ : SelectableDummyCCField[C, M, O] =
+    new SelectableDummyCCField[C, M, O](
+      fld.name + ".$",
+      fld.childMeta,
+      fld.owner
+    )
 
   def `$[]` = new SelectableDummyCCField[C, M, O](
     fld.name + ".$[]",
@@ -304,9 +306,9 @@ class InstantModifyField[O](field: Field[Instant, O])
   def currentDate = new ModifyClause(ModOps.CurrentDate, field.name -> true)
 }
 
-class EnumIdModifyField[M, E <: Enumeration#Value](field: Field[E, M])
+class EnumIdModifyField[M, E](field: Field[E, M], conv: E => Int)
     extends AbstractModifyField[E, Int, M](field) {
-  override def valueToDB(e: E) = e.id
+  override def valueToDB(e: E) = conv(e)
 }
 
 object LocalDateTimeToMongo {

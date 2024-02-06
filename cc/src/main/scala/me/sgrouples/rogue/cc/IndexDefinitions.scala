@@ -11,7 +11,7 @@ import scala.util.{Failure, Success, Try}
 trait IndexDefinitions[RecordType, OwnerType <: CcMeta[RecordType]]
     extends IndexBuilder[OwnerType] {
 
-  this: MCcMeta[RecordType, OwnerType] =>
+  this: MCcMeta[RecordType, OwnerType] & OwnerType =>
 
   val indexes: Seq[Idx]
 

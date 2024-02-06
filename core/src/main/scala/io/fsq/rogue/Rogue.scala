@@ -39,9 +39,11 @@ trait Rogue {
   implicit def rlongFieldtoNumericQueryField[F <: Long, M](
       f: RField[F, M]
   ): NumericQueryField[F, M] = new NumericQueryField(f)
-  implicit def rjlongFieldtoNumericQueryField[F <: java.lang.Long, M](
+
+  /*implicit def rjlongFieldtoNumericQueryField[F <: java.lang.Long, M](
       f: RField[F, M]
   ): NumericQueryField[F, M] = new NumericQueryField(f)
+   */
   implicit def rfloatFieldtoNumericQueryField[M](
       f: RField[Float, M]
   ): NumericQueryField[Float, M] = new NumericQueryField(f)
@@ -49,12 +51,14 @@ trait Rogue {
       f: RField[Double, M]
   ): NumericQueryField[Double, M] = new NumericQueryField(f)
 
-  implicit def rstringFieldToStringQueryField[F <: String, M](
-      f: RField[F, M]
-  ): StringQueryField[F, M] = new StringQueryField(f)
   implicit def robjectIdFieldToObjectIdQueryField[F <: ObjectId, M](
       f: RField[F, M]
   ): ObjectIdQueryField[F, M] = new ObjectIdQueryField[F, M](f)
+
+  implicit def rstringFieldToStringQueryField[F <: String, M](
+      f: RField[F, M]
+  ): StringQueryField[F, M] = new StringQueryField(f)
+
   implicit def rdateFieldToDateQueryField[M](
       f: RField[Date, M]
   ): DateQueryField[M] = new DateQueryField(f)
@@ -177,16 +181,27 @@ trait Rogue {
     new Flattened[A, A]
   implicit def enumIsFlattened[A <: Enumeration#Value]: Flattened[A, A] =
     new Flattened[A, A]
-  implicit val stringIsFlattened = new Flattened[String, String]
-  implicit val objectIdIsFlattened = new Flattened[ObjectId, ObjectId]
-  implicit val dateIsFlattened = new Flattened[java.util.Date, java.util.Date]
-  implicit def recursiveFlattenList[A, B](implicit ev: Flattened[A, B]) =
+  implicit val stringIsFlattened: Flattened[String, String] =
+    new Flattened[String, String]
+  implicit val objectIdIsFlattened: Flattened[ObjectId, ObjectId] =
+    new Flattened[ObjectId, ObjectId]
+  implicit val dateIsFlattened: Flattened[java.util.Date, java.util.Date] =
+    new Flattened[java.util.Date, java.util.Date]
+  implicit def recursiveFlattenList[A, B](implicit
+      ev: Flattened[A, B]
+  ): Flattened[List[A], B] =
     new Flattened[List[A], B]
-  implicit def recursiveFlattenVector[A, B](implicit ev: Flattened[A, B]) =
+  implicit def recursiveFlattenVector[A, B](implicit
+      ev: Flattened[A, B]
+  ): Flattened[Vector[A], B] =
     new Flattened[Vector[A], B]
-  implicit def recursiveFlattenSeq[A, B](implicit ev: Flattened[A, B]) =
+  implicit def recursiveFlattenSeq[A, B](implicit
+      ev: Flattened[A, B]
+  ): Flattened[Seq[A], B] =
     new Flattened[Seq[A], B]
-  implicit def recursiveFlattenArray[A, B](implicit ev: Flattened[A, B]) =
+  implicit def recursiveFlattenArray[A, B](implicit
+      ev: Flattened[A, B]
+  ): Flattened[Array[A], B] =
     new Flattened[Array[A], B]
 
 }

@@ -5,7 +5,7 @@ package me.sgrouples.rogue.cc
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.UUID
 import io.fsq.rogue._
-import CcRogue._
+import CcRogue.{given, *}
 import munit.FunSuite
 
 import java.util.regex.Pattern
@@ -14,7 +14,7 @@ import io.fsq.field.Field
 import me.sgrouples.rogue.CClassListField
 import me.sgrouples.rogue.cc.Metas._
 import org.bson.types._
-import com.softwaremill.tagging._
+import com.softwaremill.tagging.*
 import me.sgrouples.rogue.QueryParser._
 
 class QueryTest extends FunSuite {
@@ -557,13 +557,13 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
 
     // select case queries
     assertEquals(
-      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, V1).q,
+      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, V1.apply).q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "_id": 0})"""
       )
     )
     assertEquals(
-      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, _.userId, V2).q,
+      VenueR.where(_.mayor eqs 1).selectCase(_.legacyid, _.userId, V2.apply).q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "_id": 0})"""
       )
@@ -571,7 +571,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
     assertEquals(
       VenueR
         .where(_.mayor eqs 1)
-        .selectCase(_.legacyid, _.userId, _.mayor, V3)
+        .selectCase(_.legacyid, _.userId, _.mayor, V3.apply)
         .q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "mayor": 1, "_id": 0})"""
@@ -580,7 +580,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
     assertEquals(
       VenueR
         .where(_.mayor eqs 1)
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "mayor": 1, "mayor_count": 1, "_id": 0})"""
@@ -589,7 +589,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
     assertEquals(
       VenueR
         .where(_.mayor eqs 1)
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
         .q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "mayor": 1, "mayor_count": 1, "closed": 1, "_id": 0})"""
@@ -605,7 +605,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
           _.mayor_count,
           _.closed,
           _.tags,
-          V6
+          V6.apply
         )
         .q,
       pq(
@@ -878,7 +878,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
       pq(query + """{"$set": {"mayor_count": {"$numberLong": "3"}}}""" + suffix)
     )
     assertEquals(
-      VenueR.where(_.legacyid eqs 1).modify(_.mayor_count unset).q,
+      VenueR.where(_.legacyid eqs 1).modify(_.mayor_count.unset).q,
       pq(query + """{"$unset": {"mayor_count": 1}}""" + suffix)
     )
     assertEquals(
@@ -1041,7 +1041,7 @@ assertEquals(    doLessThan(Venue, (v: Venue) => v.mayor_count, 5L).q, pq("""db.
       pq(query3 + """{"$inc": {"counts.foo": 5}}""" + suffix)
     )
     assertEquals(
-      TipR.where(_.legacyid eqs 1).modify(_.counts at "foo" unset).q,
+      TipR.where(_.legacyid eqs 1).modify(_.counts.at("foo").unset).q,
       pq(query3 + """{"$unset": {"counts.foo": 1}}""" + suffix)
     )
     assertEquals(
@@ -1467,7 +1467,7 @@ assertEquals(    Comment.where(_.comments.unsafeField[String]("comment") contain
     // $or with optional where clause
     assertEquals(
       VenueR
-        .or(_.where(_.legacyid eqs 1), _.whereOpt(None)(_.mayor eqs _))
+        .or(_.where(_.legacyid eqs 1), _.whereOpt(Option.empty[Long])(_.mayor eqs _))
         .modify(_.userId setTo 1)
         .q,
       pq(

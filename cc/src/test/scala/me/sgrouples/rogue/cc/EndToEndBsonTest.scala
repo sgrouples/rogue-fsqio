@@ -5,10 +5,8 @@ import java.util.regex.Pattern
 import org.mongodb.scala._
 import io.fsq.rogue._
 import munit.FunSuite
-import me.sgrouples.rogue.cc.CcRogue._
+import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import org.bson.types.ObjectId
-
-import CcRogue._
 
 class EndToEndBsonTest extends FunSuite {
   import Metas._
@@ -45,7 +43,7 @@ class EndToEndBsonTest extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db =
+  implicit def db:MongoDatabase =
     dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   override def beforeAll(): Unit = {
@@ -79,6 +77,7 @@ class EndToEndBsonTest extends FunSuite {
     val vc = baseTestVenueClaim(v._id)
     VenueClaimR.insertOne(vc)
 
+    val x = VenueR.id
     // eqs
     val q = ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id)
     //println(s"Ret class ${classOf[q.meta.R]}")
@@ -212,22 +211,22 @@ class EndToEndBsonTest extends FunSuite {
     VenueR.insertOne(v)
 
     val base = VenueR.where(_.id eqs v._id)
-    assertEquals(base.selectCase(_.legacyid, V1).fetch(), List(V1(v.legId)))
+    assertEquals(base.selectCase(_.legacyid, V1.apply).fetch(), List(V1(v.legId)))
     assertEquals(
-      base.selectCase(_.legacyid, _.userId, V2).fetch(),
+      base.selectCase(_.legacyid, _.userId, V2.apply).fetch(),
       List(V2(v.legId, v.userId))
     )
     assertEquals(
-      base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetch(),
+      base.selectCase(_.legacyid, _.userId, _.mayor, V3.apply).fetch(),
       List(V3(v.legId, v.userId, v.mayor))
     )
     assertEquals(
-      base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4).fetch(),
+      base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply).fetch(),
       List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
     )
     assertEquals(
       base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5)
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
         .fetch(),
       List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
     )
@@ -240,7 +239,7 @@ class EndToEndBsonTest extends FunSuite {
           _.mayor_count,
           _.closed,
           _.tags,
-          V6
+          V6.apply
         )
         .fetch(),
       List(V6(v.legId, v.userId, v.mayor, v.mayor_count, v.closed, v.tags))

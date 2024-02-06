@@ -2,7 +2,7 @@ package me.sgrouples.rogue.cc
 
 import munit.FunSuite
 import org.mongodb.scala.MongoDatabase
-import me.sgrouples.rogue.BsonFormats._
+import me.sgrouples.rogue.cc.macros._
 import me.sgrouples.rogue.cc.CcRogue._
 
 import scala.concurrent.Future
@@ -12,9 +12,9 @@ case class ArrayOfListWrapper(
                                _id: Int = 1
                        )
 
-class ArrayOfListWrapperMeta extends RCcMetaExt[ArrayOfListWrapper, ArrayOfListWrapperMeta]() {
-  val id = IntField
-  val arrayOfList = ArrayField[List[String]]
+class ArrayOfListWrapperMeta extends MCcMeta[ArrayOfListWrapper, ArrayOfListWrapperMeta]() {
+  val id = IntField("id")
+  val arrayOfList = ArrayField[List[String]]("arrayOfList")
 }
 class ArrayOfListRepository()(implicit db:MongoDatabase) {
   private val Repo = new ArrayOfListWrapperMeta

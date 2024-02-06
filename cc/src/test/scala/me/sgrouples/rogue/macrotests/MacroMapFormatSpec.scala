@@ -4,7 +4,7 @@ import me.sgrouples.rogue.cc.CustomKey
 import me.sgrouples.rogue.cc.macros._
 import me.sgrouples.rogue.macrotests.Domain.StrLongMapT
 import org.bson.types.ObjectId
-import com.softwaremill.tagging._
+import com.softwaremill.tagging.*
 import munit.FunSuite
 object Domain {
   type StrLongMapT = Map[String, Long]
@@ -70,7 +70,7 @@ class MacroMapFormatSpec extends FunSuite {
   }*/
 
   class OptMapMeta extends MCcMeta[OptMapStrLong, OptMapMeta]("omm") {
-    @f val value = OptMapField[Long]
+    val value = OptMapField[Long]("value")
   }
   test("deal with type aliases inside options") {
     val meta = new OptMapMeta
@@ -80,7 +80,7 @@ class MacroMapFormatSpec extends FunSuite {
   }
 
   class MapMeta extends MCcMeta[MapStrLong, MapMeta]("omm") {
-    val value = MapField("value")(StringMapKeyFormat)
+    val value = MapField[String, Long]("value") //(StringMapKeyFormat)
   }
   test("deal with type aliases") {
     val meta = new MapMeta

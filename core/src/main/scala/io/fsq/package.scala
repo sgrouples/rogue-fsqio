@@ -23,12 +23,12 @@ package object rogue {
 
   trait Sharded
 
-  trait ShardKey[V] {
+  /* trait ShardKey[V] {
     def name: String
     def eqs(v: V) = new EqClause(this.name, v) with ShardKeyClause
     def in[L](vs: L)(implicit ev: L => Iterable[V]) =
       new InQueryClause(this.name, QueryHelpers.validatedList(vs.toSet))
         with ShardKeyClause
-  }
+  }*/
 
 }
