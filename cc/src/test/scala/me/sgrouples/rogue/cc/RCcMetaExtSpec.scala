@@ -4,7 +4,6 @@ import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
 import com.softwaremill.tagging.*
 import org.bson.types.ObjectId
-//import me.sgrouples.rogue.EnumNameFormats._
 import java.util.UUID
 import me.sgrouples.rogue.cc.innertest.*
 

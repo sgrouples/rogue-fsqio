@@ -1,6 +1,6 @@
 package me.sgrouples.rogue
 import org.bson.{BsonArray, BsonValue}
-import scala.annotation.{StaticAnnotation, implicitNotFound}
+import scala.annotation.implicitNotFound
 
 trait BsonFormat[T] {
   def read(b: BsonValue): T
@@ -31,4 +31,3 @@ trait BasicBsonFormat[T] extends BaseBsonFormat[T] {
   override val flds: Map[String, BsonFormat[_]] = Map.empty
 }
 
-class EnumSerializeValue extends StaticAnnotation

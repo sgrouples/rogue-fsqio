@@ -33,8 +33,6 @@ object MacroBsonFormatDerivingImpl:
       case Some('{
             $m: Mirror.ProductOf[T] { type MirroredElemTypes = elementTypes }
           }) =>
-        //val all = summonAllMShow[elementTypes]
-        //val elemInstances = summonAllFormats[elementTypes]
         genProduct[T]
       case Some('{
             $m: Mirror.SumOf[T] { type MirroredElemTypes = elementTypes }
@@ -165,13 +163,6 @@ object MacroBsonFormatDerivingImpl:
 
         '{
           new MacroBaseBsonFormat[T] {
-            //${ b.asExpr }
-            //${vd.asExpr}
-            //${ vd.asExpr }
-            //${fields.map { s => Expr(s = 1)} }
-            //${Expr.apply(h) = 1 }
-            //..$bsonFormats
-            // override val flds = ${ Expr(fldsMap) } //Map(..$fldsMap) //++ Seq(..$subFieldsAdd).flatten
             override def validNames(): Vector[String] = ${
               fieldsVec
             }.toVector //why no vector?

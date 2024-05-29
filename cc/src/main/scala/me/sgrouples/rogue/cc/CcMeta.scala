@@ -199,26 +199,3 @@ class RCcMeta[T](collName: String)(implicit f: BsonFormat[T])
 
 }
 
-/** Rogue Case Class Meta Extended, awesome name!
-  *
-  * @param collName
-  *   @param formats
-  * @tparam RecordType
-  *   @tparam OwnerType
-  */
-
-/*
-class MCc[RecordType, OwnerType <: RCcMeta[RecordType]](
-    collName: String
-)(implicit formats: BsonFormat[RecordType])
-    extends RCcMeta[RecordType](collName)(formats)
-    with QueryFieldHelpers[OwnerType]
-    with RuntimeNameResolver[OwnerType] { requires: OwnerType =>
-
-  def this(namingStrategy: NamingStrategy = LowerCase)(implicit
-      formats: BsonFormat[RecordType],
-      classTag: ClassTag[RecordType]
-  ) = {
-    this(namingStrategy[RecordType])(formats)
-  }
-}*/

@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder, Text}
 import me.sgrouples.rogue.cc.macros.*
-//import me.sgrouples.rogue.EnumNameFormats._
 import me.sgrouples.rogue.*
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
@@ -199,8 +198,7 @@ object Metas {
   val VenueR = new VenueRMeta
 
   class VenueClaimRMeta
-      extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims")
-      /*with RuntimeNameResolver[VenueClaimRMeta]*/ {
+      extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
     val id = ObjectIdField("_id")
     val venueid = ObjectIdSubtypeField[ObjectId @@ Venue]("vid")
     val status = EnumField("status", ClaimStatus)
