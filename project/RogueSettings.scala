@@ -23,7 +23,7 @@ object RogueSettings {
     git.gitDescribePatterns := Seq("v*"),
     versionScheme := Some("strict"),
     organization := "me.sgrouples",
-    scalaVersion := "3.3.0", //2.13.8",
+    scalaVersion := "3.3.3",
     isSnapshot := false,
     publishMavenStyle := true,
     Test / publishArtifact := false,
