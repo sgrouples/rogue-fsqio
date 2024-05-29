@@ -21,9 +21,6 @@ case class Nest(name: String)
 case class OneEnum(one: String, en: VenueStatus.Value)
 case class TwoEnums(one: String, en: VenueStatus.Value, x: ClaimStatus.Value)
 
-case class W(a: Int = 1)
-case class B(w: W = W(1), x: String = "a")
-
 class BsonFormatsTests extends FunSuite {
   test("basicSerializeTest") {
     val o = new ObjectId()
@@ -75,6 +72,8 @@ class BsonFormatsTests extends FunSuite {
   }
 
   test("defaultCaseClass") {
+    case class W(a: Int = 1)
+    case class B(w: W = W(1), x: String = "a")
     val f = summon[MacroBsonFormat[B]]
     val b = f.read(new BsonDocument)
     //println(s"B ${b}")

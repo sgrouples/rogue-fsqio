@@ -5,7 +5,6 @@ import me.sgrouples.rogue.cc.macros.*
 import com.softwaremill.tagging.*
 import org.bson.types.ObjectId
 import java.util.UUID
-import me.sgrouples.rogue.cc.innertest.*
 
 case class CaseClass1(id: Long)
 

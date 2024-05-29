@@ -1,4 +1,4 @@
-package me.sgrouples.rogue.cc.innertest // TODO why this package name matters
+package me.sgrouples.rogue.cc
 
 import java.util.UUID
 
