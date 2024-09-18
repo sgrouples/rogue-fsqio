@@ -15,26 +15,7 @@ as a part of Foursquare [monorepo]((http://github.com/foursquare/fsqio)
 Standard sbt build, so just `sbt package; sbt publish-local` is enough.
 
 
-#Usage - shapeless version
-1. define your model as a case class `CC`
-supported types:
- `Boolean`, `Int`, `Long`, `String`, `ObjectId`, `Tagged ObjectId` (shapeless `@@`), `Double`, `UUID`, `java.time.LocalDateTime`, `java.time.Instant`,
- `Map[String, _]` , `List[_]`, `Option[_]`, `Array[_]`
-
-inside `_` can be eny of supported types or a case class - so nesting is allowed.
-
-Enumerations are handled separately - you need to import either `me.sgrouples.rogue.EnumNameFormats._` if you want to serialize Enumeration names or
- `me.sgrouples.rogue.EnumValueFormats._` if you want to serialize integers.
-
-
-Default values handling: if database lacks value that can be deserialized into required format, a default value is provided, those are, 0 of specific type or empty. This is
-a heritage from Lift Active record, and might be changed in the future.
-
-2. Create `RCcMeta[CC]` object with definition of your fields. They must match case class fields
-
-3. Create connection to Mongo and put it on
-
-#Usage - macros version - new in 4.0.0
+#Usage
 
 1. define model as case class, with the same features supported as in shapeless version.
 Enumerations serializers are swiched by `@EnumSerializeValue` annotation on enum itself
@@ -47,10 +28,10 @@ case class Entity(_id: ObjectId, str: String, optInt: Option[Int], list:List[Int
 
   trait Metas {
     class EntityMeta extends  MCcMeta[Entity, EntityMeta]("entity_coll_name") {
-    @f val id = ObjectIdField("id")
-    @f val str = StringField
-    @f val optInt = OptIntField
-    @f val list = ListField[Int]
+    val id = ObjectIdField("id")("id")
+    val str = StringField("str")
+    val optInt = OptIntField("optInt")
+    val list = ListField[Int]("list")
     }
   }
 

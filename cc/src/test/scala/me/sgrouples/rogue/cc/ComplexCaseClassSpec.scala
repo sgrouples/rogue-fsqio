@@ -5,9 +5,8 @@ import java.time.temporal.{ChronoUnit}
 
 import org.bson.types.ObjectId
 import munit.FunSuite
-import com.softwaremill.tagging._
-import me.sgrouples.rogue.BsonFormats._
-import me.sgrouples.rogue.EnumNameFormats._
+import me.sgrouples.rogue.cc.macros.*
+import com.softwaremill.tagging.*
 
 trait User
 
@@ -19,18 +18,24 @@ object GroupModelType extends Enumeration {
   type GroupModelType = Value
   val one = Value
   val two = Value
+
+  given MacroBsonFormat[GroupModelType.Value] = EnumMacroFormats.enumNameMacroFormat(GroupModelType)
 }
 
 object RoleName extends Enumeration {
   type RoleName = Value
   val one = Value
   val two = Value
+
+  given MacroBsonFormat[RoleName.Value] = EnumMacroFormats.enumNameMacroFormat(RoleName)
 }
 
 object Permission extends Enumeration {
   type Permission = Value
   val one = Value
   val two = Value
+
+  given MacroBsonFormat[Permission.Value] = EnumMacroFormats.enumNameMacroFormat(Permission)
 }
 
 trait AnyTag
@@ -83,7 +88,7 @@ case class Group(
 
 class ComplexCaseClassSpec extends FunSuite {
 
-  class GroupMeta extends RCcMetaExt[Group, GroupMeta] {}
+  class GroupMeta extends MCcMeta[Group, GroupMeta] {}
 
   val Groups = new GroupMeta
 

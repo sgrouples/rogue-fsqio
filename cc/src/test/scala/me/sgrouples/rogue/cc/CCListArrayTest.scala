@@ -1,11 +1,11 @@
 package me.sgrouples.rogue.cc
 
-import me.sgrouples.rogue._
-import me.sgrouples.rogue.cc.CcRogue._
+import me.sgrouples.rogue.*
+import me.sgrouples.rogue.cc.CcRogue.{given, *}
+import me.sgrouples.rogue.cc.macros.*
 import org.bson.types.ObjectId
-import me.sgrouples.rogue.BsonFormats._
 import munit.FunSuite
-import me.sgrouples.rogue.QueryParser._
+import me.sgrouples.rogue.QueryParser.*
 
 case class Inner(a: Int, b: String, c: Array[String] = Array.empty)
 
@@ -16,35 +16,19 @@ case class Outer(
     innerOptArray: Option[Array[Inner]],
     innerOptList: Option[List[Inner]]
 )
-object InnerR extends RCcMeta[Inner]("") {
+object InnerR extends MCcMeta[Inner, InnerR.type]("") {
   val a = new IntField("a", this)
   val b = new StringField("b", this)
   val c = new ArrayField[String, InnerR.type]("c", this)
   val d = new ListField[String, InnerR.type]("d", this)
 }
 
-object OuterR extends RCcMeta[Outer] {
+object OuterR extends MCcMeta[Outer, OuterR.type] {
   val id = new ObjectIdField("_id", this)
-  val innerList = new CClassListField[Inner, InnerR.type, OuterR.type](
-    "innerList",
-    InnerR,
-    this
-  )
-  val innerArray = new CClassArrayField[Inner, InnerR.type, OuterR.type](
-    "innerArray",
-    InnerR,
-    this
-  )
-  val innerOptArray = new OptCClassArrayField[Inner, InnerR.type, OuterR.type](
-    "innerOptArray",
-    InnerR,
-    this
-  )
-  val innerOptList = new OptCClassListField[Inner, InnerR.type, OuterR.type](
-    "innerOptList",
-    InnerR,
-    this
-  )
+  val innerList = ClassListField("innerList", InnerR)
+  val innerArray = ClassArrayField("innerArray", InnerR)
+  val innerOptArray = OptClassArrayField("innerOptArray", InnerR)
+  val innerOptList = OptClassListField("innerOptList", InnerR)
 }
 
 class CCListArrayTest extends FunSuite {

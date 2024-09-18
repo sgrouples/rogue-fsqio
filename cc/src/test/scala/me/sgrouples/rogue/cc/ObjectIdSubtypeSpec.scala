@@ -3,11 +3,11 @@ package me.sgrouples.rogue.cc
 import java.util.UUID
 
 import io.fsq.rogue._
-import me.sgrouples.rogue.BsonFormats._
+import me.sgrouples.rogue.cc.macros.*
 import me.sgrouples.rogue.cc
 import org.bson.types.ObjectId
 import munit.FunSuite
-import com.softwaremill.tagging._
+import com.softwaremill.tagging.*
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.CcRogue._
 
@@ -51,19 +51,19 @@ object A extends TypedObjectId[A, A]
 
 class ObjectIdSubtypeSpec extends FunSuite {
 
-  class MetaA extends RCcMetaExt[A, MetaA]() {
+  class MetaA extends MCcMeta[A, MetaA]() {
     val id = ObjectIdSubtypeField[A.Id]("_id")
   }
   val X = new MetaA
   val t: Query[
     MetaA,
-    cc.A.Id,
+    A.Id,
     Unordered with Unlimited with Unskipped with HasNoOrClause with Unhinted with ShardKeyNotSpecified with SelectedOne
   ] = X.select(_.id)
 
   test("t should compile") {
     //should compile ..
-    val t: Query[_, me.sgrouples.rogue.cc.A.Id, _] = X.select(_.id)
+    val t: Query[_, A.Id, _] = X.select(_.id)
   }
 }
 
@@ -99,22 +99,22 @@ trait TypedStringId[RecordType, TagType] {
   }
 }
 
-object B extends TypedStringId[B, B]
-
 case class B(id: B.Id)
+
+object B extends TypedStringId[B, B]
 
 class StringTaggedSpec extends FunSuite {
 
-  class MetaB extends RCcMetaExt[B, MetaB]() {
-    val id = StringTaggedField[B]("id")
+  class MetaB extends MCcMeta[B, MetaB]() {
+    val id = StringSubtypeField[B.Id]("id")
   }
 
   val X = new MetaB
-  val id: cc.B.Id = cc.B.Id.get()
-  val t: Query[MetaB, cc.B.Id, _] = X.select(_.id).where(_.id eqs id)
+  val id: B.Id = B.Id.get()
+  val t: Query[MetaB, B.Id, _] = X.select(_.id).where(_.id eqs id)
 
   test("t should compile") {
-    val t: Query[_, me.sgrouples.rogue.cc.B.Id, _] =
+    val t: Query[_, B.Id, _] =
       X.select(_.id).where(_.id eqs id)
   }
 }

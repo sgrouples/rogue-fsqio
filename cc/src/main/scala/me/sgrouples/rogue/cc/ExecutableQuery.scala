@@ -5,7 +5,6 @@ package me.sgrouples.rogue.cc
 
 import com.mongodb.client.result.InsertManyResult
 import io.fsq.field.Field
-import io.fsq.rogue.MongoHelpers.MongoSelect
 import io.fsq.rogue.{
   AddLimit,
   FindAndModifyQuery,
@@ -19,6 +18,7 @@ import io.fsq.rogue.{
   Unskipped,
   _
 }
+import io.fsq.rogue.MongoHelpers.MongoSelect
 import me.sgrouples.rogue.ListField
 import org.mongodb.scala._
 import org.mongodb.scala.bson.conversions.Bson
@@ -95,7 +95,7 @@ case class ExecutableQuery[MB, M <: MB, R, State](
     * https://www.mongodb.com/docs/manual/reference/command/distinct/#return-distinct-values-for-an-array-field
     */
   def distinctAsyncT[V: ClassTag, GenField[_, _] <: Field[_, _]](
-      field: M => GenField[V, _],
+      field: M => GenField[V, M],
       readPreference: Option[ReadPreference] = None
   )(implicit db: MongoDatabase): Future[Seq[V]] = {
     ex.async.distinct(query, readPreference)(
@@ -454,17 +454,30 @@ case class InsertableQuery[MB, M <: MB, R, State](
 
 }
 
-case class AggregateQuery[MB, M <: MB,  State](collectionName:String, ex: BsonExecutors[_]) {
-  def aggregateSeq[R : ClassTag](pipeline: Seq[Bson], mapper:Document => R, readPreference: ReadPreference = ReadPreference.primaryPreferred(),
-                                 allowDiskUse: Boolean = false)(implicit db:MongoDatabase):Future[Seq[R]] = {
+case class AggregateQuery[MB, M <: MB, State](
+    collectionName: String,
+    ex: BsonExecutors[_]
+) {
+  def aggregateSeq[R: ClassTag](
+      pipeline: Seq[Bson],
+      mapper: Document => R,
+      readPreference: ReadPreference = ReadPreference.primaryPreferred(),
+      allowDiskUse: Boolean = false
+  )(implicit db: MongoDatabase): Future[Seq[R]] = {
     getCollection(db, collectionName, readPreference)
       .aggregate(pipeline)
       .allowDiskUse(allowDiskUse)
       .map(mapper)
-      .collect[R]().toFuture()
+      .collect[R]()
+      .toFuture()
   }
-  def aggregateFoldLeft[R : ClassTag](pipeline: Seq[Bson], zero:R, acc: (R, Document) => R, readPreference: ReadPreference = ReadPreference.primaryPreferred(),
-                                      allowDiskUse: Boolean = false)(implicit db: MongoDatabase): Future[R] = {
+  def aggregateFoldLeft[R: ClassTag](
+      pipeline: Seq[Bson],
+      zero: R,
+      acc: (R, Document) => R,
+      readPreference: ReadPreference = ReadPreference.primaryPreferred(),
+      allowDiskUse: Boolean = false
+  )(implicit db: MongoDatabase): Future[R] = {
     getCollection(db, collectionName, readPreference)
       .aggregate(pipeline)
       .allowDiskUse(allowDiskUse)

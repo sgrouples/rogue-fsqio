@@ -162,6 +162,8 @@ trait CcRogue {
     ccQuery.asInstanceOf[ExecutableQuery[MB, M, R, InitialState]]
   }
 
+  //given Conversion[]
+
   implicit def localDateTimeFieldToLocalDateTimeQueryField[O <: CcMeta[_]](
       f: RField[LocalDateTime, O]
   ): LocalDateTimeQueryField[O] =
@@ -251,9 +253,24 @@ trait CcRogue {
       f: CClassArrayField[C, M, O]
   ): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
 
+  given [C, M <: CcMeta[C], O]
+      : Conversion[CClassArrayField[C, M, O], CClassArrayModifyField[C, M, O]]
+    with
+    def apply(f: CClassArrayField[C, M, O]): CClassArrayModifyField[C, M, O] =
+      new CClassArrayModifyField[C, M, O](f)
+
   implicit def optCcArrayFieldToCCArrayModifyField[C, M <: CcMeta[C], O](
       f: OptCClassArrayField[C, M, O]
   ): CClassArrayModifyField[C, M, O] = new CClassArrayModifyField[C, M, O](f)
+
+  given [C, M <: CcMeta[C], O]: Conversion[
+    OptCClassArrayField[C, M, O],
+    CClassArrayModifyField[C, M, O]
+  ] with
+    def apply(
+        f: OptCClassArrayField[C, M, O]
+    ): CClassArrayModifyField[C, M, O] =
+      new CClassArrayModifyField[C, M, O](f)
 
   implicit def localDateTimeFieldToLocalDateTimeModifyField[O <: CcMeta[_]](
       f: RField[LocalDateTime, O]
@@ -293,36 +310,58 @@ trait CcRogue {
       override def owner = f.owner
     })
 
-  implicit def enumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
+  implicit def enumIdFieldToEnumQueryField[O <: CcMeta[
+    _
+  ], E <: Enumeration#Value](
       f: EnumIdField[E, O]
-  ): EnumIdQueryField[O, E#Value] =
-    new EnumIdQueryField(f)
-
+  ): EnumIdQueryField[O, E] = {
+    new EnumIdQueryField(
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
+    )
+  }
   // this is here to force proper implicit resolution
 
-  implicit def optRnumIdFieldToEnumQueryField[O <: CcMeta[_], E <: Enumeration](
+  implicit def optRnumIdFieldToEnumQueryField[O <: CcMeta[
+    _
+  ], E <: Enumeration#Value](
       f: OptEnumIdField[E, O]
-  ): EnumIdQueryField[O, E#Value] =
-    new EnumIdQueryField(f)
+  ): EnumIdQueryField[O, E] =
+    new EnumIdQueryField(
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
+    )
 
-  implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[_], E <: Enumeration](
+  implicit def enumIdFieldToEnumIdModifyField[O <: CcMeta[
+    _
+  ], E <: Enumeration#Value](
       f: EnumIdField[E, O]
-  ): EnumIdModifyField[O, E#Value] =
-    new EnumIdModifyField(f)
+  ): EnumIdModifyField[O, E] =
+    new EnumIdModifyField(
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
+    )
 
   // this is here to force proper implicit resolution
 
   implicit def optEnumIdFieldToEnumIdModifyField[O <: CcMeta[
     _
-  ], E <: Enumeration](f: OptEnumIdField[E, O]): EnumIdModifyField[O, E#Value] =
-    new EnumIdModifyField(f)
+  ], E <: Enumeration#Value](
+      f: OptEnumIdField[E, O]
+  ): EnumIdModifyField[O, E] =
+    new EnumIdModifyField(
+      f.asInstanceOf[io.fsq.field.Field[E, O]],
+      (e: E) => e.id
+    )
 
-  implicit val localDateIsFlattened =
+  given localDateIsFlattened: Rogue.Flattened[LocalDateTime, LocalDateTime] =
     new Rogue.Flattened[LocalDateTime, LocalDateTime]
 
-  implicit val instantIsFlattend = new Rogue.Flattened[Instant, Instant]
+  given instantIsFlattend: Rogue.Flattened[Instant, Instant] =
+    new Rogue.Flattened[Instant, Instant]
 
-  implicit def objIdSubtypeIsFlattened[T <: ObjectId] =
+  implicit def objIdSubtypeIsFlattened[T <: ObjectId]
+      : Rogue.Flattened[T, ObjectId] =
     new Rogue.Flattened[T, ObjectId]
 
   implicit def binaryFieldToQueryField[M](

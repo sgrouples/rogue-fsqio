@@ -3,22 +3,11 @@
 
 import sbt._
 import Keys.{scalaVersion, _}
-import scalafix.sbt.ScalafixPlugin.autoImport.{
-  scalafixScalaBinaryVersion,
-  scalafixSemanticdb
-}
+//import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixScalaBinaryVersion, scalafixSemanticdb}
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 import com.github.sbt.git.GitPlugin.autoImport._
 
 object RogueSettings {
-
-  lazy val macroSettings: Seq[Setting[_]] = Seq(
-    libraryDependencies ++= Seq(
-      scalaOrganization.value % "scala-compiler" % scalaVersion.value % Provided,
-      scalaOrganization.value % "scala-reflect" % scalaVersion.value % Provided
-    ),
-    scalacOptions ++= Seq("-Ymacro-annotations")
-  )
 
   lazy val defaultSettings: Seq[Setting[_]] = Seq(
     commands += Command.single("testOnlyUntilFailed") { (state, param) =>
@@ -34,7 +23,8 @@ object RogueSettings {
     git.gitDescribePatterns := Seq("v*"),
     versionScheme := Some("strict"),
     organization := "me.sgrouples",
-    scalaVersion := "2.13.8",
+    scalaVersion := "3.3.3",
+    isSnapshot := false,
     publishMavenStyle := true,
     Test / publishArtifact := false,
     pomIncludeRepository := { _ => false },
@@ -44,31 +34,29 @@ object RogueSettings {
     scalacOptions ++= Seq(
       "-deprecation",
       "-unchecked",
-      "-Yrangepos"
-    ), //, "-Ymacro-debug-lite"),
-    //, "-P:semanticdb:synthetics:on"), //"-Ymacro-debug-lite"), //, "-Xlog-implicit-conversions"),
-    scalacOptions ++= Seq("-feature", "-language:_"),
-    semanticdbVersion := scalafixSemanticdb.revision,
-    scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(
-      scalaVersion.value
+      "-explain",
+      "-feature",
+      "-language:implicitConversions"
     )
-  ) ++ macroSettings
+    //semanticdbVersion := scalafixSemanticdb.revision,
+    //scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
+  )
 }
 
 object RogueDependencies {
   val mongoVer = "4.9.0"
-  val nettyVer = "4.1.74.Final"
-  val testcontainersScalaVersion = "0.39.12"
+  val nettyVer = "4.1.86.Final"
+  val testcontainersScalaVersion = "0.40.12"
 
-  val bosnDeps = Seq("org.mongodb" % "bson" % mongoVer % Compile)
+  val bsonDeps = Seq("org.mongodb" % "bson" % mongoVer % Compile)
 
   val mongoDeps = Seq(
-    "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer % Compile
+    "org.mongodb.scala" %% "mongo-scala-driver" % mongoVer % Compile cross (CrossVersion.for3Use2_13)
   )
 
   val testDeps = Seq(
-    "org.slf4j" % "slf4j-simple" % "1.7.32" % Test,
-    "org.scalameta" %% "munit" % "0.7.27" % Test,
+    "org.slf4j" % "slf4j-simple" % "1.7.36" % Test,
+    "org.scalameta" %% "munit" % "1.0.0-M7" % Test,
     "io.netty" % "netty-all" % nettyVer % Test,
     "io.netty" % "netty-transport-native-epoll" % nettyVer % Test,
     "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test,
@@ -76,9 +64,8 @@ object RogueDependencies {
   )
 
   val enumeratum = "com.beachape" %% "enumeratum" % "1.7.2"
-  val shapeless = "com.chuusai" %% "shapeless" % "2.3.8"
   val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
   val coreDeps = mongoDeps ++ Seq(enumeratum)
 
-  val ccDeps = mongoDeps ++ Seq(shapeless, tagging) ++ testDeps
+  val ccDeps = mongoDeps ++ Seq(tagging) ++ testDeps
 }

@@ -7,14 +7,14 @@ import scala.concurrent.Future
 import scala.util.Try
 trait TestQueryTraitA[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
-  @f val int = IntField
-  @f val int_named = IntField("int_custom_name")
+  val int = IntField("int")
+  val int_named = IntField("int_custom_name")
 }
 
 trait TestQueryTraitB[OwnerType] {
   requires: OwnerType with QueryFieldHelpers[OwnerType] =>
-  @f val optInt = OptIntField
-  @f val optInt_named = OptIntField("optInt_custom_name")
+  val optInt = OptIntField("optInt")
+  val optInt_named = OptIntField("optInt_custom_name")
 
 }
 
@@ -25,61 +25,61 @@ trait X {
       with TestQueryTraitA[TestDomainObjectMeta]
       with TestQueryTraitB[TestDomainObjectMeta] {
 
-    @f val claims = ListField[String]
+      val claims = ListField[String]("claims")
 
-    @f val string = StringField
-    @f val string_named = StringField("string_custom_name")
+      val string = StringField("string")
+      val string_named = StringField("string_custom_name")
 
-    @f val optString = OptStringField
-    @f val optString_named = OptStringField("optString_custom_name")
+      val optString = OptStringField("optString")
+      val optString_named = OptStringField("optString_custom_name")
 
-    @f val long = LongField
-    @f val long_named = LongField("long_custom_name")
+      val long = LongField("long")
+      val long_named = LongField("long_custom_name")
 
-    @f val optLong = OptLongField
-    @f val optLong_named = OptLongField("optLong_custom_name")
+      val optLong = OptLongField("optLong")
+      val optLong_named = OptLongField("optLong_custom_name")
 
-    @f val double = DoubleField
-    @f val double_named = DoubleField("double_custom_name")
+      val double = DoubleField("double")
+      val double_named = DoubleField("double_custom_name")
 
-    @f val optDouble = OptDoubleField
-    @f val optDouble_named = OptDoubleField("optDouble_custom_name")
+      val optDouble = OptDoubleField("optDouble")
+      val optDouble_named = OptDoubleField("optDouble_custom_name")
 
-    @f val objectId = ObjectIdField
-    @f val objectId_named = ObjectIdField("objectId_custom_name")
+      val objectId = ObjectIdField("objectId")
+      val objectId_named = ObjectIdField("objectId_custom_name")
 
-    @f val optObjectId = OptObjectIdField
-    @f val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
+      val optObjectId = OptObjectIdField("optObjectId")
+      val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
 
-    val randomSomething = 42
+      val randomSomething = 42
 
     //val backwardCompatibilityCheck = new StringField("foo", this)
 
-    @f val uuid = UUIdField
-    @f val uuid_named = UUIdField("uuid_custom_name")
+      val uuid = UUIdField("uuid")
+      val uuid_named = UUIdField("uuid_custom_name")
 
-    @f val optUUID = OptUUIdField
-    @f val optUUID_named = OptUUIdField("optUUID_custom_name")
+      val optUUID = OptUUIdField("optUUID")
+      val optUUID_named = OptUUIdField("optUUID_custom_name")
 
-    @f val localDateTime = LocalDateTimeField
-    @f val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
+       val localDateTime = LocalDateTimeField("localDateTime")
+       val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
 
-    @f val optLocalDateTime = OptLocalDateTimeField
-    @f val optLocalDateTime_named = OptLocalDateTimeField(
+       val optLocalDateTime = OptLocalDateTimeField("optLocalDateTime")
+       val optLocalDateTime_named = OptLocalDateTimeField(
       "optLocalDateTime_custom_name"
     )
 
-    @f val instant = InstantField
-    @f val instant_named = InstantField("instant_custom_name")
+       val instant = InstantField("instant")
+       val instant_named = InstantField("instant_custom_name")
 
-    @f val optInstant = OptInstantField
-    @f val optInstant_named = OptInstantField("optInstant_custom_name")
+       val optInstant = OptInstantField("optInstant")
+       val optInstant_named = OptInstantField("optInstant_custom_name")
 
-    @f val boolean = BooleanField
-    @f val boolean_named = BooleanField("boolean_custom_name")
+       val boolean = BooleanField("boolean")
+       val boolean_named = BooleanField("boolean_custom_name")
 
-    @f val optBoolean = OptBooleanField
-    @f val optBoolean_named = OptBooleanField("optBoolean_custom_name")
+       val optBoolean = OptBooleanField("optBoolean")
+       val optBoolean_named = OptBooleanField("optBoolean_custom_name")
 
   }
 
@@ -172,18 +172,18 @@ class MacroQueryFieldHelperSpec extends FunSuite with X {
   case class AnotherValue(a: String)
 
   class AnotherTestMeta extends MCcMeta[AnotherValue, AnotherTestMeta] {
-    @f val a = StringField
-    @f val b = StringField("a")
+    val a = StringField("a")
+    val b = StringField("a")
   }
 
   class MultiThreadedTestMeta
       extends MCcMeta[AnotherValue, MultiThreadedTestMeta] {
-    @f val a = StringField
-    @f val b = StringField
-    @f val c = StringField
-    @f val d = StringField
-    @f val e = StringField
-    @f val f = StringField
+    val a = StringField("a")
+    val b = StringField("b")
+    val c = StringField("c")
+    val d = StringField("d")
+    val e = StringField("e")
+    val f = StringField("f")
   }
 
   test("it should fail when name is duplicated") {
@@ -196,7 +196,7 @@ class MacroQueryFieldHelperSpec extends FunSuite with X {
   case class DifferentValue(a: String)
 
   class DifferentTestMeta extends MCcMeta[DifferentValue, DifferentTestMeta] {
-    @f val a = StringField
+    val a = StringField("a")
   }
 
   test("not fail when resolving an inner meta class") {

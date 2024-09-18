@@ -4,13 +4,14 @@ import java.time.LocalDateTime
 import java.util.{Currency, Locale}
 import java.util.regex.Pattern
 import org.mongodb.scala._
-import me.sgrouples.rogue.cc.CcRogue._
+import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.*
 import org.bson.types.ObjectId
 import munit.FunSuite
 import org.mongodb.scala.result.DeleteResult
 
 import scala.concurrent.duration._
-import com.softwaremill.tagging._
+import com.softwaremill.tagging.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -54,7 +55,8 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db = dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
+  implicit def db: MongoDatabase =
+    dbOpt.getOrElse(throw new RuntimeException("Uninitialized"))
 
   override def beforeEach(context: BeforeEach): Unit = {}
 
@@ -241,23 +243,33 @@ class EndToEndBsonAsyncSpec extends FunSuite {
     for {
       _ <- VenueR.insertOneAsync(v)
 
-      _ <- base.selectCase(_.legacyid, V1).fetchAsync().map {
+      _ <- base.selectCase(_.legacyid, V1.apply).fetchAsync().map {
         assertEquals(_, List(V1(v.legId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, V2).fetchAsync().map {
+      _ <- base.selectCase(_.legacyid, _.userId, V2.apply).fetchAsync().map {
         assertEquals(_, List(V2(v.legId, v.userId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetchAsync().map {
-        assertEquals(_, List(V3(v.legId, v.userId, v.mayor)))
-      }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4)
+        .selectCase(_.legacyid, _.userId, _.mayor, V3.apply)
+        .fetchAsync()
+        .map {
+          assertEquals(_, List(V3(v.legId, v.userId, v.mayor)))
+        }
+      _ <- base
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .fetchAsync()
         .map {
           assertEquals(_, List(V4(v.legId, v.userId, v.mayor, v.mayor_count)))
         }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5)
+        .selectCase(
+          _.legacyid,
+          _.userId,
+          _.mayor,
+          _.mayor_count,
+          _.closed,
+          V5.apply
+        )
         .fetchAsync()
         .map {
           assertEquals(
@@ -273,7 +285,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
           _.mayor_count,
           _.closed,
           _.tags,
-          V6
+          V6.apply
         )
         .fetchAsync()
         .map {
@@ -704,7 +716,8 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   test("Map[K <: ObjectId, V] field") {
-    val counts: Map[CounterId, Long] = Map(ObjectId.get.taggedWith[Counter] -> 100L)
+    val counts: Map[CounterId, Long] =
+      Map(ObjectId.get.taggedWith[Counter] -> 100L)
     val counter = TypedCounter(counts = counts)
 
     for {
@@ -767,5 +780,28 @@ class EndToEndBsonAsyncSpec extends FunSuite {
         assertEquals(rcv, List("test venue", "test venue", "test venue"))
         assert(true, "OK")
       }
+  }
+
+  test("OptEnum queries should compile and work") {
+    val claim = baseTestVenueClaim(new ObjectId)
+
+    def getReason =
+      VenueClaimR
+        .where(_.id eqs claim._id)
+        .select(_.reason)
+        .getAsync()
+
+    for {
+      _ <- VenueClaimR.insertOneAsync(claim)
+      beforeUpdate <- getReason
+      _ <- VenueClaimR
+        .where(_.id eqs claim._id)
+        .modify(_.reason setTo RejectReason.cheater)
+        .updateOneAsync()
+      afterUpdate <- getReason
+    } yield {
+      assertEquals(beforeUpdate, Some(None))
+      assertEquals(afterUpdate, Some(Some(RejectReason.cheater)))
+    }
   }
 }

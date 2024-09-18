@@ -2,14 +2,15 @@ package me.sgrouples.rogue.cc
 
 import org.bson.types.ObjectId
 import munit.FunSuite
-import me.sgrouples.rogue.BsonFormats._
-import me.sgrouples.rogue.cc.CcRogue._
+import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.macros.*
+
 import scala.concurrent.ExecutionContext.Implicits.global
 case class Cont(_id: ObjectId, lst: Seq[ObjectId])
 
-class M extends RCcMetaExt[Cont, M]("cont") {
+class M extends MCcMeta[Cont, M]("cont") {
   val id = ObjectIdField("_id")
-  val lst = ListField[ObjectId]
+  val lst = ListField[ObjectId]("lst")
 }
 
 class ListFieldCaseSpec extends FunSuite {

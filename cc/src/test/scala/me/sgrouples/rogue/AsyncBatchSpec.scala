@@ -8,12 +8,13 @@ import munit.FunSuite
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.mongodb.scala.ObservableFuture
 
 case class NumModel(_id: Int, bla: String)
 
 class AsyncBatchSpec extends FunSuite {
   class NumModelMeta extends MCcMeta[NumModel, NumModelMeta]("nummodel") {
-    @f val id = IntField("_id")
+    val id = IntField("_id")
   }
 
   test("batch async should batch with slice size and function") {

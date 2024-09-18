@@ -1,21 +1,22 @@
 package me.sgrouples.rogue.cc.macros
 
-import com.softwaremill.tagging._
-import io.fsq.field.Field
-import me.sgrouples.rogue.cc.CcRogue._
-import me.sgrouples.rogue.cc._
+import java.time.LocalDateTime
+import java.util.{Currency, Locale}
+import java.util.regex.Pattern
+import org.mongodb.scala.*
+import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.*
 import me.sgrouples.rogue.{ListField, VectorField}
+import io.fsq.field.Field
 import munit.FunSuite
 import org.bson.types.ObjectId
 import org.mongodb.scala._
 import org.mongodb.scala.model.Filters
 
-import java.time.LocalDateTime
-import java.util.regex.Pattern
-import java.util.{Currency, Locale}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
+import com.softwaremill.tagging.*
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class MacroEndToEndSpec extends FunSuite {
   import me.sgrouples.rogue.cc.macros.Metas._
@@ -56,7 +57,7 @@ class MacroEndToEndSpec extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db =
+  implicit def db: MongoDatabase =
     dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   override def beforeAll(): Unit = {
@@ -97,8 +98,8 @@ class MacroEndToEndSpec extends FunSuite {
     for {
       _ <- VenueR.insertOneAsync(v)
       _ <- VenueClaimR.insertOneAsync(vc)
-      _ <- ccMetaToQueryBuilder(VenueR).where(_.id eqs v._id).fetchAsync().map {
-        res => assertEquals(res.map(_._id), Seq(v._id))
+      _ <- VenueR.where(_.id eqs v._id).fetchAsync().map { res =>
+        assertEquals(res.map(_._id), Seq(v._id))
       }
       _ <- VenueR.where(_.mayor eqs v.mayor).fetchAsync().map { res =>
         assertEquals(res.map(_._id), List(v._id))
@@ -245,23 +246,34 @@ class MacroEndToEndSpec extends FunSuite {
       _ <- VenueR.insertOneAsync(v)
 
       base = VenueR.where(_.id eqs v._id)
-      _ <- base.selectCase(_.legacyid, V1).fetchAsync().map { res =>
+      _ <- base.selectCase(_.legacyid, V1.apply).fetchAsync().map { res =>
         assertEquals(res, List(V1(v.legId)))
       }
-      _ <- base.selectCase(_.legacyid, _.userId, V2).fetchAsync().map { res =>
-        assertEquals(res, List(V2(v.legId, v.userId)))
-      }
-      _ <- base.selectCase(_.legacyid, _.userId, _.mayor, V3).fetchAsync().map {
-        res => assertEquals(res, List(V3(v.legId, v.userId, v.mayor)))
+      _ <- base.selectCase(_.legacyid, _.userId, V2.apply).fetchAsync().map {
+        res =>
+          assertEquals(res, List(V2(v.legId, v.userId)))
       }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4)
+        .selectCase(_.legacyid, _.userId, _.mayor, V3.apply)
+        .fetchAsync()
+        .map { res =>
+          assertEquals(res, List(V3(v.legId, v.userId, v.mayor)))
+        }
+      _ <- base
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
         .fetchAsync()
         .map { res =>
           assertEquals(res, List(V4(v.legId, v.userId, v.mayor, v.mayor_count)))
         }
       _ <- base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5)
+        .selectCase(
+          _.legacyid,
+          _.userId,
+          _.mayor,
+          _.mayor_count,
+          _.closed,
+          V5.apply
+        )
         .fetchAsync()
         .map { res =>
           assertEquals(
@@ -277,7 +289,7 @@ class MacroEndToEndSpec extends FunSuite {
           _.mayor_count,
           _.closed,
           _.tags,
-          V6
+          V6.apply
         )
         .fetchAsync()
         .map { res =>
@@ -774,7 +786,7 @@ class MacroEndToEndSpec extends FunSuite {
 
     // samples.foreach { sample => Locales.insertOneAsync(LocaleData(sample)).futureValue }
     for {
-      _ <- Locales.insertManyAsync(samples.map(LocaleData))
+      _ <- Locales.insertManyAsync(samples.map(LocaleData.apply))
       seq <- Locales.where(_.locale in samples).select(_.locale).fetchAsync()
       _ <- Locales
         .where(_.locale eqs Locale.CANADA_FRENCH)

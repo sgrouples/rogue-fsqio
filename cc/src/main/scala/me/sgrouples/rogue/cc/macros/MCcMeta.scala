@@ -1,12 +1,12 @@
 package me.sgrouples.rogue.cc.macros
 
+import org.mongodb.scala.*
 import io.fsq.field.Field
 import io.fsq.rogue.index.MongoIndex
 import me.sgrouples.rogue.BsonFormat
 import me.sgrouples.rogue.cc.{CcMeta, QueryFieldHelpers}
 import me.sgrouples.rogue.naming.{LowerCase, NamingStrategy}
 import org.bson.{BsonDocument, BsonInt32, BsonValue}
-import org.mongodb.scala._
 import org.mongodb.scala.model.IndexOptions
 
 import scala.concurrent.Future
@@ -14,16 +14,16 @@ import scala.reflect.ClassTag
 
 //TODO - memoize field readers
 class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(
-    implicit val macroGen: MacroBsonFormat[RecordType]
+    implicit val bsonFormat: MacroBsonFormat[RecordType]
 ) extends QueryFieldHelpers[OwnerType]
     with CcMeta[RecordType]
     with MacroNamesResolver[RecordType] {
   requires: OwnerType =>
   def this(namingStrategy: NamingStrategy = LowerCase)(implicit
-      macroGen: MacroBsonFormat[RecordType],
+      bsonFormat: MacroBsonFormat[RecordType],
       classTag: ClassTag[RecordType]
   ) = {
-    this(namingStrategy[RecordType])(macroGen)
+    this(namingStrategy[RecordType])(bsonFormat)
   }
   import me.sgrouples.rogue.cc.Waiter._
 
@@ -31,10 +31,10 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(
 
   override def reader(field: Field[_, _]): BsonFormat[_] = {
     val fieldName = field.name.replaceAll("\\.\\$", "")
-    val r = macroGen.flds.get(fieldName)
+    val r = bsonFormat.flds.get(fieldName)
     r.orElse(starReader(fieldName)).getOrElse {
       throw new RuntimeException(
-        s"No reader for field ${fieldName}, available keys ${macroGen.flds.keys.mkString(",")}"
+        s"No reader for field ${fieldName}, available keys ${bsonFormat.flds.keys.mkString(",")}"
       )
     }
   }
@@ -44,16 +44,16 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(
     val i = fieldName.lastIndexOf('.')
     if (i > 0) {
       val newName = fieldName.substring(0, i + 1) + "*"
-      macroGen.flds.get(newName)
+      bsonFormat.flds.get(newName)
     } else None
   }
 
-  override def read(b: BsonValue): RecordType = macroGen.read(b)
+  override def read(b: BsonValue): RecordType = bsonFormat.read(b)
 
-  override def write(t: RecordType): BsonValue = macroGen.write(t)
+  override def write(t: RecordType): BsonValue = bsonFormat.write(t)
 
   override def writeAnyRef(t: AnyRef): BsonDocument =
-    macroGen.write(t.asInstanceOf[RecordType]).asDocument()
+    bsonFormat.write(t.asInstanceOf[RecordType]).asDocument()
 
   /** @param indexTuples
     *   sequence of (name, int)

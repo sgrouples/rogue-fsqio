@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.map
 
 import scala.annotation.implicitNotFound
+import org.bson.types.ObjectId
 
 @implicitNotFound(
   "Please provide a valid, implicit MapKeyFormat[${T}] when using map bson format for Map[${T}, _]"
@@ -19,6 +20,14 @@ object MapKeyFormat {
       reader: String => T,
       writer: T => String = defaultWriter _
   ): MapKeyFormat[T] = new DefaultMapKeyFormat(reader, writer)
+
+  given MapKeyFormat[String] = DefaultMapKeyFormat[String](identity)
+  given MapKeyFormat[Long] = DefaultMapKeyFormat[Long](_.toLong)
+  given MapKeyFormat[Int] = DefaultMapKeyFormat[Int](_.toInt)
+  given ObjectIdMapKeyFormat: MapKeyFormat[ObjectId] =
+    DefaultMapKeyFormat[ObjectId](new ObjectId(_))
+  implicit def objectIdSubtypeMapKeyFormat[S <: ObjectId]: MapKeyFormat[S] =
+    apply[S](ObjectIdMapKeyFormat.read(_).asInstanceOf[S])
 }
 
 class DefaultMapKeyFormat[T](

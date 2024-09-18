@@ -2,9 +2,11 @@ package me.sgrouples.rogue.cc.macros
 
 import com.softwaremill.tagging._
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder}
-import me.sgrouples.rogue.cc._
+import me.sgrouples.rogue.cc.*
+import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
+import com.softwaremill.tagging.*
 
 import java.time.Instant
 import java.util.{Currency, Locale, UUID}
@@ -14,16 +16,16 @@ case class UuidCc(_id: UUID, s: String, i: Instant = Instant.now())
 object Metas {
 
   class SourceBsonMeta extends MCcMeta[SourceBson, SourceBsonMeta]("_") {
-    @f val name = StringField
-    @f val url = StringField
+    val name = StringField("name")
+    val url = StringField("url")
   }
   val SourceBsonR = new SourceBsonMeta
 
   class VenueClaimBsonRMeta
       extends MCcMeta[VenueClaimBson, VenueClaimBsonRMeta]("_") {
-    @f val uid = LongField
-    @f val status = EnumField(ClaimStatus)
-    @f val source = OptClassField[SourceBson, SourceBsonMeta](SourceBsonR)
+    val uid = LongField("uid")
+    val status = EnumField("status", ClaimStatus)
+    val source = OptClassField("source", SourceBsonR)
     val date = LocalDateTimeField("date")
   }
 
@@ -33,25 +35,31 @@ object Metas {
       extends MCcMeta[Venue, VenueRMeta](PluralLowerCase)
       with IndexBuilder[VenueRMeta] {
     val id = ObjectIdTaggedField[Venue]("_id")
-    @f val mayor = LongField
-    @f val venuename = StringField
-    @f val closed = BooleanField
-    @f val status = EnumField(VenueStatus)
-    @f val mayor_count = LongField
+    val mayor = LongField("mayor")
+    val venuename = StringField("venuename")
+    val closed = BooleanField("closed")
+    val status = EnumField("status", VenueStatus)
+    val mayor_count = LongField("mayor_count")
     val legacyid = LongField("legId")
-    @f val userId = LongField
-    @f val tags = ListField[String]
+    val userId = LongField("userId")
+    val tags = ListField[String]("tags")
 
-    @f val claims =
-      ClassListField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
-    @f val lastClaim =
-      OptClassField[VenueClaimBson, VenueClaimBsonRMeta](VenueClaimBsonR)
-    @f val firstClaim =
-      ClassRequiredField(VenueClaimBsonR, VenueClaimBson.default)
+    val claims =
+      ClassListField[VenueClaimBson, VenueClaimBsonRMeta](
+        "claims",
+        VenueClaimBsonR
+      )
+    val lastClaim =
+      OptClassField[VenueClaimBson, VenueClaimBsonRMeta](
+        "lastClaim",
+        VenueClaimBsonR
+      )
+    val firstClaim =
+      ClassRequiredField("firstClaim", VenueClaimBsonR, VenueClaimBson.default)
 
-    @f val last_updated = LocalDateTimeField
-    @f val popularity = VectorField[Long]
-    @f val categories = ListField[ObjectId]
+    val last_updated = LocalDateTimeField("last_updated")
+    val popularity = VectorField[Long]("popularity")
+    val categories = ListField[ObjectId]("categories")
 
     val idIdx = index(id, Asc)
     val legIdx = index(legacyid, Desc)
@@ -61,48 +69,48 @@ object Metas {
   val VenueR = new VenueRMeta
   class VenueClaimRMeta
       extends MCcMeta[VenueClaim, VenueClaimRMeta]("venueclaims") {
-    @f val venueid = ObjectIdTaggedField[Venue]("vid")
-    @f val status = EnumField[ClaimStatus.type]
-    @f val reason = OptEnumField[RejectReason.type]
-    @f val userId = LongField("uid")
+    val venueid = ObjectIdSubtypeField[ObjectId @@ Venue]("vid")
+    val status = EnumField("status", ClaimStatus)
+    val reason = OptEnumField("reason", RejectReason)
+    val userId = LongField("uid")
   }
 
   val VenueClaimR = new VenueClaimRMeta
 
   class TipMeta extends MCcMeta[Tip, TipMeta]("tips") {
-    @f val id = ObjectIdField("_id")
-    @f val legacyid = LongField("legid")
-    @f val userId = OptLongField("userId")
-    @f val counts = MapField[String, Long]("counts")
+    val id = ObjectIdField("_id")
+    val legacyid = LongField("legid")
+    val userId = OptLongField("userId")
+    val counts = MapField[String, Long]("counts")
   }
 
   val TipR = new TipMeta
 
   class OAuthConsumerMeta
       extends MCcMeta[OAuthConsumer, OAuthConsumerMeta]("oauthconsumers") {
-    @f val privileges = ListField[ConsumerPrivilege.Value]
+    val privileges = ListField[ConsumerPrivilege.Value]("privileges")
   }
 
   val OAuthConsumerR = new OAuthConsumerMeta
 
   class CommentMeta extends MCcMeta[Comment, CommentMeta]("comments") {
-    @f val comments = ListField[OneComment]
+    val comments = ListField[OneComment]("comments")
   }
 
   val CommentR = new CommentMeta
 
   class OptValCCMeta extends MCcMeta[OptValCC, OptValCCMeta]("optvalcc") {
-    @f val id = ObjectIdField("_id")
-    @f val ms = OptStringField("maybes")
-    @f val mi = OptObjectIdField("maybeid")
-    @f val rs = StringField("realString")
+    val id = ObjectIdField("_id")
+    val ms = OptStringField("maybes")
+    val mi = OptObjectIdField("maybeid")
+    val rs = StringField("realString")
   }
   val OptValCCR = new OptValCCMeta
 
   class UuidCcMeta extends MCcMeta[UuidCc, UuidCcMeta]("uuidcc") {
-    @f val id = UUIdField("_id")
-    @f val s = StringField
-    @f val dt = InstantField("i")
+    val id = UUIdField("_id")
+    val s = StringField("s")
+    val dt = InstantField("i")
   }
   val UuidCcR = new UuidCcMeta
 
@@ -111,14 +119,14 @@ object Metas {
   case class Invoice(id: Long, name: String, total: Money)
 
   class MoneyMeta extends MCcMeta[Money, MoneyMeta] {
-    @f val amount = BigDecimalField
-    @f val currency = CurrencyField
+    val amount = BigDecimalField("amount")
+    val currency = CurrencyField("currency")
   }
 
   class InvoiceMeta extends MCcMeta[Invoice, InvoiceMeta] {
-    @f val id = LongField
-    @f val name = StringField
-    @f val total = ClassField[Money, MoneyMeta](new MoneyMeta)
+    val id = LongField("id")
+    val name = StringField("name")
+    val total = ClassField[Money, MoneyMeta]("total", new MoneyMeta)
   }
 
   val Invoices = new InvoiceMeta
@@ -129,8 +137,8 @@ object Metas {
   )
 
   class CounterMeta extends MCcMeta[MCounter, CounterMeta] {
-    @f val id = ObjectIdField("_id")
-    @f val counts = MapField[ObjectId, Long]
+    val id = ObjectIdField("_id")
+    val counts = MapField[ObjectId, Long]("counts")
   }
 
   val Counters = new CounterMeta
@@ -143,8 +151,8 @@ object Metas {
   )
 
   class TypedCounterMeta extends MCcMeta[TypedCounter, TypedCounterMeta] {
-    @f val id = ObjectIdField("_id")
-    @f val counts = MapField[CounterId, Long]
+    val id = ObjectIdField("_id")
+    val counts = MapField[CounterId, Long]("counts")
   }
 
   val TypedCounters = new TypedCounterMeta
@@ -158,7 +166,7 @@ object Metas {
   case class LocaleData(locale: Locale)
 
   class LocaleDataMeta extends MCcMeta[LocaleData, LocaleDataMeta] {
-    @f val locale = LocaleField
+    val locale = LocaleField("locale")
   }
 
   val Locales = new LocaleDataMeta
