@@ -4,6 +4,7 @@ import java.util.UUID
 
 import io.fsq.rogue._
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.cc
 import org.bson.types.ObjectId
 import munit.FunSuite

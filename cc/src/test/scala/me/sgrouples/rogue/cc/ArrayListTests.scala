@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc
 import munit.FunSuite
 import org.mongodb.scala.MongoDatabase
 import me.sgrouples.rogue.cc.macros._
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.cc.CcRogue._
 
 import scala.concurrent.Future

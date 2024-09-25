@@ -1,5 +1,6 @@
 package me.sgrouples.rogue
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.cc.*
 import org.bson.BsonDocument
 import org.bson.types.ObjectId

@@ -4,6 +4,7 @@ import org.bson.types.ObjectId
 import munit.FunSuite
 import me.sgrouples.rogue.cc.CcRogue.*
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 case class Cont(_id: ObjectId, lst: Seq[ObjectId])

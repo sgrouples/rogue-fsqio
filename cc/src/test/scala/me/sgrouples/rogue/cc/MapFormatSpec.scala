@@ -2,6 +2,7 @@ package me.sgrouples.rogue.cc
 
 import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.map.MapKeyFormat
 import org.bson.types.ObjectId
 import com.softwaremill.tagging.*

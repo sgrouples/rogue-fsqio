@@ -7,6 +7,7 @@ import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId
 import com.softwaremill.tagging.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 
 import java.time.Instant
 import java.util.{Currency, Locale, UUID}

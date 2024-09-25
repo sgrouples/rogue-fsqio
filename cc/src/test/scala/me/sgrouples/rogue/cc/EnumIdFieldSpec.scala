@@ -4,6 +4,7 @@ import munit.FunSuite
 import CcRogue._
 import me.sgrouples.rogue.cc.macros.*
 import me.sgrouples.rogue.cc.CcRogue.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 
 object EnumIdFieldEnum extends Enumeration {
   val one: Value = Value

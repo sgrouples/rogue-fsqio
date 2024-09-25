@@ -2,6 +2,7 @@ package me.sgrouples.rogue.macrotests
 
 import me.sgrouples.rogue.cc.{QueryFieldHelpers, TestDomainObject}
 import me.sgrouples.rogue.cc.macros._
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import munit.FunSuite
 import scala.concurrent.Future
 import scala.util.Try

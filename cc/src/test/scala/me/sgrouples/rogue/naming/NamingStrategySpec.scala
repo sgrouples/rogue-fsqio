@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.naming
 
 import me.sgrouples.rogue.cc.macros._
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import munit.FunSuite
 
 /** Created by mwielocha on 09/08/16.

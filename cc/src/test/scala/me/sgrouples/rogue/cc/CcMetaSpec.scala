@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc
 import org.bson.types.ObjectId
 import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import com.softwaremill.tagging.*
 
 case class IdOneEnum(_id: ObjectId, one: String, en: VenueStatus.Value)

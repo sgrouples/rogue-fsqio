@@ -2,6 +2,7 @@ package me.sgrouples.rogue.macrotests
 
 import me.sgrouples.rogue.cc.CustomKey
 import me.sgrouples.rogue.cc.macros._
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.macrotests.Domain.StrLongMapT
 import org.bson.types.ObjectId
 import com.softwaremill.tagging.*

@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc
 import me.sgrouples.rogue.*
 import me.sgrouples.rogue.cc.CcRogue.{given, *}
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import org.bson.types.ObjectId
 import munit.FunSuite
 import me.sgrouples.rogue.QueryParser.*

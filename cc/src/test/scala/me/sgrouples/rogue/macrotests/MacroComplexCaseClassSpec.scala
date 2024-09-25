@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit
 
 import me.sgrouples.rogue.cc._
 import me.sgrouples.rogue.cc.macros._
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import org.bson.types.ObjectId
 import munit.FunSuite
 import com.softwaremill.tagging.*

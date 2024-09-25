@@ -3,6 +3,7 @@ package me.sgrouples.rogue
 import java.util.concurrent.atomic.AtomicInteger
 import me.sgrouples.rogue.cc.MongoTestConn
 import me.sgrouples.rogue.cc.macros._
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.cc.CcRogue._
 import munit.FunSuite
 

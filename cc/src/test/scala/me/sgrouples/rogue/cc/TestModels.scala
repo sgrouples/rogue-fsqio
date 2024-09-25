@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.cc
 import io.fsq.rogue.index.{Asc, Desc, IndexBuilder, Text}
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.*
 import me.sgrouples.rogue.naming.PluralLowerCase
 import org.bson.types.ObjectId

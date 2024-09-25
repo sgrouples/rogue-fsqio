@@ -3,6 +3,7 @@ package me.sgrouples.rogue.cc
 import org.bson.types.ObjectId
 import me.sgrouples.rogue._
 import me.sgrouples.rogue.cc.macros.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import me.sgrouples.rogue.cc.Metas.VenueRMeta
 import me.sgrouples.rogue.cc.CcRogue.*
 import munit.FunSuite

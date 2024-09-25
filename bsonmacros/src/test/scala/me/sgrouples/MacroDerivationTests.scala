@@ -3,6 +3,7 @@ package me.sgrouples
 import munit.FunSuite
 import me.sgrouples.rogue.cc.macros.MacroBsonFormat
 import me.sgrouples.rogue.cc.macros.MacroBsonFormat.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 import org.bson.types.ObjectId
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit

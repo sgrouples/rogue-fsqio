@@ -1,6 +1,7 @@
 package me.sgrouples.rogue.cc.macros
 import munit.FunSuite
 import me.sgrouples.rogue.cc.*
+import me.sgrouples.rogue.cc.macros.MacroBsonFormatAuto.*
 
 case class CArrays(bytes: Array[Byte], strings:Array[String])
 
