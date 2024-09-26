@@ -167,7 +167,7 @@ object MacroBsonFormatDerivingImpl:
               fieldsVec
             }.toVector //why no vector?
 
-            override def flds: Map[String, BsonFormat[?]] =
+            override val flds: Map[String, BsonFormat[?]] =
               ${ fldsFormatsMap } ++ (${ fldsFormatsMap }
                 .map { case (name, f) => subfields(name, f) })
                 .flatten
