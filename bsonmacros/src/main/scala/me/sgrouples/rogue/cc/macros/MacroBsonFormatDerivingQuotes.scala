@@ -10,6 +10,8 @@ import org.mongodb.scala.bson.BsonDocument.apply
 import org.bson.BsonValue
 
 object MacroBsonFormatDerivingImpl:
+  private val emptyDoc: org.bson.BsonDocument = new org.bson.BsonDocument()
+
   private val debug: Boolean = Option(System.getenv("ROGUE_MACRO_DEBUG"))
     .flatMap(_.toBooleanOption)
     .contains(true)
@@ -175,14 +177,14 @@ object MacroBsonFormatDerivingImpl:
 
             override def defaultValue: T = {
               //super ugly hack, but whatever
-              read(new org.bson.BsonDocument())
+              read(emptyDoc)
             }
 
             override def read(b: _root_.org.bson.BsonValue): T = {
               val doc = if (b.isDocument()) {
                 b.asDocument()
               } else {
-                new org.bson.BsonDocument()
+                emptyDoc
               }
               ${ readImpl(fieldsWithFormatRefs, 'doc) }
             }
