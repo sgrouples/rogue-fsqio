@@ -7,7 +7,6 @@ import org.bson.types.ObjectId
 import com.softwaremill.tagging.*
 import me.sgrouples.rogue.cc.CcRogue.*
 
-
 case class CustomKey(value: Long) extends AnyVal
 case class StringMap(value: Map[String, Long])
 case class ObjectIdMap(value: Map[ObjectId, Long])

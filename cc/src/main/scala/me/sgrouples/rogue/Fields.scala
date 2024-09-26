@@ -279,4 +279,3 @@ class OptCClassArrayField[C: ClassTag, MC <: CcMeta[C], O](
     with HasChildMeta[C, MC]
 class OptMapField[V, O](name: String, o: O)
     extends OCField[Map[String, V], O](name, o)
-

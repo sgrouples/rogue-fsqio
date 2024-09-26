@@ -43,7 +43,7 @@ class EndToEndBsonTest extends FunSuite {
   }
 
   private var dbOpt: Option[MongoDatabase] = None
-  implicit def db:MongoDatabase =
+  implicit def db: MongoDatabase =
     dbOpt.getOrElse(throw new RuntimeException("UninitializedError"))
 
   override def beforeAll(): Unit = {
@@ -211,7 +211,10 @@ class EndToEndBsonTest extends FunSuite {
     VenueR.insertOne(v)
 
     val base = VenueR.where(_.id eqs v._id)
-    assertEquals(base.selectCase(_.legacyid, V1.apply).fetch(), List(V1(v.legId)))
+    assertEquals(
+      base.selectCase(_.legacyid, V1.apply).fetch(),
+      List(V1(v.legId))
+    )
     assertEquals(
       base.selectCase(_.legacyid, _.userId, V2.apply).fetch(),
       List(V2(v.legId, v.userId))
@@ -221,12 +224,21 @@ class EndToEndBsonTest extends FunSuite {
       List(V3(v.legId, v.userId, v.mayor))
     )
     assertEquals(
-      base.selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply).fetch(),
+      base
+        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, V4.apply)
+        .fetch(),
       List(V4(v.legId, v.userId, v.mayor, v.mayor_count))
     )
     assertEquals(
       base
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
+        .selectCase(
+          _.legacyid,
+          _.userId,
+          _.mayor,
+          _.mayor_count,
+          _.closed,
+          V5.apply
+        )
         .fetch(),
       List(V5(v.legId, v.userId, v.mayor, v.mayor_count, v.closed))
     )

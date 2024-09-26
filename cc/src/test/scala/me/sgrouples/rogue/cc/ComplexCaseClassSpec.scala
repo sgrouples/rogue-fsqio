@@ -19,7 +19,8 @@ object GroupModelType extends Enumeration {
   val one = Value
   val two = Value
 
-  given MacroBsonFormat[GroupModelType.Value] = EnumMacroFormats.enumNameMacroFormat(GroupModelType)
+  given MacroBsonFormat[GroupModelType.Value] =
+    EnumMacroFormats.enumNameMacroFormat(GroupModelType)
 }
 
 object RoleName extends Enumeration {
@@ -27,7 +28,8 @@ object RoleName extends Enumeration {
   val one = Value
   val two = Value
 
-  given MacroBsonFormat[RoleName.Value] = EnumMacroFormats.enumNameMacroFormat(RoleName)
+  given MacroBsonFormat[RoleName.Value] =
+    EnumMacroFormats.enumNameMacroFormat(RoleName)
 }
 
 object Permission extends Enumeration {
@@ -35,7 +37,8 @@ object Permission extends Enumeration {
   val one = Value
   val two = Value
 
-  given MacroBsonFormat[Permission.Value] = EnumMacroFormats.enumNameMacroFormat(Permission)
+  given MacroBsonFormat[Permission.Value] =
+    EnumMacroFormats.enumNameMacroFormat(Permission)
 }
 
 trait AnyTag

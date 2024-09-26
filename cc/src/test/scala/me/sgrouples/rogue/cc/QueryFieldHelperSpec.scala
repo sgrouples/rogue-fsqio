@@ -214,9 +214,8 @@ class QueryFieldHelperSpec extends FunSuite {
     )
   }
 
-  class DifferentTestMeta
-      extends MCcMeta[DifferentValue, DifferentTestMeta] {
-      val a = StringField("a")
+  class DifferentTestMeta extends MCcMeta[DifferentValue, DifferentTestMeta] {
+    val a = StringField("a")
   }
 
   test("it should not fail when resolving an inner meta class") {
