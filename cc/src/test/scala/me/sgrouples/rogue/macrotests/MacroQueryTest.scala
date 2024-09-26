@@ -603,7 +603,14 @@ assertEquals(      VenueR.where(_.geolatlng nearSphere (39.0, -74.0, Radians(1.0
     assertEquals(
       VenueR
         .where(_.mayor eqs 1)
-        .selectCase(_.legacyid, _.userId, _.mayor, _.mayor_count, _.closed, V5.apply)
+        .selectCase(
+          _.legacyid,
+          _.userId,
+          _.mayor,
+          _.mayor_count,
+          _.closed,
+          V5.apply
+        )
         .q,
       pq(
         """db.venues.find({"mayor": {"$numberLong": "1"}}, {"legId": 1, "userId": 1, "mayor": 1, "mayor_count": 1, "closed": 1, "_id": 0})"""
@@ -1419,7 +1426,10 @@ assertEquals(      Comment.where(_.comments.unsafeField[String]("comment") conta
     // $or with optional where clause
     assertEquals(
       VenueR
-        .or(_.where(_.legacyid eqs 1), _.whereOpt(Option.empty[Long])(_.mayor eqs _))
+        .or(
+          _.where(_.legacyid eqs 1),
+          _.whereOpt(Option.empty[Long])(_.mayor eqs _)
+        )
         .modify(_.userId setTo 1)
         .q,
       pq(

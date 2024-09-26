@@ -29,12 +29,14 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(
 
   override def collectionName: String = collName
 
+  private val flds = bsonFormat.flds
+
   override def reader(field: Field[_, _]): BsonFormat[_] = {
     val fieldName = field.name.replaceAll("\\.\\$", "")
-    val r = bsonFormat.flds.get(fieldName)
+    val r = flds.get(fieldName)
     r.orElse(starReader(fieldName)).getOrElse {
       throw new RuntimeException(
-        s"No reader for field ${fieldName}, available keys ${bsonFormat.flds.keys.mkString(",")}"
+        s"No reader for field ${fieldName}, available keys ${flds.keys.mkString(",")}"
       )
     }
   }
@@ -44,7 +46,7 @@ class MCcMeta[RecordType, OwnerType <: CcMeta[RecordType]](collName: String)(
     val i = fieldName.lastIndexOf('.')
     if (i > 0) {
       val newName = fieldName.substring(0, i + 1) + "*"
-      bsonFormat.flds.get(newName)
+      flds.get(newName)
     } else None
   }
 

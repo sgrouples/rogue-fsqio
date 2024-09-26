@@ -25,61 +25,61 @@ trait X {
       with TestQueryTraitA[TestDomainObjectMeta]
       with TestQueryTraitB[TestDomainObjectMeta] {
 
-      val claims = ListField[String]("claims")
+    val claims = ListField[String]("claims")
 
-      val string = StringField("string")
-      val string_named = StringField("string_custom_name")
+    val string = StringField("string")
+    val string_named = StringField("string_custom_name")
 
-      val optString = OptStringField("optString")
-      val optString_named = OptStringField("optString_custom_name")
+    val optString = OptStringField("optString")
+    val optString_named = OptStringField("optString_custom_name")
 
-      val long = LongField("long")
-      val long_named = LongField("long_custom_name")
+    val long = LongField("long")
+    val long_named = LongField("long_custom_name")
 
-      val optLong = OptLongField("optLong")
-      val optLong_named = OptLongField("optLong_custom_name")
+    val optLong = OptLongField("optLong")
+    val optLong_named = OptLongField("optLong_custom_name")
 
-      val double = DoubleField("double")
-      val double_named = DoubleField("double_custom_name")
+    val double = DoubleField("double")
+    val double_named = DoubleField("double_custom_name")
 
-      val optDouble = OptDoubleField("optDouble")
-      val optDouble_named = OptDoubleField("optDouble_custom_name")
+    val optDouble = OptDoubleField("optDouble")
+    val optDouble_named = OptDoubleField("optDouble_custom_name")
 
-      val objectId = ObjectIdField("objectId")
-      val objectId_named = ObjectIdField("objectId_custom_name")
+    val objectId = ObjectIdField("objectId")
+    val objectId_named = ObjectIdField("objectId_custom_name")
 
-      val optObjectId = OptObjectIdField("optObjectId")
-      val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
+    val optObjectId = OptObjectIdField("optObjectId")
+    val optObjectId_named = OptObjectIdField("optObjectId_custom_name")
 
-      val randomSomething = 42
+    val randomSomething = 42
 
     //val backwardCompatibilityCheck = new StringField("foo", this)
 
-      val uuid = UUIdField("uuid")
-      val uuid_named = UUIdField("uuid_custom_name")
+    val uuid = UUIdField("uuid")
+    val uuid_named = UUIdField("uuid_custom_name")
 
-      val optUUID = OptUUIdField("optUUID")
-      val optUUID_named = OptUUIdField("optUUID_custom_name")
+    val optUUID = OptUUIdField("optUUID")
+    val optUUID_named = OptUUIdField("optUUID_custom_name")
 
-       val localDateTime = LocalDateTimeField("localDateTime")
-       val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
+    val localDateTime = LocalDateTimeField("localDateTime")
+    val localDateTime_named = LocalDateTimeField("localDateTime_custom_name")
 
-       val optLocalDateTime = OptLocalDateTimeField("optLocalDateTime")
-       val optLocalDateTime_named = OptLocalDateTimeField(
+    val optLocalDateTime = OptLocalDateTimeField("optLocalDateTime")
+    val optLocalDateTime_named = OptLocalDateTimeField(
       "optLocalDateTime_custom_name"
     )
 
-       val instant = InstantField("instant")
-       val instant_named = InstantField("instant_custom_name")
+    val instant = InstantField("instant")
+    val instant_named = InstantField("instant_custom_name")
 
-       val optInstant = OptInstantField("optInstant")
-       val optInstant_named = OptInstantField("optInstant_custom_name")
+    val optInstant = OptInstantField("optInstant")
+    val optInstant_named = OptInstantField("optInstant_custom_name")
 
-       val boolean = BooleanField("boolean")
-       val boolean_named = BooleanField("boolean_custom_name")
+    val boolean = BooleanField("boolean")
+    val boolean_named = BooleanField("boolean_custom_name")
 
-       val optBoolean = OptBooleanField("optBoolean")
-       val optBoolean_named = OptBooleanField("optBoolean_custom_name")
+    val optBoolean = OptBooleanField("optBoolean")
+    val optBoolean_named = OptBooleanField("optBoolean_custom_name")
 
   }
 

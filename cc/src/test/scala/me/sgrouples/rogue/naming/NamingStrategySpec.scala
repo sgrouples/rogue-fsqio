@@ -7,11 +7,21 @@ import munit.FunSuite
   */
 class NamingStrategySpec extends FunSuite {
   case class CaseClassWithVeryLongAwkwardName(id: Long)
-  
-  object DefaultMeta extends MCcMeta[CaseClassWithVeryLongAwkwardName, DefaultMeta.type]
-  object LowerCaseMeta extends MCcMeta[CaseClassWithVeryLongAwkwardName, LowerCaseMeta.type](LowerCase)
-  object UpperCaseMeta extends MCcMeta[CaseClassWithVeryLongAwkwardName, UpperCaseMeta.type](UpperCase)
-  object SnakeCaseMeta extends MCcMeta[CaseClassWithVeryLongAwkwardName, SnakeCaseMeta.type](SnakeCase)
+
+  object DefaultMeta
+      extends MCcMeta[CaseClassWithVeryLongAwkwardName, DefaultMeta.type]
+  object LowerCaseMeta
+      extends MCcMeta[CaseClassWithVeryLongAwkwardName, LowerCaseMeta.type](
+        LowerCase
+      )
+  object UpperCaseMeta
+      extends MCcMeta[CaseClassWithVeryLongAwkwardName, UpperCaseMeta.type](
+        UpperCase
+      )
+  object SnakeCaseMeta
+      extends MCcMeta[CaseClassWithVeryLongAwkwardName, SnakeCaseMeta.type](
+        SnakeCase
+      )
 
   test("Naming Startegies") {
     assertEquals(

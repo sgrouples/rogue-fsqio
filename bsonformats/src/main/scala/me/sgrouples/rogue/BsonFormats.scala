@@ -30,4 +30,3 @@ trait BaseBsonFormat[T] extends BsonFormat[T] with BsonArrayReader[T]
 trait BasicBsonFormat[T] extends BaseBsonFormat[T] {
   override val flds: Map[String, BsonFormat[_]] = Map.empty
 }
-

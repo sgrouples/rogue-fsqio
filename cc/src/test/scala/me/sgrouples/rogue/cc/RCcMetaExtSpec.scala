@@ -41,7 +41,8 @@ class MCcSpec extends FunSuite {
     val intSubtypeField_named =
       IntSubtypeField[Int @@ Tag](s"intSubtypeField$suffix")
 
-    val optIntSubtypeField = OptIntSubtypeField[Int @@ Tag]("optIntSubtypeField")
+    val optIntSubtypeField =
+      OptIntSubtypeField[Int @@ Tag]("optIntSubtypeField")
     val optIntSubtypeField_named =
       OptIntSubtypeField[Int @@ Tag](s"optIntSubtypeField$suffix")
 
@@ -52,9 +53,12 @@ class MCcSpec extends FunSuite {
     val optStringField_named = OptStringField(s"optStringField$suffix")
 
     val stringSubtypeField = StringSubtypeField("stringSubtypeField")
-    val stringSubtypeField_named = StringSubtypeField(s"stringSubtypeField$suffix")
+    val stringSubtypeField_named = StringSubtypeField(
+      s"stringSubtypeField$suffix"
+    )
 
-    val optStringSubtypeField = OptStringSubtypeField[String @@ Tag]("optStringSubtypeField")
+    val optStringSubtypeField =
+      OptStringSubtypeField[String @@ Tag]("optStringSubtypeField")
     val optStringSubtypeField_named =
       OptStringSubtypeField[String @@ Tag](s"optStringSubtypeField$suffix")
 
@@ -65,9 +69,11 @@ class MCcSpec extends FunSuite {
     val optLongField_named = OptLongField(s"optLongField$suffix")
 
     val longSubtypeField = LongSubtypeField[Long @@ Tag]("longSubtypeField")
-    val longSubtypeField_named = LongSubtypeField[Long @@ Tag](s"longSubtypeField$suffix")
+    val longSubtypeField_named =
+      LongSubtypeField[Long @@ Tag](s"longSubtypeField$suffix")
 
-    val optLongSubtypeField = OptLongSubtypeField[Long @@ Tag]("optLongSubtypeField")
+    val optLongSubtypeField =
+      OptLongSubtypeField[Long @@ Tag]("optLongSubtypeField")
     val optLongSubtypeField_named =
       OptLongSubtypeField[Long @@ Tag](s"optLongSubtypeField$suffix")
 
@@ -83,13 +89,17 @@ class MCcSpec extends FunSuite {
     val optObjectIdField = OptObjectIdField("optObjectIdField")
     val optObjectIdField_named = OptObjectIdField(s"optObjectIdField$suffix")
 
-    val objectIdSubtypeField = ObjectIdSubtypeField[ObjectId @@ Tag]("ObjectIdSubtypeField")
+    val objectIdSubtypeField =
+      ObjectIdSubtypeField[ObjectId @@ Tag]("ObjectIdSubtypeField")
     val objectIdSubtypeField_named =
-      ObjectIdSubtypeField[ObjectId @@Tag](s"ObjectIdSubtypeField$suffix")
+      ObjectIdSubtypeField[ObjectId @@ Tag](s"ObjectIdSubtypeField$suffix")
 
-    val optObjectIdSubtypeField = OptObjectIdSubtypeField[ObjectId @@ Tag]("optObjectIdSubtypeField")
+    val optObjectIdSubtypeField =
+      OptObjectIdSubtypeField[ObjectId @@ Tag]("optObjectIdSubtypeField")
     val optObjectIdSubtypeField_named =
-      OptObjectIdSubtypeField[ObjectId @@ Tag](s"optObjectIdSubtypeField$suffix")
+      OptObjectIdSubtypeField[ObjectId @@ Tag](
+        s"optObjectIdSubtypeField$suffix"
+      )
 
     val uuIdField = UUIdField("uuIdField")
     val uuIdField_named = UUIdField(s"uuIdField$suffix")
@@ -98,9 +108,11 @@ class MCcSpec extends FunSuite {
     val optUUIdField_named = OptUUIdField(s"optUUIdField$suffix")
 
     val uuIdSubtypeField = UUIdSubtypeField[UUID @@ Tag]("uuIdSubtypeField")
-    val uuIdSubtypeField_named = UUIdSubtypeField[UUID @@ Tag](s"uuIdSubtypeField$suffix")
+    val uuIdSubtypeField_named =
+      UUIdSubtypeField[UUID @@ Tag](s"uuIdSubtypeField$suffix")
 
-    val optUUIdSubtypeField = OptUUIdSubtypeField[UUID @@ Tag]("optUUIdSubtypeField")
+    val optUUIdSubtypeField =
+      OptUUIdSubtypeField[UUID @@ Tag]("optUUIdSubtypeField")
     val optUUIdSubtypeField_named =
       OptUUIdSubtypeField[UUID @@ Tag](s"optUUIdSubtypeField$suffix")
 
@@ -152,7 +164,8 @@ class MCcSpec extends FunSuite {
     val optEnumIdField_named =
       OptEnumIdField(s"optEnumIdField$suffix", ExampleEnum)
 
-    val optEnumIdFieldByParam = OptEnumIdField("optEnumIdFieldByParam", ExampleEnum)
+    val optEnumIdFieldByParam =
+      OptEnumIdField("optEnumIdFieldByParam", ExampleEnum)
     val optEnumIdFieldByParam_named =
       OptEnumIdField(s"optEnumIdFieldByParam$suffix", ExampleEnum)
 
@@ -168,17 +181,20 @@ class MCcSpec extends FunSuite {
     val optArrayField = OptArrayField[String]("optArrayField")
     val optArrayField_named = OptArrayField[String](s"optArrayField$suffix")
 
-    val classField = ClassField[CaseClass2, CaseClass2Meta]("classField", CaseClasses2)
+    val classField =
+      ClassField[CaseClass2, CaseClass2Meta]("classField", CaseClasses2)
     val classField_named =
       ClassField[CaseClass2, CaseClass2Meta](s"classField$suffix", CaseClasses2)
 
-    val optClassField = OptClassField[CaseClass2, CaseClass2Meta]("optClassField", CaseClasses2)
+    val optClassField =
+      OptClassField[CaseClass2, CaseClass2Meta]("optClassField", CaseClasses2)
     val optClassField_named = OptClassField[CaseClass2, CaseClass2Meta](
       s"optClassField$suffix",
       CaseClasses2
     )
 
-    val classRequiredField = ClassRequiredField[CaseClass2, CaseClass2Meta]("classRequiredField",
+    val classRequiredField = ClassRequiredField[CaseClass2, CaseClass2Meta](
+      "classRequiredField",
       CaseClasses2,
       CaseClass2(0L)
     )
@@ -197,7 +213,10 @@ class MCcSpec extends FunSuite {
     )
 
     val classArrayField =
-      ClassArrayField[CaseClass2, CaseClass2Meta]("classArrayField", CaseClasses2)
+      ClassArrayField[CaseClass2, CaseClass2Meta](
+        "classArrayField",
+        CaseClasses2
+      )
     val classArrayField_named = ClassArrayField[CaseClass2, CaseClass2Meta](
       s"classArrayField$suffix",
       CaseClasses2

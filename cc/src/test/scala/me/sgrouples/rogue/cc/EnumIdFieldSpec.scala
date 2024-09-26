@@ -8,7 +8,8 @@ import me.sgrouples.rogue.cc.CcRogue.*
 object EnumIdFieldEnum extends Enumeration {
   val one: Value = Value
   val two: Value = Value
-  given MacroBsonFormat[EnumIdFieldEnum.Value] = EnumMacroFormats.enumValueMacroFormat(EnumIdFieldEnum)
+  given MacroBsonFormat[EnumIdFieldEnum.Value] =
+    EnumMacroFormats.enumValueMacroFormat(EnumIdFieldEnum)
 }
 
 case class EnumIdFieldClass(`enum`: EnumIdFieldEnum.Value)

@@ -8,33 +8,41 @@ import me.sgrouples.rogue.cc.CcRogue._
 import scala.concurrent.Future
 
 case class ArrayOfListWrapper(
-                               arrayOfList: Array[List[String]],
-                               _id: Int = 1
-                       )
+    arrayOfList: Array[List[String]],
+    _id: Int = 1
+)
 
-class ArrayOfListWrapperMeta extends MCcMeta[ArrayOfListWrapper, ArrayOfListWrapperMeta]() {
+class ArrayOfListWrapperMeta
+    extends MCcMeta[ArrayOfListWrapper, ArrayOfListWrapperMeta]() {
   val id = IntField("id")
   val arrayOfList = ArrayField[List[String]]("arrayOfList")
 }
-class ArrayOfListRepository()(implicit db:MongoDatabase) {
+class ArrayOfListRepository()(implicit db: MongoDatabase) {
   private val Repo = new ArrayOfListWrapperMeta
-  def load(): Future[Option[Array[List[String]]]] = Repo.where(_.id eqs 1).select(_.arrayOfList).getAsync()
+  def load(): Future[Option[Array[List[String]]]] =
+    Repo.where(_.id eqs 1).select(_.arrayOfList).getAsync()
 
   def addWords(words: Seq[String]) = {
-    Repo.where(_.id eqs 1).modify(_.arrayOfList addToSet words.sorted.toList).upsertOneAsync()
+    Repo
+      .where(_.id eqs 1)
+      .modify(_.arrayOfList addToSet words.sorted.toList)
+      .upsertOneAsync()
   }
 
   def removeWords(words: Seq[String]) = {
-    Repo.where(_.id eqs 1).modify(_.arrayOfList pull words.sorted.toList).updateOneAsync()
+    Repo
+      .where(_.id eqs 1)
+      .modify(_.arrayOfList pull words.sorted.toList)
+      .updateOneAsync()
   }
 }
 
 class ArrayListTests extends FunSuite {
-  test("nested array list"){
+  test("nested array list") {
     //it should just compile
-    implicit val db:MongoDatabase=null
+    implicit val db: MongoDatabase = null
 
-    val repo=new ArrayOfListRepository()
+    val repo = new ArrayOfListRepository()
     assert(true)
   }
 }
