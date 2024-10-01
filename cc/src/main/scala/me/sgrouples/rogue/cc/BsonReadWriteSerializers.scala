@@ -2,6 +2,8 @@ package me.sgrouples.rogue.cc
 
 import io.fsq.rogue.MongoHelpers.MongoSelect
 import org.bson.{BsonArray, BsonDocument, BsonNull, BsonValue}
+import io.fsq.field.Field
+import me.sgrouples.rogue.CField
 
 /** Created by mar on 24.07.2016.
   */
@@ -25,7 +27,9 @@ trait BsonReadWriteSerializers[MB <: CcMeta[_]]
           val values =
             fields.map(fld => {
               val (bsonV, readArray) = readBsonVal(dbo, fld.field.name)
-              val reader = meta.reader(fld.field)
+              val reader = fld.field match
+                case f: CField[?, ?] => f.format
+                case f => meta.reader(fld.field)
               //TODO - does not in case reader is for non-array, and subselect returns array
               //if fld is optional, readOpt will read Option[Option[T]] this is handled (poorly) inside fld.valueOrDefault
               fld.valueOrDefault(if (readArray) {

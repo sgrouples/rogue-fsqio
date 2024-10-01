@@ -13,6 +13,7 @@ import me.sgrouples.rogue.map.MapKeyFormat
 
 import scala.concurrent.duration.Duration
 import java.util.UUID
+import me.sgrouples.rogue.cc.macros.MacroBsonFormat
 
 trait QueryFieldHelpers[Meta] extends NamesResolver {
   requires: Meta =>
@@ -23,12 +24,12 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptIntField(name: String): OptIntField[Meta] =
     named(name)(new OptIntField[Meta](_, this))
 
-  protected def IntSubtypeField[T <: Int](
+  protected def IntSubtypeField[T <: Int: MacroBsonFormat](
       name: String
   ): IntSubtypeField[T, Meta] =
     named(name)(new IntSubtypeField[T, Meta](_, this))
 
-  protected def OptIntSubtypeField[T <: Int](
+  protected def OptIntSubtypeField[T <: Int: MacroBsonFormat](
       name: String
   ): OptIntSubtypeField[T, Meta] =
     named(name)(new OptIntSubtypeField[T, Meta](_, this))
@@ -62,12 +63,12 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   ): OptBigDecimalField[Meta] =
     named(name)(new OptBigDecimalField[Meta](_, this))
 
-  protected def LongSubtypeField[T <: Long](
+  protected def LongSubtypeField[T <: Long: MacroBsonFormat](
       name: String
   ): LongSubtypeField[T, Meta] =
     named(name)(new LongSubtypeField[T, Meta](_, this))
 
-  protected def OptLongSubtypeField[T <: Long](
+  protected def OptLongSubtypeField[T <: Long: MacroBsonFormat](
       name: String
   ): OptLongSubtypeField[T, Meta] =
     named(name)(new OptLongSubtypeField[T, Meta](_, this))
@@ -112,12 +113,12 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptUUIdField(name: String): OptUUIDIdField[Meta] =
     named(name)(new OptUUIDIdField[Meta](_, this))
 
-  protected def UUIdSubtypeField[T <: UUID](
+  protected def UUIdSubtypeField[T <: UUID: MacroBsonFormat](
       name: String
   ): UUIDIdSubtypeField[T, Meta] =
     named(name)(new UUIDIdSubtypeField[T, Meta](_, this))
 
-  protected def OptUUIdSubtypeField[T <: UUID](
+  protected def OptUUIdSubtypeField[T <: UUID: MacroBsonFormat](
       name: String
   ): OptUUIDIdSubtypeField[T, Meta] =
     named(name)(new OptUUIDIdSubtypeField[T, Meta](_, this))
@@ -163,7 +164,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def EnumField[E <: Enumeration](
       name: String,
       e: E
-  ): EnumField[e.Value, Meta] =
+  )(using MacroBsonFormat[e.Value]): EnumField[e.Value, Meta] =
     named(name)(new EnumField[e.Value, Meta](_, this, e(0)))
 
   /** This version of the EnumField method accepts e: E as a param to avoid ugly
@@ -177,7 +178,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptEnumField[E <: Enumeration](
       name: String,
       e: E
-  ): OptEnumField[e.Value, Meta] =
+  )(using MacroBsonFormat[e.Value]): OptEnumField[e.Value, Meta] =
     named(name)(new OptEnumField[e.Value, Meta](_, this))
 
   /** This version of the EnumField method accepts e: E as a param to avoid ugly
@@ -191,7 +192,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def EnumIdField[E <: Enumeration](
       name: String,
       e: E
-  ): EnumIdField[e.Value, Meta] =
+  )(using format: MacroBsonFormat[e.Value]): EnumIdField[e.Value, Meta] =
     named(name)(new EnumIdField[e.Value, Meta](_, this, e(0)))
 
   /** This version of the EnumField method accepts e: E as a param to avoid ugly
@@ -205,88 +206,88 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptEnumIdField[E <: Enumeration](
       name: String,
       e: E
-  ): OptEnumIdField[e.Value, Meta] =
+  )(using MacroBsonFormat[e.Value]): OptEnumIdField[e.Value, Meta] =
     named(name)(new OptEnumIdField[e.Value, Meta](_, this))
 
-  protected def ListField[V](name: String): ListField[V, Meta] =
+  protected def ListField[V: MacroBsonFormat](name: String): ListField[V, Meta] =
     named(name)(new ListField[V, Meta](_, this))
 
-  protected def OptListField[V](name: String): OptListField[V, Meta] =
+  protected def OptListField[V: MacroBsonFormat](name: String): OptListField[V, Meta] =
     named(name)(new OptListField[V, Meta](_, this))
 
   protected def ArrayField[V: ClassTag](
       name: String
-  ): ArrayField[V, Meta] =
+  )(using MacroBsonFormat[Array[V]]): ArrayField[V, Meta] =
     named(name)(new ArrayField[V, Meta](_, this))
 
-  protected def OptArrayField[V: ClassTag](
+  protected def OptArrayField[V: ClassTag ](
       name: String
-  ): OptArrayField[V, Meta] =
+  )(using MacroBsonFormat[Array[V]]): OptArrayField[V, Meta] =
     named(name)(new OptArrayField[V, Meta](_, this))
 
-  protected def VectorField[V](name: String): VectorField[V, Meta] =
+  protected def VectorField[V: MacroBsonFormat](name: String): VectorField[V, Meta] =
     named(name)(new VectorField[V, Meta](_, this))
 
-  protected def OptVectorField[V](
+  protected def OptVectorField[V: MacroBsonFormat](
       name: String
   ): OptVectorField[V, Meta] =
     named(name)(new OptVectorField[V, Meta](_, this))
 
-  protected def SeqField[V](name: String): SeqField[V, Meta] =
+  protected def SeqField[V: MacroBsonFormat](name: String): SeqField[V, Meta] =
     named(name)(new SeqField[V, Meta](_, this))
 
-  protected def OptSeqField[V](name: String): OptSeqField[V, Meta] =
+  protected def OptSeqField[V: MacroBsonFormat](name: String): OptSeqField[V, Meta] =
     named(name)(new OptSeqField[V, Meta](_, this))
 
-  protected def ClassField[C, MC <: CcMeta[C]](
+  protected def ClassField[C: MacroBsonFormat, MC <: CcMeta[C]](
       name: String,
       mc: MC
   ): CClassField[C, MC, Meta] =
     named(name)(new CClassField[C, MC, Meta](_, mc, this))
 
-  protected def OptClassField[C, MC <: CcMeta[C]](
+  protected def OptClassField[C: MacroBsonFormat, MC <: CcMeta[C]](
       name: String,
       mc: MC
   ): OptCClassField[C, MC, Meta] =
     named(name)(new OptCClassField[C, MC, Meta](_, mc, this))
 
-  protected def ClassRequiredField[C, MC <: CcMeta[C]](
+  protected def ClassRequiredField[C: MacroBsonFormat, MC <: CcMeta[C]](
       name: String,
       mc: MC,
       default: C
   ): CClassRequiredField[C, MC, Meta] =
     named(name)(new CClassRequiredField(_, mc, default, this))
 
-  protected def ClassListField[C: ClassTag, MC <: CcMeta[C]](
+  protected def ClassListField[C: ClassTag: MacroBsonFormat, MC <: CcMeta[C]](
       name: String,
       mc: MC
   ): CClassListField[C, MC, Meta] =
     named(name)(new CClassListField[C, MC, Meta](_, mc, this))
 
-  protected def OptClassListField[C: ClassTag, MC <: CcMeta[C]](
+  protected def OptClassListField[C: ClassTag: MacroBsonFormat, MC <: CcMeta[C]](
       name: String,
       mc: MC
   ): OptCClassListField[C, MC, Meta] =
     named(name)(new OptCClassListField[C, MC, Meta](_, mc, this))
 
-  protected def ClassArrayField[C: ClassTag, MC <: CcMeta[C]](
+  protected def ClassArrayField[C: ClassTag: MacroBsonFormat, MC <: CcMeta[C]](
       name: String,
       mc: MC
   ): CClassArrayField[C, MC, Meta] =
     named(name)(new CClassArrayField[C, MC, Meta](_, mc, this))
 
-  protected def OptClassArrayField[C: ClassTag, MC <: CcMeta[C]](
+  protected def OptClassArrayField[C: ClassTag: MacroBsonFormat, MC <: CcMeta[C]](
       name: String,
       mc: MC
   ): OptCClassArrayField[C, MC, Meta] =
     named(name)(new OptCClassArrayField[C, MC, Meta](_, mc, this))
 
-  protected def MapField[K: MapKeyFormat, V](
+  protected def MapField[K: MapKeyFormat, V: MacroBsonFormat](
       name: String
   ): MapField[K, V, Meta] =
     named(name)(new MapField[K, V, Meta](_, this))
 
-  protected def OptMapField[V](name: String): OptMapField[V, Meta] =
+  protected def OptMapField[V: MacroBsonFormat](name: String): OptMapField[V, Meta] =
     named(name)(new OptMapField[V, Meta](_, this))
 
   protected def LocaleField(name: String): LocaleField[Meta] =
@@ -295,7 +296,7 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   protected def OptLocaleField(name: String): OptLocaleField[Meta] =
     named(name)(new OptLocaleField[Meta](_, this))
 
-  protected def EnumeratumField[E <: EnumEntry](
+  protected def EnumeratumField[E <: EnumEntry: MacroBsonFormat](
       name: String,
       e: Enum[E]
   ): EnumeratumField[E, Meta] =

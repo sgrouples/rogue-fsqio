@@ -10,14 +10,16 @@ import enumeratum.{Enum, EnumEntry}
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
+import me.sgrouples.rogue.cc.macros.MacroBsonFormat
 
-abstract class CField[V, O](val name: String, val owner: O) extends Field[V, O]
+abstract class CField[V: MacroBsonFormat, O](val name: String, val owner: O) extends Field[V, O]:
+  val format: MacroBsonFormat[V] = summon
 
-abstract class MCField[V, O](name: String, owner: O)
+abstract class MCField[V: MacroBsonFormat, O](name: String, owner: O)
     extends CField[V, O](name, owner)
     with RequiredField[V, O]
 
-abstract class OCField[V, O](name: String, owner: O)
+abstract class OCField[V: MacroBsonFormat, O](name: String, owner: O)
     extends CField[V, O](name, owner)
     with OptionalField[V, O]
 
@@ -25,7 +27,7 @@ class IntField[O](name: String, o: O) extends MCField[Int, O](name, o) {
   override def defaultValue = 0
 }
 
-class IntSubtypeField[T <: Int, O](name: String, o: O)
+class IntSubtypeField[T <: Int: MacroBsonFormat, O](name: String, o: O)
     extends MCField[T, O](name, o) {
   override def defaultValue: T = 0.asInstanceOf[T]
 }
@@ -39,7 +41,7 @@ class BigDecimalField[O](name: String, o: O)
   override def defaultValue = BigDecimal(0)
 }
 
-class LongSubtypeField[T <: Long, O](name: String, o: O)
+class LongSubtypeField[T <: Long: MacroBsonFormat, O](name: String, o: O)
     extends MCField[T, O](name, o) {
   override def defaultValue: T = 0L.asInstanceOf[T]
 }
@@ -79,7 +81,7 @@ class UUIDIdField[O](name: String, o: O) extends MCField[UUID, O](name, o) {
   override def defaultValue: UUID = UUID.randomUUID()
 }
 
-class UUIDIdSubtypeField[T <: UUID, O](name: String, o: O)
+class UUIDIdSubtypeField[T <: UUID: MacroBsonFormat, O](name: String, o: O)
     extends MCField[T, O](name, o) {
   override def defaultValue: T = UUID.randomUUID().asInstanceOf[T]
 }
@@ -105,36 +107,36 @@ class LocaleField[O](name: String, o: O) extends MCField[Locale, O](name, o) {
 class BooleanField[O](name: String, o: O) extends MCField[Boolean, O](name, o) {
   override def defaultValue = false
 }
-class EnumField[T <: Enumeration#Value, O](name: String, o: O, defaultVal: T)
+class EnumField[T <: Enumeration#Value: MacroBsonFormat, O](name: String, o: O, defaultVal: T)
     extends MCField[T, O](name, o) {
   override def defaultValue: T = defaultVal
 }
 
-class EnumIdField[T <: Enumeration#Value, O](
+class EnumIdField[T <: Enumeration#Value: MacroBsonFormat, O](
     name: String,
     o: O,
     override val defaultValue: T
 ) extends MCField[T, O](name, o)
 
-class EnumeratumField[E <: EnumEntry, O](e: Enum[E], name: String, o: O)
+class EnumeratumField[E <: EnumEntry: MacroBsonFormat, O](e: Enum[E], name: String, o: O)
     extends MCField[E, O](name, o) {
   override def defaultValue: E = e.values.head
 }
 
-class ListField[V, O](name: String, o: O) extends MCField[List[V], O](name, o) {
+class ListField[V: MacroBsonFormat, O](name: String, o: O) extends MCField[List[V], O](name, o) {
   override def defaultValue: List[V] = Nil
 }
 
-class SeqField[V, O](name: String, o: O) extends MCField[Seq[V], O](name, o) {
+class SeqField[V: MacroBsonFormat, O](name: String, o: O) extends MCField[Seq[V], O](name, o) {
   override def defaultValue: List[V] = Nil
 }
 
-class VectorField[V, O](name: String, o: O)
+class VectorField[V: MacroBsonFormat, O](name: String, o: O)
     extends MCField[Vector[V], O](name, o) {
   override def defaultValue = Vector.empty[V]
 }
 
-class ArrayField[V: ClassTag, O](name: String, o: O)
+class ArrayField[V: ClassTag, O](name: String, o: O)(using MacroBsonFormat[Array[V]])
     extends MCField[Array[V], O](name, o) {
   override def defaultValue = Array.empty[V]
 }
@@ -187,7 +189,7 @@ trait HasChildMeta[C, MC <: CcMeta[C]] {
   def childMeta: MC
 }
 
-class CClassListField[C, MC <: CcMeta[C], O](
+class CClassListField[C: MacroBsonFormat, MC <: CcMeta[C], O](
     name: String,
     val childMeta: MC,
     owner: O
@@ -196,7 +198,7 @@ class CClassListField[C, MC <: CcMeta[C], O](
   override def defaultValue: List[C] = Nil
 }
 
-class CClassArrayField[C: ClassTag, MC <: CcMeta[C], O](
+class CClassArrayField[C: ClassTag: MacroBsonFormat, MC <: CcMeta[C], O](
     name: String,
     val childMeta: MC,
     o: O
@@ -205,24 +207,24 @@ class CClassArrayField[C: ClassTag, MC <: CcMeta[C], O](
   override def defaultValue = Array.empty[C]
 }
 
-class MapField[K: MapKeyFormat, V, O](name: String, o: O)
+class MapField[K: MapKeyFormat, V: MacroBsonFormat, O](name: String, o: O)
     extends MCField[Map[K, V], O](name, o) {
   override def defaultValue = Map.empty
 }
 
 class OptIntField[O](name: String, o: O) extends OCField[Int, O](name, o)
-class OptIntSubtypeField[T <: Int, O](name: String, o: O)
+class OptIntSubtypeField[T <: Int: MacroBsonFormat, O](name: String, o: O)
     extends OCField[T, O](name, o)
 
 class OptLongField[O](name: String, o: O) extends OCField[Long, O](name, o)
-class OptLongSubtypeField[T <: Long, O](name: String, o: O)
+class OptLongSubtypeField[T <: Long: MacroBsonFormat, O](name: String, o: O)
     extends OCField[T, O](name, o)
 
 class OptBigDecimalField[O](name: String, o: O)
     extends OCField[BigDecimal, O](name, o)
 
 class OptStringField[O](name: String, o: O) extends OCField[String, O](name, o)
-class OptStringSubtypeField[T <: String, O](name: String, o: O)
+class OptStringSubtypeField[T <: String: MacroBsonFormat, O](name: String, o: O)
     extends OCField[T, O](name, o)
 
 class OptObjectIdField[O](name: String, o: O)
@@ -233,7 +235,7 @@ class OptObjectIdSubtypeField[Subtype <: ObjectId, O](name: String, o: O)
     extends OCField[Subtype, O](name, o)
 
 class OptUUIDIdField[O](name: String, o: O) extends OCField[UUID, O](name, o)
-class OptUUIDIdSubtypeField[T <: UUID, O](name: String, o: O)
+class OptUUIDIdSubtypeField[T <: UUID: MacroBsonFormat, O](name: String, o: O)
     extends OCField[T, O](name, o)
 
 class OptDoubleField[O](name: String, o: O) extends OCField[Double, O](name, o)
@@ -248,34 +250,34 @@ class OptInstantField[O](name: String, o: O)
     extends OCField[Instant, O](name, o)
 class OptBooleanField[O](name: String, o: O)
     extends OCField[Boolean, O](name, o)
-class OptEnumField[T <: Enumeration#Value, O](name: String, o: O)
+class OptEnumField[T <: Enumeration#Value: MacroBsonFormat, O](name: String, o: O)
     extends OCField[T, O](name, o)
-class OptEnumIdField[T <: Enumeration#Value, O](name: String, o: O)
+class OptEnumIdField[T <: Enumeration#Value: MacroBsonFormat, O](name: String, o: O)
     extends OCField[T, O](name, o)
-class OptListField[V, O](name: String, o: O)
+class OptListField[V: MacroBsonFormat, O](name: String, o: O)
     extends OCField[List[V], O](name, o)
-class OptArrayField[V: ClassTag, O](name: String, o: O)
+class OptArrayField[V: ClassTag, O](name: String, o: O)(using MacroBsonFormat[Array[V]])
     extends OCField[Array[V], O](name, o)
-class OptVectorField[V, O](name: String, o: O)
+class OptVectorField[V: MacroBsonFormat, O](name: String, o: O)
     extends OCField[Vector[V], O](name, o)
-class OptSeqField[V, O](name: String, o: O) extends OCField[Seq[V], O](name, o)
-class OptCClassField[C, MC <: CcMeta[C], O](
+class OptSeqField[V: MacroBsonFormat, O](name: String, o: O) extends OCField[Seq[V], O](name, o)
+class OptCClassField[C: MacroBsonFormat, MC <: CcMeta[C], O](
     name: String,
     val childMeta: MC,
     owner: O
 ) extends OCField[C, O](name, owner)
     with HasChildMeta[C, MC]
-class OptCClassListField[C, MC <: CcMeta[C], O](
+class OptCClassListField[C: MacroBsonFormat, MC <: CcMeta[C], O](
     name: String,
     val childMeta: MC,
     o: O
 ) extends OCField[List[C], O](name, o)
     with HasChildMeta[C, MC]
-class OptCClassArrayField[C: ClassTag, MC <: CcMeta[C], O](
+class OptCClassArrayField[C: ClassTag: MacroBsonFormat, MC <: CcMeta[C], O](
     name: String,
     val childMeta: MC,
     o: O
 ) extends OCField[Array[C], O](name, o)
     with HasChildMeta[C, MC]
-class OptMapField[V, O](name: String, o: O)
+class OptMapField[V: MacroBsonFormat, O](name: String, o: O)
     extends OCField[Map[String, V], O](name, o)

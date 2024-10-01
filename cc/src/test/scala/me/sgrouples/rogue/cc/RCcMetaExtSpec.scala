@@ -19,6 +19,8 @@ trait Tag
 object ExampleEnum extends Enumeration {
   val one = Value
   val two = Value
+
+  given MacroBsonFormat[Value] = EnumMacroFormats.enumNameMacroFormat(this)
 }
 
 class MCcSpec extends FunSuite {
@@ -28,6 +30,9 @@ class MCcSpec extends FunSuite {
   private class CaseClass2Meta extends MCcMeta[CaseClass2, CaseClass2Meta]
 
   private val CaseClasses2 = new CaseClass2Meta
+
+  given taggedFormat[Type: MacroBsonFormat, Tag]: MacroBsonFormat[Type @@ Tag] =
+    summon[MacroBsonFormat[Type]].taggedWithF[Tag]
 
   private class CaseClass1Meta extends MCcMeta[CaseClass1, CaseClass1Meta] {
 

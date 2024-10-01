@@ -226,7 +226,7 @@ object Metas {
 
   object CommentR extends MCcMeta[Comment, CommentR.type]("comments") {
     val comments =
-      new ListField[OneComment.type, CommentR.type]("comments", this)
+      new ListField[OneComment, CommentR.type]("comments", this)
   }
 
   object OptValCCR extends MCcMeta[OptValCC, OptValCCR.type]("optvalcc") {
