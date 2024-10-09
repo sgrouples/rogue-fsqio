@@ -879,7 +879,7 @@ class MacroEndToEndSpec extends FunSuite {
     }
   }
 
-  test("Update array value using arrayFilter") {
+  test("filtered positional operator updates to subarray documents") {
     val v = baseTestVenue()
     val date1: LocalDateTime = LocalDateTime.now().minusDays(10)
     val date2: LocalDateTime = LocalDateTime.now().minusDays(11)
@@ -919,5 +919,42 @@ class MacroEndToEndSpec extends FunSuite {
         )
       )
     )
+  }
+
+  test("filtered positional operator fail when array filter is missing") {
+    VenueR
+      .modify(
+        _.claims.$("test1").subfield(_.status).setTo(ClaimStatus.approved)
+      )
+      .updateOneAsync()
+      .failed
+      .map(exception => assert(exception.isInstanceOf[MongoWriteException]))
+  }
+
+  test(
+    "filtered positional operator fail when array filter has different identifier"
+  ) {
+    VenueR
+      .modify(
+        _.claims.$("test1").subfield(_.status).setTo(ClaimStatus.approved)
+      )
+      .withArrayFilter("test2", _.claims.childMeta)(_.uid eqs 1L)
+      .updateOneAsync()
+      .failed
+      .map(exception => assert(exception.isInstanceOf[MongoWriteException]))
+  }
+
+  test(
+    "filtered positional operator fail when an unused array filter exists"
+  ) {
+    VenueR
+      .modify(
+        _.claims.$("test1").subfield(_.status).setTo(ClaimStatus.approved)
+      )
+      .withArrayFilter("test1", _.claims.childMeta)(_.uid eqs 1L)
+      .withArrayFilter("test2", _.claims.childMeta)(_.uid eqs 2L)
+      .updateOneAsync()
+      .failed
+      .map(exception => assert(exception.isInstanceOf[MongoWriteException]))
   }
 }
