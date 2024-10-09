@@ -30,6 +30,7 @@ import org.bson.codecs.{
 }
 import org.bson.codecs.configuration.CodecRegistries
 import org.reactivestreams.Publisher
+import scala.jdk.CollectionConverters.*
 
 import scala.reflect._
 //rename to reactive
@@ -292,13 +293,16 @@ class MongoAsyncBsonJavaDriverAdapter[MB](
       writeConcern: WriteConcern
   )(implicit dba: MongoDatabase): Future[UpdateResult] = {
     val modClause = mod
-    if (!modClause.mod.clauses.isEmpty) {
+    if (modClause.mod.clauses.nonEmpty) {
       val q: Bson = buildCondition(modClause.query.condition)
       val m: Bson = buildModify(modClause.mod)
       val coll = dbCollectionFactory
         .getPrimaryDBCollection(modClause.query)
         .withWriteConcern(writeConcern)
       val updateOptions = new UpdateOptions().upsert(upsert)
+
+      if mod.arrayFilters.nonEmpty then
+        updateOptions.arrayFilters(mod.arrayFilters.asJava)
 
       val updater = if (multi) {
         coll.updateMany(q, m, updateOptions)

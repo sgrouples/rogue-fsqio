@@ -2,7 +2,12 @@
 
 package io.fsq.rogue
 
-import com.mongodb.{BasicDBObjectBuilder, DBObject, ReadPreference}
+import com.mongodb.{
+  BasicDBObject,
+  BasicDBObjectBuilder,
+  DBObject,
+  ReadPreference
+}
 import io.fsq.rogue.MongoHelpers.{
   AndCondition,
   FieldOrderTerm,
@@ -15,6 +20,7 @@ import io.fsq.rogue.MongoHelpers.{
   SearchCondition
 }
 import io.fsq.rogue.index.MongoIndex
+
 import scala.concurrent.duration.FiniteDuration
 
 // ***************************************************************************
@@ -3397,7 +3403,11 @@ case class Query[M, R, +State](
 // *** Modify Queries
 // *******************************************************
 
-case class ModifyQuery[M, +State](query: Query[M, _, State], mod: MongoModify) {
+case class ModifyQuery[M, +State](
+    query: Query[M, _, State],
+    mod: MongoModify,
+    arrayFilters: List[BasicDBObject] = List.empty
+) {
 
   private def addClause(clause: M => ModifyClause) = {
     this.copy(mod = MongoModify(clause(query.meta) :: mod.clauses))
@@ -3425,6 +3435,24 @@ case class ModifyQuery[M, +State](query: Query[M, _, State], mod: MongoModify) {
     MongoBuilder.buildModifyString(query.collectionName, this)
 
   def asDBObject = (this.query.asDBObject, MongoBuilder.buildModify(this.mod))
+
+  /** Use to add array filter referenced by identifier in
+    * `me.sgrouples.rogue.CClassSeqModifyField.$(identifier)`
+    * @see
+    *   https://www.mongodb.com/docs/manual/reference/operator/update/positional-filtered
+    */
+  def withArrayFilter[CM](identifier: String, childMeta: M => CM)(
+      filter: CM => QueryClause[?]
+  ): ModifyQuery[M, State] =
+    val filterQuery = filter(childMeta(query.meta))
+    val builder = BasicDBObjectBuilder.start()
+    filterQuery.extend(builder, false)
+    val bsonFilter = builder.get().asInstanceOf[BasicDBObject]
+    bsonFilter.put(
+      s"$identifier.${filterQuery.fieldName}",
+      bsonFilter.removeField(filterQuery.fieldName)
+    )
+    this.copy(arrayFilters = bsonFilter :: arrayFilters)
 }
 
 // *******************************************************
