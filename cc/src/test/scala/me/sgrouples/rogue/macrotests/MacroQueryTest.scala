@@ -1527,6 +1527,19 @@ assertEquals(      Comment.where(_.comments.unsafeField[String]("comment") conta
     assertEquals(
       VenueR
         .where(_.legacyid eqs 1)
+        .and(_.claims.subfield(_.uid) contains 2)
+        .modify(
+          _.claims.$("test").subfield(_.status) setTo ClaimStatus.approved
+        )
+        .q,
+      pq(
+        """db.venues.update({"legId": {"$numberLong": "1"}, "claims.uid": {"$numberLong": "2"}}, {"$set": {"claims.$[test].status": "Approved"}}, false, false)"""
+      )
+    )
+
+    assertEquals(
+      VenueR
+        .where(_.legacyid eqs 1)
         .and(_.tags contains "sometag")
         .modify(_.tags.$ setTo "othertag")
         .q,

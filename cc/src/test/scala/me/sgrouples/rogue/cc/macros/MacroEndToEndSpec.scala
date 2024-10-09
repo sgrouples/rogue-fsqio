@@ -10,12 +10,14 @@ import me.sgrouples.rogue.{ListField, VectorField}
 import io.fsq.field.Field
 import munit.FunSuite
 import org.bson.types.ObjectId
-import org.mongodb.scala._
+import org.mongodb.scala.*
 import org.mongodb.scala.model.Filters
 
 import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import com.softwaremill.tagging.*
+
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MacroEndToEndSpec extends FunSuite {
@@ -875,5 +877,47 @@ class MacroEndToEndSpec extends FunSuite {
       assert(aggregatedSeq.map(_.t).forall(_.intValue() == 2))
       assert(aggregatedFold.keySet == Set(0L, 1L, 2L, 3L, 4L))
     }
+  }
+
+  test("Update array value using arrayFilter") {
+    val v = baseTestVenue()
+    val date1: LocalDateTime = LocalDateTime.now().minusDays(10)
+    val date2: LocalDateTime = LocalDateTime.now().minusDays(11)
+    for
+      _ <- VenueR.insertOneAsync(v)
+      _ <- VenueR
+        .where(_.id eqs v._id)
+        .modify(
+          _.claims.$("test1").subfield(_.date).setTo(date1)
+        )
+        .and(
+          _.claims.$("test2").subfield(_.date).setTo(date2)
+        )
+        .and(
+          _.claims.$("test2").subfield(_.status).setTo(ClaimStatus.pending)
+        )
+        .withArrayFilter("test1", _.claims.childMeta)(_.uid eqs 1234L)
+        .withArrayFilter("test2", _.claims.childMeta)(_.uid eqs 5678L)
+        .updateOneAsync()
+      claimsAfterUpdate <- VenueR
+        .where(_.id eqs v._id)
+        .select(_.claims)
+        .fetchAsync()
+        .map(_.flatten)
+    yield assertEquals(
+      claimsAfterUpdate,
+      List(
+        VenueClaimBson(
+          uid = 1234L,
+          status = ClaimStatus.pending,
+          date = date1.truncatedTo(ChronoUnit.MILLIS)
+        ),
+        VenueClaimBson(
+          uid = 5678L,
+          status = ClaimStatus.pending,
+          date = date2.truncatedTo(ChronoUnit.MILLIS)
+        )
+      )
+    )
   }
 }

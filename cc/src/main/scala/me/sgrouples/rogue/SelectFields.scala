@@ -257,6 +257,15 @@ class CClassSeqModifyField[C, M <: CcMeta[C], O, CC[_] <: Seq[_]](
     fld.childMeta,
     fld.owner
   )
+
+  /** @see
+    *   https://www.mongodb.com/docs/manual/reference/operator/update/positional-filtered
+    */
+  def $(identifier: String) = new SelectableDummyCCField[C, M, O](
+    fld.name + s".$$[$identifier]",
+    fld.childMeta,
+    fld.owner
+  )
 }
 
 class CClassArrayModifyField[C, M <: CcMeta[C], O](
