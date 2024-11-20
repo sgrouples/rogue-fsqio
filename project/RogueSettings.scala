@@ -23,7 +23,7 @@ object RogueSettings {
     git.gitDescribePatterns := Seq("v*"),
     versionScheme := Some("strict"),
     organization := "me.sgrouples",
-    scalaVersion := "3.3.3",
+    scalaVersion := "3.3.4",
     isSnapshot := false,
     publishMavenStyle := true,
     Test / publishArtifact := false,
@@ -44,9 +44,9 @@ object RogueSettings {
 }
 
 object RogueDependencies {
-  val mongoVer = "4.9.0"
-  val nettyVer = "4.1.86.Final"
-  val testcontainersScalaVersion = "0.40.12"
+  val mongoVer = "5.2.0"
+  val nettyVer = "4.1.114.Final"
+  val testcontainersScalaVersion = "0.41.4"
 
   val bsonDeps = Seq("org.mongodb" % "bson" % mongoVer % Compile)
 
@@ -56,15 +56,15 @@ object RogueDependencies {
 
   val testDeps = Seq(
     "org.slf4j" % "slf4j-simple" % "1.7.36" % Test,
-    "org.scalameta" %% "munit" % "1.0.0-M7" % Test,
+    "org.scalameta" %% "munit" % "1.0.2" % Test,
     "io.netty" % "netty-all" % nettyVer % Test,
     "io.netty" % "netty-transport-native-epoll" % nettyVer % Test,
     "io.netty" % "netty-transport-native-unix-common" % nettyVer % Test,
     "com.dimafeng" %% "testcontainers-scala-mongodb" % testcontainersScalaVersion % Test
   )
 
-  val enumeratum = "com.beachape" %% "enumeratum" % "1.7.2"
-  val tagging = "com.softwaremill.common" %% "tagging" % "2.3.3"
+  val enumeratum = "com.beachape" %% "enumeratum" % "1.7.4"
+  val tagging = "com.softwaremill.common" %% "tagging" % "2.3.5"
   val coreDeps = mongoDeps ++ Seq(enumeratum)
 
   val ccDeps = mongoDeps ++ Seq(tagging) ++ testDeps
