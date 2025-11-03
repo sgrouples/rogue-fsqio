@@ -131,6 +131,15 @@ object Metas {
 
   val Invoices = new InvoiceMeta
 
+  case class BigIntData(value: BigInt, optValue: Option[BigInt])
+
+  class BigIntDataMeta extends MCcMeta[BigIntData, BigIntDataMeta] {
+    val value = BigIntField("value")
+    val optValue = OptBigIntField("optValue")
+  }
+
+  val BigIntDatas = new BigIntDataMeta
+
   case class MCounter(
       _id: ObjectId = ObjectId.get(),
       counts: Map[ObjectId, Long]

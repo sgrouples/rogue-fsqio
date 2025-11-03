@@ -7,7 +7,7 @@ import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{BaseBsonFormat, BsonFormat, SupportedLocales}
 import org.bson._
 import org.bson.types.{Decimal128, ObjectId}
-
+import java.math.{BigDecimal => BigDec}
 import scala.collection.Factory
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
@@ -117,6 +117,29 @@ final class BigDecimalMacroBsonFormat()
   }
   override def append(writer: BsonWriter, v: BigDecimal): Unit = {
     writer.writeDecimal128(new Decimal128(v.bigDecimal))
+  }
+}
+
+final class BigIntMacroBsonFormat()
+  extends MacroBaseBsonFormat[BigInt] {
+  override def read(b: BsonValue): BigInt = if (b.isDecimal128) {
+    BigInt(b.asDecimal128().decimal128Value().bigDecimalValue().toBigInteger)
+  } else {
+    defaultValue
+  }
+
+  override def write(v: BigInt): BsonValue = new BsonDecimal128(
+   new Decimal128(new BigDec(v.bigInteger))
+  )
+
+  override def defaultValue: BigInt = BigInt(0)
+
+  override def append(writer: BsonWriter, k: String, v: BigInt): Unit = {
+    writer.writeDecimal128(k, new Decimal128(new BigDec(v.bigInteger)))
+  }
+
+  override def append(writer: BsonWriter, v: BigInt): Unit = {
+    writer.writeDecimal128(new Decimal128(new BigDec(v.bigInteger)))
   }
 }
 
@@ -538,6 +561,7 @@ object MacroBsonFormat extends MacroBsonFormatDeriving:
   given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
   given MacroBsonFormat[Double] = DoubleMacroBsonFormat(0d)
   given MacroBsonFormat[BigDecimal] = BigDecimalMacroBsonFormat()
+  given MacroBsonFormat[BigInt] = BigIntMacroBsonFormat()
   given MacroBsonFormat[Boolean] = BooleanMacroBsonFormat(false)
   given MacroBsonFormat[String] = StringMacroBsonFormat("")
   given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()

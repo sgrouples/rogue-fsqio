@@ -3,14 +3,14 @@ import scala.language.implicitConversions
 import java.time.LocalDateTime
 import java.util.{Currency, Locale}
 import java.util.regex.Pattern
-import org.mongodb.scala._
+import org.mongodb.scala.*
 import me.sgrouples.rogue.cc.CcRogue.*
 import me.sgrouples.rogue.cc.*
 import org.bson.types.ObjectId
 import munit.FunSuite
 import org.mongodb.scala.result.DeleteResult
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import com.softwaremill.tagging.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -693,6 +693,71 @@ class EndToEndBsonAsyncSpec extends FunSuite {
             Seq(Invoice(2L, "Invoice no. 2", Money(1352.98, EUR)))
           )
         )
+    } yield ()
+  }
+
+  test("BigInt fields") {
+    val bigValue = BigInt("100000000000000000000000")
+    val data1 = BigIntData(bigValue, Some(bigValue))
+    val data2 = BigIntData(BigInt(111111111), None)
+    val data3 = BigIntData(BigInt(999999999), Some(BigInt(123)))
+    val data4 = BigIntData(BigInt(500000000), Some(BigInt(500000000)))
+
+    val allData = Seq(data1, data2, data3, data4)
+
+    for {
+      _ <- Future.traverse(allData)(data => BigIntDatas.insertOneAsync(data))
+      _ <- BigIntDatas
+        .where(_.value eqs bigValue)
+        .fetchAsync()
+        .map(assertEquals(_, Seq(data1)))
+      // Query by optional BigInt field
+      _ <- BigIntDatas
+        .where(_.optValue eqs bigValue)
+        .fetchAsync()
+        .map(assertEquals(_, Seq(data1)))
+      // Query with comparison operators
+      _ <- BigIntDatas
+        .where(_.value > BigInt(120000000))
+        .fetchAsync()
+        .map(result => assertEquals(result.toSet, Set(data1, data3, data4)))
+      _ <- BigIntDatas
+        .where(_.value < BigInt(200000000))
+        .fetchAsync()
+        .map(result => assertEquals(result.toSet, Set(data2)))
+      // Modify BigInt field
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(111111111))
+        .modify(_.value setTo BigInt(222222222))
+        .updateOneAsync()
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(222222222))
+        .fetchAsync()
+        .map(result => {
+          assertEquals(result.size, 1)
+          assertEquals(result.head.value, BigInt(222222222))
+          assertEquals(result.head.optValue, None)
+        })
+      // Modify optional BigInt field
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(999999999))
+        .modify(_.optValue setTo Some(BigInt(456)))
+        .updateOneAsync()
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(999999999))
+        .fetchAsync()
+        .map(result => {
+          assertEquals(result.size, 1)
+          assertEquals(result.head.optValue, Some(BigInt(456)))
+        })
+      // Query records where optional field is None
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(222222222))
+        .fetchAsync()
+        .map(result => {
+          assertEquals(result.size, 1)
+          assertEquals(result.head.optValue, None)
+        })
     } yield ()
   }
 

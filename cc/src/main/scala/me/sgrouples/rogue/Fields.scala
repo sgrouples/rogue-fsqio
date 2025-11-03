@@ -39,6 +39,11 @@ class BigDecimalField[O](name: String, o: O)
   override def defaultValue = BigDecimal(0)
 }
 
+class BigIntField[O](name: String, o: O)
+    extends MCField[BigInt, O](name, o) {
+  override def defaultValue = BigInt(0)
+}
+
 class LongSubtypeField[T <: Long, O](name: String, o: O)
     extends MCField[T, O](name, o) {
   override def defaultValue: T = 0L.asInstanceOf[T]
@@ -220,6 +225,8 @@ class OptLongSubtypeField[T <: Long, O](name: String, o: O)
 
 class OptBigDecimalField[O](name: String, o: O)
     extends OCField[BigDecimal, O](name, o)
+
+class OptBigIntField[O](name: String, o: O) extends OCField[BigInt, O](name, o)
 
 class OptStringField[O](name: String, o: O) extends OCField[String, O](name, o)
 class OptStringSubtypeField[T <: String, O](name: String, o: O)

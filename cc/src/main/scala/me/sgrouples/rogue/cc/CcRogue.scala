@@ -189,6 +189,11 @@ trait CcRogue {
   ): BigDecimalQueryField[O] =
     new BigDecimalQueryField[O](f)
 
+  implicit def bigIntFieldToCurrencyQueryField[O <: CcMeta[_]](
+                                                                      f: RField[BigInt, O]
+                                                                    ): BigIntQueryField[O] =
+  new BigIntQueryField[O](f)
+
   implicit def caseClassFieldToQueryField[C, M <: CcMeta[C], O](
       f: CClassField[C, M, O]
   ): CClassQueryField[C, M, O] =
@@ -291,6 +296,11 @@ trait CcRogue {
       f: RField[BigDecimal, O]
   ): BigDecimalModifyField[O] =
     new BigDecimalModifyField[O](f)
+
+  implicit def bigIntFieldToCurrencyModifyField[O <: CcMeta[_]](
+                                                                     f: RField[BigInt, O]
+                                                                   ): BigIntModifyField[O] =
+    new BigIntModifyField[O](f)
 
   implicit def localeFieldToLocaleModifyField[O <: CcMeta[_]](
       f: RField[Locale, O]

@@ -62,6 +62,14 @@ trait QueryFieldHelpers[Meta] extends NamesResolver {
   ): OptBigDecimalField[Meta] =
     named(name)(new OptBigDecimalField[Meta](_, this))
 
+  protected def BigIntField(name: String): BigIntField[Meta] =
+    named(name)(new BigIntField[Meta](_, this))
+
+  protected def OptBigIntField(
+      name: String
+  ): OptBigIntField[Meta] =
+    named(name)(new OptBigIntField[Meta](_, this))
+
   protected def LongSubtypeField[T <: Long](
       name: String
   ): LongSubtypeField[T, Meta] =
