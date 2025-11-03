@@ -196,6 +196,18 @@ class BigDecimalModifyField[M](field: Field[BigDecimal, M])
   )
 }
 
+class BigIntQueryField[M](field: Field[BigInt, M])
+    extends AbstractQueryField[BigInt, BigInt, BsonInt64, M](
+      field
+    ) {
+  override def valueToDB(v: BigInt): BsonInt64 = new BsonInt64(v.longValue)
+}
+
+class BigIntModifyField[M](field: Field[BigInt, M])
+    extends AbstractModifyField[BigInt, BsonInt64, M](field) {
+  override def valueToDB(v: BigInt): BsonInt64 = new BsonInt64(v.longValue)
+}
+
 class CurrencyQueryField[M](field: Field[Currency, M])
     extends AbstractQueryField[Currency, Currency, BsonString, M](field) {
   override def valueToDB(v: Currency): BsonString = new BsonString(

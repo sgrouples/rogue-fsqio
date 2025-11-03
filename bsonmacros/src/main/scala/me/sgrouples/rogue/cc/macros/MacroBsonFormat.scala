@@ -120,6 +120,25 @@ final class BigDecimalMacroBsonFormat()
   }
 }
 
+final class BigIntMacroBsonFormat()
+    extends MacroBaseBsonFormat[BigInt] {
+  override def read(b: BsonValue): BigInt = if (b.isInt64) {
+    BigInt(b.asInt64().getValue)
+  } else if (b.isInt32) {
+    BigInt(b.asInt32().getValue)
+  } else {
+    defaultValue
+  }
+  override def write(t: BigInt): BsonValue = new BsonInt64(t.longValue)
+  override def defaultValue: BigInt = BigInt(0)
+  override def append(writer: BsonWriter, k: String, v: BigInt): Unit = {
+    writer.writeInt64(k, v.longValue)
+  }
+  override def append(writer: BsonWriter, v: BigInt): Unit = {
+    writer.writeInt64(v.longValue)
+  }
+}
+
 final class BooleanMacroBsonFormat(default: Boolean = false)
     extends MacroBaseBsonFormat[Boolean] {
   override def read(b: BsonValue): Boolean = if (b.isBoolean) {
@@ -538,6 +557,7 @@ object MacroBsonFormat extends MacroBsonFormatDeriving:
   given MacroBsonFormat[Long] = LongMacroBsonFormat(0L)
   given MacroBsonFormat[Double] = DoubleMacroBsonFormat(0d)
   given MacroBsonFormat[BigDecimal] = BigDecimalMacroBsonFormat()
+  given MacroBsonFormat[BigInt] = BigIntMacroBsonFormat()
   given MacroBsonFormat[Boolean] = BooleanMacroBsonFormat(false)
   given MacroBsonFormat[String] = StringMacroBsonFormat("")
   given MacroBsonFormat[ObjectId] = ObjectIdMacroBsonFormat[ObjectId]()

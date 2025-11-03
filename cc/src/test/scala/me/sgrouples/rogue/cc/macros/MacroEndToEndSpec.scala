@@ -705,6 +705,71 @@ class MacroEndToEndSpec extends FunSuite {
 
   }
 
+  test("BigInt fields should just work") {
+    val data1 = BigIntData(BigInt(123456789), Some(BigInt(987654321)))
+    val data2 = BigIntData(BigInt(111111111), None)
+    val data3 = BigIntData(BigInt(999999999), Some(BigInt(123)))
+    val data4 = BigIntData(BigInt(500000000), Some(BigInt(500000000)))
+
+    val allData = Seq(data1, data2, data3, data4)
+
+    for {
+      _ <- Future.traverse(allData)(data => BigIntDatas.insertOneAsync(data))
+      // Query by required BigInt field
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(123456789))
+        .fetchAsync()
+        .map(assertEquals(_, Seq(data1)))
+      // Query by optional BigInt field
+      _ <- BigIntDatas
+        .where(_.optValue eqs BigInt(987654321))
+        .fetchAsync()
+        .map(assertEquals(_, Seq(data1)))
+      // Query with comparison operators
+      _ <- BigIntDatas
+        .where(_.value > BigInt(120000000))
+        .fetchAsync()
+        .map(result => assertEquals(result.toSet, Set(data1, data3, data4)))
+      _ <- BigIntDatas
+        .where(_.value < BigInt(115000000))
+        .fetchAsync()
+        .map(assertEquals(_, Seq(data2)))
+      // Modify BigInt field
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(111111111))
+        .modify(_.value setTo BigInt(222222222))
+        .updateOneAsync()
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(222222222))
+        .fetchAsync()
+        .map(result => {
+          assertEquals(result.size, 1)
+          assertEquals(result.head.value, BigInt(222222222))
+          assertEquals(result.head.optValue, None)
+        })
+      // Modify optional BigInt field
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(999999999))
+        .modify(_.optValue setTo Some(BigInt(456)))
+        .updateOneAsync()
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(999999999))
+        .fetchAsync()
+        .map(result => {
+          assertEquals(result.size, 1)
+          assertEquals(result.head.optValue, Some(BigInt(456)))
+        })
+      // Query records where optional field is None
+      _ <- BigIntDatas
+        .where(_.value eqs BigInt(222222222))
+        .fetchAsync()
+        .map(result => {
+          assertEquals(result.size, 1)
+          assertEquals(result.head.optValue, None)
+        })
+    } yield ()
+  }
+
   test("Map[K, V] field should just work") {
 
     val counts = Map(ObjectId.get -> 100L)
