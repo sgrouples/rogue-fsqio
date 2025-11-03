@@ -16,7 +16,6 @@ import org.mongodb.scala.model.Filters
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.*
 import com.softwaremill.tagging.*
-
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -706,7 +705,8 @@ class MacroEndToEndSpec extends FunSuite {
   }
 
   test("BigInt fields should just work") {
-    val data1 = BigIntData(BigInt(123456789), Some(BigInt(987654321)))
+    val bigValue = BigInt("100000000000000000000000")
+    val data1 = BigIntData(bigValue, Some(bigValue))
     val data2 = BigIntData(BigInt(111111111), None)
     val data3 = BigIntData(BigInt(999999999), Some(BigInt(123)))
     val data4 = BigIntData(BigInt(500000000), Some(BigInt(500000000)))
@@ -717,12 +717,12 @@ class MacroEndToEndSpec extends FunSuite {
       _ <- Future.traverse(allData)(data => BigIntDatas.insertOneAsync(data))
       // Query by required BigInt field
       _ <- BigIntDatas
-        .where(_.value eqs BigInt(123456789))
+        .where(_.value eqs bigValue)
         .fetchAsync()
         .map(assertEquals(_, Seq(data1)))
       // Query by optional BigInt field
       _ <- BigIntDatas
-        .where(_.optValue eqs BigInt(987654321))
+        .where(_.optValue eqs bigValue)
         .fetchAsync()
         .map(assertEquals(_, Seq(data1)))
       // Query with comparison operators

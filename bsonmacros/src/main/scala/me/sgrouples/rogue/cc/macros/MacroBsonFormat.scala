@@ -7,7 +7,7 @@ import me.sgrouples.rogue.map.MapKeyFormat
 import me.sgrouples.rogue.{BaseBsonFormat, BsonFormat, SupportedLocales}
 import org.bson._
 import org.bson.types.{Decimal128, ObjectId}
-
+import java.math.{BigDecimal => BigDec}
 import scala.collection.Factory
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
@@ -121,21 +121,25 @@ final class BigDecimalMacroBsonFormat()
 }
 
 final class BigIntMacroBsonFormat()
-    extends MacroBaseBsonFormat[BigInt] {
-  override def read(b: BsonValue): BigInt = if (b.isInt64) {
-    BigInt(b.asInt64().getValue)
-  } else if (b.isInt32) {
-    BigInt(b.asInt32().getValue)
+  extends MacroBaseBsonFormat[BigInt] {
+  override def read(b: BsonValue): BigInt = if (b.isDecimal128) {
+    BigInt(b.asDecimal128().decimal128Value().bigDecimalValue().toBigInteger)
   } else {
     defaultValue
   }
-  override def write(t: BigInt): BsonValue = new BsonInt64(t.longValue)
+
+  override def write(v: BigInt): BsonValue = new BsonDecimal128(
+   new Decimal128(new BigDec(v.bigInteger))
+  )
+
   override def defaultValue: BigInt = BigInt(0)
+
   override def append(writer: BsonWriter, k: String, v: BigInt): Unit = {
-    writer.writeInt64(k, v.longValue)
+    writer.writeDecimal128(k, new Decimal128(new BigDec(v.bigInteger)))
   }
+
   override def append(writer: BsonWriter, v: BigInt): Unit = {
-    writer.writeInt64(v.longValue)
+    writer.writeDecimal128(new Decimal128(new BigDec(v.bigInteger)))
   }
 }
 

@@ -8,7 +8,7 @@ import io.fsq.rogue._
 import me.sgrouples.rogue.cc.CcMeta
 import org.bson.types.Decimal128
 import org.bson._
-
+import java.math.{BigDecimal => BigDec}
 /** Trait representing a field and all the operations on it.
   *
   * @tparam F
@@ -197,15 +197,19 @@ class BigDecimalModifyField[M](field: Field[BigDecimal, M])
 }
 
 class BigIntQueryField[M](field: Field[BigInt, M])
-    extends AbstractQueryField[BigInt, BigInt, BsonInt64, M](
+    extends AbstractQueryField[BigInt, BigInt, BsonDecimal128, M](
       field
     ) {
-  override def valueToDB(v: BigInt): BsonInt64 = new BsonInt64(v.longValue)
+  override def valueToDB(v: BigInt): BsonDecimal128 = new BsonDecimal128(
+    new Decimal128(new BigDec(v.bigInteger))
+  )
 }
 
 class BigIntModifyField[M](field: Field[BigInt, M])
-    extends AbstractModifyField[BigInt, BsonInt64, M](field) {
-  override def valueToDB(v: BigInt): BsonInt64 = new BsonInt64(v.longValue)
+    extends AbstractModifyField[BigInt, BsonDecimal128, M](field) {
+  override def valueToDB(v: BigInt): BsonDecimal128 = new BsonDecimal128(
+    new Decimal128(new BigDec(v.bigInteger))
+  )
 }
 
 class CurrencyQueryField[M](field: Field[Currency, M])

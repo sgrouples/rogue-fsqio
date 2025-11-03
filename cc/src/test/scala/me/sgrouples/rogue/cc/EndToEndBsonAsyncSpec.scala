@@ -3,14 +3,14 @@ import scala.language.implicitConversions
 import java.time.LocalDateTime
 import java.util.{Currency, Locale}
 import java.util.regex.Pattern
-import org.mongodb.scala._
+import org.mongodb.scala.*
 import me.sgrouples.rogue.cc.CcRogue.*
 import me.sgrouples.rogue.cc.*
 import org.bson.types.ObjectId
 import munit.FunSuite
 import org.mongodb.scala.result.DeleteResult
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import com.softwaremill.tagging.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -697,7 +697,8 @@ class EndToEndBsonAsyncSpec extends FunSuite {
   }
 
   test("BigInt fields") {
-    val data1 = BigIntData(BigInt(123456789), Some(BigInt(987654321)))
+    val bigValue = BigInt("100000000000000000000000")
+    val data1 = BigIntData(bigValue, Some(bigValue))
     val data2 = BigIntData(BigInt(111111111), None)
     val data3 = BigIntData(BigInt(999999999), Some(BigInt(123)))
     val data4 = BigIntData(BigInt(500000000), Some(BigInt(500000000)))
@@ -706,14 +707,13 @@ class EndToEndBsonAsyncSpec extends FunSuite {
 
     for {
       _ <- Future.traverse(allData)(data => BigIntDatas.insertOneAsync(data))
-      // Query by required BigInt field
       _ <- BigIntDatas
-        .where(_.value eqs BigInt(123456789))
+        .where(_.value eqs bigValue)
         .fetchAsync()
         .map(assertEquals(_, Seq(data1)))
       // Query by optional BigInt field
       _ <- BigIntDatas
-        .where(_.optValue eqs BigInt(987654321))
+        .where(_.optValue eqs bigValue)
         .fetchAsync()
         .map(assertEquals(_, Seq(data1)))
       // Query with comparison operators
@@ -724,7 +724,7 @@ class EndToEndBsonAsyncSpec extends FunSuite {
       _ <- BigIntDatas
         .where(_.value < BigInt(200000000))
         .fetchAsync()
-        .map(result => assertEquals(result.toSet, Set(data1, data2)))
+        .map(result => assertEquals(result.toSet, Set(data2)))
       // Modify BigInt field
       _ <- BigIntDatas
         .where(_.value eqs BigInt(111111111))
