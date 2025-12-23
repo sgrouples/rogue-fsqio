@@ -1,7 +1,6 @@
 package me.sgrouples.rogue.cc
 
-import com.mongodb.connection.StreamFactoryFactory
-import com.mongodb.connection.netty.NettyStreamFactoryFactory
+import com.mongodb.connection.TransportSettings
 import org.bson.UuidRepresentation
 import org.mongodb.scala.{MongoClientSettings, _}
 import io.netty.channel.EventLoopGroup
@@ -19,7 +18,7 @@ object MongoTestConn {
   var client: Option[MongoClient] = None
 
   private val containerDef =
-    MongoDBContainer.Def(DockerImageName.parse("mongo:5.0.10"))
+    MongoDBContainer.Def(DockerImageName.parse("mongo:6.0.14"))
   private var containerRef: Option[MongoDBContainer] = None
 
   def create(threadNamePrefix: String): EventLoopGroup = {
@@ -36,16 +35,16 @@ object MongoTestConn {
     }
   }
 
-  def nettyStreamFactoryFactory(
+  def transportSettings(
       eventLoopGroup: EventLoopGroup
-  ): StreamFactoryFactory = {
+  ): TransportSettings = {
     val socketChannelClass = if (Epoll.isAvailable) {
       classOf[EpollSocketChannel]
     } else {
       classOf[NioSocketChannel]
     }
-    NettyStreamFactoryFactory
-      .builder()
+    TransportSettings
+      .nettyBuilder()
       .eventLoopGroup(eventLoopGroup)
       .socketChannelClass(socketChannelClass)
       .build()
@@ -56,7 +55,7 @@ object MongoTestConn {
       val mongo = containerDef.start()
       containerRef = Some(mongo)
     }
-    val sff = nettyStreamFactoryFactory(create("XX"))
+    val ts = transportSettings(create("XX"))
     val settings = MongoClientSettings
       .builder()
       .applyConnectionString(
@@ -66,7 +65,7 @@ object MongoTestConn {
             .getOrElse(throw new RuntimeException("Mongo container is empty"))
         )
       )
-      .streamFactoryFactory(sff)
+      .transportSettings(ts)
       .uuidRepresentation(UuidRepresentation.JAVA_LEGACY)
       .build()
     val cl = MongoClient(settings)
